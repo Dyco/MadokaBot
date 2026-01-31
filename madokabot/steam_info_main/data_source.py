@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Any, List, Dict, Optional, Tuple
 
 from .models import Player, ProcessedPlayer
-from .constants import *
+from .constants import unknown_avatar_path
 
 
 class BindData:
@@ -68,7 +68,7 @@ class BindData:
         result = []
 
         for data in self.content[parent_id]:
-            if not data["steam_id"] in result:
+            if data["steam_id"] not in result:
                 result.append(data["steam_id"])
 
         return result
@@ -77,7 +77,7 @@ class BindData:
         result = []
         for parent_id in self.content:
             for data in self.content[parent_id]:
-                if not data["steam_id"] in result:
+                if data["steam_id"] not in result:
                     result.append(data["steam_id"])
         return result
 

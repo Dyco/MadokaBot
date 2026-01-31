@@ -1,12 +1,10 @@
 import time
-from nonebot.adapters.onebot.v11 import MessageEvent
-
-import platform
 import os
 import random
 from pathlib import Path
 from typing import Dict, List, Optional
-from nonebot.adapters.onebot.v11 import MessageSegment
+
+from nonebot.adapters.onebot.v11 import MessageEvent, MessageSegment
 from .constants import ResType, SubFolder
 from .config import assets
 
@@ -35,15 +33,7 @@ def to_segment(res_type: ResType, file_path: Path) -> MessageSegment:
     获取绝对路径转换为 file:///
     """
     abs_p = file_path.resolve()
-    p_str = str(abs_p)
-
-    if platform == "Linux":
-        madoka_path = os.getenv("MADOKA_PATH")  # 容器中配置的根路径
-        if madoka_path and str(abs_p).startswith("/app"):
-            abs_p = Path(str(abs_p).replace("/app", madoka_path, 1))
-        file_uri = f"file://{abs_p}"
-    else:
-        file_uri = abs_p.as_uri()
+    file_uri = abs_p.as_uri()
 
     if res_type == ResType.AUDIO:
         return MessageSegment.record(file=file_uri)

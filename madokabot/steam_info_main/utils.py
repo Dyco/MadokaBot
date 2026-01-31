@@ -1,6 +1,5 @@
 import time
 import pytz
-import httpx
 import datetime
 import calendar
 from PIL import Image
@@ -11,18 +10,14 @@ from nonebot import logger
 
 
 from .models import Player
-from .constants import *
+from .constants import unknown_avatar_path
 from .data_source import BindData
 from .steam import get_http_client
-
-import time
-
 
 
 async def fetch_avatar(
     player: Player, avatar_dir: Optional[Path], proxy: str = None
 ) -> Image.Image:
-    # 使用 .get() 并在缺失时尝试 fallback 到 "avatar" 字段
     url = player.get("avatarfull") or player.get("avatar")
     
     if not url:

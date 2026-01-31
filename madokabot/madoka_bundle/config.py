@@ -4,7 +4,7 @@ from nonebot import get_plugin_config
 from .constants import ResType, SubFolder
 
 class MainConfig(BaseModel):
-    assets_path: Path = Path(__file__).parent / "assets" #默认资源目录
+    assets_path: Path = Path.cwd() / "assets" #默认资源目录
 
 config = get_plugin_config(MainConfig)
 

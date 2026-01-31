@@ -4,14 +4,12 @@ import nonebot
 import re
 from io import BytesIO
 from pathlib import Path
-from typing import Union, Optional, List, Dict
+from typing import Union, List, Dict
 import asyncio
 
-from nonebot.exception import FinishedException
 from nonebot.log import logger
-from nonebot.adapters import Bot, Event, Message
+from nonebot.adapters import Bot, Event
 from nonebot.adapters.onebot.v11 import GroupMessageEvent, GROUP_ADMIN, GROUP_OWNER
-from nonebot.adapters.onebot.v11 import GroupMessageEvent
 from nonebot.plugin import PluginMetadata, inherit_supported_adapters
 from nonebot.permission import SUPERUSER
 
@@ -320,7 +318,7 @@ async def handle_remove(
             try:
                 member_info = await bot.get_group_member_info(group_id=int(parent_id), user_id=int(u_id))
                 name = member_info.get("card") or member_info.get("nickname") or u_id
-            except:
+            except:  
                 name = u_id
             
             msg += f"• {name} ({u_id}) -> {s_id}\n"
