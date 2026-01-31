@@ -32,12 +32,7 @@ def to_segment(res_type: ResType, file_path: Path) -> MessageSegment:
     abs_p = file_path.resolve()
     abs_str = str(abs_p)
     
-    file_uri = f"file:///{abs_str}" 
-
-    # print(f"DEBUG_PATH_ORIGIN: {file_path}")  
-    # print(f"DEBUG_PATH_ABS: {abs_str}")      
-    # print(f"DEBUG_FILE_EXISTS: {exists}")    
-    # print(f"DEBUG_FINAL_URI: {file_uri}")  
+    file_uri = f"file://{abs_str}" 
 
     if res_type == ResType.AUDIO:
         return MessageSegment.record(file=file_uri)
