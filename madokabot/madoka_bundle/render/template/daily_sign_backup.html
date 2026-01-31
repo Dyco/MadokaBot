@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <style>
+        @font-face {
+            font-family: 'CustomFont';
+            src: url('{{ font_path }}');
+        }
+
+        :root {
+            --bg-gradient: linear-gradient(145deg, #e8f0f7 0%, #f4f7f9 40%, #fceef0 100%);
+            --card-bg: rgba(255, 255, 255, 0.45);
+            --accent-color: #92a8d1;
+            --accent-pink: #d88a8a;
+            --text-main: #4a4e69;
+            --decoration-color: rgba(146, 168, 209, 0.15);
+            --grid-color: rgba(146, 168, 209, 0.1);
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            width: 900px;
+            height: 600px;
+            font-family: 'CustomFont', sans-serif;
+            background: var(--bg-gradient);
+            overflow: hidden;
+            contain: paint;
+        }
+
+        .stage {
+            position: relative;
+            width: 900px;
+            height: 600px;
+            overflow: hidden;
+        }
+
+        body::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background:
+                radial-gradient(var(--grid-color) 1px, transparent 0),
+                linear-gradient(120deg, transparent 70%, var(--decoration-color) 70.1%),
+                linear-gradient(200deg, transparent 80%, rgba(216, 138, 138, 0.05) 80.1%);
+            background-size: 30px 30px, 100% 100%, 100% 100%;
+            z-index: 0;
+        }
+
+        .outer-frame {
+            position: absolute;
+            top: 22px;
+            left: 22px;
+            width: 856px;
+            height: 556px;
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            border-radius: 6px;
+            z-index: 1;
+            display: flex;
+            align-items: center;
+            background:
+                linear-gradient(transparent, transparent),
+                linear-gradient(145deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0));
+        }
+
+        .data-card {
+            margin-left: 50px;
+            width: 330px;
+            padding: 30px 35px;
+            background: var(--card-bg);
+            backdrop-filter: blur(15px) saturate(140%);
+            -webkit-backdrop-filter: blur(15px) saturate(140%);
+            border-radius: 4px;
+            border-left: 5px solid var(--accent-color);
+            box-shadow:
+                0 10px 30px rgba(0, 0, 0, 0.06),
+                0 30px 60px rgba(146, 168, 209, 0.15);
+            position: relative;
+            z-index: 10;
+        }
+
+        .data-card::after {
+            content: "······\a ······";
+            position: absolute;
+            top: 10px;
+            left: 12px;
+
+            color: var(--accent-color);
+            font-size: 12px;
+            line-height: 8px;
+            opacity: 0.6;
+            white-space: pre;
+            font-family: monospace;
+            z-index: 11;
+        }
+
+        .card-footer {
+            margin-top: 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            opacity: 0.6;
+        }
+
+        .chara-name-display {
+            position: absolute;
+            right: 15px;
+            bottom: 10px;
+            font-size: 10px;
+            color: var(--text-main);
+            opacity: 0.5;
+            font-family: 'CustomFont', sans-serif;
+            letter-spacing: 0.5px;
+            white-space: nowrap;
+            z-index: 12;
+        }
+
+        .watermark {
+            position: absolute;
+            left: -25px;
+            bottom: 0px;
+            writing-mode: vertical-rl;
+            font-size: 12px;
+            font-style: italic;
+            color: var(--accent-color);
+            letter-spacing: 6px;
+            z-index: 2;
+            opacity: 0.4;
+        }
+
+        .status-bar {
+            display: flex;
+            justify-content: flex-end;
+            font-size: 10px;
+            color: var(--accent-color);
+            letter-spacing: 1px;
+            margin-bottom: 12px;
+            font-family: monospace;
+            border-bottom: 1px solid rgba(146, 168, 209, 0.3);
+            padding-bottom: 4px;
+        }
+
+        .user-info {
+            font-size: 11px;
+            color: #889;
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .user-name {
+            color: var(--text-main);
+            font-weight: bold;
+        }
+
+        .title-area {
+            margin-bottom: 25px;
+        }
+
+        .title-main {
+            font-size: 38px;
+            color: var(--text-main);
+            margin: 0;
+            font-weight: bold;
+            letter-spacing: -1.5px;
+        }
+
+        .item {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(146, 168, 209, 0.2);
+        }
+
+        .item-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .item-icon {
+            width: 18px;
+            height: 18px;
+            fill: var(--accent-color);
+            opacity: 0.8;
+        }
+
+        .label {
+            font-size: 14px;
+            color: #889;
+            font-weight: bold;
+        }
+
+        .value-main {
+            font-size: 26px;
+            color: var(--text-main);
+            font-weight: 800;
+            font-family: 'Arial Black', sans-serif;
+        }
+
+        .value-delta {
+            font-size: 14px;
+            color: var(--accent-pink);
+            margin-left: 4px;
+            font-weight: bold;
+        }
+
+        .barcode {
+            height: 18px;
+            width: 100px;
+            background: repeating-linear-gradient(90deg, var(--text-main), var(--text-main) 1px, transparent 1px, transparent 3px);
+        }
+
+        .chara-container {
+            position: absolute;
+            right: 0;
+            bottom: -15px;
+            height: 600px;
+            width: 500px;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            z-index: 5;
+            pointer-events: none;
+        }
+
+        .chara-img {
+            max-height: 95%;
+            display: flex;
+            filter: drop-shadow(-20px 10px 40px rgba(146, 168, 209, 0.2));
+            object-fit: contain;
+        }
+
+        .bubble {
+            position: absolute;
+            left: 490px;
+            top: 42%;
+            transform: translateY(-50%);
+            width: 220px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.75);
+            border-radius: 18px;
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+            z-index: 100;
+        }
+
+        .bubble-text {
+            font-size: 15px;
+            line-height: 1.6;
+            color: #667;
+            font-style: italic;
+            text-align: center;
+        }
+
+        .bot-watermark {
+            position: absolute;
+            right: 30px;
+            bottom: 30px;
+            text-align: right;
+            z-index: 100;
+            opacity: 0.7;
+            border-right: 3px solid var(--accent-color);
+            padding-right: 10px;
+        }
+
+        .watermark-main {
+            font-family: 'Arial Black', sans-serif;
+            font-size: 14px;
+            letter-spacing: 1px;
+            color: #3d405b;
+            margin: 0;
+            line-height: 1;
+            text-shadow: 1px 1px 1px rgba(255, 255, 255, 0.8);
+
+        }
+
+
+
+        .watermark-sub {
+            font-family: monospace;
+            font-size: 10px;
+            letter-spacing: 0.5px;
+            color: #7a92b1;
+            margin-top: 4px;
+            text-transform: uppercase;
+
+        }
+    </style>
+</head>
+
+<body>
+    <div class="stage">
+        <div class="outer-frame">
+            <div class="data-card">
+                <div class="status-bar">
+                    <span>{{ current_time }}</span>
+                </div>
+                <div class="watermark">
+                    SHINY COLORS / 283PRO / NOCTCHILL
+                </div>
+
+                <div class="user-info">
+                    <span class="user-name">{{ user_name }}</span>
+                    <span style="opacity: 0.6; font-family: monospace;">(QQ：{{ user_id }})</span>
+                </div>
+
+                <div class="title-area">
+                    <p class="title-main">{{ title }}</p>
+                </div>
+
+                {% for label, value, delta in items %}
+                <div class="item">
+                    <div class="item-left">
+                        <svg class="item-icon" viewBox="0 0 24 24">
+                            {% if label == "总积分" %}
+                            <path d="M12 2L1 7l11 5 11-5-11-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path>
+                            {% elif label == "好感度" %}
+                            <path
+                                d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z">
+                            </path>
+                            {% elif label == "连续陪伴" %}
+                            <path
+                                d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V9h14v11z">
+                            </path>
+                            {% elif label == "累计签到" %}
+                            <path d="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z"></path>
+                            {% else %}
+                            <path
+                                d="M13 3c-4.97 0-9 4.03-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42C8.27 19.99 10.51 21 13 21c4.97 0 9-4.03 9-9s-4.03-9-9-9zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8H12z">
+                            </path>
+                            {% endif %}
+                        </svg>
+                        <span class="label">{{ label }}</span>
+                    </div>
+                    <div class="value-container">
+                        <span class="value-main">{{ value }}</span>
+                        {% if delta %}
+                        <span class="value-delta">({{ delta }})</span>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+
+                <div class="card-footer">
+                    <div class="barcode"></div>
+                </div>
+                <div class="chara-name-display">
+                    立绘：{{ chara_name }}</div>
+            </div>
+
+        </div>
+
+        <div class="chara-container">
+            <img class="chara-img" src="{{ chara_b64 }}">
+        </div>
+
+        <div class="bubble">
+            <div class="bubble-text">「{{ quote }}」</div>
+        </div>
+
+        <div class="bot-watermark">
+            <div class="watermark-main">283PRODUCTION ANALYTICS</div>
+            <div class="watermark-sub">CORE SERVICE BY MADOKABOT</div>
+        </div>
+    </div>
+</body>
+
+</html>
