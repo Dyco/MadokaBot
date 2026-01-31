@@ -29,17 +29,32 @@ def get_file(res_type: ResType, plugin: SubFolder, name: str) -> Optional[Path]:
 
 # 处理文件
 def to_segment(res_type: ResType, file_path: Path) -> MessageSegment:
-    """
-    获取绝对路径转换为 file:///
-    """
+    # 1. 获取绝对路径
     abs_p = file_path.resolve()
-    file_uri = abs_p.as_uri()
+    abs_str = str(abs_p)
+    
+    # 2. 检查文件是否真的存在（Docker 映射最容易出问题的地方）
+    exists = abs_p.exists()
+    
+    # 3. 构造 URI
+    # 既然你说 NoneBot 建议三个斜杠，我们手动拼一个最标准的 Linux 格式
+    file_uri = f"file://{abs_str}" if abs_str.startswith("/") else f"file:///{abs_str.replace('\\', '/')}"
+
+    # --- 调试打印开始 ---
+    print(f"DEBUG_PATH_ORIGIN: {file_path}")  # 原始传入路径
+    print(f"DEBUG_PATH_ABS: {abs_str}")       # 转换后的绝对路径
+    print(f"DEBUG_FILE_EXISTS: {exists}")     # 文件在容器内是否存在
+    print(f"DEBUG_FINAL_URI: {file_uri}")     # 最终传给 OneBot 的字符串
+    # --- 调试打印结束 ---
+
+    if not exists:
+        return MessageSegment.text(f"错误：容器内找不到文件 {abs_str}")
 
     if res_type == ResType.AUDIO:
         return MessageSegment.record(file=file_uri)
     if res_type == ResType.IMAGE:
         return MessageSegment.image(file=file_uri)
-    return MessageSegment.text(str(abs_p))
+    return MessageSegment.text(abs_str)
 
 # 随机文件
 def get_random_res(res_type: ResType, plugin: SubFolder) -> MessageSegment:
