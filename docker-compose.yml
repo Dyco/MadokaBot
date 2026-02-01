@@ -8,8 +8,7 @@ services:
     env_file:
       - .env.prod
     volumes:
-      - /opt/madokabot:/app
-      - ./data:/app/assets  
+      - /opt/madokabot/assets:/app/assets
     environment:
       ENVIRONMENT: prod
       HOST: 0.0.0.0
