@@ -30,7 +30,7 @@ class PlayerSummaries(TypedDict):
 
 
 class ProcessedPlayer(Player):
-    game_start_time: int  # Unix timestamp
+    game_start_time: int 
 
 
 class PlayerSummariesProcessedResponse(TypedDict):
@@ -44,8 +44,8 @@ class Achievements(TypedDict):
 
 class GameData(TypedDict):
     game_name: str
-    play_time: str  # e.g. 10.2
-    last_played: str  # e.g. 10 月 2 日
+    play_time: str 
+    last_played: str 
     game_image: bytes
     achievements: List[Achievements]
     completed_achievement_number: int
@@ -64,8 +64,8 @@ class PlayerData(TypedDict):
 
 class DrawPlayerStatusData(TypedDict):
     game_name: str
-    game_time: str  # e.g. 10.2 小时（过去 2 周）
-    last_play_time: str  # e.g. 10 月 2 日
+    game_time: str
+    last_play_time: str 
     game_header: bytes
     achievements: List[Achievements]
     completed_achievement_number: int

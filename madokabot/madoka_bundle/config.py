@@ -6,7 +6,6 @@ from .constants import ResType, SubFolder
 class MainConfig(BaseModel):
     assets_path: Path = Path.cwd() / "assets" #默认资源目录
 
-config = get_plugin_config(MainConfig)
 
 class AssetManager:
     def __init__(self, root: Path):
@@ -19,4 +18,5 @@ class AssetManager:
         return path
 
 # 实例化管理器
+config = get_plugin_config(MainConfig)
 assets = AssetManager(config.assets_path)
