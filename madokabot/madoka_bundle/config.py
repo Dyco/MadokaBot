@@ -5,6 +5,7 @@ from .constants import ResType, SubFolder
 
 class MainConfig(BaseModel):
     assets_path: Path = Path.cwd() / "assets" #默认资源目录
+    skincost: int = 50
 
 
 class AssetManager:

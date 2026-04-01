@@ -41,6 +41,11 @@ query_cmd_alc = Alconna(
 
 set_cmd = on_alconna(set_cmd_alc, priority=10, block=True)
 query_cmd = on_alconna(query_cmd_alc, priority=10, block=True)
+shop_cmd_alc = Alconna(
+    "shop",
+    Subcommand("buy", Args["skin_key", str], alias=["购买"]),
+)
+shop_cmd = on_alconna(shop_cmd_alc, priority=10, block=True)
 
 # ================= 设置类处理器 =================
 
@@ -72,11 +77,11 @@ async def handle_query_base(event: MessageEvent):
 
 @query_cmd.assign("立绘")
 async def _query_skin_list():
-    from ...registry import SKIN_MAP
+    from ...registry import SKIN_MAP, SKIN_PRICE_MAP
     if not SKIN_MAP:
         await query_cmd.finish("当前没有可用的立绘")
     
-    lines = [f"{key} : {path.name}" for key, path in SKIN_MAP.items()]
+    lines = [f"{key} : {path.name}（价格: {SKIN_PRICE_MAP.get(key, 0)}）" for key, path in SKIN_MAP.items()]
     await query_cmd.finish("可用立绘列表：\n" + "\n".join(lines))
 
 @query_cmd.assign("资料")
@@ -104,6 +109,15 @@ async def _query_profile(event: MessageEvent):
         await query_cmd.finish(UniMessage(Image(raw=image_data)))
     except Exception as e:
         await query_cmd.finish(f"资料查询失败：{str(e)}")
+
+
+@shop_cmd.assign("buy")
+async def _shop_buy_skin(event: MessageEvent, skin_key: Match[str]):
+    uid = event.get_user_id()
+    from ...db.user_source import UserAccount
+
+    ok, message = await UserAccount.buy_skin(uid, skin_key.result)
+    await shop_cmd.finish(message if ok else f"购买失败：{message}")
 
 # ================= 兜底逻辑 (显示菜单) =================
 
