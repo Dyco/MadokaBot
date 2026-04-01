@@ -1,7 +1,7 @@
 from sqlalchemy import select
 from nonebot_plugin_datastore import create_session
 from .models import UserStats, UserInventory, ShopItem, UserSkin
-from ..registry import SKIN_MAP, DEFAULT_SKIN
+from ..registry import SKIN_MAP, DEFAULT_SKIN, SKIN_PRICE_MAP
 
 class UserAccount:
     """用户账务处理类"""
@@ -30,6 +30,15 @@ class UserAccount:
             user.points -= amount
             await session.commit()
             return True
+
+    @staticmethod
+    async def get_points(uid: str) -> int:
+        """获取用户当前积分，不存在时返回0"""
+        async with create_session() as session:
+            user = await session.get(UserStats, uid)
+            if not user:
+                return 0
+            return user.points
 
     @staticmethod
     async def give_item(uid: str, item_id: int, count: int = 1):
@@ -123,3 +132,36 @@ class UserAccount:
 
             await session.commit()
             return True
+
+    @staticmethod
+    async def buy_skin(uid: str, skin_key: str) -> tuple[bool, str]:
+        """
+        购买皮肤：
+        - 资源不存在
+        - 已拥有
+        - 余额不足
+        """
+        if skin_key not in SKIN_MAP:
+            return False, "皮肤不存在"
+
+        skin_cost = SKIN_PRICE_MAP.get(skin_key, 0)
+        async with create_session() as session:
+            user = await session.get(UserStats, uid)
+            if not user:
+                return False, "请先签到后再购买皮肤"
+
+            stmt = select(UserSkin).where(
+                UserSkin.user_id == uid,
+                UserSkin.skin_key == skin_key
+            )
+            owned = (await session.execute(stmt)).scalar_one_or_none()
+            if owned:
+                return False, "你已经拥有这个皮肤"
+
+            if user.points < skin_cost:
+                return False, f"积分不足，购买 {skin_key} 需要 {skin_cost} 积分，你当前有 {user.points} 积分"
+
+            user.points -= skin_cost
+            session.add(UserSkin(user_id=uid, skin_key=skin_key))
+            await session.commit()
+            return True, f"购买成功：{skin_key}，消耗 {skin_cost} 积分，剩余 {user.points} 积分"
