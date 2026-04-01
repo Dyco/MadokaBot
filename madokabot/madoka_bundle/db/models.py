@@ -1,6 +1,6 @@
 from datetime import datetime
 from typing import Optional
-from sqlalchemy import String, Integer, DateTime, select
+from sqlalchemy import String, Integer, DateTime, select, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column
 
 from nonebot_plugin_datastore import get_plugin_data, create_session
@@ -39,6 +39,9 @@ class UserInventory(data.Model):
     
 class UserSkin(data.Model):
     __tablename__ = "madoka_user_skins"
+    __table_args__ = (
+        UniqueConstraint("user_id", "skin_key", name="uq_madoka_user_skin"),
+    )
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     user_id: Mapped[str] = mapped_column(String, index=True)
     skin_key: Mapped[str] = mapped_column(String(32), index=True)

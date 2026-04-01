@@ -1,4 +1,5 @@
-from sqlalchemy import select
+from sqlalchemy import select, update
+from sqlalchemy.exc import IntegrityError
 from nonebot_plugin_datastore import create_session
 from .models import UserStats, UserInventory, ShopItem, UserSkin
 from ..registry import SKIN_MAP, DEFAULT_SKIN, SKIN_PRICE_MAP
@@ -146,22 +147,45 @@ class UserAccount:
 
         skin_cost = SKIN_PRICE_MAP.get(skin_key, 0)
         async with create_session() as session:
-            user = await session.get(UserStats, uid)
+            stmt = (
+                select(UserStats)
+                .where(UserStats.user_id == uid)
+                .with_for_update()
+            )
+            user = (await session.execute(stmt)).scalar_one_or_none()
             if not user:
                 return False, "请先签到后再购买皮肤"
 
-            stmt = select(UserSkin).where(
+            owned_stmt = select(UserSkin).where(
                 UserSkin.user_id == uid,
                 UserSkin.skin_key == skin_key
             )
-            owned = (await session.execute(stmt)).scalar_one_or_none()
+            owned = (await session.execute(owned_stmt)).scalar_one_or_none()
             if owned:
                 return False, "你已经拥有这个皮肤"
 
             if user.points < skin_cost:
                 return False, f"积分不足，购买 {skin_key} 需要 {skin_cost} 积分，你当前有 {user.points} 积分"
 
-            user.points -= skin_cost
+            points_stmt = (
+                update(UserStats)
+                .where(
+                    UserStats.user_id == uid,
+                    UserStats.points >= skin_cost
+                )
+                .values(points=UserStats.points - skin_cost)
+                .returning(UserStats.points)
+            )
+            remain_points = (await session.execute(points_stmt)).scalar_one_or_none()
+            if remain_points is None:
+                current_points = (await session.get(UserStats, uid)).points if user else 0
+                return False, f"积分不足，购买 {skin_key} 需要 {skin_cost} 积分，你当前有 {current_points} 积分"
+
             session.add(UserSkin(user_id=uid, skin_key=skin_key))
-            await session.commit()
-            return True, f"购买成功：{skin_key}，消耗 {skin_cost} 积分，剩余 {user.points} 积分"
+            try:
+                await session.commit()
+            except IntegrityError:
+                await session.rollback()
+                return False, "你已经拥有这个皮肤"
+
+            return True, f"购买成功：{skin_key}，消耗 {skin_cost} 积分，剩余 {remain_points} 积分"
