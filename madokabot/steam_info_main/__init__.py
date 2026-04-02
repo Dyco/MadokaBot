@@ -529,10 +529,13 @@ async def update_steam_info():
 
 @scheduler.scheduled_job("interval", minutes=config.steam_request_interval / 60)
 async def _():
-    old = await update_steam_info()
-    for pid, old_players in old.items():
-        new_players = steam_info_data.get_players(bind_data.get_all(pid))
-        await broadcast_steam_info(pid, old_players, new_players)
+    try:
+        old = await update_steam_info()
+        for pid, old_players in old.items():
+            new_players = steam_info_data.get_players(bind_data.get_all(pid))
+            await broadcast_steam_info(pid, old_players, new_players)
+    except Exception as e:
+        logger.error(f"Steam 自动播报任务执行失败: {e}")
 
 
 async def broadcast_steam_info(
@@ -543,7 +546,6 @@ async def broadcast_steam_info(
     if disable_parent_data.is_disabled(parent_id):
         return None
 
-    bot = nonebot.get_bot()
     play_data = steam_info_data.compare(old_players, new_players)
     msg = []
 
@@ -613,7 +615,17 @@ async def broadcast_steam_info(
         logger.error(f"未知的播报类型: {config.steam_broadcast_type}")
         return None
 
-    await uni_msg.send(
-        Target(parent_id, parent_id, True, False, "", bot.adapter.get_name()),
-        bot,
-    )
+    bots = list(nonebot.get_bots().values())
+    if not bots:
+        logger.warning("Steam 自动播报跳过：当前没有可用的 Bot 连接")
+        return None
+
+    bot = bots[0]
+    try:
+        await uni_msg.send(
+            Target(parent_id, parent_id, True, False, "", bot.adapter.get_name()),
+            bot,
+        )
+    except Exception as e:
+        logger.error(f"Steam 自动播报发送失败: parent_id={parent_id}, error={e}")
+        return None
