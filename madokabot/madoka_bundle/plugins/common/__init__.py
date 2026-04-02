@@ -2,7 +2,7 @@ from nonebot import on_command
 from nonebot.adapters.onebot.v11 import MessageEvent, MessageSegment
 from nonebot.plugin import PluginMetadata
 from nonebot.params import CommandArg
-from .utils import SET_COMMANDS
+
 
 from nonebot_plugin_alconna import (
     Alconna, 
@@ -39,12 +39,14 @@ query_cmd_alc = Alconna(
     Subcommand("data", alias=["资料"]),
 )
 
-set_cmd = on_alconna(set_cmd_alc, priority=10, block=True)
-query_cmd = on_alconna(query_cmd_alc, priority=10, block=True)
 shop_cmd_alc = Alconna(
     "shop",
     Subcommand("buy", Args["skin_key", str], alias=["购买"]),
 )
+
+set_cmd = on_alconna(set_cmd_alc, priority=10, block=True)
+query_cmd = on_alconna(query_cmd_alc, priority=10, block=True)
+
 shop_cmd = on_alconna(shop_cmd_alc, priority=10, block=True)
 
 # ================= 设置类处理器 =================

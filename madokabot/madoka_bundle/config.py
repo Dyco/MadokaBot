@@ -1,10 +1,15 @@
 from pathlib import Path
-from pydantic import BaseModel
+
 from nonebot import get_plugin_config
+from pydantic import BaseModel
+
 from .constants import ResType, SubFolder
 
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+
+
 class MainConfig(BaseModel):
-    assets_path: Path = Path.cwd() / "assets" #默认资源目录
+    assets_path: Path = PROJECT_ROOT / "assets"
     skincost: int = 50
 
 
@@ -13,11 +18,11 @@ class AssetManager:
         self.root = root
 
     def get_dir(self, res_type: ResType, plugin: SubFolder) -> Path:
-        """定位文件夹：assets/{type}/{plugin_name}"""
+        """Locate assets/{type}/{plugin_name} and ensure it exists."""
         path = self.root / res_type.value / plugin.value
         path.mkdir(parents=True, exist_ok=True)
         return path
 
-# 实例化管理器
+
 config = get_plugin_config(MainConfig)
 assets = AssetManager(config.assets_path)

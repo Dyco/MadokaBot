@@ -65,4 +65,4 @@ async def _(question: Match[str]):
         await ask_matcher.finish(f"{answer}\n\n📊 统计：{usage_text} | 耗时 {elapsed:.2f}s")
     except Exception as e:
         logger.exception(f"Gemini 问答失败: {e}")
-        await ask_matcher.finish(f"问答失败：{e}")
+        await ask_matcher.finish(f"问答失败：请稍后再试或联系管理员。")
