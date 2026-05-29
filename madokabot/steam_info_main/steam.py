@@ -236,6 +236,7 @@ async def _fetch(
     if cache_file is not None and cache_file.exists():
         cached = cache_file.read_bytes()
         if _is_valid_image_bytes(cached):
+            logger.info(f"Steam image cache hit: {cache_file}")
             return cached
         logger.warning(f"Cached Steam image is invalid, removing: {cache_file}")
         cache_file.unlink(missing_ok=True)
@@ -247,6 +248,7 @@ async def _fetch(
             if cache_file is not None:
                 cache_file.parent.mkdir(parents=True, exist_ok=True)
                 cache_file.write_bytes(response.content)
+                logger.info(f"Steam image cached: {cache_file}")
             return response.content
         logger.warning(
             "Steam image fetch returned invalid image "
@@ -574,21 +576,27 @@ async def get_user_data(
 
     background_url = _extract_background_url(html, soup)
     if background_url:
+        logger.info(f"Steam profile background URL extracted: {background_url}")
         result["background"] = await _fetch(
             background_url,
             default_background,
             _cache_file(cache_path, "backgrounds", background_url),
             proxy,
         )
+    else:
+        logger.info("Steam profile background URL not found; using default background")
 
     avatar_url = _extract_avatar_url(html, soup)
     if avatar_url:
+        logger.info(f"Steam profile avatar URL extracted: {avatar_url}")
         result["avatar"] = await _fetch(
             avatar_url,
             default_avatar,
             _cache_file(cache_path, "avatars", avatar_url),
             proxy,
         )
+    else:
+        logger.info("Steam profile avatar URL not found; using default avatar")
 
     recent_games_node = _find_recent_games_node(soup)
     result["recent_2_week_play_time"] = (
