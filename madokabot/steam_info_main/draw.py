@@ -4,6 +4,7 @@ from pathlib import Path
 from typing import List, Dict, Tuple
 from colorsys import rgb_to_hsv, hsv_to_rgb
 from PIL import Image, ImageDraw, ImageFont, ImageFilter, ImageEnhance
+from nonebot.log import logger
 
 from .utils import hex_to_rgb
 from .models import DrawPlayerStatusData, Achievements
@@ -20,6 +21,34 @@ def set_font_paths(regular_path, light_path, bold_path):
     font_regular_path = str((base_dir / regular_path).resolve())
     font_light_path = str((base_dir / light_path).resolve())
     font_bold_path = str((base_dir / bold_path).resolve())
+
+
+def open_image_or_default(
+    image_source, default_path: Path, context: str
+) -> Image.Image:
+    """Open an image source, falling back to a bundled default asset.
+
+    Steam pages/CDNs can occasionally return HTML, rate-limit pages, or empty
+    payloads where an image is expected.  Keep the card renderable by replacing
+    only the bad asset with a local placeholder.
+    """
+    try:
+        if isinstance(image_source, Image.Image):
+            return image_source.copy()
+        if isinstance(image_source, bytes) and image_source:
+            image = Image.open(BytesIO(image_source))
+        elif isinstance(image_source, (str, Path)):
+            image = Image.open(image_source)
+        else:
+            raise ValueError("empty image source")
+        image.load()
+        return image
+    except Exception as exc:
+        logger.warning(f"{context} 图片无效，使用默认图: {exc}")
+        image = Image.open(default_path)
+        image.load()
+        return image
+
 
 personastate_colors = {
     0: (hex_to_rgb("969697"), hex_to_rgb("656565")),
@@ -628,7 +657,9 @@ def draw_game_info(
     # 画成就图标
     x = 860 - 48 * 6 - 10 * 6
     for achievement in achievements:
-        achievement_image = Image.open(BytesIO(achievement["image"])).resize((48, 48))
+        achievement_image = open_image_or_default(
+            achievement.get("image"), default_achievement_image_path, "成就图标"
+        ).resize((48, 48))
         achievement_bg.paste(achievement_image, (x, 8))
         x += 48 + 10
 
@@ -656,10 +687,10 @@ def draw_player_status(
     player_last_two_weeks_time: str,  # e.g. 10.2 小时
     player_games: List[DrawPlayerStatusData],
 ):
-    if isinstance(player_bg, bytes):
-        player_bg = Image.open(BytesIO(player_bg))
-    if isinstance(player_avatar, bytes):
-        player_avatar = Image.open(BytesIO(player_avatar))
+    player_bg = open_image_or_default(player_bg, default_background_path, "玩家背景")
+    player_avatar = open_image_or_default(
+        player_avatar, default_avatar_path, "玩家头像"
+    )
 
     bg = recolor_image(
         player_bg.crop(
@@ -747,17 +778,27 @@ def draw_player_status(
     )
     game_images: List[Image.Image] = []
     for idx, game in enumerate(player_games):
-        game_image = Image.open(BytesIO(game["game_header"]))
-        game_info = draw_game_info(
-            game_image,
-            game["game_name"],
-            game["game_time"],
-            game["last_play_time"],
-            game["achievements"],
-            game["completed_achievement_number"],
-            game["total_achievement_number"],
-            achievement_color,
+        game_image = open_image_or_default(
+            game.get("game_header"),
+            default_header_image_path,
+            f"游戏 {game.get('game_name', '未知游戏')} 头图",
         )
+        try:
+            game_info = draw_game_info(
+                game_image,
+                game.get("game_name", "未知游戏"),
+                game.get("game_time", "0 小时"),
+                game.get("last_play_time", "未知"),
+                game.get("achievements", []),
+                game.get("completed_achievement_number", 0),
+                game.get("total_achievement_number", 0),
+                achievement_color,
+            )
+        except Exception as exc:
+            logger.warning(
+                f"游戏 {game.get('game_name', '未知游戏')} 信息绘制失败，已跳过: {exc}"
+            )
+            continue
         game_images.append(game_info)
 
     # 画半透明黑色背景
