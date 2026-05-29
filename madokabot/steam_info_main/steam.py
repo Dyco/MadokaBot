@@ -1,6 +1,7 @@
 import hashlib
 import re
 from io import BytesIO
+from urllib.parse import urljoin
 
 import httpx
 from pathlib import Path
@@ -260,12 +261,25 @@ async def _fetch(
 # ----------------------------
 # 用户详情
 # ----------------------------
+def get_default_user_data(steam_id: Any) -> PlayerData:
+    return {
+        "steamid": str(steam_id),
+        "description": "No information given.",
+        "background": default_background_path.read_bytes(),
+        "avatar": default_avatar_path.read_bytes(),
+        "player_name": "Unknown",
+        "recent_2_week_play_time": None,
+        "game_data": [],
+    }
+
+
 async def get_user_data(
     steam_id: int, cache_path: Path, proxy: Optional[str] = None
 ) -> PlayerData:
     url = f"https://steamcommunity.com/profiles/{steam_id}?l=schinese"
-    default_background = default_background_path.read_bytes()
-    default_avatar = default_avatar_path.read_bytes()
+    result = get_default_user_data(steam_id)
+    default_background = result["background"]
+    default_avatar = result["avatar"]
     default_achievement_image = default_achievement_image_path.read_bytes()
     default_header_image = default_header_image_path.read_bytes()
 
@@ -299,7 +313,7 @@ async def get_user_data(
         response.raise_for_status()
         html = response.text
     except Exception as exc:
-        logger.error(f"获取用户详细数据失败: {exc}")
+        logger.error(f"获取用户详细数据失败，使用默认资料继续绘图: {exc}")
         return result
 
     soup = BeautifulSoup(html, "html.parser")
