@@ -1,7 +1,7 @@
 import numpy as np
 from io import BytesIO
 from pathlib import Path
-from typing import List, Dict, Tuple
+from typing import List, Dict, Tuple, Optional
 from colorsys import rgb_to_hsv, hsv_to_rgb
 from PIL import Image, ImageDraw, ImageFont, ImageFilter, ImageEnhance
 from nonebot.log import logger
@@ -703,6 +703,7 @@ def draw_player_status(
     player_description: str,
     player_last_two_weeks_time: str,  # e.g. 10.2 小时
     player_games: List[DrawPlayerStatusData],
+    player_avatar_frame=None,
 ):
     player_bg = open_image_or_default(player_bg, default_background_path, "玩家背景")
     default_bg = Image.open(default_background_path)
@@ -735,6 +736,11 @@ def draw_player_status(
 
     # 画头像外框
     draw.rectangle((40, 40, 240, 240), outline=(83, 164, 196), width=3)
+
+    avatar_frame = open_optional_image(player_avatar_frame, "玩家头像框")
+    if avatar_frame:
+        avatar_frame = avatar_frame.resize((220, 220), Image.BICUBIC)
+        bg.paste(avatar_frame, (30, 30), avatar_frame.convert("RGBA"))
 
     # 画昵称
     draw.text(

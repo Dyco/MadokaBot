@@ -504,6 +504,7 @@ async def handle_info(
             player_data.get("description", ""),
             player_data.get("recent_2_week_play_time", "0"),
             draw_data,
+            player_data.get("avatar_frame"),
         )
     except Exception as e:
         logger.exception(f"绘制 Steam 详情图失败，改用默认资料重试: {e}")

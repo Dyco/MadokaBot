@@ -1,4 +1,4 @@
-from typing import TypedDict, List
+from typing import Optional, TypedDict, List
 
 
 class Player(TypedDict):
@@ -57,6 +57,7 @@ class PlayerData(TypedDict):
     player_name: str
     background: bytes
     avatar: bytes
+    avatar_frame: Optional[bytes]
     description: str
     recent_2_week_play_time: str
     game_data: List[GameData]
