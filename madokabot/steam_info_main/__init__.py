@@ -46,6 +46,7 @@ from .steam import (
     get_steam_id,
     get_steam_users_info,
     get_steam_users_info_cached,
+    get_default_user_data,
     get_user_data,
 )
 from .utils import (
@@ -471,40 +472,71 @@ async def handle_info(
     try:
         player_data = await get_user_data(steam_id, avatar_path, config.proxy)
     except Exception as e:
-        logger.error(f"获取玩家详情失败: {e}")
-        await steam_cmd.finish("获取 Steam 数据失败，可能是 API 超时或 ID 无效")
+        logger.exception(f"获取玩家详情失败，使用默认资料继续绘图: {e}")
+        player_data = get_default_user_data(steam_id)
 
     steam_friend_code = str(int(steam_id) - STEAM_ID_OFFSET)
-    draw_data = [
-        {
-            "game_header": game.get("game_image"),
-            "game_name": game.get("game_name", "未知游戏"),
-            "game_time": f"{game.get('play_time', 0)} 小时",
-            "last_play_time": game.get("last_played", "未知"),
-            "achievements": game.get("achievements", []),
-            "completed_achievement_number": game.get(
-                "completed_achievement_number", 0
-            ),
-            "total_achievement_number": game.get("total_achievement_number", 0),
-        }
-        for game in player_data.get("game_data", [])
-    ]
+    draw_data = []
+    for game in player_data.get("game_data", []):
+        try:
+            draw_data.append(
+                {
+                    "game_header": game.get("game_image"),
+                    "game_name": game.get("game_name", "未知游戏"),
+                    "game_time": f"{game.get('play_time', 0)} 小时",
+                    "last_play_time": game.get("last_played", "未知"),
+                    "achievements": game.get("achievements", []),
+                    "completed_achievement_number": game.get(
+                        "completed_achievement_number", 0
+                    ),
+                    "total_achievement_number": game.get("total_achievement_number", 0),
+                }
+            )
+        except Exception as e:
+            logger.warning(f"构建 Steam 游戏绘图数据失败，已跳过该条目: {e}")
 
     try:
         image = draw_player_status(
-            player_data["background"],
-            player_data["avatar"],
-            player_data["player_name"],
+            player_data.get("background"),
+            player_data.get("avatar"),
+            player_data.get("player_name", "Unknown"),
             steam_friend_code,
             player_data.get("description", ""),
             player_data.get("recent_2_week_play_time", "0"),
             draw_data,
         )
     except Exception as e:
-        logger.error(f"绘图失败: {e}")
-        await steam_cmd.finish("绘图失败，部分数据可能存在异常")
+        logger.exception(f"绘制 Steam 详情图失败，改用默认资料重试: {e}")
+        fallback_data = get_default_user_data(steam_id)
+        try:
+            image = draw_player_status(
+                fallback_data["background"],
+                fallback_data["avatar"],
+                player_data.get("player_name", fallback_data["player_name"]),
+                steam_friend_code,
+                player_data.get("description", fallback_data["description"]),
+                None,
+                [],
+            )
+        except Exception as fallback_error:
+            logger.exception(f"默认 Steam 详情图绘制仍然失败: {fallback_error}")
+            await steam_cmd.finish(
+                f"Steam 信息读取完成，但图片渲染失败。\n"
+                f"玩家：{player_data.get('player_name', 'Unknown')}\n"
+                f"好友代码：{steam_friend_code}"
+            )
 
-    await steam_cmd.finish(UniMessage(Image(raw=image_to_bytes(image))))
+    try:
+        image_bytes = image_to_bytes(image)
+    except Exception as image_error:
+        logger.exception(f"Steam 详情图转为图片消息失败: {image_error}")
+        await steam_cmd.finish(
+            f"Steam 信息读取完成，但图片编码失败。\n"
+            f"玩家：{player_data.get('player_name', 'Unknown')}\n"
+            f"好友代码：{steam_friend_code}"
+        )
+
+    await steam_cmd.finish(UniMessage(Image(raw=image_bytes)))
 
 
 async def update_steam_info():
@@ -606,7 +638,9 @@ async def broadcast_steam_info(
             image = (
                 vertically_concatenate_images(images) if len(images) > 1 else images[0]
             )
-            uni_msg = UniMessage([Text("\n".join(msg)), Image(raw=image_to_bytes(image))])
+            uni_msg = UniMessage(
+                [Text("\n".join(msg)), Image(raw=image_to_bytes(image))]
+            )
         else:
             uni_msg = UniMessage([Text("\n".join(msg))])
     elif config.steam_broadcast_type == "none":
