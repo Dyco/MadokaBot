@@ -472,7 +472,7 @@ async def handle_info(
     try:
         player_data = await get_user_data(steam_id, avatar_path, config.proxy)
     except Exception as e:
-        logger.exception(f"Steam 详情读取异常，使用默认资料继续绘图: {e}")
+        logger.exception(f"获取玩家详情失败，使用默认资料继续绘图: {e}")
         player_data = get_default_user_data(steam_id)
 
     steam_friend_code = str(int(steam_id) - STEAM_ID_OFFSET)

@@ -216,206 +216,6 @@ async def get_steam_users_info(
 # ----------------------------
 
 
-def _clean_text(text: str) -> str:
-    return re.sub(r"\s+", " ", text or "").strip()
-
-
-def _node_text(node) -> str:
-    return _clean_text(node.get_text("\n", strip=True) if node else "")
-
-
-def _image_attr(node) -> Optional[str]:
-    if not node:
-        return None
-    for attr in ("src", "data-src", "data-background-image", "href"):
-        value = node.get(attr)
-        if value:
-            return value
-    srcset = node.get("srcset")
-    if srcset:
-        return srcset.split(",")[-1].strip().split(" ")[0]
-    return None
-
-
-def _absolute_steam_url(url: Optional[str]) -> Optional[str]:
-    if not url:
-        return None
-    url = url.strip().strip("\"'")
-    if not url:
-        return None
-    if url.startswith("//"):
-        return f"https:{url}"
-    return urljoin("https://steamcommunity.com/", url)
-
-
-def _cache_file(cache_path: Path, category: str, url: str) -> Path:
-    suffix = Path(url.split("?", 1)[0]).suffix or ".img"
-    digest = hashlib.sha256(url.encode("utf-8")).hexdigest()[:24]
-    return cache_path / "profile_assets" / category / f"{digest}{suffix}"
-
-
-def _call_optional_parser(name: str, *args):
-    parser = globals().get(name)
-    if not callable(parser):
-        logger.warning(f"Steam 解析辅助函数缺失，已跳过: {name}")
-        return None
-    return parser(*args)
-
-
-def _extract_background_url(html: str, soup: BeautifulSoup) -> Optional[str]:
-    background_img = soup.select_one(
-        ".profile_background_image_content img, "
-        ".profile_background_holder_content img, "
-        ".profile_animated_background img"
-    )
-    url = _absolute_steam_url(_image_attr(background_img))
-    if url:
-        return url
-
-    for pattern in (
-        r'<div[^>]+class=["\'][^"\']*profile_background_image_content[^"\']*["\'][^>]*>.*?<img[^>]+src=["\']([^"\']+)["\']',
-        r'profile_background_image_content[^<]+<img[^>]+src=["\']([^"\']+)["\']',
-        r'background-image\s*:\s*url\(["\']?([^"\')]+)["\']?\)',
-    ):
-        match = re.search(pattern, html, re.IGNORECASE | re.DOTALL)
-        if match:
-            return _absolute_steam_url(match.group(1))
-    return None
-
-
-def _extract_avatar_url(html: str, soup: BeautifulSoup) -> Optional[str]:
-    avatar_candidates = soup.select(
-        ".playerAvatarAutoSizeInner img, .playerAvatar img, .profile_header .playerAvatar img"
-    )
-    for image in avatar_candidates:
-        url = _absolute_steam_url(_image_attr(image))
-        if url and ("avatars" in url or "avatar" in url):
-            return url
-
-    match = re.search(r'https?://[^"\']*/avatars/[^"\']+_full\.(?:jpg|png|gif)', html)
-    if match:
-        return match.group(0)
-    return None
-
-
-def _extract_recent_2_week_play_time(recent_node) -> Optional[str]:
-    if not recent_node:
-        return None
-    text = _node_text(recent_node)
-    match = re.search(r"([\d,.]+\s*小时\s*[（(]\s*过去\s*2\s*周\s*[）)])", text)
-    if match:
-        return _clean_text(match.group(1))
-    match = re.search(r"([\d,.]+\s*hrs?\s+past\s+2\s+weeks)", text, re.IGNORECASE)
-    if match:
-        return _clean_text(match.group(1))
-    return None
-
-
-async def _parse_recent_game(
-    game,
-    default_header_image: bytes,
-    default_achievement_image: bytes,
-    cache_path: Path,
-    proxy: Optional[str],
-) -> Optional[dict]:
-    name_node = game.select_one(".game_name a, .game_name")
-    game_name = _node_text(name_node)
-    if not game_name:
-        return None
-
-    header_url = _absolute_steam_url(
-        _image_attr(game.select_one(".game_info_cap img, img[src*='capsule_184x69']"))
-    )
-    game_image = default_header_image
-    if header_url:
-        game_image = await _fetch(
-            header_url,
-            default_header_image,
-            _cache_file(cache_path, "game_headers", header_url),
-            proxy,
-        )
-
-    details_text = _node_text(
-        game.select_one(".game_info_details_block, .game_info_stats") or game
-    )
-    play_time = "0"
-    play_time_match = re.search(
-        r"(?:总时数|Total\s+Playtime|Total\s+hours)\s*([\d,.]+)\s*(?:小时|hrs?|hours?)?",
-        details_text,
-        re.IGNORECASE,
-    )
-    if play_time_match:
-        play_time = play_time_match.group(1)
-
-    last_played = "未知"
-    last_played_match = re.search(
-        r"(?:最后运行日期|Last\s+Played)\s*[：:]\s*(.+)$",
-        details_text,
-        re.IGNORECASE,
-    )
-    if last_played_match:
-        last_played = _clean_text(last_played_match.group(1))
-
-    completed_achievement_number = 0
-    total_achievement_number = 0
-    achievement_match = re.search(r"(\d+)\s*/\s*(\d+)", _node_text(game))
-    if achievement_match:
-        completed_achievement_number = int(achievement_match.group(1))
-        total_achievement_number = int(achievement_match.group(2))
-
-    achievements = []
-    seen_achievement_urls = set()
-    achievement_images = game.select(
-        ".recent_game_achievements img, "
-        ".game_info_achievement img, "
-        ".achievement_icon img, "
-        "a[href*='achievements'] img"
-    )
-    for image in achievement_images[:6]:
-        image_url = _absolute_steam_url(_image_attr(image))
-        if (
-            not image_url
-            or image_url == header_url
-            or image_url in seen_achievement_urls
-        ):
-            continue
-        seen_achievement_urls.add(image_url)
-        achievements.append(
-            {
-                "name": image.get("alt") or image.get("title") or "",
-                "image": await _fetch(
-                    image_url,
-                    default_achievement_image,
-                    _cache_file(cache_path, "achievement_icons", image_url),
-                    proxy,
-                ),
-            }
-        )
-
-    return {
-        "game_name": game_name,
-        "play_time": play_time,
-        "last_played": last_played,
-        "game_image": game_image,
-        "achievements": achievements,
-        "completed_achievement_number": completed_achievement_number,
-        "total_achievement_number": total_achievement_number,
-    }
-
-
-def _find_recent_games_node(soup: BeautifulSoup):
-    recent_node = soup.select_one(".recent_games")
-    if recent_node:
-        return recent_node
-    header = soup.find(string=re.compile(r"最新动态|Recent Activity", re.IGNORECASE))
-    if not header:
-        return None
-    for parent in header.parents:
-        if parent.select(".recent_game"):
-            return parent
-    return None
-
-
 def _is_valid_image_bytes(data: bytes) -> bool:
     if not data:
         return False
@@ -483,6 +283,16 @@ async def get_user_data(
     default_achievement_image = default_achievement_image_path.read_bytes()
     default_header_image = default_header_image_path.read_bytes()
 
+    result = {
+        "steamid": str(steam_id),
+        "description": "No information given.",
+        "background": default_background,
+        "avatar": default_avatar,
+        "player_name": "Unknown",
+        "recent_2_week_play_time": None,
+        "game_data": [],
+    }
+
     local_time = datetime.now(timezone.utc).astimezone()
     utc_offset_minutes = int(local_time.utcoffset().total_seconds())
 
@@ -506,93 +316,55 @@ async def get_user_data(
         logger.error(f"获取用户详细数据失败，使用默认资料继续绘图: {exc}")
         return result
 
-    try:
-        soup = BeautifulSoup(html, "html.parser")
-    except Exception as exc:
-        logger.error(f"解析 Steam 主页 HTML 失败，使用默认资料继续绘图: {exc}")
-        return result
+    soup = BeautifulSoup(html, "html.parser")
 
-    try:
-        if soup.title and soup.title.string:
-            title = soup.title.string.strip()
-            result["player_name"] = (
-                re.sub(r"^Steam\s*(?:社区|Community)\s*::\s*", "", title).strip()
-                or result["player_name"]
-            )
-    except Exception as exc:
-        logger.warning(f"解析 Steam 玩家名称失败: {exc}")
-
-    try:
-        description_node = soup.select_one(".profile_summary")
-        if description_node:
-            for br in description_node.find_all("br"):
-                br.replace_with("\n")
-            desc = description_node.get_text("\n", strip=True)
-            desc = re.sub(r"ː.*?ː", "", desc)
-            result["description"] = desc.strip()
-    except Exception as exc:
-        logger.warning(f"解析 Steam 玩家简介失败: {exc}")
-
-    try:
-        background_url = _call_optional_parser("_extract_background_url", html, soup)
-        if background_url:
-            result["background"] = await _fetch(
-                background_url,
-                default_background,
-                _cache_file(cache_path, "backgrounds", background_url),
-                proxy,
-            )
-    except Exception as exc:
-        logger.warning(f"解析 Steam 背景图失败，使用默认背景继续绘图: {exc}")
-
-    try:
-        avatar_url = _call_optional_parser("_extract_avatar_url", html, soup)
-        if avatar_url:
-            result["avatar"] = await _fetch(
-                avatar_url,
-                default_avatar,
-                _cache_file(cache_path, "avatars", avatar_url),
-                proxy,
-            )
-    except Exception as exc:
-        logger.warning(f"解析 Steam 头像失败，使用默认头像继续绘图: {exc}")
-
-    try:
-        recent_games_node = _call_optional_parser("_find_recent_games_node", soup)
-    except Exception as exc:
-        logger.warning(f"定位 Steam 最近游戏区域失败: {exc}")
-        recent_games_node = None
-
-    try:
-        result["recent_2_week_play_time"] = (
-            _call_optional_parser("_extract_recent_2_week_play_time", recent_games_node)
-            or result["recent_2_week_play_time"]
+    if soup.title and soup.title.string:
+        title = soup.title.string.strip()
+        result["player_name"] = (
+            re.sub(r"^Steam\s*(?:社区|Community)\s*::\s*", "", title).strip()
+            or result["player_name"]
         )
-    except Exception as exc:
-        logger.warning(f"解析 Steam 最近两周游戏时间失败: {exc}")
+
+    description_node = soup.select_one(".profile_summary")
+    if description_node:
+        for br in description_node.find_all("br"):
+            br.replace_with("\n")
+        desc = description_node.get_text("\n", strip=True)
+        desc = re.sub(r"ː.*?ː", "", desc)
+        result["description"] = desc.strip()
+
+    background_url = _extract_background_url(html, soup)
+    if background_url:
+        result["background"] = await _fetch(
+            background_url,
+            default_background,
+            _cache_file(cache_path, "backgrounds", background_url),
+            proxy,
+        )
+
+    avatar_url = _extract_avatar_url(html, soup)
+    if avatar_url:
+        result["avatar"] = await _fetch(
+            avatar_url,
+            default_avatar,
+            _cache_file(cache_path, "avatars", avatar_url),
+            proxy,
+        )
+
+    recent_games_node = _find_recent_games_node(soup)
+    result["recent_2_week_play_time"] = (
+        _extract_recent_2_week_play_time(recent_games_node)
+        or result["recent_2_week_play_time"]
+    )
 
     game_data = []
     if recent_games_node:
-        parse_recent_game = globals().get("_parse_recent_game")
-        if not callable(parse_recent_game):
-            logger.warning(
-                "Steam 解析辅助函数缺失，已跳过最近游戏解析: _parse_recent_game"
+        for game in recent_games_node.select(".recent_game"):
+            game_info = await _parse_recent_game(
+                game, default_header_image, default_achievement_image, cache_path, proxy
             )
-        else:
-            for game in recent_games_node.select(".recent_game"):
-                try:
-                    game_info = await parse_recent_game(
-                        game,
-                        default_header_image,
-                        default_achievement_image,
-                        cache_path,
-                        proxy,
-                    )
-                except Exception as exc:
-                    logger.warning(f"解析 Steam 最近游戏条目失败，已跳过该条目: {exc}")
-                    continue
-                if game_info:
-                    game_data.append(game_info)
+            if game_info:
+                game_data.append(game_info)
 
     result["game_data"] = game_data
     return result
