@@ -50,6 +50,23 @@ def open_image_or_default(
         return image
 
 
+def fit_image_cover(image: Image.Image, target_size: Tuple[int, int]) -> Image.Image:
+    """Resize and center-crop an image so rendered cards keep a stable size."""
+    target_width, target_height = target_size
+    if image.size == target_size:
+        return image.copy()
+
+    scale = max(target_width / image.width, target_height / image.height)
+    resized_size = (
+        max(target_width, int(round(image.width * scale))),
+        max(target_height, int(round(image.height * scale))),
+    )
+    resized = image.resize(resized_size, Image.BICUBIC)
+    left = (resized.width - target_width) // 2
+    top = (resized.height - target_height) // 2
+    return resized.crop((left, top, left + target_width, top + target_height))
+
+
 personastate_colors = {
     0: (hex_to_rgb("969697"), hex_to_rgb("656565")),
     1: (hex_to_rgb("6dcef5"), hex_to_rgb("4c91ac")),
@@ -688,6 +705,9 @@ def draw_player_status(
     player_games: List[DrawPlayerStatusData],
 ):
     player_bg = open_image_or_default(player_bg, default_background_path, "玩家背景")
+    default_bg = Image.open(default_background_path)
+    default_bg.load()
+    player_bg = fit_image_cover(player_bg, default_bg.size)
     player_avatar = open_image_or_default(
         player_avatar, default_avatar_path, "玩家头像"
     )
