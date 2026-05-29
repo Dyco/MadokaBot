@@ -292,24 +292,6 @@ def _style_image_url(style: Optional[str]) -> Optional[str]:
     return _normalize_steam_url(match.group(2))
 
 
-def _looks_like_image_url(url: Optional[str]) -> bool:
-    if not url:
-        return False
-    return bool(re.search(r"\.(?:jpg|jpeg|png|gif|webp)(?:[?#].*)?$", url, re.I))
-
-
-def _looks_like_steam_avatar_url(url: Optional[str]) -> bool:
-    if not url:
-        return False
-    return "/avatars/" in url and _looks_like_image_url(url)
-
-
-def _prefer_full_avatar_url(url: str) -> str:
-    if "_full." in url:
-        return url
-    return re.sub(r"(?:_medium)?(\.[a-zA-Z0-9]+)([?#].*)?$", r"_full\1\2", url)
-
-
 def _cache_file(cache_path: Path, category: str, url: str) -> Path:
     digest = hashlib.sha256(url.encode("utf-8")).hexdigest()
     ext_match = re.search(r"\.([a-zA-Z0-9]{2,5})(?:[?#].*)?$", url)
@@ -323,40 +305,31 @@ def _extract_background_url(html: str, soup: BeautifulSoup) -> Optional[str]:
         ".profile_background_holder_content",
         ".profile_animated_background",
         ".profile_background",
-        ".profile_page",
-        ".no_header",
         "[class*='profile_background']",
-        "[style*='background']",
-        "video[poster]",
     )
     for selector in selectors:
         for node in soup.select(selector):
             url = _style_image_url(node.get("style"))
-            if _looks_like_image_url(url):
+            if url:
                 return url
-            if node.name in ("img", "video"):
-                url = _normalize_steam_url(
-                    _url_from_attr(node, "src", "data-src", "poster")
-                )
-                if _looks_like_image_url(url):
+            if node.name == "img":
+                url = _normalize_steam_url(_url_from_attr(node, "src", "data-src"))
+                if url:
                     return url
-            image = node.select_one("img[src], img[data-src], video[poster]")
+            image = node.select_one("img[src], img[data-src]")
             if image:
-                url = _normalize_steam_url(
-                    _url_from_attr(image, "src", "data-src", "poster")
-                )
-                if _looks_like_image_url(url):
+                url = _normalize_steam_url(_url_from_attr(image, "src", "data-src"))
+                if url:
                     return url
 
     # Fallback for pages where Steam only leaves the image URL in inline CSS.
-    for match in re.finditer(r"url\((['\"]?)(.*?)\1\)", html, re.I | re.S):
-        url = _normalize_steam_url(match.group(2))
-        if _looks_like_image_url(url) and (
-            "profile" in url.lower()
-            or "background" in url.lower()
-            or "community.akamai.steamstatic.com" in url.lower()
-        ):
-            return url
+    match = re.search(
+        r"profile_(?:animated_)?background[^<>{}]*?url\((['\"]?)(.*?)\1\)",
+        html,
+        re.I | re.S,
+    )
+    if match:
+        return _normalize_steam_url(match.group(2))
     return None
 
 
@@ -365,24 +338,18 @@ def _extract_avatar_url(html: str, soup: BeautifulSoup) -> Optional[str]:
         ".playerAvatarAutoSizeInner img",
         ".profile_header .playerAvatar img",
         ".profile_header .playerAvatarAutoSizeInner img",
-        "img[src*='/avatars/']",
+        "img.playerAvatarAutoSizeInner",
+        ".profile_avatar_frame img",
     )
-    candidates = []
     for selector in selectors:
         for image in soup.select(selector):
             url = _normalize_steam_url(_url_from_attr(image, "src", "data-src"))
-            if _looks_like_steam_avatar_url(url):
-                candidates.append(_prefer_full_avatar_url(url))
+            if url and "avatar_frame" not in url:
+                return url
 
-    if candidates:
-        candidates.sort(key=lambda value: "_full." not in value)
-        return candidates[0]
-
-    match = re.search(
-        r"https?://[^'\"]+/avatars/[^'\"]+?\.(?:jpg|jpeg|png)", html, re.I
-    )
+    match = re.search(r"https?://[^'\"]+/avatars/[^'\"]+_full\.jpg", html, re.I)
     if match:
-        return _prefer_full_avatar_url(match.group(0))
+        return match.group(0)
     return None
 
 
@@ -493,7 +460,7 @@ async def _parse_recent_game(
 
     completed_achievement_number = 0
     total_achievement_number = 0
-    achievement_match = re.search(r"(\d+)\s*(?:/|of|共)\s*(\d+)", text, re.I)
+    achievement_match = re.search(r"(\d+)\s*/\s*(\d+)", text)
     if achievement_match:
         completed_achievement_number = int(achievement_match.group(1))
         total_achievement_number = int(achievement_match.group(2))
@@ -501,9 +468,7 @@ async def _parse_recent_game(
     achievements = []
     seen_urls = set()
     for image in game.select(
-        ".achievement img, .achieveImgHolder img, .game_info_achievement img, "
-        ".game_info_achievements img, a[href*='achievements'] img, "
-        "a[href*='/stats/'] img, img[src*='achievements']"
+        ".achievement img, .achieveImgHolder img, img[src*='achievements']"
     ):
         url = _normalize_steam_url(_url_from_attr(image, "src", "data-src"))
         if not url or url in seen_urls:
@@ -522,9 +487,6 @@ async def _parse_recent_game(
         )
         if len(achievements) >= 6:
             break
-
-    if total_achievement_number and not achievements:
-        logger.info(f"Steam achievement icons not found for recent game: {game_name}")
 
     return {
         "game_name": game_name,
