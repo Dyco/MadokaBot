@@ -1,7 +1,10 @@
 import re
+from io import BytesIO
+
 import httpx
 from pathlib import Path
 from bs4 import BeautifulSoup
+from PIL import Image as PILImage
 from nonebot.log import logger
 from typing import List, Optional, Dict, Tuple, Any
 from datetime import datetime, timezone
@@ -12,7 +15,6 @@ import asyncio
 from .models import PlayerSummaries, PlayerData
 from .constants import *
 
-
 STEAM_ID_OFFSET = 76561197960265728
 
 # ----------------------------
@@ -22,6 +24,7 @@ _http_client: Optional[httpx.AsyncClient] = None
 _http_client_lock = asyncio.Lock()
 _http_client_created_at: float = 0
 HTTP_CLIENT_MAX_AGE = 60 * 30
+
 
 async def get_http_client(proxy: Optional[str]) -> httpx.AsyncClient:
     global _http_client, _http_client_created_at
@@ -44,19 +47,20 @@ async def get_http_client(proxy: Optional[str]) -> httpx.AsyncClient:
 
             _http_client = httpx.AsyncClient(
                 proxy=proxy,
-                timeout=httpx.Timeout(connect=10.0, read=15.0, write=10.0,pool=10.0),
+                timeout=httpx.Timeout(connect=10.0, read=15.0, write=10.0, pool=10.0),
                 headers={"User-Agent": "MadokaBot/SteamInfo"},
                 follow_redirects=True,
                 limits=httpx.Limits(
                     max_connections=10,
                     keepalive_expiry=30.0,
-                    max_keepalive_connections=0 
-                )
+                    max_keepalive_connections=0,
+                ),
             )
             _http_client_created_at = now
             logger.info("Steam HTTP client recreated")
 
         return _http_client
+
 
 # ----------------------------
 # CACHE（修复线程不安全）
@@ -131,6 +135,7 @@ def get_steam_id(steam_id_or_steam_friends_code: str) -> Optional[str]:
 # ----------------------------
 STEAM_BATCH_SIZE = 25
 
+
 async def get_steam_users_info(
     steam_ids: List[str],
     api_key: str,
@@ -153,7 +158,7 @@ async def get_steam_users_info(
     ) as client:
 
         for i in range(0, len(steam_ids), STEAM_BATCH_SIZE):
-            batch = steam_ids[i:i + STEAM_BATCH_SIZE]
+            batch = steam_ids[i : i + STEAM_BATCH_SIZE]
             params = {
                 "key": api_key,
                 "steamids": ",".join(batch),
@@ -166,19 +171,27 @@ async def get_steam_users_info(
                     raw = resp.json()
                     players = raw.get("response", {}).get("players", [])
                     for p in players:
-                        all_players.append({
-                            "steamid": p.get("steamid"),
-                            "personaname": p.get("personaname"),
-                            "personastate": p.get("personastate"),
-                            "gameextrainfo": p.get("gameextrainfo"),
-                            "avatar": p.get("avatar"),
-                            "avatarfull": p.get("avatarfull"),
-                            "lastlogoff": p.get("lastlogoff"),
-                            "gameid": p.get("gameid"),
-                            "communityvisibilitystate": p.get("communityvisibilitystate"),
-                        })
+                        all_players.append(
+                            {
+                                "steamid": p.get("steamid"),
+                                "personaname": p.get("personaname"),
+                                "personastate": p.get("personastate"),
+                                "gameextrainfo": p.get("gameextrainfo"),
+                                "avatar": p.get("avatar"),
+                                "avatarfull": p.get("avatarfull"),
+                                "lastlogoff": p.get("lastlogoff"),
+                                "gameid": p.get("gameid"),
+                                "communityvisibilitystate": p.get(
+                                    "communityvisibilitystate"
+                                ),
+                            }
+                        )
                     return True
-                except (httpx.ConnectError, httpx.ReadTimeout, httpx.RemoteProtocolError) as e:
+                except (
+                    httpx.ConnectError,
+                    httpx.ReadTimeout,
+                    httpx.RemoteProtocolError,
+                ) as e:
                     logger.warning(f"Steam API 请求失败: {e}")
                     return False
                 except Exception as e:
@@ -199,6 +212,19 @@ async def get_steam_users_info(
 # ----------------------------
 # 通用 fetch
 # ----------------------------
+
+
+def _is_valid_image_bytes(data: bytes) -> bool:
+    if not data:
+        return False
+    try:
+        image = PILImage.open(BytesIO(data))
+        image.verify()
+        return True
+    except Exception:
+        return False
+
+
 async def _fetch(
     url: str,
     default: bytes,
@@ -206,16 +232,24 @@ async def _fetch(
     proxy: Optional[str] = None,
 ) -> bytes:
     if cache_file is not None and cache_file.exists():
-        return cache_file.read_bytes()
+        cached = cache_file.read_bytes()
+        if _is_valid_image_bytes(cached):
+            return cached
+        logger.warning(f"Cached Steam image is invalid, removing: {cache_file}")
+        cache_file.unlink(missing_ok=True)
 
     try:
         client = await get_http_client(proxy)
         response = await client.get(url)
-        if response.status_code == 200:
+        if response.status_code == 200 and _is_valid_image_bytes(response.content):
             if cache_file is not None:
                 cache_file.parent.mkdir(parents=True, exist_ok=True)
                 cache_file.write_bytes(response.content)
             return response.content
+        logger.warning(
+            "Steam image fetch returned invalid image "
+            f"(status={response.status_code}, content-type={response.headers.get('content-type')}): {url}"
+        )
     except Exception as exc:
         logger.error(f"Failed to fetch image: {exc}")
 
