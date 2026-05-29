@@ -67,23 +67,6 @@ def fit_image_cover(image: Image.Image, target_size: Tuple[int, int]) -> Image.I
     return resized.crop((left, top, left + target_width, top + target_height))
 
 
-def open_optional_image(image_source, context: str) -> Optional[Image.Image]:
-    try:
-        if isinstance(image_source, Image.Image):
-            return image_source.copy()
-        if isinstance(image_source, bytes) and image_source:
-            image = Image.open(BytesIO(image_source))
-        elif isinstance(image_source, (str, Path)):
-            image = Image.open(image_source)
-        else:
-            return None
-        image.load()
-        return image
-    except Exception as exc:
-        logger.warning(f"{context} 图片无效，已跳过: {exc}")
-        return None
-
-
 personastate_colors = {
     0: (hex_to_rgb("969697"), hex_to_rgb("656565")),
     1: (hex_to_rgb("6dcef5"), hex_to_rgb("4c91ac")),
