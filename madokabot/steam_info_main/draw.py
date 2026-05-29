@@ -1,7 +1,7 @@
 import numpy as np
 from io import BytesIO
 from pathlib import Path
-from typing import List, Dict, Tuple
+from typing import List, Dict, Tuple, Optional
 from colorsys import rgb_to_hsv, hsv_to_rgb
 from PIL import Image, ImageDraw, ImageFont, ImageFilter, ImageEnhance
 from nonebot.log import logger
@@ -48,6 +48,40 @@ def open_image_or_default(
         image = Image.open(default_path)
         image.load()
         return image
+
+
+def fit_image_cover(image: Image.Image, target_size: Tuple[int, int]) -> Image.Image:
+    """Resize and center-crop an image so rendered cards keep a stable size."""
+    target_width, target_height = target_size
+    if image.size == target_size:
+        return image.copy()
+
+    scale = max(target_width / image.width, target_height / image.height)
+    resized_size = (
+        max(target_width, int(round(image.width * scale))),
+        max(target_height, int(round(image.height * scale))),
+    )
+    resized = image.resize(resized_size, Image.BICUBIC)
+    left = (resized.width - target_width) // 2
+    top = (resized.height - target_height) // 2
+    return resized.crop((left, top, left + target_width, top + target_height))
+
+
+def open_optional_image(image_source, context: str) -> Optional[Image.Image]:
+    try:
+        if isinstance(image_source, Image.Image):
+            return image_source.copy()
+        if isinstance(image_source, bytes) and image_source:
+            image = Image.open(BytesIO(image_source))
+        elif isinstance(image_source, (str, Path)):
+            image = Image.open(image_source)
+        else:
+            return None
+        image.load()
+        return image
+    except Exception as exc:
+        logger.warning(f"{context} 图片无效，已跳过: {exc}")
+        return None
 
 
 personastate_colors = {
@@ -686,8 +720,12 @@ def draw_player_status(
     player_description: str,
     player_last_two_weeks_time: str,  # e.g. 10.2 小时
     player_games: List[DrawPlayerStatusData],
+    player_avatar_frame=None,
 ):
     player_bg = open_image_or_default(player_bg, default_background_path, "玩家背景")
+    default_bg = Image.open(default_background_path)
+    default_bg.load()
+    player_bg = fit_image_cover(player_bg, default_bg.size)
     player_avatar = open_image_or_default(
         player_avatar, default_avatar_path, "玩家头像"
     )
@@ -715,6 +753,11 @@ def draw_player_status(
 
     # 画头像外框
     draw.rectangle((40, 40, 240, 240), outline=(83, 164, 196), width=3)
+
+    avatar_frame = open_optional_image(player_avatar_frame, "玩家头像框")
+    if avatar_frame:
+        avatar_frame = avatar_frame.resize((220, 220), Image.BICUBIC)
+        bg.paste(avatar_frame, (30, 30), avatar_frame.convert("RGBA"))
 
     # 画昵称
     draw.text(

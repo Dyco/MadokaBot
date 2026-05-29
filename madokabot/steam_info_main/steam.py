@@ -236,6 +236,7 @@ async def _fetch(
     if cache_file is not None and cache_file.exists():
         cached = cache_file.read_bytes()
         if _is_valid_image_bytes(cached):
+            logger.info(f"Steam image cache hit: {cache_file}")
             return cached
         logger.warning(f"Cached Steam image is invalid, removing: {cache_file}")
         cache_file.unlink(missing_ok=True)
@@ -247,6 +248,7 @@ async def _fetch(
             if cache_file is not None:
                 cache_file.parent.mkdir(parents=True, exist_ok=True)
                 cache_file.write_bytes(response.content)
+                logger.info(f"Steam image cached: {cache_file}")
             return response.content
         logger.warning(
             "Steam image fetch returned invalid image "
@@ -258,6 +260,310 @@ async def _fetch(
     return default
 
 
+def _url_from_attr(node, *attrs: str) -> Optional[str]:
+    for attr in attrs:
+        value = node.get(attr)
+        if isinstance(value, str) and value.strip():
+            return value.strip()
+    srcset = node.get("srcset")
+    if isinstance(srcset, str) and srcset.strip():
+        # Prefer the largest candidate, which Steam usually lists last.
+        return srcset.split(",")[-1].strip().split()[0]
+    return None
+
+
+def _normalize_steam_url(url: Optional[str]) -> Optional[str]:
+    if not url:
+        return None
+    url = url.strip().strip('"\'')
+    if not url or url.startswith("data:"):
+        return None
+    if url.startswith("//"):
+        return f"https:{url}"
+    return urljoin("https://steamcommunity.com/", url)
+
+
+def _style_image_url(style: Optional[str]) -> Optional[str]:
+    if not style:
+        return None
+    match = re.search(r"url\((['\"]?)(.*?)\1\)", style, re.I | re.S)
+    if not match:
+        return None
+    return _normalize_steam_url(match.group(2))
+
+
+def _looks_like_image_url(url: Optional[str]) -> bool:
+    if not url:
+        return False
+    return bool(re.search(r"\.(?:jpg|jpeg|png|gif|webp)(?:[?#].*)?$", url, re.I))
+
+
+def _looks_like_steam_avatar_url(url: Optional[str]) -> bool:
+    if not url:
+        return False
+    return _looks_like_image_url(url) and (
+        "/avatars/" in url or "avatars." in url
+    )
+
+
+def _prefer_full_avatar_url(url: str) -> str:
+    if "_full." in url:
+        return url
+    return re.sub(r"(?:_medium)?(\.[a-zA-Z0-9]+)([?#].*)?$", r"_full\1\2", url)
+
+
+def _image_url_from_node(node, *attrs: str) -> Optional[str]:
+    url = _normalize_steam_url(_url_from_attr(node, *attrs))
+    return url if _looks_like_image_url(url) else None
+
+
+def _cache_file(cache_path: Path, category: str, url: str) -> Path:
+    digest = hashlib.sha256(url.encode("utf-8")).hexdigest()
+    ext_match = re.search(r"\.([a-zA-Z0-9]{2,5})(?:[?#].*)?$", url)
+    ext = f".{ext_match.group(1).lower()}" if ext_match else ".img"
+    return cache_path / category / f"{digest}{ext}"
+
+
+def _extract_background_url(html: str, soup: BeautifulSoup) -> Optional[str]:
+    # Steam puts equipped static profile backgrounds on this page container.
+    # If the class is absent, the user simply has no custom background and we
+    # should keep the local default background.
+    profile_page = soup.select_one(
+        ".no_header.profile_page.has_profile_background[style*='background-image']"
+    )
+    if profile_page:
+        url = _style_image_url(profile_page.get("style"))
+        if _looks_like_image_url(url):
+            return url
+
+    # Animated/profile themes can expose a poster image rather than a static
+    # background-image; use the poster only when it is actually an image.
+    for node in soup.select(
+        ".profile_animated_background video[poster], video.profile_animated_background[poster]"
+    ):
+        url = _image_url_from_node(node, "poster")
+        if url:
+            return url
+
+    for node in soup.select(
+        ".profile_background_image_content, .profile_background_holder_content, "
+        ".profile_background, [class*='profile_background']"
+    ):
+        url = _style_image_url(node.get("style"))
+        if _looks_like_image_url(url):
+            return url
+        image = node.select_one("img[src], img[data-src], img[srcset]")
+        if image:
+            url = _image_url_from_node(image, "src", "data-src")
+            if url:
+                return url
+
+    # Last resort: find background-image declarations in the raw HTML, but keep
+    # this limited to Steam community item/static CDN URLs so icons are not
+    # mistaken for profile backgrounds.
+    for match in re.finditer(
+        r"background-image\s*:\s*url\((['\"]?)(.*?)\1\)", html, re.I | re.S
+    ):
+        url = _normalize_steam_url(match.group(2))
+        if _looks_like_image_url(url) and (
+            "community_assets/images/items" in url
+            or "community.akamai.steamstatic.com" in url
+        ):
+            return url
+    return None
+
+def _extract_avatar_url(html: str, soup: BeautifulSoup) -> Optional[str]:
+    selectors = (
+        ".playerAvatarAutoSizeInner picture source",
+        ".playerAvatarAutoSizeInner picture img",
+        ".playerAvatarAutoSizeInner > img",
+        ".profile_header .playerAvatar picture source",
+        ".profile_header .playerAvatar picture img",
+        ".profile_header .playerAvatar > img",
+        "img[src*='/avatars/']",
+        "source[srcset*='/avatars/']",
+    )
+    candidates = []
+    for selector in selectors:
+        for node in soup.select(selector):
+            url = _normalize_steam_url(_url_from_attr(node, "src", "data-src"))
+            if _looks_like_steam_avatar_url(url):
+                candidates.append(_prefer_full_avatar_url(url))
+
+    if candidates:
+        candidates.sort(key=lambda value: "_full." not in value)
+        return candidates[0]
+
+    match = re.search(
+        r"https?://[^'\"]+/avatars/[^'\"]+?\.(?:jpg|jpeg|png|webp)", html, re.I
+    )
+    if match:
+        return _prefer_full_avatar_url(match.group(0))
+    return None
+
+
+def _extract_avatar_frame_url(soup: BeautifulSoup) -> Optional[str]:
+    for node in soup.select(
+        ".profile_avatar_frame img, .profile_avatar_frame source, "
+        ".playerAvatarAutoSizeInner .profile_avatar_frame img"
+    ):
+        url = _image_url_from_node(node, "src", "data-src")
+        if url:
+            return url
+    return None
+
+def _find_recent_games_node(soup: BeautifulSoup):
+    for selector in ("#recent_games", ".recent_games", ".recentgame_quicklinks"):
+        node = soup.select_one(selector)
+        if node:
+            return node
+
+    recent_game = soup.select_one(".recent_game")
+    if not recent_game:
+        return None
+    parent = recent_game.parent
+    while parent is not None and parent.name not in ("body", "html"):
+        if parent.select_one(".recent_game"):
+            return parent
+        parent = parent.parent
+    return recent_game.parent
+
+
+def _extract_recent_2_week_play_time(recent_games_node) -> Optional[str]:
+    if not recent_games_node:
+        return None
+    text = recent_games_node.get_text(" ", strip=True)
+    patterns = (
+        r"过去\s*2\s*周(?:总时数|共)?\s*([\d,.]+\s*小时)",
+        r"Past\s*2\s*weeks\s*([\d,.]+\s*hrs?)",
+        r"([\d,.]+\s*小时)\s*(?:过去\s*2\s*周|最近\s*2\s*周)",
+        r"([\d,.]+\s*hrs?)\s*(?:past\s*2\s*weeks|last\s*2\s*weeks)",
+    )
+    for pattern in patterns:
+        match = re.search(pattern, text, re.I)
+        if match:
+            return match.group(1).replace("hrs", "小时").replace("hr", "小时")
+    return None
+
+
+def _extract_text_by_patterns(text: str, patterns: Tuple[str, ...]) -> Optional[str]:
+    for pattern in patterns:
+        match = re.search(pattern, text, re.I)
+        if match:
+            return re.sub(r"\s+", " ", match.group(1)).strip()
+    return None
+
+
+def _extract_first_image_url(node, selectors: Tuple[str, ...]) -> Optional[str]:
+    for selector in selectors:
+        for image in node.select(selector):
+            url = _normalize_steam_url(_url_from_attr(image, "src", "data-src"))
+            if url:
+                return url
+    return None
+
+
+async def _parse_recent_game(
+    game,
+    default_header_image: bytes,
+    default_achievement_image: bytes,
+    cache_path: Path,
+    proxy: Optional[str],
+) -> Optional[dict]:
+    text = game.get_text(" ", strip=True)
+    if not text:
+        return None
+
+    name_node = game.select_one(
+        ".game_name a, .game_name, .recent_game_name, .game_info_name, a[href*='/app/']"
+    )
+    game_name = name_node.get_text(" ", strip=True) if name_node else "未知游戏"
+
+    play_time = _extract_text_by_patterns(
+        text,
+        (
+            r"总时数\s*([\d,.]+\s*小时)",
+            r"Total\s*Play(?:ed)?\s*([\d,.]+\s*hrs?)",
+            r"([\d,.]+\s*小时)\s*总时数",
+            r"([\d,.]+\s*hrs?)\s*on\s*record",
+        ),
+    ) or "0 小时"
+    play_time = play_time.replace("hrs", "小时").replace("hr", "小时")
+
+    last_played = _extract_text_by_patterns(
+        text,
+        (
+            r"最后(?:运行|游玩)日期\s*([^成]+?)(?:\s+成就|$)",
+            r"Last\s*Played\s*([^A]+?)(?:\s+Achievements|$)",
+        ),
+    ) or "未知"
+
+    header_url = _extract_first_image_url(
+        game,
+        (
+            "img[src*='header']",
+            "img[src*='capsule_184x69']",
+            ".game_capsule img",
+            ".game_info_cap img",
+            "img",
+        ),
+    )
+    game_image = default_header_image
+    if header_url:
+        game_image = await _fetch(
+            header_url,
+            default_header_image,
+            _cache_file(cache_path, "game_headers", header_url),
+            proxy,
+        )
+
+    completed_achievement_number = 0
+    total_achievement_number = 0
+    achievement_match = re.search(r"(\d+)\s*(?:/|of|共)\s*(\d+)", text, re.I)
+    if achievement_match:
+        completed_achievement_number = int(achievement_match.group(1))
+        total_achievement_number = int(achievement_match.group(2))
+
+    achievements = []
+    seen_urls = set()
+    for image in game.select(
+        ".achievement_icons img, .achievement img, .achieveImgHolder img, "
+        ".game_info_achievement img, .game_info_achievements img, "
+        "a[href*='achievements'] img, a[href*='/stats/'] img, "
+        "img[src*='achievements']"
+    ):
+        url = _image_url_from_node(image, "src", "data-src")
+        if not url or url in seen_urls:
+            continue
+        seen_urls.add(url)
+        achievements.append(
+            {
+                "name": image.get("alt") or image.get("title") or "",
+                "image": await _fetch(
+                    url,
+                    default_achievement_image,
+                    _cache_file(cache_path, "achievements", url),
+                    proxy,
+                ),
+            }
+        )
+        if len(achievements) >= 6:
+            break
+
+    if total_achievement_number and not achievements:
+        logger.info(f"Steam achievement icons not found for recent game: {game_name}")
+
+    return {
+        "game_name": game_name,
+        "play_time": play_time,
+        "last_played": last_played,
+        "game_image": game_image,
+        "achievements": achievements,
+        "completed_achievement_number": completed_achievement_number,
+        "total_achievement_number": total_achievement_number,
+    }
+
+
 # ----------------------------
 # 用户详情
 # ----------------------------
@@ -267,6 +573,7 @@ def get_default_user_data(steam_id: Any) -> PlayerData:
         "description": "No information given.",
         "background": default_background_path.read_bytes(),
         "avatar": default_avatar_path.read_bytes(),
+        "avatar_frame": None,
         "player_name": "Unknown",
         "recent_2_week_play_time": None,
         "game_data": [],
@@ -288,6 +595,7 @@ async def get_user_data(
         "description": "No information given.",
         "background": default_background,
         "avatar": default_avatar,
+        "avatar_frame": None,
         "player_name": "Unknown",
         "recent_2_week_play_time": None,
         "game_data": [],
@@ -335,19 +643,35 @@ async def get_user_data(
 
     background_url = _extract_background_url(html, soup)
     if background_url:
+        logger.info(f"Steam profile background URL extracted: {background_url}")
         result["background"] = await _fetch(
             background_url,
             default_background,
             _cache_file(cache_path, "backgrounds", background_url),
             proxy,
         )
+    else:
+        logger.info("Steam profile background URL not found; using default background")
 
     avatar_url = _extract_avatar_url(html, soup)
     if avatar_url:
+        logger.info(f"Steam profile avatar URL extracted: {avatar_url}")
         result["avatar"] = await _fetch(
             avatar_url,
             default_avatar,
             _cache_file(cache_path, "avatars", avatar_url),
+            proxy,
+        )
+    else:
+        logger.info("Steam profile avatar URL not found; using default avatar")
+
+    avatar_frame_url = _extract_avatar_frame_url(soup)
+    if avatar_frame_url:
+        logger.info(f"Steam profile avatar frame URL extracted: {avatar_frame_url}")
+        result["avatar_frame"] = await _fetch(
+            avatar_frame_url,
+            b"",
+            _cache_file(cache_path, "avatar_frames", avatar_frame_url),
             proxy,
         )
 
