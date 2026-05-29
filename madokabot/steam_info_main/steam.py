@@ -1,3 +1,4 @@
+import hashlib
 import re
 from io import BytesIO
 
@@ -269,6 +270,7 @@ async def get_user_data(
     default_header_image = default_header_image_path.read_bytes()
 
     result = {
+        "steamid": str(steam_id),
         "description": "No information given.",
         "background": default_background,
         "avatar": default_avatar,
@@ -300,30 +302,55 @@ async def get_user_data(
         logger.error(f"获取用户详细数据失败: {exc}")
         return result
 
-    player_name = re.search(r"<title>Steam 社区 :: (.*?)</title>", html)
-    if player_name:
-        result["player_name"] = player_name.group(1)
+    soup = BeautifulSoup(html, "html.parser")
 
-    description = re.search(
-        r'<div class="profile_summary">(.*?)</div>', html, re.DOTALL
-    )
-    if description:
-        desc = description.group(1)
-        desc = re.sub(r"<br>", "\n", desc)
-        desc = re.sub(r"\t", "", desc)
+    if soup.title and soup.title.string:
+        title = soup.title.string.strip()
+        result["player_name"] = (
+            re.sub(r"^Steam\s*(?:社区|Community)\s*::\s*", "", title).strip()
+            or result["player_name"]
+        )
+
+    description_node = soup.select_one(".profile_summary")
+    if description_node:
+        for br in description_node.find_all("br"):
+            br.replace_with("\n")
+        desc = description_node.get_text("\n", strip=True)
         desc = re.sub(r"ː.*?ː", "", desc)
-        desc = re.sub(r"<.*?>", "", desc)
         result["description"] = desc.strip()
 
-    soup = BeautifulSoup(html, "html.parser")
-    game_data = []
+    background_url = _extract_background_url(html, soup)
+    if background_url:
+        result["background"] = await _fetch(
+            background_url,
+            default_background,
+            _cache_file(cache_path, "backgrounds", background_url),
+            proxy,
+        )
 
-    for game in soup.find_all("div", class_="recent_game"):
-        game_info = {
-            "game_name": game.find("div", class_="game_name").text.strip(),
-            "achievements": [],
-        }
-        game_data.append(game_info)
+    avatar_url = _extract_avatar_url(html, soup)
+    if avatar_url:
+        result["avatar"] = await _fetch(
+            avatar_url,
+            default_avatar,
+            _cache_file(cache_path, "avatars", avatar_url),
+            proxy,
+        )
+
+    recent_games_node = _find_recent_games_node(soup)
+    result["recent_2_week_play_time"] = (
+        _extract_recent_2_week_play_time(recent_games_node)
+        or result["recent_2_week_play_time"]
+    )
+
+    game_data = []
+    if recent_games_node:
+        for game in recent_games_node.select(".recent_game"):
+            game_info = await _parse_recent_game(
+                game, default_header_image, default_achievement_image, cache_path, proxy
+            )
+            if game_info:
+                game_data.append(game_info)
 
     result["game_data"] = game_data
     return result
