@@ -1,3 +1,4 @@
+import asyncio
 from typing import Any, Dict, Optional, Tuple
 
 import aiohttp
@@ -12,6 +13,7 @@ from ..madoka_bundle.plugins.common import is_group_whitelisted
 from .cache import cache_filter, dict_hash
 from .config import DATA_PATH, config
 from .parser import FeedProcessor
+from .routes.danbooru import fetch_danbooru, is_danbooru_url
 from .subscription import Rss
 from .utils import (
     filter_valid_group_id_list,
@@ -35,6 +37,42 @@ HEADERS = {
     "Connection": "keep-alive",
     "Content-Type": "application/xml; charset=utf-8",
 }
+
+
+def _request_mode(proxy: Optional[str]) -> str:
+    return "代理" if proxy else "直连"
+
+
+def _log_http_error(
+    rss_url: str,
+    proxy: Optional[str],
+    exc: aiohttp.ClientResponseError,
+) -> None:
+    headers = exc.headers or {}
+    logger.error(
+        f"[{rss_url}] {_request_mode(proxy)}请求失败：HTTP {exc.status} "
+        f"{exc.message or 'Unknown Error'}；"
+        f"Content-Type={headers.get('Content-Type') or '未知'}；"
+        f"Cf-Mitigated={headers.get('Cf-Mitigated') or '无'}"
+    )
+
+
+def _log_invalid_feed(
+    rss_url: str,
+    proxy: Optional[str],
+    response: aiohttp.ClientResponse,
+    body: str,
+    parsed: Dict[str, Any],
+) -> None:
+    bozo_exception = parsed.get("bozo_exception")
+    logger.error(
+        f"[{rss_url}] {_request_mode(proxy)}请求未解析出 RSS/Atom："
+        f"HTTP {response.status}；"
+        f"Content-Type={response.headers.get('Content-Type') or '未知'}；"
+        f"Cf-Mitigated={response.headers.get('Cf-Mitigated') or '无'}；"
+        f"响应长度={len(body)}；"
+        f"解析错误={bozo_exception or '无'}"
+    )
 
 
 async def filter_and_validate_rss(rss: Rss, bot: Bot) -> Rss:
@@ -148,12 +186,25 @@ async def fetch_rss_backup(
         rss_url = rss.get_url(rsshub=str(rsshub_url))
         try:
             resp = await session.get(rss_url, proxy=proxy)
-            d = feedparser.parse(await resp.text())
+            body = await resp.text()
+            d = feedparser.parse(body)
+            if not d.get("feed"):
+                _log_invalid_feed(rss_url, proxy, resp, body, d)
             if d.get("feed"):
                 logger.info(f"[{rss_url}]抓取成功！")
                 break
-        except Exception:
-            logger.debug(f"[{rss_url}]访问失败！将使用备用 RSSHub 地址！")
+        except asyncio.TimeoutError:
+            logger.error(
+                f"[{rss_url}] {_request_mode(proxy)}请求超时！"
+                "将使用下一个备用 RSSHub 地址"
+            )
+        except aiohttp.ClientResponseError as exc:
+            _log_http_error(rss_url, proxy, exc)
+        except Exception as exc:
+            logger.exception(
+                f"[{rss_url}] {_request_mode(proxy)}请求异常："
+                f"{type(exc).__name__}: {exc}；将使用下一个备用 RSSHub 地址"
+            )
             continue
     return d
 
@@ -164,6 +215,30 @@ async def fetch_rss(rss: Rss) -> Tuple[Dict[str, Any], bool]:
     # 对本机部署的 RSSHub 不使用代理
     local_host = ["localhost", "127.0.0.1"]
     proxy = get_proxy(rss.img_proxy) if URL(rss_url).host not in local_host else None
+
+    if is_danbooru_url(rss_url):
+        try:
+            data, cached, response_headers = await fetch_danbooru(rss, proxy)
+            if not config.debug:
+                rss.etag = response_headers.get("ETag") or rss.etag
+                rss.last_modified = (
+                    response_headers.get("Last-Modified") or rss.last_modified
+                )
+                rss.upsert()
+            return data, cached
+        except asyncio.TimeoutError:
+            logger.error(
+                f"[{rss_url}] Danbooru API {_request_mode(proxy)}请求超时（10 秒）"
+            )
+        except aiohttp.ClientResponseError as exc:
+            _log_http_error(rss_url, proxy, exc)
+        except Exception as exc:
+            logger.exception(
+                f"[{rss_url}] Danbooru API {_request_mode(proxy)}请求异常："
+                f"{type(exc).__name__}: {exc}"
+            )
+        return {}, False
+
     cookies = rss.cookies or None
     headers = HEADERS.copy()
     if cookies:
@@ -192,11 +267,30 @@ async def fetch_rss(rss: Rss) -> Tuple[Dict[str, Any], bool]:
             content_length = resp.headers.get("Content-Length")
             if (resp.status == 200 and content_length == "0") or resp.status == 304:
                 cached = True
-            d = feedparser.parse(await resp.text())
-        except Exception:
+            body = await resp.text()
+            d = feedparser.parse(body)
+            if not cached and not d.get("feed"):
+                _log_invalid_feed(rss_url, proxy, resp, body, d)
+        except asyncio.TimeoutError:
+            logger.error(
+                f"[{rss_url}] {_request_mode(proxy)}请求超时（10 秒）"
+            )
             if not URL(rss.url).scheme and config.rsshub_backup:
-                logger.debug(f"[{rss_url}]访问失败！将使用备用 RSSHub 地址！")
+                d = await fetch_rss_backup(rss, session, proxy)
+        except aiohttp.ClientResponseError as exc:
+            _log_http_error(rss_url, proxy, exc)
+            if not URL(rss.url).scheme and config.rsshub_backup:
+                d = await fetch_rss_backup(rss, session, proxy)
+        except Exception as exc:
+            if not URL(rss.url).scheme and config.rsshub_backup:
+                logger.exception(
+                    f"[{rss_url}] {_request_mode(proxy)}请求异常："
+                    f"{type(exc).__name__}: {exc}；将使用备用 RSSHub 地址"
+                )
                 d = await fetch_rss_backup(rss, session, proxy)
             else:
-                logger.error(f"[{rss_url}]访问失败！")
+                logger.exception(
+                    f"[{rss_url}] {_request_mode(proxy)}请求异常："
+                    f"{type(exc).__name__}: {exc}"
+                )
     return d, cached

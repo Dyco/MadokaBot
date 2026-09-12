@@ -1,133 +1,185 @@
-import sqlite3
-from typing import Any, Dict
+import asyncio
+from html import escape
+from typing import Any, Dict, List, Optional, Tuple
 
 import aiohttp
-from nonebot.log import logger
-from pyquery import PyQuery as Pq
-from tenacity import RetryError, retry, stop_after_attempt, stop_after_delay
+from yarl import URL
 
-from ..cache import cache_db_manage, duplicate_exists, write_item
-from ..config import CACHE_DB_PATH
-from ..images import (
-    get_preview_gif_from_video,
-    handle_img_combo,
-    handle_img_combo_with_content,
-)
+from ..config import config
+from ..images import handle_img_combo, handle_img_combo_with_content
 from ..parser import HandlerRegistry
 from ..subscription import Rss
-from ..utils import get_proxy
 
 
-# 处理图片
-@HandlerRegistry.append_handler(parsing_type="picture", rex="danbooru")
-async def handle_picture(rss: Rss, item: Dict[str, Any], tmp: str) -> str:
-    # 判断是否开启了只推送标题
-    if rss.only_title:
-        return ""
+DANBOORU_HOST = "danbooru.donmai.us"
+DANBOORU_POST_PATHS = {"/posts", "/posts.atom", "/posts.json"}
+VIDEO_EXTENSIONS = {"mp4", "webm", "zip"}
+RATING_NAMES = {
+    "g": "普通",
+    "s": "敏感",
+    "q": "可疑",
+    "e": "露骨",
+}
+_request_lock = asyncio.Lock()
+_last_request_at = 0.0
 
-    try:
-        res = await handle_img(
-            item=item,
-            img_proxy=rss.img_proxy,
-            rss=rss,
+
+class DanbooruAPIError(RuntimeError):
+    """Danbooru API returned data in an unexpected shape."""
+
+
+def is_danbooru_url(url: str) -> bool:
+    parsed = URL(url)
+    return (
+        parsed.host == DANBOORU_HOST
+        and parsed.path.rstrip("/") in DANBOORU_POST_PATHS
+    )
+
+
+def _api_url(url: str) -> URL:
+    parsed = URL(url)
+    query = [(key, value) for key, value in parsed.query.items() if key != "format"]
+    return parsed.with_path("/posts.json").with_query(query)
+
+
+def _api_user_agent() -> str:
+    user_agent = "MadokaBot-RSS/1.0"
+    if config.danbooru_user_id is not None:
+        user_agent += f" (user #{config.danbooru_user_id})"
+    return user_agent
+
+
+def _api_auth() -> Optional[aiohttp.BasicAuth]:
+    if config.danbooru_login and config.danbooru_api_key:
+        return aiohttp.BasicAuth(
+            config.danbooru_login,
+            config.danbooru_api_key.get_secret_value(),
         )
-    except RetryError:
-        res = "预览图获取失败"
-        logger.warning(f"[{item['link']}]的预览图获取失败")
-
-    # 判断是否开启了只推送图片
-    return f"{res}\n" if rss.only_pic else f"{tmp + res}\n"
+    return None
 
 
-# 处理图片、视频
-@retry(stop=(stop_after_attempt(5) | stop_after_delay(30)))
-async def handle_img(item: Dict[str, Any], img_proxy: bool, rss: Rss) -> str:
-    if item.get("image_content"):
-        return await handle_img_combo_with_content(
-            item.get("gif_url", ""), item["image_content"], rss
-        )
-    img_str = ""
-
-    # 处理图片
-    async with aiohttp.ClientSession() as session:
-        resp = await session.get(item["link"], proxy=get_proxy(img_proxy))
-        d = Pq(await resp.text())
-        if img := d("img#image"):
-            url = img.attr("src")
-        else:
-            img_str += "视频预览："
-            url = d("video#image").attr("src")
-            try:
-                url = await get_preview_gif_from_video(url)
-            except RetryError:
-                logger.warning("视频预览获取失败，将发送原视频封面")
-                url = d("meta[property='og:image']").attr("content")
-        img_str += await handle_img_combo(url, img_proxy, rss)
-
-    return img_str
+def _display_tags(value: Any) -> str:
+    return str(value or "").replace("_", " ")
 
 
-# 如果启用了去重模式，对推送列表进行过滤
-@HandlerRegistry.append_before_handler(rex="danbooru", priority=12)
-async def filter_duplicates(rss: Rss, state: Dict[str, Any]) -> Dict[str, Any]:
-    change_data = state["change_data"]
-    conn = state["conn"]
-    db = state["tinydb"]
+def _post_to_entry(post: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    post_id = post.get("id")
+    if not post_id:
+        return None
 
-    # 检查是否启用去重 使用 duplicate_filter_mode 字段
-    if not rss.duplicate_filter_mode:
-        return {"change_data": change_data}
+    post_url = f"https://{DANBOORU_HOST}/posts/{post_id}"
+    file_ext = str(post.get("file_ext") or "").lower()
+    is_video = file_ext in VIDEO_EXTENSIONS
+    preview_url = str(post.get("preview_file_url") or "")
+    original_url = str(post.get("file_url") or "")
+    large_url = str(post.get("large_file_url") or "")
+    media_url = preview_url if is_video else large_url or original_url or preview_url
 
-    if not conn:
-        conn = sqlite3.connect(str(CACHE_DB_PATH))
-        conn.set_trace_callback(logger.debug)
-
-    cache_db_manage(conn)
-
-    delete = []
-    for index, item in enumerate(change_data):
-        try:
-            summary = await get_summary(item, rss.img_proxy)
-        except RetryError:
-            logger.warning(f"[{item['link']}]的预览图获取失败")
-            continue
-        is_duplicate, image_hash = await duplicate_exists(
-            rss=rss,
-            conn=conn,
-            item=item,
-            summary=summary,
-        )
-        if is_duplicate:
-            write_item(db, item)
-            delete.append(index)
-        else:
-            change_data[index]["image_hash"] = str(image_hash)
-
-    change_data = [
-        item for index, item in enumerate(change_data) if index not in delete
+    details: List[str] = [
+        f"评分：{post.get('score', 0)}",
+        f"分级：{RATING_NAMES.get(str(post.get('rating') or ''), '未知')}",
     ]
+    for label, field in (
+        ("作者", "tag_string_artist"),
+        ("角色", "tag_string_character"),
+        ("作品", "tag_string_copyright"),
+    ):
+        if value := _display_tags(post.get(field)):
+            details.append(f"{label}：{value}")
+    if source := str(post.get("source") or ""):
+        details.append(
+            f'来源：<a href="{escape(source, quote=True)}">{escape(source)}</a>'
+        )
+
+    summary = "<p>" + "<br>".join(details) + "</p>"
+    if media_url:
+        summary += f'<img src="{escape(media_url, quote=True)}">'
 
     return {
-        "change_data": change_data,
-        "conn": conn,
+        "guid": post_url,
+        "link": post_url,
+        "title": f"Danbooru Post #{post_id}",
+        "author": _display_tags(post.get("tag_string_artist")),
+        "published": post.get("created_at"),
+        "updated": post.get("updated_at"),
+        "summary": summary,
+        "danbooru_media_url": media_url,
+        "danbooru_original_url": original_url,
+        "danbooru_file_ext": file_ext,
+        "danbooru_is_video": is_video,
+        "image_headers": {
+            "Referer": f"https://{DANBOORU_HOST}/",
+            "User-Agent": _api_user_agent(),
+        },
     }
 
 
-# 获取正文
-@retry(stop=(stop_after_attempt(5) | stop_after_delay(30)))
-async def get_summary(item: Dict[str, Any], img_proxy: bool) -> str:
-    summary = (
-        item["content"][0].get("value")
-        if item.get("content")
-        else item.get("summary", item.get("description", ""))
-    )
-    # 如果图片非视频封面，替换为更清晰的预览图；否则移除，以此跳过图片去重检查
-    summary_doc = Pq(summary)
-    async with aiohttp.ClientSession() as session:
-        resp = await session.get(item["link"], proxy=get_proxy(img_proxy))
-        d = Pq(await resp.text())
-        if img := d("img#image"):
-            summary_doc("img").attr("src", img.attr("src"))
-        else:
-            summary_doc.remove("img")
-    return str(summary_doc)
+async def fetch_danbooru(
+    rss: Rss, proxy: Optional[str]
+) -> Tuple[Dict[str, Any], bool, Dict[str, str]]:
+    """Fetch a Danbooru post search through the official JSON API."""
+    global _last_request_at
+
+    headers = {
+        "Accept": "application/json",
+        "User-Agent": _api_user_agent(),
+    }
+    if not config.debug:
+        if rss.etag:
+            headers["If-None-Match"] = rss.etag
+        if rss.last_modified:
+            headers["If-Modified-Since"] = rss.last_modified
+
+    async with _request_lock:
+        loop = asyncio.get_running_loop()
+        wait_time = 1.0 - (loop.time() - _last_request_at)
+        if wait_time > 0:
+            await asyncio.sleep(wait_time)
+
+        try:
+            timeout = aiohttp.ClientTimeout(total=10)
+            async with aiohttp.ClientSession(
+                headers=headers, timeout=timeout
+            ) as session:
+                async with session.get(
+                    _api_url(rss.get_url()),
+                    proxy=proxy,
+                    auth=_api_auth(),
+                ) as response:
+                    response_headers = dict(response.headers)
+                    if response.status == 304:
+                        return {}, True, response_headers
+                    response.raise_for_status()
+                    payload = await response.json(content_type=None)
+        finally:
+            _last_request_at = loop.time()
+
+    if not isinstance(payload, list):
+        raise DanbooruAPIError("Danbooru API 没有返回作品列表")
+
+    entries = [entry for post in payload if (entry := _post_to_entry(post))]
+    tags = _api_url(rss.get_url()).query.get("tags", "")
+    title = f"Danbooru: {tags}" if tags else "Danbooru Posts"
+    return {"feed": {"title": title}, "entries": entries}, False, response_headers
+
+
+@HandlerRegistry.append_handler(parsing_type="picture", rex="danbooru")
+async def handle_picture(rss: Rss, item: Dict[str, Any], tmp: str) -> str:
+    if rss.only_title:
+        return ""
+
+    media_url = str(item.get("danbooru_media_url") or "")
+    if not media_url:
+        result = "图片地址不可用"
+    elif item.get("image_content"):
+        result = await handle_img_combo_with_content(
+            media_url, item["image_content"], rss
+        )
+    else:
+        result = await handle_img_combo(
+            media_url, rss.img_proxy, rss, item.get("image_headers")
+        )
+
+    if item.get("danbooru_is_video"):
+        result = f"视频预览：{result}"
+    return f"{result}\n" if rss.only_pic else f"{tmp + result}\n"

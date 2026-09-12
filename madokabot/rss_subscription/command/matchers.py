@@ -26,6 +26,8 @@ RSS 修改 <名称 ...> 属性=值
 RSS cookies <名称> <cookies>
 RSS 上传文件 <磁力或 torrent 地址>
 RSS 选择文件 <GID> <编号，如 1,3-5>
+RSS 重试 <GID>
+RSS 删除文件 <GID>
 RSS 终止 <GID>
 
 也可以使用“订阅”作为 RSS 的别名。"""
@@ -96,6 +98,18 @@ rss_cmd_alc = Alconna(
         alias=["选择文件", "选择下载", "select"],
         help_text="选择多文件种子中要下载的文件",
     ),
+    Subcommand(
+        "retry_upload",
+        Args["content?", StrMulti],
+        alias=["重试", "重试上传", "retry"],
+        help_text="重试上传已下载完成的文件",
+    ),
+    Subcommand(
+        "delete_file",
+        Args["content?", StrMulti],
+        alias=["删除文件", "清理文件", "deletefile"],
+        help_text="删除 aria2 任务的下载文件和任务记录",
+    ),
 )
 
 
@@ -162,6 +176,12 @@ rss_close_cmd = rss_cmd.dispatch(
 )
 rss_select_file_cmd = rss_cmd.dispatch(
     "select_file", additional=check_group_message, block=True
+)
+rss_retry_upload_cmd = rss_cmd.dispatch(
+    "retry_upload", additional=check_rss_manage_permission, block=True
+)
+rss_delete_file_cmd = rss_cmd.dispatch(
+    "delete_file", additional=check_rss_manage_permission, block=True
 )
 
 

@@ -431,10 +431,7 @@ async def _parse_recent_game(
     if not text:
         return None
 
-    name_node = game.select_one(
-        ".game_name a, .game_name, .recent_game_name, .game_info_name, a[href*='/app/']"
-    )
-    game_name = name_node.get_text(" ", strip=True) if name_node else "未知游戏"
+    game_name = game.find("div", class_="game_name").text.strip()
 
     details_node = game.select_one(".game_info_details")
     details_text = details_node.get_text(" ", strip=True) if details_node else text

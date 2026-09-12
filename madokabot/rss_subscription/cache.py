@@ -120,7 +120,7 @@ async def get_image_hash(rss: Rss, summary: str, item: Dict[str, Any]) -> Option
 
     url = img_doc.attr("src")
     # 通过图像的指纹来判断是否实际是同一张图片
-    content = await download_image(url, rss.img_proxy)
+    content = await download_image(url, rss.img_proxy, item.get("image_headers"))
 
     if not content:
         return None

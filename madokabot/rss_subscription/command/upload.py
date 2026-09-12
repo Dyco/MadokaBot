@@ -20,12 +20,20 @@ from ..download import (
     DownloadSizeLimitExceeded,
     DownloadStatus,
     cancel_download,
+    delete_download_files,
     download_tasks,
+    retry_upload_to_group,
     select_download_files,
     start_download,
 )
 from ..utils import get_proxy
-from .matchers import rss_close_cmd, rss_select_file_cmd, rss_upload_cmd
+from .matchers import (
+    rss_close_cmd,
+    rss_delete_file_cmd,
+    rss_retry_upload_cmd,
+    rss_select_file_cmd,
+    rss_upload_cmd,
+)
 
 
 FILE_SELECTION_TIMEOUT = 60.0
@@ -219,4 +227,73 @@ async def handle_close_download(
         await rss_close_cmd.finish(f"任务 {gid} 已经下载完成，已清理任务记录。")
     await rss_close_cmd.finish(
         f"已终止下载任务：{gid}\n已下载到磁盘的部分文件不会自动删除。"
+    )
+
+
+@rss_retry_upload_cmd.handle()
+async def prepare_retry_upload(matcher: Matcher, content: AlcMatch[str]) -> None:
+    if content.available and content.result.strip():
+        matcher.set_arg("UPLOAD_RETRY_GID", Message(content.result.strip()))
+
+
+@rss_retry_upload_cmd.got(
+    "UPLOAD_RETRY_GID", prompt="请输入要重试上传的任务 GID"
+)
+async def handle_retry_upload(
+    bot: Bot,
+    event: GroupMessageEvent,
+    gid: str = ArgPlainText("UPLOAD_RETRY_GID"),
+) -> None:
+    gid = gid.strip()
+    if not re.fullmatch(r"[0-9a-fA-F]{16}", gid):
+        await rss_retry_upload_cmd.reject("GID 格式错误，请输入 16 位十六进制 GID")
+        return
+
+    try:
+        succeeded = await retry_upload_to_group(bot, gid, str(event.group_id))
+    except Aria2Error as exc:
+        await rss_retry_upload_cmd.finish(f"❌ 重试上传失败：{exc}")
+        return
+
+    if not succeeded:
+        await rss_retry_upload_cmd.finish()
+        return
+    await rss_retry_upload_cmd.finish(
+        f"✅ GID：{gid}\n当前群待重试的文件已上传完成。"
+    )
+
+
+@rss_delete_file_cmd.handle()
+async def prepare_delete_files(matcher: Matcher, content: AlcMatch[str]) -> None:
+    if content.available and content.result.strip():
+        matcher.set_arg("DELETE_FILE_GID", Message(content.result.strip()))
+
+
+@rss_delete_file_cmd.got(
+    "DELETE_FILE_GID", prompt="请输入要删除下载文件的任务 GID"
+)
+async def handle_delete_files(
+    gid: str = ArgPlainText("DELETE_FILE_GID"),
+) -> None:
+    gid = gid.strip()
+    if not re.fullmatch(r"[0-9a-fA-F]{16}", gid):
+        await rss_delete_file_cmd.reject("GID 格式错误，请输入 16 位十六进制 GID")
+        return
+
+    try:
+        deleted_count, failed_paths = await delete_download_files(gid)
+    except Aria2Error as exc:
+        await rss_delete_file_cmd.finish(f"❌ 删除下载文件失败：{exc}")
+        return
+
+    if failed_paths:
+        details = "\n".join(f"- {path}" for path in failed_paths)
+        await rss_delete_file_cmd.finish(
+            f"⚠️ GID：{gid}\n已删除 {deleted_count} 个文件，"
+            f"以下文件删除失败：\n{details}\n"
+            "任务记录已保留，可以稍后再次执行删除文件指令。"
+        )
+        return
+    await rss_delete_file_cmd.finish(
+        f"✅ GID：{gid}\n已删除 {deleted_count} 个下载文件并清理任务记录。"
     )

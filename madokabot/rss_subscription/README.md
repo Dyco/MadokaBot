@@ -15,6 +15,8 @@ RSS 修改 <名称 ...> 属性=值            修改订阅设置
 RSS cookies <名称> <cookies>           设置订阅 cookies
 RSS 上传文件 <磁力或 torrent 地址>     手动下载并上传群文件
 RSS 选择文件 <GID> <编号>              选择多文件任务，如 1,3-5
+RSS 重试 <GID>                        重试上传下载完成但上传失败的文件
+RSS 删除文件 <GID>                    删除下载文件及对应任务记录
 RSS 终止 <GID>                        终止下载任务（也可使用 close）
 ```
 
@@ -47,6 +49,20 @@ RSS 终止 <GID>                        终止下载任务（也可使用 close�
 - `FIRST_BOOT_MESSAGE` 和 `BOOT_SUCCESS_MESSAGE` 可分别修改首次启动、启动成功时发送的提示文本。
 
 图片下载/压缩、Pixiv/微博/Bilibili/Twitter/Danbooru/Yande.re/YouTube 特殊解析、aria2 种子下载上传、消息转发和多目标订阅均保留原功能；RSS 内容直接按原文展示，不再调用翻译服务。aria2 由 MadokaBot 通过 JSON-RPC 控制，Python 依赖已经包含在项目环境中，但 `aria2c` 程序需要在服务器上单独安装并运行。
+
+## Danbooru 配置
+
+Danbooru 订阅会把 `/posts.atom` 和 `/posts.json` 地址统一转换为官方 `/posts.json` API 请求，并保留原地址中的 `limit`、`tags` 等查询参数。程序直接使用 API 返回的作品页、发布时间、评分、标签以及预览/大图地址，不再抓取作品 HTML 页面。
+
+公开作品无需登录即可读取。按照 Danbooru API 的客户端标识建议，可以配置自己的 Danbooru 用户 ID；需要访问账户可见内容时，再同时配置用户名和 API Key：
+
+```ini
+DANBOORU_USER_ID=123456
+DANBOORU_LOGIN="your_name"
+DANBOORU_API_KEY="your_api_key"
+```
+
+用户名和 API Key 必须同时配置，API Key 应当只保存在环境配置中。已有的 Danbooru Atom 订阅不需要删除重建；部署新代码并重新启用订阅后会自动改走 JSON API。
 
 ## aria2 配置（Linux）
 
@@ -82,9 +98,10 @@ ARIA2_FILE_CLEANUP_DELAY=3600
 ARIA2_MAX_FILE_SIZE_MB=2048
 ARIA2_MAX_TOTAL_SIZE_MB=4096
 DOWN_STATUS_MSG_GROUP="[]"
-DOWN_STATUS_MSG_DATE=10
+DOWN_STATUS_MSG_DATE=300
+DOWN_STATUS_MSG_RECALL_DELAY=110
 ```
 
-订阅开启 `downopen=1` 后，RSS 中的磁力链接或 `.torrent` 链接会提交给 aria2。`ARIA2_ACQUIRE_TIMEOUT` 控制 torrent 链接、aria2 RPC 初始信息及磁力元数据的获取时限，单位为秒，默认是 `60`；获取失败或超时后会放弃任务，进入正式文件下载后不再受该时限影响。`ARIA2_FILE_CLEANUP_DELAY` 控制上传处理结束后的文件保留时间，单位为秒，默认是 `3600`；设为 `0` 可以关闭自动清理。`ARIA2_MAX_FILE_SIZE_MB` 限制单个文件大小，默认是 `2048` MiB；`ARIA2_MAX_TOTAL_SIZE_MB` 限制单个 aria2 下载任务的总大小，默认是 `4096` MiB。任一限制超出时都会拒绝整个下载任务。下载完成后，插件会通过 OneBot 的 `upload_group_file` 上传文件到该订阅的群组。若 aria2 和 MadokaBot 使用 Docker，两个容器必须挂载同一个下载目录，并使用相同的容器内路径；此时 `ARIA2_RPC_URL` 应填写 aria2 服务名（例如 `http://aria2:6800/jsonrpc`），不能填写指向 MadokaBot 容器自身的 `127.0.0.1`。
+订阅开启 `downopen=1` 后，RSS 中的磁力链接或 `.torrent` 链接会提交给 aria2。机器人提交的任务会设置 `seed-time=0`，下载完成后不继续做种。`ARIA2_ACQUIRE_TIMEOUT` 控制 torrent 链接、aria2 RPC 初始信息及磁力元数据的获取时限，单位为秒，默认是 `60`；获取失败或超时后会放弃任务，进入正式文件下载后不再受该时限影响。`ARIA2_FILE_CLEANUP_DELAY` 控制上传处理结束后的文件保留时间，单位为秒，默认是 `3600`；设为 `0` 可以关闭自动清理。`ARIA2_MAX_FILE_SIZE_MB` 限制单个文件大小，默认是 `2048` MiB；`ARIA2_MAX_TOTAL_SIZE_MB` 限制单个 aria2 下载任务的总大小，默认是 `4096` MiB。任一限制超出时都会拒绝整个下载任务。`DOWN_STATUS_MSG_DATE` 控制下载进度检查及提示间隔，单位为秒，默认是 `300`；`DOWN_STATUS_MSG_RECALL_DELAY` 控制每条进度消息独立撤回的延迟，默认是 `110` 秒，设为 `0` 时不自动撤回。下载完成后，插件会通过 OneBot 的 `upload_group_file` 上传文件到该订阅的群组。上传失败时会发送包含 GID 的提醒，并暂停自动清理；确认群文件中没有同名文件后，可以使用 `RSS 重试 <GID>` 重试当前群的失败文件。全部上传成功后才会重新开始文件清理倒计时。不再需要失败文件时，可以使用 `RSS 删除文件 <GID>` 立即删除该任务的下载文件、上传失败记录和 aria2 任务记录。若 aria2 和 MadokaBot 使用 Docker，两个容器必须挂载同一个下载目录，并使用相同的容器内路径；此时 `ARIA2_RPC_URL` 应填写 aria2 服务名（例如 `http://aria2:6800/jsonrpc`），不能填写指向 MadokaBot 容器自身的 `127.0.0.1`。
 
 使用 `RSS 终止 <GID>` 或 `RSS close <GID>` 可以停止尚未完成的 aria2 任务，同时停止机器人对该任务的进度检查。该命令不会删除已经下载到磁盘的完整或部分文件。

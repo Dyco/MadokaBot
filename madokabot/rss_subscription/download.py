@@ -33,6 +33,8 @@ class DownloadStatus(str, Enum):
     WAITING_SELECTION = "waiting_selection"
     DOWNLOADING = "downloading"
     UPLOADING = "uploading"
+    UPLOAD_FAILED = "upload_failed"
+    DELETE_FAILED = "delete_failed"
 
 
 class Aria2Error(RuntimeError):
@@ -54,6 +56,7 @@ ARIA2_STATUS_FIELDS = [
     "totalLength",
     "completedLength",
     "downloadSpeed",
+    "seeder",
     "dir",
     "files",
     "bittorrent",
@@ -62,6 +65,7 @@ ARIA2_STATUS_FIELDS = [
 
 # 任务状态保存在进程内，和原下载后端保持一致。
 download_tasks: Dict[str, Dict[str, Any]] = {}
+progress_recall_tasks: set[asyncio.Task[None]] = set()
 
 SelectionHandler = Callable[
     [Bot, str, List[Dict[str, Any]], List[str], str], Awaitable[None]
@@ -120,7 +124,7 @@ async def _rpc_call(method: str, params: Sequence[Any] = ()) -> Any:
 
 
 def _download_options(proxy: Optional[str] = None) -> Dict[str, str]:
-    options: Dict[str, str] = {}
+    options: Dict[str, str] = {"seed-time": "0"}
     if config.aria2_download_path:
         download_path = Path(config.aria2_download_path).expanduser().resolve()
         try:
@@ -281,8 +285,7 @@ async def _remove_download(gid: str, status: str = "") -> None:
 
 
 def _clear_download_tracking(gid: str) -> None:
-    if scheduler.get_job(gid):
-        scheduler.remove_job(gid)
+    _stop_status_check(gid)
     task_info = download_tasks.pop(gid, None)
     if task_info is None:
         return
@@ -292,6 +295,11 @@ def _clear_download_tracking(gid: str) -> None:
         and timeout_task is not asyncio.current_task()
     ):
         timeout_task.cancel()
+
+
+def _stop_status_check(gid: str) -> None:
+    if scheduler.get_job(gid):
+        scheduler.remove_job(gid)
 
 
 async def cancel_download(gid: str) -> str:
@@ -506,7 +514,8 @@ async def upload_files_to_groups(
     files: List[Dict[str, Any]],
     name: str,
     gid: str,
-) -> None:
+) -> Dict[str, List[Dict[str, Any]]]:
+    failed_files: Dict[str, List[Dict[str, Any]]] = {}
     for group_id in _whitelisted_group_ids(group_ids):
         for file_info in files:
             raw_path = file_info.get("path")
@@ -514,7 +523,11 @@ async def upload_files_to_groups(
                 continue
             path = Path(str(raw_path))
             if not path.is_file():
-                msg = f"{name}\nGID：{gid}\n找不到待上传文件：{path}"
+                failed_files.setdefault(group_id, []).append(file_info)
+                msg = (
+                    f"❌ {name}\nGID：{gid}\n找不到待上传文件：{path}\n"
+                    f"文件记录将保留，可使用 /RSS 重试 {gid} 再次检查并上传。"
+                )
                 await send_msg(bot, msg, [group_id])
                 logger.error(msg)
                 continue
@@ -532,12 +545,89 @@ async def upload_files_to_groups(
                     file=str(path),
                     name=file_name,
                 )
-            except ActionFailed:
-                msg = f"{name}\nGID：{gid}\n上传到群：{group_id}失败！请手动上传！"
-                await send_msg(bot, msg, [group_id])
+            except ActionFailed as exc:
+                failed_files.setdefault(group_id, []).append(file_info)
+                msg = (
+                    f"❌ {name}\nGID：{gid}\n上传到群：{group_id}失败。\n"
+                    f"原因：{exc}\n"
+                    f"文件将暂时保留，可使用 /RSS 重试 {gid} 再次上传。"
+                )
+                try:
+                    await send_msg(bot, msg, [group_id])
+                except Exception:
+                    logger.exception(f"发送上传失败提醒到群[{group_id}]时出错")
                 logger.exception(msg)
             except (NetworkError, TimeoutError) as exc:
+                failed_files.setdefault(group_id, []).append(file_info)
                 logger.warning(f"上传到群[{group_id}]网络异常：{exc}")
+                msg = (
+                    f"⚠️ {name}\nGID：{gid}\n上传到群：{group_id}调用超时，"
+                    "无法确认服务端是否已经接收文件。\n"
+                    "请先检查群文件；如果没有出现，再使用 "
+                    f"/RSS 重试 {gid}。\n文件将暂时保留，不会自动清理。"
+                )
+                try:
+                    await send_msg(bot, msg, [group_id])
+                except Exception:
+                    logger.exception(f"发送上传超时提醒到群[{group_id}]时出错")
+    return failed_files
+
+
+async def retry_upload_to_group(bot: Bot, gid: str, group_id: str) -> bool:
+    """Retry failed files for one group and schedule cleanup after full success."""
+    task_info = download_tasks.get(gid)
+    if task_info and task_info.get("status") == DownloadStatus.UPLOAD_FAILED:
+        failures = task_info.get("upload_failures")
+        if not isinstance(failures, dict):
+            raise Aria2Error("没有找到该任务的上传失败记录")
+        files = failures.get(group_id)
+        if not isinstance(files, list) or not files:
+            raise Aria2Error("该任务在当前群没有待重试的文件")
+        info = task_info.get("download_status")
+        if not isinstance(info, dict):
+            raise Aria2Error("该任务缺少下载状态，无法重试上传")
+        name = str(task_info.get("name") or _task_name(info, "重试上传"))
+    else:
+        info = await get_status(gid)
+        if str(info.get("status", "")) != "complete":
+            raise Aria2Error("该 aria2 任务尚未下载完成，无法重试上传")
+        files = [
+            file_info
+            for file_info in _status_files(info, selected_only=True)
+            if file_info.get("path")
+        ]
+        if not files:
+            raise Aria2Error("该任务没有可上传的文件")
+        name = _task_name(info, "重试上传")
+        failures = {}
+        task_info = {
+            "status": DownloadStatus.UPLOAD_FAILED,
+            "name": name,
+            "download_status": info,
+            "upload_failures": failures,
+        }
+        download_tasks[gid] = task_info
+
+    retried_failures = await upload_files_to_groups(
+        bot=bot,
+        group_ids=[group_id],
+        files=files,
+        name=name,
+        gid=gid,
+    )
+    if retried_failures:
+        failures[group_id] = retried_failures[group_id]
+        task_info["upload_failures"] = failures
+        return False
+
+    failures.pop(group_id, None)
+    if failures:
+        task_info["upload_failures"] = failures
+        return True
+
+    schedule_file_cleanup(gid, info)
+    _clear_download_tracking(gid)
+    return True
 
 
 def _cleanup_paths(status: Dict[str, Any]) -> tuple[Path, List[Path]]:
@@ -620,12 +710,93 @@ def schedule_file_cleanup(gid: str, status: Dict[str, Any]) -> None:
     )
 
 
+async def delete_download_files(gid: str) -> tuple[int, List[Path]]:
+    """Delete files belonging to one aria2 task and clear its tracking records."""
+    task_info = download_tasks.get(gid)
+    stored_status = task_info.get("download_status") if task_info else None
+    info = stored_status if isinstance(stored_status, dict) else await get_status(gid)
+    download_dir, paths = _cleanup_paths(info)
+    if not paths:
+        raise Aria2Error("该任务没有可安全删除的文件路径")
+
+    cleanup_job_id = f"rss-file-cleanup-{gid}"
+    if scheduler.get_job(cleanup_job_id):
+        scheduler.remove_job(cleanup_job_id)
+    _stop_status_check(gid)
+    aria2_status = str(info.get("status", ""))
+    if aria2_status not in {"complete", "error", "removed"}:
+        try:
+            await _rpc_call("aria2.forceRemove", [gid])
+        except Aria2Error as exc:
+            raise Aria2Error(
+                f"无法先停止仍在运行的 aria2 任务，未删除任何文件：{exc}"
+            ) from exc
+        info["status"] = "removed"
+    else:
+        await _remove_download(gid, aria2_status)
+
+    deleted_count = 0
+    failed_paths: List[Path] = []
+    for path in paths:
+        current_path = path.resolve()
+        if current_path == download_dir or download_dir not in current_path.parents:
+            logger.warning(f"跳过已离开下载目录的删除路径：{current_path}")
+            failed_paths.append(current_path)
+            continue
+        if not current_path.exists():
+            continue
+        try:
+            current_path.unlink()
+            deleted_count += 1
+        except OSError as exc:
+            failed_paths.append(current_path)
+            logger.warning(f"删除下载文件失败[{current_path}]：{exc}")
+
+    parent_dirs = sorted(
+        {path.parent for path in paths},
+        key=lambda path: len(path.parts),
+        reverse=True,
+    )
+    for parent in parent_dirs:
+        while parent != download_dir and download_dir in parent.parents:
+            try:
+                parent.rmdir()
+            except OSError:
+                break
+            parent = parent.parent
+
+    if failed_paths:
+        retained_info = task_info or {}
+        retained_info["status"] = DownloadStatus.DELETE_FAILED
+        retained_info["download_status"] = info
+        download_tasks[gid] = retained_info
+    else:
+        _clear_download_tracking(gid)
+    return deleted_count, failed_paths
+
+
 async def delete_messages(bot: Bot, msg_ids: List[Dict[str, Any]]) -> None:
     for msg_id in msg_ids:
         try:
             await bot.delete_msg(message_id=msg_id["message_id"])
         except Exception as exc:
             logger.debug(f"撤回下载进度消息失败：{exc}")
+
+
+async def _recall_progress_messages(
+    bot: Bot, msg_ids: List[Dict[str, Any]], delay: int
+) -> None:
+    await asyncio.sleep(delay)
+    await delete_messages(bot, msg_ids)
+
+
+def schedule_progress_recall(bot: Bot, msg_ids: List[Dict[str, Any]]) -> None:
+    delay = int(config.down_status_msg_recall_delay)
+    if delay <= 0 or not msg_ids:
+        return
+    task = asyncio.create_task(_recall_progress_messages(bot, msg_ids, delay))
+    progress_recall_tasks.add(task)
+    task.add_done_callback(progress_recall_tasks.discard)
 
 
 def _track_download(
@@ -670,8 +841,9 @@ async def _prepare_manual_download(
 
     if str(info.get("status", "")) == "paused":
         await _rpc_call("aria2.unpause", [gid])
-    task_summary = _task_summary(gid, info, name)
-    _track_download(bot, gid, group_ids, task_summary, task_info)
+    task_name = _task_name(info, name)
+    task_summary = _task_summary(gid, info, task_name)
+    _track_download(bot, gid, group_ids, task_name, task_info)
     await send_msg(bot, f"👏 {name}\n{task_summary}\n下载任务添加成功！", group_ids)
     return True
 
@@ -712,7 +884,7 @@ async def select_download_files(
     task_name = _task_name(updated_info, name)
     task_summary = _task_summary(gid, updated_info, task_name)
     await _rpc_call("aria2.unpause", [gid])
-    _track_download(bot, gid, group_ids, task_summary, task_info)
+    _track_download(bot, gid, group_ids, task_name, task_info)
     return {
         "gid": gid,
         "name": task_name,
@@ -763,7 +935,7 @@ async def _follow_metadata_download(
         await _rpc_call("aria2.unpause", [child_gid])
     task_name = _task_name(child_info, name)
     task_summary = _task_summary(child_gid, child_info, task_name)
-    _track_download(bot, child_gid, group_ids, task_summary, task_info)
+    _track_download(bot, child_gid, group_ids, task_name, task_info)
     _clear_download_tracking(metadata_gid)
     await _remove_download(metadata_gid, "complete")
     await send_msg(
@@ -831,7 +1003,13 @@ async def check_download_status(
         _clear_download_tracking(gid)
         return
 
-    if status == "complete":
+    is_seeding = (
+        status == "active" and str(info.get("seeder", "")).lower() == "true"
+    )
+    if status == "complete" or is_seeding:
+        if is_seeding:
+            await _remove_download(gid, status)
+        await delete_messages(bot, task_info["downing_tips_msg_id"])
         files = [
             file_info
             for file_info in _status_files(info, selected_only=True)
@@ -845,16 +1023,28 @@ async def check_download_status(
             f"👏 {name}\nGID：{gid}\n下载完成！耗时：{str(all_time).split('.', 2)[0]}",
             group_ids,
         )
-        await upload_files_to_groups(bot, group_ids, files, name, gid)
+        upload_failures = await upload_files_to_groups(
+            bot, group_ids, files, name, gid
+        )
+        if upload_failures:
+            task_info["status"] = DownloadStatus.UPLOAD_FAILED
+            task_info["name"] = name
+            task_info["download_status"] = info
+            task_info["upload_failures"] = upload_failures
+            _stop_status_check(gid)
+            return
+
         schedule_file_cleanup(gid, info)
         _clear_download_tracking(gid)
         return
 
     await delete_messages(bot, task_info["downing_tips_msg_id"])
     if status in {"active", "waiting", "paused"}:
-        task_info["downing_tips_msg_id"] = await send_download_progress(
+        progress_messages = await send_download_progress(
             bot, gid, info, name, group_ids
         )
+        task_info["downing_tips_msg_id"] = progress_messages
+        schedule_progress_recall(bot, progress_messages)
 
 
 def schedule_status_check(
@@ -961,7 +1151,7 @@ async def start_download(
                 await _remove_download(gid, str(info.get("status", "")))
                 _clear_download_tracking(gid)
                 raise DownloadSizeLimitExceeded(size_limit_message)
-            _track_download(bot, gid, group_ids, task_summary, task_info)
+            _track_download(bot, gid, group_ids, task_name, task_info)
             await send_msg(
                 bot,
                 f"👏 订阅：{name}\n{task_summary}\n下载任务添加成功！",

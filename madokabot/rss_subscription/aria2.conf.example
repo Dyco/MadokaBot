@@ -9,3 +9,6 @@ rpc-secret=change-this-secret
 # 该路径必须与 MadokaBot 的 ARIA2_DOWNLOAD_PATH 完全一致。
 dir=/srv/madoka/downloads
 continue=true
+
+# 下载完成后立即停止做种，交由 MadokaBot 上传和定时清理文件。
+seed-time=0

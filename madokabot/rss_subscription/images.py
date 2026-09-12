@@ -3,7 +3,7 @@ import random
 import re
 from io import BytesIO
 from pathlib import Path
-from typing import Any, Dict, Optional, Tuple, Union
+from typing import Any, Dict, Mapping, Optional, Tuple, Union
 
 import aiohttp
 from nonebot.log import logger
@@ -165,20 +165,26 @@ async def resolve_pixiv_cat_url(url: str) -> str:
 
 
 @retry(stop=(stop_after_attempt(5) | stop_after_delay(30)))
-async def download_image_detail(url: str, proxy: bool) -> Optional[bytes]:
+async def download_image_detail(
+    url: str,
+    proxy: bool,
+    headers: Optional[Mapping[str, str]] = None,
+) -> Optional[bytes]:
     async with aiohttp.ClientSession(raise_for_status=True) as session:
         referer = f"{URL(url).scheme}://{URL(url).host}/"
-        headers = {"referer": referer}
+        request_headers = {"referer": referer}
+        if headers:
+            request_headers.update(headers)
         try:
             resp = await session.get(
-                url, headers=headers, proxy=get_proxy(open_proxy=proxy)
+                url, headers=request_headers, proxy=get_proxy(open_proxy=proxy)
             )
             content = await resp.read()
             # 如果图片无法获取到，直接返回
             if len(content) == 0:
                 if "pixiv.cat" in url:
                     url = await resolve_pixiv_cat_url(url=url)
-                    return await download_image(url, proxy)
+                    return await download_image(url, proxy, headers)
                 logger.error(
                     f"图片[{url}]下载失败！ Content-Type: {resp.headers.get('Content-Type')} status: {resp.status}"
                 )
@@ -188,22 +194,31 @@ async def download_image_detail(url: str, proxy: bool) -> Optional[bytes]:
                 next_url = str(
                     URL("https://images.weserv.nl/").with_query(f"url={url}&output=png")
                 )
-                return await download_image(next_url, proxy)
+                return await download_image(next_url, proxy, headers)
             return content
         except Exception as e:
             logger.warning(f"图片[{url}]下载失败！将重试最多 5 次！\n{e}")
             raise
 
 
-async def download_image(url: str, proxy: bool = False) -> Optional[bytes]:
+async def download_image(
+    url: str,
+    proxy: bool = False,
+    headers: Optional[Mapping[str, str]] = None,
+) -> Optional[bytes]:
     try:
-        return await download_image_detail(url=url, proxy=proxy)
+        return await download_image_detail(url=url, proxy=proxy, headers=headers)
     except RetryError:
         logger.error(f"图片[{url}]下载失败！已达最大重试次数！有可能需要开启代理！")
         return None
 
 
-async def handle_img_combo(url: str, img_proxy: bool, rss: Optional[Rss] = None) -> str:
+async def handle_img_combo(
+    url: str,
+    img_proxy: bool,
+    rss: Optional[Rss] = None,
+    headers: Optional[Mapping[str, str]] = None,
+) -> str:
     """'
     下载图片并返回可用的CQ码
 
@@ -215,7 +230,7 @@ async def handle_img_combo(url: str, img_proxy: bool, rss: Optional[Rss] = None)
         返回当前图片的CQ码,以base64格式编码发送
         如获取图片失败将会提示图片走丢了
     """
-    if content := await download_image(url, img_proxy):
+    if content := await download_image(url, img_proxy, headers):
         if rss is not None and rss.download_pic:
             _url = URL(url)
             logger.debug(f"正在保存图片: {url}")
@@ -261,14 +276,18 @@ async def handle_img(
         doc_img = doc_img[:img_num]
     for img in doc_img:
         url = img.attr("src")
-        img_str += await handle_img_combo(url, img_proxy, rss)
+        img_str += await handle_img_combo(
+            url, img_proxy, rss, item.get("image_headers")
+        )
 
     # 处理视频
     if doc_video := html("video"):
         img_str += "\n视频封面："
         for video in doc_video.items():
             url = video.attr("poster")
-            img_str += await handle_img_combo(url, img_proxy, rss)
+            img_str += await handle_img_combo(
+                url, img_proxy, rss, item.get("image_headers")
+            )
 
     return img_str
 

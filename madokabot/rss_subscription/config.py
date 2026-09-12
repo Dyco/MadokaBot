@@ -5,7 +5,7 @@ from nonebot import get_plugin_config
 from nonebot.config import Config
 from nonebot.log import logger
 import nonebot_plugin_localstore as store
-from pydantic import AnyHttpUrl, Field
+from pydantic import AnyHttpUrl, Field, SecretStr
 
 try:
     from pydantic import ConfigDict
@@ -65,18 +65,22 @@ class RSSConfig(Config):
     blockquote: bool = True
     black_word: Optional[List[str]] = None
 
+    danbooru_user_id: Optional[int] = None
+    danbooru_login: Optional[str] = None
+    danbooru_api_key: Optional[SecretStr] = None
+
     aria2_rpc_url: str = "http://127.0.0.1:6800/jsonrpc"  # aria2 JSON-RPC 地址
     aria2_rpc_secret: Optional[str] = None  # aria2 RPC 密钥
     aria2_download_path: Optional[str] = (
         None  # aria2 下载目录，必须是 MadokaBot 能访问到的本地路径
     )
     aria2_acquire_timeout: int = Field(
-        default=60,
+        default=120,
         gt=0,
         description="下载链接、种子文件及磁力元数据的获取超时，单位秒",
     )
     aria2_file_cleanup_delay: int = Field(
-        default=3600,
+        default=600,
         ge=0,
         description="下载文件的自动清理延迟，单位秒；设为 0 时关闭",
     )
@@ -91,7 +95,17 @@ class RSSConfig(Config):
         description="单个下载任务的总文件大小上限，单位 MiB",
     )
     down_status_msg_group: Optional[List[int]] = None  # 下载进度消息提示群组
-    down_status_msg_date: int = 10  # 下载进度检查及提示间隔时间，单位秒
+    down_status_msg_date: int = Field(
+        default=90,
+        gt=0,
+        description="下载进度检查及提示间隔时间，单位秒",
+    )
+    down_status_msg_recall_delay: int = Field(
+        default=60,
+        ge=0,
+        lt=120,
+        description="下载进度消息的自动撤回延迟，单位秒；设为 0 时不自动撤回",
+    )
 
     telegram_admin_ids: List[int] = Field(
         default_factory=list
