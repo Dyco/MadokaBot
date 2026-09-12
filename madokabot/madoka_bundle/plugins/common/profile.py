@@ -1,10 +1,6 @@
+from nonebot import logger
 from nonebot.adapters.onebot.v11 import MessageEvent
-from nonebot_plugin_alconna import (
-    Arparma,
-    Image,
-    Match,
-    UniMessage,
-)
+from nonebot_plugin_alconna import Arparma, Match
 from nonebot_plugin_datastore import create_session
 
 from ...db.services import UserService
@@ -20,12 +16,15 @@ async def handle_set_base(result: Arparma):
 
 
 @set_cmd.assign("chara")
-async def _set_skin(event: MessageEvent, id: Match[str]):
+async def _set_skin(event: MessageEvent, skin_id: Match[str]):
     uid = event.get_user_id()
-    if not id.available or not id.result.strip():
+    if not await UserAccount.is_registered(uid):
+        await set_cmd.finish("请先发送“注册”完成用户注册")
+
+    if not skin_id.available or not skin_id.result.strip():
         await set_cmd.finish(f"用法：{SET_USAGE}")
 
-    _, message = await UserAccount.switch_skin(uid, id.result)
+    _, message = await UserAccount.switch_skin(uid, skin_id.result)
     await set_cmd.finish(message)
 
 
@@ -74,7 +73,8 @@ async def _query_profile(event: MessageEvent):
         )
     except LookupError:
         await query_cmd.finish("请先发送“注册”完成用户注册")
-    except Exception as e:
-        await query_cmd.finish(f"资料查询失败：{str(e)}")
+    except Exception:
+        logger.exception("生成用户资料失败")
+        await query_cmd.finish("资料查询失败，请稍后重试")
 
-    await query_cmd.finish(UniMessage(Image(raw=image_data)))
+    await query_cmd.finish(image_data)

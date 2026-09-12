@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-from typing import Dict, Optional
 from pathlib import Path
 
 from .constants import ResType, SubFolder
@@ -8,7 +7,7 @@ from .utils import get_indexed_files
 
 @dataclass(frozen=True)
 class ShopDefinition:
-    """A hand-written shop category backed directly by an asset directory."""
+    """由资源目录直接提供商品的手写商店分类。"""
 
     type: ResType
     content: SubFolder
@@ -22,8 +21,10 @@ SKIN_SHOP = ShopDefinition(
     price=50,
     prefix="skin",
 )
-def get_skin_map() -> Dict[str, Path]:
-    """Scan the configured enum directory and generate consecutive runtime IDs."""
+
+
+def get_skin_map() -> dict[str, Path]:
+    """扫描立绘目录并生成连续的运行时编号。"""
     return get_indexed_files(
         SKIN_SHOP.type,
         SKIN_SHOP.content,
@@ -31,16 +32,10 @@ def get_skin_map() -> Dict[str, Path]:
     )
 
 
-def get_skin_asset_name(skin_key: str) -> Optional[str]:
-    """Translate a temporary display key (for example skin06) to its asset name."""
-    path = get_skin_map().get(skin_key.strip().lower())
-    return path.name if path else None
-
-
-def get_skin_path(asset_name: str) -> Optional[Path]:
-    """Resolve a persisted asset name without depending on its current display number."""
+def get_skin_path(asset_name: str) -> Path | None:
+    """根据持久化文件名查找立绘，不依赖当前展示编号。"""
     path = next(
         (path for path in get_skin_map().values() if path.name == asset_name),
         None,
     )
-    return path if path and path.is_file() else None
+    return path if path is not None and path.is_file() else None

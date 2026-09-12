@@ -5,12 +5,35 @@ services:
     build: .
     ports:
       - "8080:8080"
+
     env_file:
       - .env.prod
+
     volumes:
       - ./assets:/app/assets
+
     environment:
       ENVIRONMENT: prod
       HOST: 0.0.0.0
       PORT: 8080
+
+      HTTP_PROXY: http://mihomo:7890
+      HTTPS_PROXY: http://mihomo:7890
+      ALL_PROXY: socks5://mihomo:7890
+
+      http_proxy: http://mihomo:7890
+      https_proxy: http://mihomo:7890
+      all_proxy: socks5://mihomo:7890
+
+      NO_PROXY: localhost,127.0.0.1,mihomo
+      no_proxy: localhost,127.0.0.1,mihomo
+
+    networks:
+      - default
+      - proxy-net
+
     restart: always
+
+networks:
+  proxy-net:
+    external: true

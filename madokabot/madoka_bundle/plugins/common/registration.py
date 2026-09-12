@@ -1,19 +1,13 @@
-from datetime import datetime
-from sqlalchemy.exc import IntegrityError
-from sqlalchemy.ext.asyncio import AsyncSession
-from zoneinfo import ZoneInfo
-
 from nonebot import on_message
 from nonebot.adapters.onebot.v11 import MessageEvent
 from nonebot.rule import fullmatch
 from nonebot_plugin_datastore import create_session
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from ...db.models import SignRecord, UserInventory, UserStats
 from ...registry import SKIN_SHOP
 from .config import config
-
-
-_SHANGHAI_TZ = ZoneInfo("Asia/Shanghai")
 
 
 register_matcher = on_message(
@@ -27,27 +21,22 @@ async def register_user(
     session: AsyncSession,
     uid: str,
 ) -> tuple[UserStats, SignRecord, bool]:
-    """Create all user state in one place and return whether it was newly created."""
+    """集中创建用户数据，并返回本次是否为首次注册。"""
     user = await session.get(UserStats, uid)
     if user is not None:
         sign = await session.get(SignRecord, uid)
         if sign is None:
-            sign = SignRecord(
-                user_id=uid,
-                last_sign_date=None,
-                continuous_days=0,
-                total_count=0,
-            )
+            sign = SignRecord(user_id=uid)
             session.add(sign)
             try:
                 await session.commit()
             except IntegrityError:
-                # Another request may have repaired the same partial account.
+                # 并发请求可能已补全同一份不完整账号。
                 await session.rollback()
                 sign = await session.get(SignRecord, uid)
-                if sign is None:
-                    raise
                 user = await session.get(UserStats, uid)
+                if user is None or sign is None:
+                    raise
             else:
                 await session.refresh(user)
                 await session.refresh(sign)
@@ -55,17 +44,9 @@ async def register_user(
 
     user = UserStats(
         user_id=uid,
-        register_time=datetime.now(_SHANGHAI_TZ),
-        points=0,
-        favorability=0,
         skin_asset=config.initial_chara,
     )
-    sign = SignRecord(
-        user_id=uid,
-        last_sign_date=None,
-        continuous_days=0,
-        total_count=0,
-    )
+    sign = SignRecord(user_id=uid)
     session.add_all([user, sign])
     if config.initial_chara:
         session.add(
@@ -81,7 +62,7 @@ async def register_user(
     try:
         await session.commit()
     except IntegrityError:
-        # A registration command and a sign command may arrive together.
+        # 注册与签到可能同时创建同一账号。
         await session.rollback()
         existing_user = await session.get(UserStats, uid)
         existing_sign = await session.get(SignRecord, uid)
@@ -92,18 +73,6 @@ async def register_user(
     await session.refresh(user)
     await session.refresh(sign)
     return user, sign, True
-
-
-async def get_or_register_user(
-    session: AsyncSession,
-    uid: str,
-) -> tuple[UserStats, SignRecord, bool]:
-    """Return an existing account or create it through the common flow."""
-    user = await session.get(UserStats, uid)
-    sign = await session.get(SignRecord, uid) if user is not None else None
-    if user is not None and sign is not None:
-        return user, sign, False
-    return await register_user(session, uid)
 
 
 @register_matcher.handle()

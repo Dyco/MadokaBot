@@ -14,14 +14,19 @@ __plugin_meta__ = PluginMetadata(
         "shop help\n"
         "shop chara\n"
         "shop list\n"
-        "shop buy <编号>"
+        "shop buy <编号>\n"
+        "群白名单 添加 [群号]\n"
+        "群白名单 删除 [群号]\n"
+        "群白名单 列表 [页码]"
     ),
     type="application",
     config=CommonConfig,
 )
 
-# Register commands first, then attach their handlers.
-from . import registration as registration  # noqa: E402
+# Import matcher definitions before attaching command handlers.
 from . import matchers as matchers  # noqa: E402
+from . import group_whitelist as group_whitelist  # noqa: E402
+from .group_whitelist import is_group_whitelisted  # noqa: E402,F401
+from . import registration as registration  # noqa: E402
 from . import profile as profile  # noqa: E402
 from . import shop as shop  # noqa: E402

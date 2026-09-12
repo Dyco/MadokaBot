@@ -34,10 +34,11 @@ class ChatConfig(BaseModel):
                 parsed = json.loads(stripped)
                 if isinstance(parsed, list):
                     return [str(item).strip() for item in parsed if str(item).strip()]
+                raise ValueError("set_model 的 JSON 配置必须是模型名称列表")
             return [item.strip() for item in stripped.split(",") if item.strip()]
         if isinstance(value, list):
             return [str(item).strip() for item in value if str(item).strip()]
-        return [str(value).strip()]
+        raise ValueError("set_model 必须是列表、JSON 列表或逗号分隔字符串")
 
 
 config = get_plugin_config(ChatConfig)

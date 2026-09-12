@@ -1,18 +1,16 @@
 import asyncio
+from collections import defaultdict
 
-from nonebot import on_message, logger
-from nonebot.rule import fullmatch
-from nonebot.exception import FinishedException
+from nonebot import logger, on_message
 from nonebot.adapters.onebot.v11 import MessageEvent
 from nonebot.plugin import PluginMetadata
-from collections import defaultdict
+from nonebot.rule import fullmatch
 from nonebot_plugin_datastore import create_session
 
-from .config import SignConfig, config
-from .utils import get_sign_status, execute_sign_update
-from ..common.registration import get_or_register_user
 from ...render.utils import render_sign_card
-
+from ..common.registration import register_user
+from .config import SignConfig, config
+from .utils import can_sign_today, execute_sign_update
 
 __plugin_meta__ = PluginMetadata(
     name="每日签到",
@@ -22,55 +20,53 @@ __plugin_meta__ = PluginMetadata(
     config=SignConfig,
 )
 
-sign_locks = defaultdict(asyncio.Lock)
-sign_generating = defaultdict(bool)
+sign_locks: defaultdict[str, asyncio.Lock] = defaultdict(asyncio.Lock)
 
-sign_matcher = on_message( rule=fullmatch(config.sign_keywords) , priority=10 , block=True )
+sign_matcher = on_message(
+    rule=fullmatch(config.sign_keywords),
+    priority=10,
+    block=True,
+)
+
 
 @sign_matcher.handle()
-async def _(event: MessageEvent):
+async def _handle_sign(event: MessageEvent):
     uid = event.get_user_id()
-    username = event.sender.card or event.sender.nickname
-    
-    if sign_generating[uid]:
-        return  
+    username = event.sender.card or event.sender.nickname or uid
+    lock = sign_locks[uid]
+    if lock.locked():
+        return
 
-    async with sign_locks[uid]:
-        sign_generating[uid] = True
-        try:
+    image_message = None
+    try:
+        async with lock:
             reward_data = None
             async with create_session() as session:
-                try:
-                    user, sign, is_new = await get_sign_status(uid, session)
-                except LookupError:
-                    # Registration belongs to common. A first-time sign-in
-                    # continues through the same sign update/render flow.
-                    await get_or_register_user(session, uid)
-                    user, sign, is_new = await get_sign_status(uid, session)
-                
-                prefix = "签到成功！正在获得数据…" if is_new else "你已经签到过了。正在生成个人数据…"
-                await sign_matcher.send(prefix)
+                user, sign, _ = await register_user(session, uid)
+                is_new_sign = can_sign_today(sign)
 
-                if is_new:
+                if is_new_sign:
+                    prompt = "签到成功！正在获得数据…"
+                else:
+                    prompt = "你已经签到过了。正在生成个人数据…"
+                await sign_matcher.send(prompt)
+
+                if is_new_sign:
                     reward_data = await execute_sign_update(user, sign, session)
                     await session.refresh(user)
                     await session.refresh(sign)
-            
-            # 传入参数：username, user, sign, reward_data
-            image_msg = await render_sign_card(
-                user_name=username, 
-                user=user, 
-                sign=sign, 
-                reward_data=reward_data
-            )
-            
-            await sign_matcher.finish(image_msg)
 
-        except FinishedException:
-            raise
-        except Exception as e:
-            import traceback
-            logger.error(f"签到异常: {e}\n{traceback.format_exc()}")
-            await sign_matcher.send("抱歉，円香现在心情不太好，稍后再来吧。")
-        finally:
-            sign_generating[uid] = False
+            image_message = await render_sign_card(
+                user_name=username,
+                user=user,
+                sign=sign,
+                reward_data=reward_data,
+            )
+    except Exception:
+        logger.exception("签到处理失败")
+    finally:
+        sign_locks.pop(uid, None)
+
+    if image_message is None:
+        await sign_matcher.finish("抱歉，円香现在心情不太好，稍后再来吧。")
+    await sign_matcher.finish(image_message)

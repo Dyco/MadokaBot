@@ -1,10 +1,10 @@
-from pydantic import BaseModel
 from nonebot import get_plugin_config
-from typing import List
+from pydantic import BaseModel, Field
+
 
 class EchoConfig(BaseModel):
     echo_reply: str = "我在"
-    echo_keywords: List[str] = ["ping", "円香"]
+    echo_keywords: list[str] = Field(default_factory=lambda: ["ping", "円香"])
 
-# 实例化配置
+
 config = get_plugin_config(EchoConfig)

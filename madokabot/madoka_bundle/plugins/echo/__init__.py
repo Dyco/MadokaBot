@@ -1,10 +1,10 @@
 from nonebot import on_message
-from nonebot.rule import fullmatch
 from nonebot.adapters.onebot.v11 import MessageEvent
 from nonebot.plugin import PluginMetadata
+from nonebot.rule import fullmatch
 
+from ...utils import get_latency_ms
 from .config import EchoConfig, config
-from ...utils import get_latency_ms 
 
 __plugin_meta__ = PluginMetadata(
     name="状态测试",
@@ -14,10 +14,14 @@ __plugin_meta__ = PluginMetadata(
     config=EchoConfig,
 )
 
-# 关键词匹配响应
-echo = on_message( rule=fullmatch(config.echo_keywords) , priority=10 , block=True )
+echo_matcher = on_message(
+    rule=fullmatch(config.echo_keywords),
+    priority=10,
+    block=True,
+)
 
-@echo.handle()
-async def _(event: MessageEvent):
+
+@echo_matcher.handle()
+async def _handle_echo(event: MessageEvent):
     ms = get_latency_ms(event)
-    await echo.finish(f"{config.echo_reply} ({ms:.0f}ms)")
+    await echo_matcher.finish(f"{config.echo_reply} ({ms:.0f}ms)")

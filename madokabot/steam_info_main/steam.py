@@ -22,46 +22,40 @@ STEAM_ID_OFFSET = 76561197960265728
 # ----------------------------
 # HTTP CLIENT（修复并发关闭）
 # ----------------------------
-_http_client: Optional[httpx.AsyncClient] = None
+_http_clients: Dict[Optional[str], Tuple[httpx.AsyncClient, float]] = {}
 _http_client_lock = asyncio.Lock()
-_http_client_created_at: float = 0
 HTTP_CLIENT_MAX_AGE = 60 * 30
 
 
 async def get_http_client(proxy: Optional[str]) -> httpx.AsyncClient:
-    global _http_client, _http_client_created_at
-
     async with _http_client_lock:
         now = time.time()
-
-        need_recreate = (
-            _http_client is None
-            or _http_client.is_closed
-            or now - _http_client_created_at > HTTP_CLIENT_MAX_AGE
-        )
-
-        if need_recreate:
-            if _http_client is not None:
+        client_entry = _http_clients.get(proxy)
+        if client_entry is not None:
+            client, created_at = client_entry
+            if not client.is_closed and now - created_at <= HTTP_CLIENT_MAX_AGE:
+                return client
+            if not client.is_closed:
                 try:
-                    await _http_client.aclose()
+                    await client.aclose()
                 except Exception:
                     pass
 
-            _http_client = httpx.AsyncClient(
-                proxy=proxy,
-                timeout=httpx.Timeout(connect=10.0, read=15.0, write=10.0, pool=10.0),
-                headers={"User-Agent": "MadokaBot/SteamInfo"},
-                follow_redirects=True,
-                limits=httpx.Limits(
-                    max_connections=10,
-                    keepalive_expiry=30.0,
-                    max_keepalive_connections=0,
-                ),
-            )
-            _http_client_created_at = now
-            logger.info("Steam HTTP client recreated")
+        client = httpx.AsyncClient(
+            proxy=proxy,
+            timeout=httpx.Timeout(connect=10.0, read=15.0, write=10.0, pool=10.0),
+            headers={"User-Agent": "MadokaBot/SteamInfo"},
+            follow_redirects=True,
+            limits=httpx.Limits(
+                max_connections=10,
+                keepalive_expiry=30.0,
+                max_keepalive_connections=0,
+            ),
+        )
+        _http_clients[proxy] = (client, now)
+        logger.info("Steam HTTP client recreated for the requested proxy mode")
 
-        return _http_client
+        return client
 
 
 # ----------------------------
@@ -626,6 +620,8 @@ async def get_user_data(
     if description_node:
         for br in description_node.find_all("br"):
             br.replace_with("\n")
+        for h1 in description_node.select(".bb_h1"):
+            h1.replace_with(f"[H1]{h1.get_text(' ', strip=True)}[/H1]")
         desc = description_node.get_text("\n", strip=True)
         desc = re.sub(r"ː.*?ː", "", desc)
         result["description"] = desc.strip()

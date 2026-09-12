@@ -1,0 +1,11 @@
+# aria2c 配置示例（Linux）
+# 复制到 /etc/aria2/aria2.conf 或用户自己的配置目录后按需修改。
+
+enable-rpc=true
+rpc-listen-all=false
+rpc-listen-port=6800
+rpc-secret=change-this-secret
+
+# 该路径必须与 MadokaBot 的 ARIA2_DOWNLOAD_PATH 完全一致。
+dir=/srv/madoka/downloads
+continue=true

@@ -1,5 +1,4 @@
 from pathlib import Path
-from typing import Optional
 
 from nonebot import get_plugin_config
 from pydantic import BaseModel
@@ -11,7 +10,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[2]
 
 class MainConfig(BaseModel):
     assets_path: Path = PROJECT_ROOT / "assets"
-    proxy: Optional[str] = None
+    proxy: str | None = None
 
 
 class AssetManager:
@@ -19,7 +18,7 @@ class AssetManager:
         self.root = root
 
     def get_dir(self, res_type: ResType, plugin: SubFolder) -> Path:
-        """Locate assets/{type}/{plugin_name} and ensure it exists."""
+        """返回资源目录，并在目录尚不存在时创建它。"""
         path = self.root / res_type.value / plugin.value
         path.mkdir(parents=True, exist_ok=True)
         return path

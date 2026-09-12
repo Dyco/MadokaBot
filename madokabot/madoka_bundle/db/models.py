@@ -1,6 +1,4 @@
 from datetime import datetime
-from typing import Optional
-
 from zoneinfo import ZoneInfo
 
 from sqlalchemy import DateTime, Integer, String, inspect
@@ -29,8 +27,7 @@ class UserStats(data.Model):
     )
     points: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     favorability: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
-    # Store the stable filename. Runtime keys such as skin06 are generated from
-    # the current resource list and are deliberately not persisted.
+    # 只保存稳定文件名；skin06 等运行时编号由当前资源列表生成。
     skin_asset: Mapped[str] = mapped_column(String, default="", nullable=False)
 
 
@@ -38,7 +35,7 @@ class SignRecord(data.Model):
     __tablename__ = "madoka_sign_record"
 
     user_id: Mapped[str] = mapped_column(String, primary_key=True)
-    last_sign_date: Mapped[Optional[datetime]] = mapped_column(
+    last_sign_date: Mapped[datetime | None] = mapped_column(
         DateTime,
         default=None,
         nullable=True,
@@ -57,7 +54,7 @@ class UserInventory(data.Model):
     quantity: Mapped[int] = mapped_column(Integer, default=1)
 
 
-async def init_madoka_db():
+async def init_madoka_db() -> None:
     engine = get_engine()
     async with engine.begin() as conn:
         await conn.run_sync(data.Model.metadata.create_all)
@@ -67,19 +64,16 @@ async def init_madoka_db():
                 for column in inspect(sync_conn).get_columns(UserStats.__tablename__)
             }
         )
-        if columns and "register_time" not in columns:
+        if "register_time" not in columns:
             column_type = DateTime().compile(dialect=conn.dialect)
             await conn.exec_driver_sql(
                 f"ALTER TABLE {UserStats.__tablename__} "
                 f"ADD COLUMN register_time {column_type}"
             )
 
-        # Existing installations predate the registration timestamp. Give
-        # those rows a usable value so adding the non-null model field does
-        # not make old accounts unreadable.
-        if columns:
-            await conn.exec_driver_sql(
-                f"UPDATE {UserStats.__tablename__} "
-                "SET register_time = CURRENT_TIMESTAMP "
-                "WHERE register_time IS NULL"
-            )
+        # 旧数据库没有注册时间，补值后才能满足模型的非空约束。
+        await conn.exec_driver_sql(
+            f"UPDATE {UserStats.__tablename__} "
+            "SET register_time = CURRENT_TIMESTAMP "
+            "WHERE register_time IS NULL"
+        )

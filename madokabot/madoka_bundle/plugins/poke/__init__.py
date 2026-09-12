@@ -1,9 +1,9 @@
 from nonebot import on_notice
 from nonebot.adapters.onebot.v11 import PokeNotifyEvent
-from ...constants import ResType, SubFolder
-from ...utils import get_random_res
 from nonebot.plugin import PluginMetadata
 
+from ...constants import ResType, SubFolder
+from ...utils import get_random_res
 
 __plugin_meta__ = PluginMetadata(
     name="戳一戳",
@@ -13,9 +13,11 @@ __plugin_meta__ = PluginMetadata(
 )
 
 
-poke = on_notice()
+poke_matcher = on_notice()
 
-@poke.handle()
-async def _(event: PokeNotifyEvent):
-    if event.target_id != event.self_id: return
-    await poke.finish(get_random_res(ResType.AUDIO, SubFolder.POKE))
+
+@poke_matcher.handle()
+async def _handle_poke(event: PokeNotifyEvent):
+    if event.target_id != event.self_id:
+        return
+    await poke_matcher.finish(get_random_res(ResType.AUDIO, SubFolder.POKE))

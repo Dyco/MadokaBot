@@ -1,4 +1,5 @@
 import asyncio
+import math
 import re
 import time
 from io import BytesIO
@@ -94,10 +95,36 @@ disable_parent_data = DisableParentData(
     store.get_data_file("nonebot_plugin_steam_info", "disable_parent_data.json")
 )
 avatar_path = store.get_cache_dir("nonebot_plugin_steam_info")
+_steam_query_timestamps: Dict[str, float] = {}
 
 
 def get_configured_steam_api_key() -> str:
     return config.steam_api_key.strip()
+
+
+def _get_query_proxy() -> Optional[str]:
+    return madoka_config.proxy if config.steam_query_use_proxy else None
+
+
+def _get_monitor_proxy() -> Optional[str]:
+    return madoka_config.proxy if config.steam_monitor_use_proxy else None
+
+
+def _claim_query_slot(user_id: str) -> Optional[int]:
+    """占用资料查询名额；若仍在冷却中则返回剩余分钟数。"""
+    cooldown = config.steam_query_cooldown
+    if cooldown <= 0:
+        return None
+
+    now = time.monotonic()
+    last_query = _steam_query_timestamps.get(user_id)
+    if last_query is not None:
+        remaining = cooldown - (now - last_query)
+        if remaining > 0:
+            return math.ceil(remaining / 60)
+
+    _steam_query_timestamps[user_id] = now
+    return None
 
 
 steam_command = Alconna(
@@ -135,7 +162,7 @@ async def to_image_data(image: Image) -> Union[BytesIO, bytes]:
     if image.path:
         return Path(image.path).read_bytes()
     if image.url:
-        async with httpx.AsyncClient(proxy=madoka_config.proxy) as client:
+        async with httpx.AsyncClient(proxy=_get_query_proxy()) as client:
             resp = await client.get(image.url)
             resp.raise_for_status()
             return resp.content
@@ -205,7 +232,7 @@ async def handle_bind(
     try:
         api_key = get_configured_steam_api_key()
         if api_key:
-            info = await get_steam_users_info([steam_id], api_key, madoka_config.proxy)
+            info = await get_steam_users_info([steam_id], api_key, _get_query_proxy())
             players = info.get("response", {}).get("players", [])
             if players:
                 steam_name = players[0].get("personaname", steam_id)
@@ -286,7 +313,7 @@ async def handle_add_other(
     try:
         api_key = get_configured_steam_api_key()
         if api_key:
-            info = await get_steam_users_info([s_id], api_key, madoka_config.proxy)
+            info = await get_steam_users_info([s_id], api_key, _get_query_proxy())
             players = info.get("response", {}).get("players", [])
             if players:
                 steam_name = players[0].get("personaname", s_id)
@@ -390,7 +417,7 @@ async def update_parent_info_handle(bot: Bot, target: MsgTarget):
         group_id = int(parent_id)
         group_info = await bot.get_group_info(group_id=group_id)
         avatar_url = f"https://p.qlogo.cn/gh/{group_id}/{group_id}/640"
-        async with httpx.AsyncClient(proxy=madoka_config.proxy) as client:
+        async with httpx.AsyncClient(proxy=_get_query_proxy()) as client:
             resp = await client.get(avatar_url)
             resp.raise_for_status()
             avatar = PILImage.open(BytesIO(resp.content))
@@ -413,7 +440,7 @@ async def _(target: MsgTarget):
     await steam_cmd.send("收到指令，正在尝试读取…")
     try:
         info = await get_steam_users_info(
-            steam_ids, get_configured_steam_api_key(), madoka_config.proxy
+            steam_ids, get_configured_steam_api_key(), _get_query_proxy()
         )
     except Exception as e:
         logger.error(f"Steam API 调用失败: {e}")
@@ -423,7 +450,7 @@ async def _(target: MsgTarget):
         await steam_cmd.finish("未查找到玩家信息")
 
     tasks = [
-        simplize_steam_player_data(p, madoka_config.proxy, avatar_path)
+        simplize_steam_player_data(p, _get_query_proxy(), avatar_path)
         for p in info["response"]["players"]
     ]
     try:
@@ -469,9 +496,13 @@ async def handle_info(
             await steam_cmd.finish("你尚未绑定 Steam，请使用 `steam bind ID`")
         steam_id = user_data["steam_id"]
 
+    remaining_minutes = _claim_query_slot(sender_id)
+    if remaining_minutes is not None:
+        await steam_cmd.finish(f"频繁查询，{remaining_minutes}分钟后再试。")
+
     await steam_cmd.send("收到指令，正在尝试读取…")
     try:
-        player_data = await get_user_data(steam_id, avatar_path, madoka_config.proxy)
+        player_data = await get_user_data(steam_id, avatar_path, _get_query_proxy())
     except Exception as e:
         logger.exception(f"获取玩家详情失败，使用默认资料继续绘图: {e}")
         player_data = get_default_user_data(steam_id)
@@ -548,7 +579,7 @@ async def update_steam_info():
     steam_info = await get_steam_users_info_cached(
         list(steam_ids),
         get_configured_steam_api_key(),
-        madoka_config.proxy,
+        _get_monitor_proxy(),
         STEAM_USER_CACHE_TTL,
     )
 
@@ -624,7 +655,11 @@ async def broadcast_steam_info(
             if steamid in avatar_cache:
                 avatar = avatar_cache[steamid]
             else:
-                avatar = await fetch_avatar(entry["player"], avatar_path, madoka_config.proxy)
+                avatar = await fetch_avatar(
+                    entry["player"],
+                    avatar_path,
+                    _get_monitor_proxy(),
+                )
                 avatar_cache[steamid] = avatar
 
             bind_info = bind_data.get_by_steam_id(parent_id, steamid) or {}

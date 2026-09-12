@@ -1,5 +1,4 @@
 import math
-import re
 import time
 from typing import Any
 
@@ -13,9 +12,10 @@ from nonebot_plugin_alconna import (
 from nonebot_plugin_waiter import waiter
 
 from ...db.user_source import UserAccount
-from ..pillow import render_shop_list_card
+from ..pillow.shop_card import render_shop_list_card
 from .config import config
 from .matchers import SHOP_USAGE, shop_cmd
+from .utils import parse_page_command
 
 
 def _extract_message_id(send_result: Any) -> int | None:
@@ -42,29 +42,6 @@ def _extract_message_id(send_result: Any) -> int | None:
 
 def _calc_total_pages(item_count: int) -> int:
     return max(1, math.ceil(item_count / config.shop_page_size))
-
-
-def _parse_page_command(
-    text: str,
-    current_page: int,
-    total_pages: int,
-) -> tuple[int | None, bool]:
-    normalized = text.strip().lower()
-    if not normalized:
-        return None, False
-
-    if normalized in {"下一页", "下页", "next", "n"}:
-        return min(total_pages, current_page + 1), False
-    if normalized in {"上一页", "上页", "prev", "previous", "p"}:
-        return max(1, current_page - 1), False
-
-    page_match = re.fullmatch(r"第?\s*(\d+)\s*页?", normalized)
-    if page_match:
-        page = int(page_match.group(1))
-        if 1 <= page <= total_pages:
-            return page, False
-        return None, True
-    return None, False
 
 
 async def _build_shop_page(uid: str, page: int) -> tuple[UniMessage, int, int]:
@@ -112,6 +89,9 @@ async def _shop_list(event: MessageEvent):
 
 async def _send_skin_shop(event: MessageEvent):
     uid = event.get_user_id()
+    if not await UserAccount.is_registered(uid):
+        await shop_cmd.finish("请先发送“注册”完成用户注册")
+
     message, current_page, total_pages = await _build_shop_page(uid, 1)
     send_result = await shop_cmd.send(
         message + _build_shop_page_text(current_page, total_pages),
@@ -132,7 +112,7 @@ async def _send_skin_shop(event: MessageEvent):
         if replied_message_id != reply_message_id:
             return None
 
-        target_page, invalid_page = _parse_page_command(
+        target_page, invalid_page = parse_page_command(
             reply_event.get_plaintext(),
             current_page,
             total_pages,
@@ -154,6 +134,8 @@ async def _send_skin_shop(event: MessageEvent):
             ).send(target=reply_event, reply_to=True)
             continue
 
+        if target_page is None:
+            continue
         message, current_page, total_pages = await _build_shop_page(uid, target_page)
         send_result = await (
             message + "\n" + _build_shop_page_text(current_page, total_pages)
@@ -170,10 +152,15 @@ async def _send_skin_shop(event: MessageEvent):
 @shop_cmd.assign("buy")
 async def _shop_buy_skin(event: MessageEvent, number: Match[str]):
     uid = event.get_user_id()
+    if not await UserAccount.is_registered(uid):
+        await shop_cmd.finish("请先发送“注册”完成用户注册")
+
     if not number.available or not number.result.strip():
         await shop_cmd.finish(f"用法：{SHOP_USAGE}")
-    if not number.result.strip().isdigit():
+
+    raw_number = number.result.strip()
+    if not raw_number.isdigit():
         await shop_cmd.finish("参数无效，请输入商品编号")
 
-    ok, message = await UserAccount.buy_shop_skin(uid, int(number.result.strip()))
+    ok, message = await UserAccount.buy_shop_skin(uid, int(raw_number))
     await shop_cmd.finish(message if ok else f"购买失败：{message}")

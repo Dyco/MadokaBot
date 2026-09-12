@@ -1,4 +1,5 @@
 import numpy as np
+import re
 from io import BytesIO
 from pathlib import Path
 from typing import List, Dict, Tuple, Optional
@@ -777,24 +778,49 @@ def draw_player_status(
     )
 
     # 画简介
-    line_width = 0
-    offset = 0
-    line = ""
-    for idx, char in enumerate(player_description):
-        line += char
-        line_width += ImageFont.truetype(font_light_path, 22).getlength(char)
-        if line_width > 640 or idx == len(player_description) - 1 or char == "\n":
-            draw.text(
-                (280, 132 + offset),
-                line,
-                font=ImageFont.truetype(font_light_path, 22),
-                fill=(255, 255, 255),
-            )
+    description_parts = re.split(
+        r"(\[H1\].*?\[/H1\])", player_description, flags=re.I | re.S
+    )
+    description_line_count = 0
+    description_y = 132
+
+    for part in description_parts:
+        if not part or description_line_count >= 4:
+            continue
+
+        h1_match = re.fullmatch(r"\[H1\](.*?)\[/H1\]", part, flags=re.I | re.S)
+        is_h1 = h1_match is not None
+        text = h1_match.group(1).strip() if h1_match else part
+        if not text:
+            continue
+
+        font = ImageFont.truetype(font_bold_path if is_h1 else font_light_path, 28 if is_h1 else 22)
+        line_height = 32 if is_h1 else 25
+
+        for text_line in text.splitlines() or [text]:
             line = ""
-            offset += 25
             line_width = 0
-        if offset >= 25 * 4:
-            break
+            for char in text_line:
+                char_width = draw.textlength(char, font=font)
+                if line and line_width + char_width > 640:
+                    draw.text(
+                        (280, description_y), line, font=font, fill=(255, 255, 255)
+                    )
+                    description_line_count += 1
+                    if description_line_count >= 4:
+                        break
+                    description_y += line_height
+                    line = ""
+                    line_width = 0
+                line += char
+                line_width += char_width
+
+            if description_line_count >= 4:
+                break
+            if line:
+                draw.text((280, description_y), line, font=font, fill=(255, 255, 255))
+                description_line_count += 1
+                description_y += line_height
 
     # 画游戏
 

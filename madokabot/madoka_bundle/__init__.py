@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from nonebot import load_plugins, logger
+from nonebot import load_plugins
 from nonebot.plugin import PluginMetadata
 from nonebot_plugin_datastore.db import post_db_init
 
@@ -15,14 +15,11 @@ __plugin_meta__ = PluginMetadata(
     config=MainConfig,
 )
 
+
 @post_db_init
-async def _():
-    try:
-        await init_madoka_db()
-        logger.info("[Madoka] 用户数据库初始化完成，商店资源使用代码配置")
-    except Exception as e:
-        logger.error(f"[Madoka] 初始化失败，请检查数据库配置或资源目录: {e}")
+async def _init_database():
+    await init_madoka_db()
 
 
-inline_plugins_path = str(Path(__file__).parent.joinpath("plugins").resolve())
+inline_plugins_path = str((Path(__file__).parent / "plugins").resolve())
 load_plugins(inline_plugins_path)

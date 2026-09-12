@@ -2,15 +2,24 @@ from typing import Any
 
 from sqlalchemy import select, update
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from nonebot_plugin_datastore import create_session
 
 from .models import UserInventory, UserStats
-from ..registry import (
-    SKIN_SHOP,
-    get_skin_asset_name,
-    get_skin_map,
-)
+from ..registry import SKIN_SHOP, get_skin_map
+
+
+async def _get_owned_skin_names(session: AsyncSession, uid: str) -> set[str]:
+    result = await session.scalars(
+        select(UserInventory.file_name).where(
+            UserInventory.user_id == uid,
+            UserInventory.resource_type == SKIN_SHOP.type.name,
+            UserInventory.content == SKIN_SHOP.content.name,
+            UserInventory.quantity > 0,
+        )
+    )
+    return set(result.all())
 
 
 class UserAccount:
@@ -18,8 +27,8 @@ class UserAccount:
     async def get_points(uid: str) -> int:
         async with create_session() as session:
             user = await session.get(UserStats, uid)
-            if not user:
-                return 0
+            if user is None:
+                raise LookupError("用户未注册")
             return user.points
 
     @staticmethod
@@ -30,13 +39,14 @@ class UserAccount:
     @staticmethod
     async def switch_skin(uid: str, skin_key: str) -> tuple[bool, str]:
         normalized_key = skin_key.strip().lower()
-        asset_name = get_skin_asset_name(normalized_key)
-        if not asset_name:
+        skin_path = get_skin_map().get(normalized_key)
+        if skin_path is None:
             return False, "该立绘不存在"
+        asset_name = skin_path.name
 
         async with create_session() as session:
             user = await session.get(UserStats, uid)
-            if not user:
+            if user is None:
                 return False, "请先发送“注册”完成用户注册"
 
             owned = (
@@ -58,25 +68,15 @@ class UserAccount:
 
             user.skin_asset = asset_name
             await session.commit()
-            return True, f"立绘切换成功：{normalized_key}（{get_skin_map()[normalized_key].stem}）"
+            return True, f"立绘切换成功：{normalized_key}（{skin_path.stem}）"
 
     @staticmethod
     async def get_shop_skin_list(uid: str) -> list[dict[str, Any]]:
         async with create_session() as session:
-            owned_assets = set(
-                (
-                    await session.execute(
-                        select(UserInventory.file_name).where(
-                            UserInventory.user_id == uid,
-                            UserInventory.resource_type == SKIN_SHOP.type.name,
-                            UserInventory.content == SKIN_SHOP.content.name,
-                            UserInventory.quantity > 0,
-                        )
-                    )
-                ).scalars().all()
-            )
             user = await session.get(UserStats, uid)
-            current_asset = user.skin_asset if user else None
+            if user is None:
+                raise LookupError("用户未注册")
+            owned_assets = await _get_owned_skin_names(session, uid)
 
             return [
                 {
@@ -85,7 +85,7 @@ class UserAccount:
                     "asset_name": path.name,
                     "price": SKIN_SHOP.price,
                     "owned": path.name in owned_assets,
-                    "current": path.name == current_asset,
+                    "current": path.name == user.skin_asset,
                 }
                 for display_id, (skin_key, path) in enumerate(
                     get_skin_map().items(), start=1
@@ -95,26 +95,16 @@ class UserAccount:
     @staticmethod
     async def get_owned_skin_list(uid: str) -> list[dict[str, Any]]:
         async with create_session() as session:
-            owned_assets = set(
-                (
-                    await session.execute(
-                        select(UserInventory.file_name).where(
-                            UserInventory.user_id == uid,
-                            UserInventory.resource_type == SKIN_SHOP.type.name,
-                            UserInventory.content == SKIN_SHOP.content.name,
-                            UserInventory.quantity > 0,
-                        )
-                    )
-                ).scalars().all()
-            )
             user = await session.get(UserStats, uid)
-            current_asset = user.skin_asset if user else None
+            if user is None:
+                raise LookupError("用户未注册")
+            owned_assets = await _get_owned_skin_names(session, uid)
 
             return [
                 {
                     "item_key": skin_key,
                     "asset_name": path.name,
-                    "current": path.name == current_asset,
+                    "current": path.name == user.skin_asset,
                 }
                 for skin_key, path in get_skin_map().items()
                 if path.name in owned_assets
@@ -148,11 +138,8 @@ class UserAccount:
                     )
                 )
             ).scalar_one_or_none()
-            if owned:
+            if owned is not None:
                 return False, "你已经拥有这个立绘了"
-
-            if item_price < 0:
-                return False, "商品价格配置错误，请联系管理员"
 
             if current_points < item_price:
                 return (
@@ -183,9 +170,11 @@ class UserAccount:
                     )
                 )
                 await session.flush()
-                remaining_points = await session.scalar(
-                    select(UserStats.points).where(UserStats.user_id == uid)
-                )
+                remaining_points = (
+                    await session.execute(
+                        select(UserStats.points).where(UserStats.user_id == uid)
+                    )
+                ).scalar_one()
                 await session.commit()
             except IntegrityError:
                 await session.rollback()
