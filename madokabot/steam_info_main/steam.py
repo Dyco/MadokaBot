@@ -43,6 +43,7 @@ async def get_http_client(proxy: Optional[str]) -> httpx.AsyncClient:
 
         client = httpx.AsyncClient(
             proxy=proxy,
+            trust_env=False,
             timeout=httpx.Timeout(connect=10.0, read=15.0, write=10.0, pool=10.0),
             headers={"User-Agent": "MadokaBot/SteamInfo"},
             follow_redirects=True,
@@ -147,6 +148,7 @@ async def get_steam_users_info(
 
     async with httpx.AsyncClient(
         proxy=proxy,
+        trust_env=False,
         timeout=timeout,
         headers={"User-Agent": "MadokaBot/SteamInfo"},
         follow_redirects=True,

@@ -15,27 +15,41 @@ from .data_source import BindData
 from .steam import get_http_client
 
 
+def _load_unknown_avatar() -> Image.Image:
+    with Image.open(unknown_avatar_path) as image:
+        image.load()
+        return image.copy()
+
+
 async def fetch_avatar(
     player: Player, avatar_dir: Optional[Path], proxy: str = None
 ) -> Image.Image:
     url = player.get("avatarfull") or player.get("avatar")
-    
+
     if not url:
         logger.warning(f"玩家 {player.get('steamid')} 缺少头像 URL")
-        return Image.open(unknown_avatar_path)
+        return _load_unknown_avatar()
 
     if avatar_dir is None:
         return await _fetch_avatar(url, proxy)
 
-    avatar_dir.mkdir(parents=True, exist_ok=True)
+    try:
+        avatar_dir.mkdir(parents=True, exist_ok=True)
+    except OSError as exc:
+        logger.warning(f"头像缓存目录不可用，将跳过缓存: {exc}")
+        return await _fetch_avatar(url, proxy)
+
     avatar_path = avatar_dir / f"avatar_{player['steamid']}.png"
 
     if avatar_path.exists():
         mtime = avatar_path.stat().st_mtime
         if (time.time() - mtime) < 86400:
             try:
-                return Image.open(avatar_path)
-            except Exception:
+                with Image.open(avatar_path) as image:
+                    image.load()
+                    return image.copy()
+            except Exception as exc:
+                logger.warning(f"头像缓存损坏，将重新下载: {avatar_path}, 错误: {exc}")
                 avatar_path.unlink(missing_ok=True)
 
     avatar = await _fetch_avatar(url, proxy)
@@ -43,21 +57,24 @@ async def fetch_avatar(
         avatar.save(avatar_path)
     except Exception as e:
         logger.error(f"保存头像失败: {e}")
-            
+
     return avatar
 
+
 async def _fetch_avatar(avatar_url: str, proxy: str = None) -> Image.Image:
-    client = await get_http_client(proxy) 
     try:
+        client = await get_http_client(proxy)
         response = await client.get(avatar_url)
         if response.status_code == 200:
-            return Image.open(BytesIO(response.content))
+            image = Image.open(BytesIO(response.content))
+            image.load()
+            return image
         else:
             logger.warning(f"下载头像失败，状态码: {response.status_code}")
     except Exception as e:
         logger.warning(f"下载头像异常: {avatar_url}, 错误: {e}")
-            
-    return Image.open(unknown_avatar_path)
+
+    return _load_unknown_avatar()
 
 
 def convert_player_name_to_nickname(

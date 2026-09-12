@@ -102,12 +102,21 @@ def get_configured_steam_api_key() -> str:
     return config.steam_api_key.strip()
 
 
+def _get_configured_proxy(enabled: bool) -> Optional[str]:
+    if not enabled or not madoka_config.proxy:
+        return None
+    proxy = str(madoka_config.proxy).strip()
+    if not proxy:
+        return None
+    return proxy if "://" in proxy else f"http://{proxy}"
+
+
 def _get_query_proxy() -> Optional[str]:
-    return madoka_config.proxy if config.steam_query_use_proxy else None
+    return _get_configured_proxy(config.steam_query_use_proxy)
 
 
 def _get_monitor_proxy() -> Optional[str]:
-    return madoka_config.proxy if config.steam_monitor_use_proxy else None
+    return _get_configured_proxy(config.steam_monitor_use_proxy)
 
 
 def _claim_query_slot(user_id: str) -> Optional[int]:
@@ -162,7 +171,9 @@ async def to_image_data(image: Image) -> Union[BytesIO, bytes]:
     if image.path:
         return Path(image.path).read_bytes()
     if image.url:
-        async with httpx.AsyncClient(proxy=_get_query_proxy()) as client:
+        async with httpx.AsyncClient(
+            proxy=_get_query_proxy(), trust_env=False
+        ) as client:
             resp = await client.get(image.url)
             resp.raise_for_status()
             return resp.content
@@ -417,7 +428,9 @@ async def update_parent_info_handle(bot: Bot, target: MsgTarget):
         group_id = int(parent_id)
         group_info = await bot.get_group_info(group_id=group_id)
         avatar_url = f"https://p.qlogo.cn/gh/{group_id}/{group_id}/640"
-        async with httpx.AsyncClient(proxy=_get_query_proxy()) as client:
+        async with httpx.AsyncClient(
+            proxy=_get_query_proxy(), trust_env=False
+        ) as client:
             resp = await client.get(avatar_url)
             resp.raise_for_status()
             avatar = PILImage.open(BytesIO(resp.content))
@@ -456,7 +469,7 @@ async def _(target: MsgTarget):
     try:
         player_results = await asyncio.gather(*tasks)
     except Exception as e:
-        logger.error(f"处理玩家数据时崩溃: {e}")
+        logger.exception(f"处理玩家数据时崩溃: {e}")
         await steam_cmd.finish("处理头像数据时出错")
 
     parent_avatar, parent_name = parent_data.get(parent_id)
