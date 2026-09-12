@@ -300,40 +300,50 @@ def _cache_file(cache_path: Path, category: str, url: str) -> Path:
 
 
 def _extract_background_url(html: str, soup: BeautifulSoup) -> Optional[str]:
-    selectors = (
-        ".profile_background_image_content",
-        ".profile_background_holder_content",
-        ".profile_animated_background",
-        ".profile_background",
-        "[class*='profile_background']",
+    # The reference page stores the equipped static background on the main
+    # profile-page container. Read that exact element first so decoration,
+    # preview, and avatar-frame assets cannot be mistaken for the background.
+    profile_page = soup.select_one(
+        ".no_header.profile_page.has_profile_background"
+        "[style*='background-image']"
     )
-    for selector in selectors:
-        for node in soup.select(selector):
-            url = _style_image_url(node.get("style"))
-            if url:
-                return url
-            if node.name == "img":
-                url = _normalize_steam_url(_url_from_attr(node, "src", "data-src"))
-                if url:
-                    return url
-            image = node.select_one("img[src], img[data-src]")
-            if image:
-                url = _normalize_steam_url(_url_from_attr(image, "src", "data-src"))
-                if url:
-                    return url
+    if profile_page:
+        url = _style_image_url(profile_page.get("style"))
+        if url:
+            return url
 
-    # Fallback for pages where Steam only leaves the image URL in inline CSS.
+    # Match Sample.py's `background-image: url( '...' )` structure when the
+    # profile classes differ, allowing harmless whitespace/quote variations.
     match = re.search(
-        r"profile_(?:animated_)?background[^<>{}]*?url\((['\"]?)(.*?)\1\)",
+        r"background-image\s*:\s*url\(\s*(['\"])(.*?)\1\s*\)",
         html,
         re.I | re.S,
     )
     if match:
         return _normalize_steam_url(match.group(2))
+
+    # Animated backgrounds have no usable static background-image. Prefer their
+    # poster frame rather than selecting an unrelated image from a broad class
+    # match.
+    animated_background = soup.select_one(
+        ".profile_animated_background video[poster], "
+        "video.profile_animated_background[poster]"
+    )
+    if animated_background:
+        return _normalize_steam_url(animated_background.get("poster"))
+
     return None
 
 
 def _extract_avatar_url(html: str, soup: BeautifulSoup) -> Optional[str]:
+    # Steam's profile page exposes the canonical full-size avatar through this
+    # link even when the visible avatar markup changes (see Sample.py).
+    image_src = soup.find("link", rel="image_src")
+    if image_src:
+        url = _normalize_steam_url(image_src.get("href"))
+        if url:
+            return url
+
     selectors = (
         ".playerAvatarAutoSizeInner img",
         ".profile_header .playerAvatar img",
@@ -354,7 +364,7 @@ def _extract_avatar_url(html: str, soup: BeautifulSoup) -> Optional[str]:
 
 
 def _find_recent_games_node(soup: BeautifulSoup):
-    for selector in ("#recent_games", ".recent_games", ".recentgame_quicklinks"):
+    for selector in ("#recent_games", ".recent_games"):
         node = soup.select_one(selector)
         if node:
             return node
@@ -370,7 +380,17 @@ def _find_recent_games_node(soup: BeautifulSoup):
     return recent_game.parent
 
 
-def _extract_recent_2_week_play_time(recent_games_node) -> Optional[str]:
+def _extract_recent_2_week_play_time(soup: BeautifulSoup) -> Optional[str]:
+    # This is the stable structure used by the reference implementation.
+    play_time_node = soup.select_one(
+        ".recentgame_quicklinks.recentgame_recentplaytime > div"
+    )
+    if play_time_node:
+        value = play_time_node.get_text(" ", strip=True)
+        if value:
+            return value
+
+    recent_games_node = _find_recent_games_node(soup)
     if not recent_games_node:
         return None
     text = recent_games_node.get_text(" ", strip=True)
@@ -420,28 +440,38 @@ async def _parse_recent_game(
     )
     game_name = name_node.get_text(" ", strip=True) if name_node else "未知游戏"
 
-    play_time = _extract_text_by_patterns(
-        text,
-        (
-            r"总时数\s*([\d,.]+\s*小时)",
-            r"Total\s*Play(?:ed)?\s*([\d,.]+\s*hrs?)",
-            r"([\d,.]+\s*小时)\s*总时数",
-            r"([\d,.]+\s*hrs?)\s*on\s*record",
-        ),
-    ) or "0 小时"
-    play_time = play_time.replace("hrs", "小时").replace("hr", "小时")
+    details_node = game.select_one(".game_info_details")
+    details_text = details_node.get_text(" ", strip=True) if details_node else text
 
-    last_played = _extract_text_by_patterns(
-        text,
+    # Keep only the numeric portion. The drawing adapter adds the Chinese unit,
+    # matching the field contract used by Sample.py.
+    play_time = _extract_text_by_patterns(
+        details_text,
         (
-            r"最后(?:运行|游玩)日期\s*([^成]+?)(?:\s+成就|$)",
-            r"Last\s*Played\s*([^A]+?)(?:\s+Achievements|$)",
+            r"总时数\s*([\d,.]+)\s*小时",
+            r"Total\s*Play(?:ed)?\s*([\d,.]+)\s*(?:hrs?|hours?)",
+            r"([\d,.]+)\s*小时\s*总时数",
+            r"([\d,.]+)\s*(?:hrs?|hours?)\s*on\s*record",
         ),
-    ) or "未知"
+    ) or ""
+
+    last_played_value = _extract_text_by_patterns(
+        details_text,
+        (
+            r"最后(?:运行|游玩)日期[：:]?\s*(.*?)(?:\s+成就|$)",
+            r"Last\s*Played[：:]?\s*(.*?)(?:\s+Achievements|$)",
+        ),
+    )
+    last_played = (
+        f"最后运行日期：{last_played_value}"
+        if last_played_value
+        else "当前正在游戏"
+    )
 
     header_url = _extract_first_image_url(
         game,
         (
+            "img.game_capsule",
             "img[src*='header']",
             "img[src*='capsule_184x69']",
             ".game_capsule img",
@@ -460,7 +490,16 @@ async def _parse_recent_game(
 
     completed_achievement_number = 0
     total_achievement_number = 0
-    achievement_match = re.search(r"(\d+)\s*/\s*(\d+)", text)
+    achievement_summary = game.select_one(
+        ".game_info_achievement_summary .ellipsis, "
+        ".game_info_achievement_summary"
+    )
+    achievement_text = (
+        achievement_summary.get_text(" ", strip=True)
+        if achievement_summary
+        else text
+    )
+    achievement_match = re.search(r"(\d+)\s*/\s*(\d+)", achievement_text)
     if achievement_match:
         completed_achievement_number = int(achievement_match.group(1))
         total_achievement_number = int(achievement_match.group(2))
@@ -468,15 +507,30 @@ async def _parse_recent_game(
     achievements = []
     seen_urls = set()
     for image in game.select(
+        ".game_info_achievement:not(.plus_more) img, "
         ".achievement img, .achieveImgHolder img, img[src*='achievements']"
     ):
+        achievement_node = image.find_parent(
+            class_=lambda classes: classes
+            and "game_info_achievement" in classes
+        )
+        if achievement_node and "plus_more" in achievement_node.get("class", []):
+            continue
+
         url = _normalize_steam_url(_url_from_attr(image, "src", "data-src"))
         if not url or url in seen_urls:
             continue
         seen_urls.add(url)
         achievements.append(
             {
-                "name": image.get("alt") or image.get("title") or "",
+                "name": (
+                    achievement_node.get("data-tooltip-text")
+                    if achievement_node
+                    else None
+                )
+                or image.get("alt")
+                or image.get("title")
+                or "",
                 "image": await _fetch(
                     url,
                     default_achievement_image,
@@ -600,20 +654,20 @@ async def get_user_data(
     else:
         logger.info("Steam profile avatar URL not found; using default avatar")
 
-    recent_games_node = _find_recent_games_node(soup)
     result["recent_2_week_play_time"] = (
-        _extract_recent_2_week_play_time(recent_games_node)
+        _extract_recent_2_week_play_time(soup)
         or result["recent_2_week_play_time"]
     )
 
     game_data = []
-    if recent_games_node:
-        for game in recent_games_node.select(".recent_game"):
-            game_info = await _parse_recent_game(
-                game, default_header_image, default_achievement_image, cache_path, proxy
-            )
-            if game_info:
-                game_data.append(game_info)
+    # Parse cards directly from the page. A `recentgame_quicklinks` element is
+    # inside a card, so treating it as the list container drops every game.
+    for game in soup.select("div.recent_game"):
+        game_info = await _parse_recent_game(
+            game, default_header_image, default_achievement_image, cache_path, proxy
+        )
+        if game_info:
+            game_data.append(game_info)
 
     result["game_data"] = game_data
     return result

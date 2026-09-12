@@ -3,13 +3,14 @@ import asyncio
 from nonebot import on_message, logger
 from nonebot.rule import fullmatch
 from nonebot.exception import FinishedException
-from nonebot.adapters.onebot.v11 import MessageEvent, MessageSegment
+from nonebot.adapters.onebot.v11 import MessageEvent
 from nonebot.plugin import PluginMetadata
 from collections import defaultdict
 from nonebot_plugin_datastore import create_session
 
 from .config import SignConfig, config
 from .utils import get_sign_status, execute_sign_update
+from ..common.registration import get_or_register_user
 from ...render.utils import render_sign_card
 
 
@@ -39,7 +40,13 @@ async def _(event: MessageEvent):
         try:
             reward_data = None
             async with create_session() as session:
-                user, sign, is_new = await get_sign_status(uid, session)
+                try:
+                    user, sign, is_new = await get_sign_status(uid, session)
+                except LookupError:
+                    # Registration belongs to common. A first-time sign-in
+                    # continues through the same sign update/render flow.
+                    await get_or_register_user(session, uid)
+                    user, sign, is_new = await get_sign_status(uid, session)
                 
                 prefix = "签到成功！正在获得数据…" if is_new else "你已经签到过了。正在生成个人数据…"
                 await sign_matcher.send(prefix)

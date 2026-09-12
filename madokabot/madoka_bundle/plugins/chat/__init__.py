@@ -8,6 +8,7 @@ from nonebot.exception import FinishedException
 from nonebot.plugin import PluginMetadata
 from nonebot_plugin_alconna import Alconna, Args, Match, on_alconna
 
+from ...config import config as madoka_config
 from .config import ChatConfig, config
 
 
@@ -146,7 +147,10 @@ async def _chat_completion(question: str, mode: str) -> tuple[str, int | None, f
     start_time = time.perf_counter()
     errors: list[str] = []
 
-    async with httpx.AsyncClient(timeout=config.chat_timeout) as client:
+    async with httpx.AsyncClient(
+        proxy=madoka_config.proxy,
+        timeout=config.chat_timeout,
+    ) as client:
         for model in models:
             try:
                 answer, total_tokens = await _request_with_model(

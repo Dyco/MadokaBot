@@ -17,6 +17,7 @@ TEXT_MAIN = "#2d3440"        # 主文本：深灰蓝/夜蓝色
 TEXT_SUB = "#6c7686"         # 副文本：冷铅灰色
 OWNED_COLOR = "#3c7a89"      # 已拥有：沉静的灰青色
 UNOWNED_COLOR = "#8e5a65"    # 未拥有：冷调的暗蔷薇色
+CURRENT_COLOR = "#426b9b"    # 使用中：冷蓝色
 
 THUMB_HEIGHT = 300
 THUMB_FRAME_HEIGHT = THUMB_HEIGHT + 20
@@ -188,10 +189,18 @@ def render_shop_list_card(
             _draw_preview(image, preview_box, item["asset_name"], small_font)
 
             owned = item["owned"]
-            status_text = "[已拥有]" if owned else "[未拥有]"
-            status_color = OWNED_COLOR if owned else UNOWNED_COLOR
+            current = item.get("current", False)
+            if current:
+                status_text = "[使用中]"
+                status_color = CURRENT_COLOR
+            elif owned:
+                status_text = "[已拥有]"
+                status_color = OWNED_COLOR
+            else:
+                status_text = "[未拥有]"
+                status_color = UNOWNED_COLOR
             name_text = _clip_name(Path(item["asset_name"]).stem, limit=20) # 宽度够了，可以允许更长的截断限制
-            number_text = f"#{item['item_id']}"
+            number_text = f"#{item['display_id']}"
             price_text = f"价格：{item['price']}积分"
 
             draw.text(

@@ -8,7 +8,7 @@ from pathlib import Path
 from jinja2 import Template
 from nonebot.adapters.onebot.v11 import MessageSegment
 from nonebot_plugin_htmlrender import html_to_pic
-from ..registry import SKIN_MAP
+from ..registry import get_skin_path
 from ..utils import get_file, ResType, SubFolder
 from ..db.models import UserStats, SignRecord
 from .config import HTML_FILE_PATH
@@ -21,13 +21,15 @@ async def render_sign_card(user_name: str, user: UserStats, sign: SignRecord, re
     :param sign: SignRecord 数据库对象
     :param reward_data: 奖励字典，包含 reward_points, bonus_point, reward_favor
     """
-    chara_path = SKIN_MAP.get(user.skin_key, SKIN_MAP["skin08"])
+    chara_path = get_skin_path(user.skin_asset)
     font_file = get_file(ResType.FONT, SubFolder.SIGN, "font.ttf")
     font_uri = Path(font_file).as_uri() 
-    chara_display_name = os.path.splitext(os.path.basename(chara_path))[0]
-    
-    with open(chara_path, "rb") as f:
-        chara_b64 = f"data:image/png;base64,{base64.b64encode(f.read()).decode()}"
+    chara_display_name = None
+    chara_b64 = None
+    if chara_path is not None:
+        chara_display_name = os.path.splitext(os.path.basename(chara_path))[0]
+        with open(chara_path, "rb") as f:
+            chara_b64 = f"data:image/png;base64,{base64.b64encode(f.read()).decode()}"
 
     if reward_data:
         title = "每日签到"

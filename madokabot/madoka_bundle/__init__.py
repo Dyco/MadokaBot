@@ -1,11 +1,11 @@
 from pathlib import Path
 
-from nonebot import get_driver, load_plugins, logger
+from nonebot import load_plugins, logger
 from nonebot.plugin import PluginMetadata
+from nonebot_plugin_datastore.db import post_db_init
 
 from .config import MainConfig
 from .db.models import init_madoka_db
-from .db.user_source import UserAccount
 
 __plugin_meta__ = PluginMetadata(
     name="圆香聊天机器人",
@@ -15,15 +15,11 @@ __plugin_meta__ = PluginMetadata(
     config=MainConfig,
 )
 
-driver = get_driver()
-
-
-@driver.on_startup
+@post_db_init
 async def _():
     try:
         await init_madoka_db()
-        await UserAccount.sync_shop_skins()
-        logger.info("[Madoka] 数据库和商店资源同步完成")
+        logger.info("[Madoka] 用户数据库初始化完成，商店资源使用代码配置")
     except Exception as e:
         logger.error(f"[Madoka] 初始化失败，请检查数据库配置或资源目录: {e}")
 

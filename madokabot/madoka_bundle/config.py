@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import Optional
 
 from nonebot import get_plugin_config
 from pydantic import BaseModel
@@ -10,7 +11,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[2]
 
 class MainConfig(BaseModel):
     assets_path: Path = PROJECT_ROOT / "assets"
-    skincost: int = 50
+    proxy: Optional[str] = None
 
 
 class AssetManager:

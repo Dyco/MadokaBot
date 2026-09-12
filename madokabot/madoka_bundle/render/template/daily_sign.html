@@ -350,15 +350,19 @@
 
                 <div class="card-footer">
                 </div>
+                {% if chara_name %}
                 <div class="chara-name-display">
                     立绘：{{ chara_name }}</div>
+                {% endif %}
             </div>
 
         </div>
 
+        {% if chara_b64 %}
         <div class="chara-container">
             <img class="chara-img" src="{{ chara_b64 }}">
         </div>
+        {% endif %}
 
         <div class="bubble">
             <div class="bubble-text">「{{ quote }}」</div>
