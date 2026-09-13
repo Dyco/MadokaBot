@@ -107,6 +107,7 @@ VIDEO_COMPRESS_MAX_MB=300
 VIDEO_COMPRESS_TARGET_MB=90
 FFMPEG_PATH=ffmpeg
 FFPROBE_PATH=ffprobe
+FFMPEG_TIMEOUT=1800
 GROUP_FILE_MAX_MB=2048
 GROUP_FILE_UPLOAD_TIMEOUT=3600
 RSS_UPLOAD_VERIFY_DELAY=3600
@@ -116,6 +117,8 @@ DOWN_STATUS_MSG_GROUP="[]"
 DOWN_STATUS_MSG_DATE=90
 DOWN_STATUS_MSG_RECALL_DELAY=60
 ```
+
+`FFMPEG_TIMEOUT` 控制单次 FFmpeg/FFprobe 处理时限，默认 `1800` 秒；超时后会终止子进程并释放上传队列。群文件核验接口连续异常时同样受 `RSS_UPLOAD_MAX_RETRIES` 限制，不会无限期循环核验。
 
 订阅开启 `downopen=1` 后，RSS 中的磁力链接或 `.torrent` 链接会提交给 aria2。机器人提交的任务会设置 `seed-time=0`，下载完成后不继续做种。`ARIA2_ACQUIRE_TIMEOUT` 控制 torrent 链接、aria2 RPC 初始信息及磁力元数据的获取时限，单位为秒，默认是 `60`；获取失败或超时后会放弃任务，进入正式文件下载后不再受该时限影响。`ARIA2_FILE_CLEANUP_DELAY` 控制上传处理结束后的文件保留时间，单位为秒，默认是 `3600`；设为 `0` 可以关闭自动清理。`ARIA2_MAX_FILE_SIZE_MB` 限制单个普通文件大小，默认是 `512` MiB；`ARIA2_MAX_TOTAL_SIZE_MB` 限制单个种子任务的总大小，默认是 `1024` MiB。视频另受 `VIDEO_COMPRESS_MAX_MB` 限制，超过默认 `300` MiB 时不会开始内容下载。触发任一大小限制时只会停止内容文件，已经取得的 `.torrent` 仍会加入上传队列。`DOWN_STATUS_MSG_DATE` 控制下载进度检查及提示间隔，单位为秒，默认是 `300`；`DOWN_STATUS_MSG_RECALL_DELAY` 控制每条进度消息独立撤回的延迟，默认是 `110` 秒，设为 `0` 时不自动撤回。
 

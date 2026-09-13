@@ -1,11 +1,14 @@
+import asyncio
 import json
 import os
 import re
-import subprocess
 from pathlib import Path
 from urllib.parse import urljoin
 
+import aiofiles
 import httpx
+
+from .downloads import DownloadBudget
 
 headers = {
     'referer': 'https://www.acfun.cn/',
@@ -100,6 +103,7 @@ async def download_m3u8_videos(
     i: int,
     output_dir: str | os.PathLike[str] | None = None,
     proxy: str | None = None,
+    budget: DownloadBudget | None = None,
 ):
     """
         批量下载m3u8
@@ -117,9 +121,11 @@ async def download_m3u8_videos(
     ) as client:
         async with client.stream("GET", m3u8_full_url, headers=headers) as resp:
             resp.raise_for_status()
-            with (target_dir / f"{i}.ts").open("wb") as f:
+            async with aiofiles.open(target_dir / f"{i}.ts", "wb") as f:
                 async for chunk in resp.aiter_bytes():
-                    f.write(chunk)
+                    if budget is not None:
+                        await budget.consume(len(chunk))
+                    await f.write(chunk)
 
 
 def escape_special_chars(str_json):
@@ -142,11 +148,13 @@ def parse_video_name(video_info: dict) -> str:
     return raw
 
 
-def merge_ac_file_to_mp4(
+async def merge_ac_file_to_mp4(
     ts_names,
     full_file_name: str | os.PathLike[str],
     should_delete: bool = True,
     work_dir: str | os.PathLike[str] | None = None,
+    ffmpeg_path: str = "ffmpeg",
+    timeout: int = 1800,
 ):
     work_path = Path(work_dir or Path.cwd())
     work_path.mkdir(parents=True, exist_ok=True)
@@ -160,9 +168,9 @@ def merge_ac_file_to_mp4(
     )
     manifest_path.write_text(concat_str, encoding="utf-8")
 
-    result = subprocess.run(
-        [
-            "ffmpeg",
+    try:
+        process = await asyncio.create_subprocess_exec(
+            ffmpeg_path,
             "-y",
             "-f",
             "concat",
@@ -173,14 +181,26 @@ def merge_ac_file_to_mp4(
             "-c",
             "copy",
             str(output_path),
-        ],
-        cwd=work_path,
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL,
-        check=False,
-    )
-    if result.returncode != 0:
-        raise RuntimeError(f"ffmpeg 合并 ACFun 视频失败，退出码: {result.returncode}")
+            cwd=work_path,
+            stdout=asyncio.subprocess.DEVNULL,
+            stderr=asyncio.subprocess.DEVNULL,
+        )
+    except FileNotFoundError as exc:
+        raise RuntimeError(f"找不到 ffmpeg：{ffmpeg_path}") from exc
+    try:
+        return_code = await asyncio.wait_for(process.wait(), timeout=timeout)
+    except asyncio.TimeoutError as exc:
+        if process.returncode is None:
+            process.kill()
+        await process.wait()
+        raise RuntimeError(f"ffmpeg 合并 ACFun 视频超过 {timeout} 秒") from exc
+    except asyncio.CancelledError:
+        if process.returncode is None:
+            process.kill()
+        await process.wait()
+        raise
+    if return_code != 0:
+        raise RuntimeError(f"ffmpeg 合并 ACFun 视频失败，退出码: {return_code}")
     if should_delete:
         manifest_path.unlink(missing_ok=True)
         for index in range(len(ts_names)):

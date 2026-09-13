@@ -212,6 +212,7 @@ def _new_upload_item(
         "upload_success": False,
         "attempt_count": 0,
         "retry_count": 0,
+        "verification_error_count": 0,
         "manual_retry_count": 0,
         "last_attempt_at": None,
         "next_verify_at": None,
@@ -815,6 +816,9 @@ def get_download_record_messages(group_id: Optional[str] = None) -> List[str]:
             }.get(str(item.get("delivery_mode") or ""), "待判定")
             attempts = _int_value(item.get("attempt_count"))
             retries = _int_value(item.get("retry_count"))
+            verification_errors = _int_value(
+                item.get("verification_error_count")
+            )
             manual_retries = _int_value(item.get("manual_retry_count"))
             last_attempt = item.get("last_attempt_at") or "尚未尝试"
             next_verify = item.get("next_verify_at")
@@ -824,6 +828,7 @@ def get_download_record_messages(group_id: Optional[str] = None) -> List[str]:
             file_lines.append(
                 f"- {file_name}[{file_size}]：{status_label}（{delivery_mode}）\n"
                 f"  尝试 {attempts} 次，自动重传 {retries} 次，"
+                f"核验异常 {verification_errors} 次，"
                 f"手动重试 {manual_retries} 次\n"
                 f"  上次尝试：{last_attempt}{verify_message}"
             )
@@ -1133,6 +1138,7 @@ async def _process_upload_item(bot: Bot, gid: str, item_id: str) -> None:
     group_id = str(item.get("group_id"))
     item["status"] = DownloadStatus.UPLOADING.value
     item["last_error"] = None
+    item["verification_error_count"] = 0
     _save_upload_record(gid, record)
 
     try:
@@ -1141,18 +1147,33 @@ async def _process_upload_item(bot: Bot, gid: str, item_id: str) -> None:
             item,
         )
     except Exception as exc:
-        item["status"] = DownloadStatus.UPLOAD_VERIFYING.value
         item["last_error"] = f"上传前检查失败：{type(exc).__name__}: {exc}"
-        run_at = datetime.now().astimezone() + timedelta(
-            seconds=int(config.rss_upload_verify_delay)
-        )
-        _schedule_upload_verification(gid, item, run_at)
+        retry_count = _int_value(item.get("retry_count"))
+        if retry_count < int(config.rss_upload_max_retries):
+            item["retry_count"] = retry_count + 1
+            item["status"] = DownloadStatus.UPLOAD_QUEUED.value
+            item["next_verify_at"] = None
+            _save_upload_record(gid, record)
+            await _safe_upload_notice(
+                bot,
+                f"⚠️ {record.get('name', '下载任务')}\nGID：{gid}\n"
+                f"文件上传前检查未通过，开始第 {item['retry_count']} 次自动重试："
+                f"{item.get('file_name')}\n原因：{exc}",
+                group_id,
+            )
+            _enqueue_upload_item(gid, item_id)
+            return
+
+        item["status"] = DownloadStatus.UPLOAD_FAILED.value
+        item["verified_at"] = _now_iso()
+        item["next_verify_at"] = None
         _save_upload_record(gid, record)
         await _safe_upload_notice(
             bot,
-            f"⚠️ {record.get('name', '下载任务')}\nGID：{gid}\n"
+            f"❌ {record.get('name', '下载任务')}\nGID：{gid}\n"
             f"文件上传前检查未通过：{item.get('file_name')}\n"
-            f"原因：{exc}\n将在 {_upload_verify_delay_text()}后核验并决定是否重传。",
+            f"原因：{exc}\n已达到自动重试上限，文件仍会保留，"
+            f"可使用 /RSS 重试 {gid}。",
             group_id,
         )
         return
@@ -1347,11 +1368,36 @@ async def verify_uploaded_file(gid: str, item_id: str) -> None:
     if str(item.get("status")) != DownloadStatus.UPLOAD_VERIFYING.value:
         return
 
+    async def handle_verification_error(
+        message: str,
+        bot: Optional[Bot],
+    ) -> None:
+        error_count = _int_value(item.get("verification_error_count")) + 1
+        item["verification_error_count"] = error_count
+        item["last_error"] = message
+        if error_count <= int(config.rss_upload_max_retries):
+            run_at = datetime.now().astimezone() + timedelta(minutes=10)
+            _schedule_upload_verification(gid, item, run_at)
+            _save_upload_record(gid, record)
+            return
+
+        item["status"] = DownloadStatus.UPLOAD_FAILED.value
+        item["upload_success"] = False
+        item["verified_at"] = _now_iso()
+        item["next_verify_at"] = None
+        _save_upload_record(gid, record)
+        if bot is not None:
+            await _safe_upload_notice(
+                bot,
+                f"❌ {record.get('name', '下载任务')}\nGID：{gid}\n"
+                f"群文件核验连续失败：{item.get('file_name')}\n"
+                f"原因：{message}\n已停止自动核验，可使用 /RSS 重试 {gid}。",
+                str(item.get("group_id")),
+            )
+
     bot = await get_bot()
     if bot is None:
-        run_at = datetime.now().astimezone() + timedelta(minutes=10)
-        _schedule_upload_verification(gid, item, run_at)
-        _save_upload_record(gid, record)
+        await handle_verification_error("当前没有可用的 Bot", None)
         return
 
     group_id = str(item.get("group_id"))
@@ -1364,13 +1410,12 @@ async def verify_uploaded_file(gid: str, item_id: str) -> None:
             str(item.get("folder_id") or "/"),
         )
     except Exception as exc:
-        item["last_error"] = f"群文件核验失败：{type(exc).__name__}: {exc}"
-        run_at = datetime.now().astimezone() + timedelta(minutes=10)
-        _schedule_upload_verification(gid, item, run_at)
-        _save_upload_record(gid, record)
+        message = f"群文件核验失败：{type(exc).__name__}: {exc}"
+        await handle_verification_error(message, bot)
         logger.warning(f"群文件核验请求失败[{gid}][{item_id}]：{exc}")
         return
 
+    item["verification_error_count"] = 0
     if remote_file:
         item["status"] = DownloadStatus.UPLOAD_COMPLETE.value
         item["upload_success"] = True
@@ -1512,6 +1557,7 @@ async def retry_upload_to_group(bot: Bot, gid: str, group_id: str) -> bool:
         )
         item["verified_at"] = None
         item["next_verify_at"] = None
+        item["verification_error_count"] = 0
         item["last_error"] = None
     _save_upload_record(gid, record)
     for item in failed_items:
@@ -1572,9 +1618,9 @@ async def restore_upload_records(_: Bot) -> None:
                 and _int_value(item.get("retry_count"))
                 < int(config.rss_upload_max_retries)
             ):
-                item["status"] = DownloadStatus.UPLOAD_VERIFYING.value
-                _schedule_upload_verification(gid, item, now)
-                restored_verifications += 1
+                item["status"] = DownloadStatus.UPLOAD_QUEUED.value
+                _enqueue_upload_item(gid, item_id)
+                restored_queue += 1
         _save_upload_record(gid, record)
         if str(record.get("status")) == DownloadStatus.UPLOAD_COMPLETE.value:
             info = record.get("download_status")

@@ -28,6 +28,11 @@ class MainConfig(BaseModel):
     )
     ffmpeg_path: str = "ffmpeg"
     ffprobe_path: str = "ffprobe"
+    ffmpeg_timeout: int = Field(
+        default=1800,
+        gt=0,
+        description="FFmpeg/FFprobe 单次处理的最长时间，单位秒",
+    )
     group_file_max_mb: float = Field(
         default=2048,
         gt=0,

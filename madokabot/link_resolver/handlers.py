@@ -4,6 +4,7 @@ import asyncio
 import json
 import os
 import re
+import tempfile
 from pathlib import Path
 from urllib.parse import parse_qs, urlparse
 
@@ -14,13 +15,13 @@ try:
     from bilibili_api import article, live, video, Credential
     from bilibili_api.favorite_list import get_video_favorite_list_content
     from bilibili_api.opus import Opus
-    from bilibili_api.video import VideoDownloadURLDataDetecter
+    from bilibili_api.video import VideoCodecs, VideoDownloadURLDataDetecter
 
     BILIBILI_AVAILABLE = True
 except ImportError:
     article = live = video = Credential = None
     get_video_favorite_list_content = None
-    Opus = VideoDownloadURLDataDetecter = None
+    Opus = VideoCodecs = VideoDownloadURLDataDetecter = None
     BILIBILI_AVAILABLE = False
 
 from nonebot import get_plugin_config, logger
@@ -63,11 +64,12 @@ from .core.acfun import (
 from .core.bilibili import download_b_file, extra_bili_info, merge_file_to_mp4
 from .core.downloads import (
     CACHE_DIR,
+    DownloadBudget,
     clean_title,
     download_audio,
     download_image,
     download_video,
-    remove_files,
+    ensure_remote_total_within_limit,
 )
 from .core.tiktok import dou_transfer_other, generate_x_bogus_url
 from .core.weibo import mid2id
@@ -113,6 +115,19 @@ else:
     resolver_proxy = None
 
 credential = Credential(sessdata=BILI_SESSDATA) if BILIBILI_AVAILABLE else None
+
+
+async def _gather_downloads(*coroutines):
+    """任一并发下载失败时，先取消并回收其余下载任务。"""
+    tasks = [asyncio.create_task(coroutine) for coroutine in coroutines]
+    try:
+        return await asyncio.gather(*tasks)
+    except BaseException:
+        for task in tasks:
+            task.cancel()
+        await asyncio.gather(*tasks, return_exceptions=True)
+        raise
+
 
 @bili23.handle()
 @resolve_handler
@@ -399,12 +414,24 @@ async def bilibili(bot: Bot, event: Event) -> None:
     # 获取下载链接
     logger.info(page_num)
     download_url_data = await v.get_download_url(page_index=page_num)
+    transcode_video = False
 
     try:
         # 1. 尝试使用官方库的选择器
         detecter = VideoDownloadURLDataDetecter(download_url_data)
-        streams = detecter.detect_best_streams()
-        video_url, audio_url = streams[0].url, streams[1].url
+        streams = detecter.detect_best_streams(codecs=[VideoCodecs.AVC])
+        if not streams or streams[0] is None:
+            streams = detecter.detect_best_streams()
+            if not streams or streams[0] is None:
+                raise RuntimeError("没有可用的视频流")
+            transcode_video = True
+            logger.info("[Bilibili] 没有 AVC/H.264 视频流，将转码后发送")
+        video_url = streams[0].url
+        audio_url = (
+            streams[1].url
+            if len(streams) > 1 and streams[1] is not None
+            else None
+        )
     except Exception as e:
         # 2. 如果官方库因为编码枚举不匹配而崩溃，自动执行手动提取兜底
         logger.warning(f"[Bilibili] detect_best_streams 发生错误: {e}，正在启用手动提取流...")
@@ -414,10 +441,32 @@ async def bilibili(bot: Bot, event: Event) -> None:
             video_list = dash_data.get('video', [])
             audio_list = dash_data.get('audio', [])
 
-            if video_list and audio_list:
-                # 默认列表中的第一个就是画质/音质最好的
-                video_url = video_list[0].get('baseUrl') or video_list[0].get('base_url')
-                audio_url = audio_list[0].get('baseUrl') or audio_list[0].get('base_url')
+            avc_video = next(
+                (
+                    item
+                    for item in video_list
+                    if str(item.get("codecid")) == "7"
+                    or str(item.get("codecs") or "").lower().startswith(
+                        ("avc", "avc1")
+                    )
+                ),
+                None,
+            )
+
+            selected_video = avc_video or (video_list[0] if video_list else None)
+            if selected_video:
+                transcode_video = avc_video is None
+                if transcode_video:
+                    logger.info("[Bilibili] 备用视频流不是 AVC/H.264，将转码后发送")
+                video_url = selected_video.get('baseUrl') or selected_video.get('base_url')
+                audio = audio_list[0] if audio_list else None
+                audio_url = (
+                    audio.get('baseUrl') or audio.get('base_url')
+                    if audio
+                    else None
+                )
+                if not video_url:
+                    raise RuntimeError("视频流缺少下载地址")
             else:
                 # 兼容非 DASH 的 DURL 格式
                 durl_list = download_url_data.get('durl', [])
@@ -430,45 +479,61 @@ async def bilibili(bot: Bot, event: Event) -> None:
             logger.error(f"[Bilibili] 备用流解析也宣告失败: {fallback_err}")
             await bili23.finish("解析失败：B站流媒体接口发生不兼容的变更。")
             return
-    # 下载视频和音频
-    path = CACHE_DIR / video_id
-    video_file = path.with_name(f"{path.name}-video.m4s")
-    audio_file = path.with_name(f"{path.name}-audio.m4s")
-    output_file = path.with_name(f"{path.name}-res.mp4")
-    try:
-        download_tasks = [
-            download_b_file(
-                video_url,
-                video_file,
-                logger.info,
-                resolver_proxy,
+    # 每次解析使用独立目录，避免同一视频被并发解析时互相覆盖。
+    with tempfile.TemporaryDirectory(
+        prefix=f"bili-{video_id}-",
+        dir=CACHE_DIR,
+    ) as temp_dir:
+        work_dir = Path(temp_dir)
+        video_file = work_dir / "video.m4s"
+        audio_file = work_dir / "audio.m4s"
+        output_file = work_dir / "result.mp4"
+        try:
+            stream_urls = [video_url, *([audio_url] if audio_url else [])]
+            await ensure_remote_total_within_limit(
+                stream_urls,
                 media_delivery.video_compress_limit,
-            ),
-        ]
-        if audio_url:
-            download_tasks.append(
+                resolver_proxy,
+                BILIBILI_HEADER,
+            )
+            budget = DownloadBudget(media_delivery.video_compress_limit)
+            download_tasks = [
                 download_b_file(
-                    audio_url,
-                    audio_file,
+                    video_url,
+                    video_file,
                     logger.info,
                     resolver_proxy,
                     media_delivery.video_compress_limit,
+                    budget,
+                ),
+            ]
+            if audio_url:
+                download_tasks.append(
+                    download_b_file(
+                        audio_url,
+                        audio_file,
+                        logger.info,
+                        resolver_proxy,
+                        media_delivery.video_compress_limit,
+                        budget,
+                    )
                 )
+            await _gather_downloads(*download_tasks)
+            await merge_file_to_mp4(
+                str(video_file),
+                str(audio_file) if audio_url else None,
+                str(output_file),
+                ffmpeg_path=madoka_config.ffmpeg_path,
+                timeout=madoka_config.ffmpeg_timeout,
+                transcode_video=transcode_video,
             )
-        await asyncio.gather(*download_tasks)
-        await merge_file_to_mp4(
-            str(video_file),
-            str(audio_file) if audio_url else None,
-            str(output_file),
-        )
-    except ValueError as exc:
-        await bili23.finish(f"视频无法下载：{exc}")
-    finally:
-        remove_res = remove_files([video_file, audio_file])
-        logger.info(remove_res)
-    # 发送出去
-    # await bili23.send(Message(MessageSegment.video(f"{path}-res.mp4")))
-    await send_resolved_video(event, str(output_file))
+            await send_resolved_video(event, str(output_file))
+        except ValueError as exc:
+            await bili23.finish(f"视频无法下载：{exc}")
+        except RuntimeError as exc:
+            await bili23.finish(f"视频处理失败：{exc}")
+
+
 @douyin.handle()
 @resolve_handler
 @resolve_controller
@@ -757,29 +822,53 @@ async def ac(bot: Bot, event: Event) -> None:
             MessageSegment.text(f"{GLOBAL_NICKNAME}识别：猴山\n标题：{video_name}"),
         ),
     )
-    m3u8_full_urls, ts_names, output_folder_name, output_file_name = parse_m3u8(
+    m3u8_full_urls, ts_names, _, output_file_name = parse_m3u8(
         url_m3u8s,
         resolver_proxy,
     )
     # logger.info(output_folder_name, output_file_name)
-    await asyncio.gather(
-        *[
-            download_m3u8_videos(url, i, CACHE_DIR, resolver_proxy)
-            for i, url in enumerate(m3u8_full_urls)
-        ]
-    )
-    output_path = merge_ac_file_to_mp4(
-        ts_names,
-        output_file_name,
-        work_dir=CACHE_DIR,
-    )
-    await send_resolved_video(event, output_path)
+    try:
+        await ensure_remote_total_within_limit(
+            m3u8_full_urls,
+            media_delivery.video_compress_limit,
+            resolver_proxy,
+        )
+        budget = DownloadBudget(media_delivery.video_compress_limit)
+        with tempfile.TemporaryDirectory(
+            prefix="acfun-",
+            dir=CACHE_DIR,
+        ) as temp_dir:
+            work_dir = Path(temp_dir)
+            await _gather_downloads(
+                *[
+                    download_m3u8_videos(
+                        url,
+                        i,
+                        work_dir,
+                        resolver_proxy,
+                        budget,
+                    )
+                    for i, url in enumerate(m3u8_full_urls)
+                ]
+            )
+            output_path = await merge_ac_file_to_mp4(
+                ts_names,
+                output_file_name,
+                work_dir=work_dir,
+                ffmpeg_path=madoka_config.ffmpeg_path,
+                timeout=madoka_config.ffmpeg_timeout,
+            )
+            await send_resolved_video(event, output_path)
+    except ValueError as exc:
+        await acfun.finish(f"视频无法下载：{exc}")
+    except RuntimeError as exc:
+        await acfun.finish(f"视频处理失败：{exc}")
 
 
 @twit.handle()
 @resolve_handler
 @resolve_controller
-async def twitter(bot: Bot, event: Event):
+async def twitter(bot: Bot, event: Event) -> None:
     """
         X解析
     :param bot:
@@ -797,33 +886,37 @@ async def twitter(bot: Bot, event: Event):
 
     x_url = GENERAL_REQ_LINK.replace("{}", x_url)
 
-    # 内联一个请求
-    def x_req(url: str):
-        return httpx.get(
-            url,
-            headers={
-                "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,"
-                "image/avif,image/webp,image/apng,*/*;q=0.8,"
-                "application/signed-exchange;v=b3;q=0.7",
-                "Accept-Encoding": "gzip, deflate",
-                "Accept-Language": "zh-CN,zh;q=0.9",
-                "Host": "47.99.158.118",
-                "Proxy-Connection": "keep-alive",
-                "Upgrade-Insecure-Requests": "1",
-                "Sec-Fetch-User": "?1",
-                **COMMON_HEADER,
-            },
+    request_headers = {
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,"
+        "image/avif,image/webp,image/apng,*/*;q=0.8,"
+        "application/signed-exchange;v=b3;q=0.7",
+        "Accept-Encoding": "gzip, deflate",
+        "Accept-Language": "zh-CN,zh;q=0.9",
+        "Host": "47.99.158.118",
+        "Proxy-Connection": "keep-alive",
+        "Upgrade-Insecure-Requests": "1",
+        "Sec-Fetch-User": "?1",
+        **COMMON_HEADER,
+    }
+    try:
+        async with httpx.AsyncClient(
+            headers=request_headers,
             proxy=resolver_proxy,
             timeout=20,
             trust_env=False,
-        )
-
-    x_data: object = x_req(x_url).json()["data"]
-
-    if x_data is None:
-        x_url = x_url + '/photo/1'
-        logger.info(x_url)
-        x_data = x_req(x_url).json()["data"]
+        ) as client:
+            response = await client.get(x_url)
+            response.raise_for_status()
+            x_data: object = response.json().get("data")
+            if x_data is None:
+                photo_url = f"{x_url}/photo/1"
+                logger.info(photo_url)
+                response = await client.get(photo_url)
+                response.raise_for_status()
+                x_data = response.json().get("data")
+    except (httpx.HTTPError, ValueError, AttributeError) as exc:
+        logger.warning(f"X 链接解析接口请求失败：{exc}")
+        await twit.finish("X 链接解析失败，请稍后重试。")
 
     if not isinstance(x_data, dict) or not x_data.get("url"):
         await twit.finish("X 链接解析失败，接口没有返回媒体地址。")
@@ -832,35 +925,38 @@ async def twitter(bot: Bot, event: Event):
     # 海外服务器判断
     proxy = None if IS_OVERSEA else resolver_proxy
 
-    # 图片
+    info_node = make_forward_nodes(
+        bot.self_id,
+        MessageSegment.text(f"{GLOBAL_NICKNAME}识别：小蓝鸟学习版"),
+    )
+
     if Path(urlparse(x_url_res).path).suffix.lower() in {".jpg", ".jpeg", ".png"}:
-        res = await download_image(x_url_res, '', proxy)
-    else:
-        # 视频
+        res = await download_image(x_url_res, "", proxy)
         try:
-            res = await download_video(
-                x_url_res,
-                proxy,
-                max_size=media_delivery.video_compress_limit,
-            )
-        except ValueError as exc:
-            await twit.finish(f"视频无法下载：{exc}")
-    aio_task_res = build_media_node(int(bot.self_id), res)
-    if aio_task_res is None:
-        await twit.finish("X 媒体格式暂不支持。")
+            media_node = build_media_node(int(bot.self_id), res)
+            if media_node is None:
+                await twit.finish("X 媒体格式暂不支持。")
+            await send_forward(bot, event, [info_node, media_node])
+        finally:
+            Path(res).unlink(missing_ok=True)
+        return
 
-    # 说明和媒体统一放进同一条合并转发。
-    forward_nodes = [
-        make_forward_nodes(
-            bot.self_id,
-            MessageSegment.text(f"{GLOBAL_NICKNAME}识别：小蓝鸟学习版"),
-        ),
-        aio_task_res,
-    ]
-    await send_forward(bot, event, forward_nodes)
-
-    # 清除垃圾
-    Path(res).unlink(missing_ok=True)
+    # 视频交给统一媒体服务判断直发、压缩或拒绝。
+    try:
+        res = await download_video(
+            x_url_res,
+            proxy,
+            max_size=media_delivery.video_compress_limit,
+        )
+    except ValueError as exc:
+        await twit.finish(f"视频无法下载：{exc}")
+    if not res:
+        await twit.finish("X 视频下载失败，请稍后重试。")
+    try:
+        await send_forward(bot, event, info_node)
+        await send_resolved_video(event, res)
+    finally:
+        Path(res).unlink(missing_ok=True)
 
 
 @xhs.handle()

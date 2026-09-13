@@ -61,8 +61,17 @@ async def start(bot: Bot) -> None:
             f"{plugin_config.boot_success_message}\n{boot_message}", bot
         )
     logger.info(plugin_config.boot_success_message)
-    # 创建检查更新任务
-    await asyncio.gather(
-        *[scheduler.add_job(rss) for rss in rss_list if not rss.stop]
-    )
-    await restore_upload_records(bot)
+    # 上传恢复不依赖任何订阅源，优先执行，避免单个源初始化失败时
+    # 连带阻断重启后的上传与核验任务。
+    try:
+        await restore_upload_records(bot)
+    except Exception:
+        logger.exception("恢复 RSS 上传记录失败")
+
+    active_rss = [rss for rss in rss_list if not rss.stop]
+    jobs = [scheduler.add_job(rss) for rss in active_rss]
+    if jobs:
+        results = await asyncio.gather(*jobs, return_exceptions=True)
+        for rss, result in zip(active_rss, results):
+            if isinstance(result, BaseException):
+                logger.error(f"初始化订阅任务[{rss.name}]失败：{result}")

@@ -14,11 +14,19 @@ from .subscription import Rss
 async def check_update(rss: Rss) -> None:
     logger.info(f"{rss.name} 检查更新")
     try:
-        wait_for = 5 * 60 if re.search(r"[_*/,-]", rss.time) else int(rss.time) * 60
+        wait_for = (
+            5 * 60
+            if re.search(r"[_*/,-]", rss.time)
+            else int(rss.time) * 60
+        )
         async with timeout(wait_for):
             await feed.start(rss)
+    except asyncio.CancelledError:
+        raise
     except asyncio.TimeoutError:
         logger.error(f"{rss.name} 检查更新超时，结束此次任务!")
+    except Exception:
+        logger.exception(f"{rss.name} 检查更新失败，结束此次任务!")
 
 
 def delete_job(rss: Rss) -> None:

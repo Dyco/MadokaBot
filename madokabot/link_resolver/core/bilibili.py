@@ -1,7 +1,5 @@
 import asyncio
-import platform
 import shutil
-import subprocess
 from collections.abc import Callable
 from pathlib import Path
 
@@ -10,32 +8,35 @@ import httpx
 from nonebot import logger
 
 from ..constants import BILIBILI_HEADER
+from .downloads import DownloadBudget
 
 
-async def is_ffmpeg_installed():
+async def is_ffmpeg_installed(
+    ffmpeg_path: str = "ffmpeg",
+    timeout: int = 10,
+) -> bool:
     """检查ffmpeg是否安装"""
 
     # 检查ffmpeg是否在环境变量中
-    ffmpeg_path = shutil.which('ffmpeg')
-    if ffmpeg_path:
+    resolved_path = shutil.which(ffmpeg_path)
+    if resolved_path:
         return True
 
     # 如果仍然未找到，尝试异步调用ffmpeg命令
     try:
-        # 根据操作系统选择合适的命令
-        if platform.system() == "Windows":
-            process = await asyncio.create_subprocess_exec(
-                'ffmpeg', '-version',
-                stdout=asyncio.subprocess.DEVNULL,
-                stderr=asyncio.subprocess.DEVNULL
-            )
-        else:
-            process = await asyncio.create_subprocess_exec(
-                'ffmpeg', '-version',
-                stdout=asyncio.subprocess.DEVNULL,
-                stderr=asyncio.subprocess.DEVNULL
-            )
-        await process.wait()
+        process = await asyncio.create_subprocess_exec(
+            ffmpeg_path,
+            "-version",
+            stdout=asyncio.subprocess.DEVNULL,
+            stderr=asyncio.subprocess.DEVNULL,
+        )
+        try:
+            await asyncio.wait_for(process.wait(), timeout=timeout)
+        except asyncio.TimeoutError:
+            if process.returncode is None:
+                process.kill()
+            await process.wait()
+            return False
         if process.returncode == 0:
             return True
     except FileNotFoundError:
@@ -51,6 +52,7 @@ async def download_b_file(
     progress_callback: Callable[[str], object] | None = None,
     proxy: str | None = None,
     max_size: int | None = None,
+    budget: DownloadBudget | None = None,
 ) -> bool:
     """
         下载视频文件和音频文件
@@ -82,6 +84,8 @@ async def download_b_file(
             async with aiofiles.open(target, "wb") as f:
                 async for chunk in resp.aiter_bytes():
                     current_len += len(chunk)
+                    if budget is not None:
+                        await budget.consume(len(chunk))
                     if max_size is not None and current_len > max_size:
                         raise ValueError(
                             f"视频流下载大小超过 {max_size / 1024 / 1024:g} MiB"
@@ -98,6 +102,9 @@ async def merge_file_to_mp4(
     a_full_file_name: str | None,
     output_file_name: str,
     log_output: bool = False,
+    ffmpeg_path: str = "ffmpeg",
+    timeout: int = 1800,
+    transcode_video: bool = False,
 ):
     """
     合并视频文件和音频文件
@@ -110,23 +117,58 @@ async def merge_file_to_mp4(
     logger.info(f'正在合并：{output_file_name}')
 
     # 检查 ffmpeg 是否安装
-    if not await is_ffmpeg_installed():
+    if not await is_ffmpeg_installed(ffmpeg_path, min(timeout, 10)):
         logger.error('ffmpeg 未安装，请先安装 ffmpeg 并配置环境变量。可参考插件主页说明。')
-        return
+        raise RuntimeError(f"找不到 ffmpeg：{ffmpeg_path}")
 
     # 使用参数列表构建命令，避免标题或路径中的字符被 shell 解释。
-    command = ["ffmpeg", "-y", "-i", v_full_file_name]
+    command = [ffmpeg_path, "-y", "-i", v_full_file_name]
     if a_full_file_name:
         command.extend(["-i", a_full_file_name])
-    command.extend(["-c", "copy", output_file_name])
-    stdout = None if log_output else subprocess.DEVNULL
-    stderr = None if log_output else subprocess.DEVNULL
-
-    loop = asyncio.get_running_loop()
-    return_code = await loop.run_in_executor(
-        None,
-        lambda: subprocess.call(command, stdout=stdout, stderr=stderr),
+    if transcode_video:
+        command.extend(["-map", "0:v:0"])
+        command.extend(
+            ["-map", "1:a:0?"]
+            if a_full_file_name
+            else ["-map", "0:a:0?"]
+        )
+        command.extend(
+            [
+                "-c:v",
+                "libx264",
+                "-preset",
+                "veryfast",
+                "-crf",
+                "23",
+                "-pix_fmt",
+                "yuv420p",
+                "-c:a",
+                "aac",
+                "-movflags",
+                "+faststart",
+                output_file_name,
+            ]
+        )
+    else:
+        command.extend(["-c", "copy", output_file_name])
+    output_target = None if log_output else asyncio.subprocess.DEVNULL
+    process = await asyncio.create_subprocess_exec(
+        *command,
+        stdout=output_target,
+        stderr=output_target,
     )
+    try:
+        return_code = await asyncio.wait_for(process.wait(), timeout=timeout)
+    except asyncio.TimeoutError as exc:
+        if process.returncode is None:
+            process.kill()
+        await process.wait()
+        raise RuntimeError(f"ffmpeg 合并 Bilibili 视频超过 {timeout} 秒") from exc
+    except asyncio.CancelledError:
+        if process.returncode is None:
+            process.kill()
+        await process.wait()
+        raise
     if return_code != 0:
         raise RuntimeError(f"ffmpeg 合并 Bilibili 视频失败，退出码: {return_code}")
     return output_file_name

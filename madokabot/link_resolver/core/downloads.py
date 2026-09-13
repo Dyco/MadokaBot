@@ -1,5 +1,6 @@
 """Resolver 的临时资源下载与文件清理工具。"""
 
+import asyncio
 import os
 import re
 import time
@@ -19,6 +20,66 @@ require("nonebot_plugin_localstore")
 
 CACHE_DIR = Path(store.get_cache_dir(PLUGIN_NAME))
 CACHE_DIR.mkdir(parents=True, exist_ok=True)
+
+
+class DownloadBudget:
+    """为并发分片或音视频流共享一个实际下载字节上限。"""
+
+    def __init__(self, limit: int) -> None:
+        self.limit = limit
+        self.downloaded = 0
+        self._lock = asyncio.Lock()
+
+    async def consume(self, size: int) -> None:
+        async with self._lock:
+            if self.downloaded + size > self.limit:
+                raise ValueError(
+                    f"视频下载大小超过上限 {self.limit / 1024 / 1024:g} MiB"
+                )
+            self.downloaded += size
+
+
+async def ensure_remote_total_within_limit(
+    urls: Iterable[str],
+    limit: int,
+    proxy: str | None = None,
+    headers: dict[str, str] | None = None,
+) -> None:
+    """在服务器提供 Content-Length 时，于下载正文前校验总大小。"""
+    url_list = [url for url in urls if url]
+    if not url_list:
+        return
+
+    client_headers = COMMON_HEADER.copy()
+    if headers:
+        client_headers.update(headers)
+    async with httpx.AsyncClient(
+        headers=client_headers,
+        timeout=httpx.Timeout(20, connect=5.0),
+        follow_redirects=True,
+        proxy=proxy,
+        trust_env=False,
+    ) as client:
+        semaphore = asyncio.Semaphore(8)
+
+        async def content_length(url: str) -> int | None:
+            try:
+                async with semaphore:
+                    response = await client.head(url)
+                response.raise_for_status()
+                size = int(response.headers.get("content-length") or 0)
+                return size if size > 0 else None
+            except (httpx.HTTPError, TypeError, ValueError):
+                return None
+
+        sizes = await asyncio.gather(*(content_length(url) for url in url_list))
+
+    known_total = sum(size for size in sizes if size is not None)
+    if known_total > limit:
+        raise ValueError(
+            f"视频已知总大小 {known_total / 1024 / 1024:.2f} MiB "
+            f"超过上限 {limit / 1024 / 1024:g} MiB"
+        )
 
 
 async def download_video(

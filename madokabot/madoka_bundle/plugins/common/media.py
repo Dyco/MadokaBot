@@ -3,6 +3,7 @@
 import asyncio
 import os
 import re
+import shutil
 import uuid
 from dataclasses import dataclass
 from enum import Enum
@@ -17,10 +18,14 @@ from nonebot.adapters.onebot.v11 import (
     MessageSegment,
     PrivateMessageEvent,
 )
+import nonebot_plugin_localstore as store
 
 from ...config import config as madoka_config
 
 MIB = 1024 * 1024
+VIDEO_SEND_RETENTION_SECONDS = 300
+VIDEO_SEND_CACHE_DIR = store.get_cache_dir("madoka_bundle") / "video_send"
+VIDEO_SEND_CACHE_DIR.mkdir(parents=True, exist_ok=True)
 VIDEO_SUFFIXES = frozenset(
     {
         ".mp4",
@@ -74,6 +79,7 @@ class MediaDelivery:
         upload_timeout: int,
         ffmpeg_path: str,
         ffprobe_path: str,
+        ffmpeg_timeout: int,
     ) -> None:
         self.video_message_limit = int(video_message_max_mb * MIB)
         self.video_compress_limit = int(video_compress_max_mb * MIB)
@@ -82,6 +88,8 @@ class MediaDelivery:
         self.upload_timeout = upload_timeout
         self.ffmpeg_path = ffmpeg_path
         self.ffprobe_path = ffprobe_path
+        self.ffmpeg_timeout = ffmpeg_timeout
+        self._cleanup_tasks: set[asyncio.Task[None]] = set()
 
         if self.video_compress_target >= self.video_message_limit:
             raise ValueError("视频压缩目标大小必须小于视频消息上限")
@@ -140,7 +148,23 @@ class MediaDelivery:
         except FileNotFoundError as exc:
             raise RuntimeError(f"找不到媒体处理程序：{command[0]}") from exc
 
-        stdout, stderr = await process.communicate()
+        try:
+            stdout, stderr = await asyncio.wait_for(
+                process.communicate(),
+                timeout=self.ffmpeg_timeout,
+            )
+        except asyncio.TimeoutError as exc:
+            if process.returncode is None:
+                process.kill()
+            await process.communicate()
+            raise RuntimeError(
+                f"媒体处理超过 {self.ffmpeg_timeout} 秒，已终止：{command[0]}"
+            ) from exc
+        except asyncio.CancelledError:
+            if process.returncode is None:
+                process.kill()
+            await process.communicate()
+            raise
         if process.returncode:
             reason = stderr.decode("utf-8", errors="replace").strip()
             raise RuntimeError(
@@ -254,24 +278,57 @@ class MediaDelivery:
         if prepared.path != original.path:
             prepared.path.unlink(missing_ok=True)
 
+    async def _stage_video_for_send(self, media: LocalMedia) -> LocalMedia:
+        """为 OneBot 保留独立文件，避免发送端尚未读取时源文件已被清理。"""
+        staged_path = VIDEO_SEND_CACHE_DIR / f"{uuid.uuid4().hex}{media.path.suffix}"
+        try:
+            await asyncio.to_thread(os.link, media.path, staged_path)
+        except OSError:
+            await asyncio.to_thread(shutil.copy2, media.path, staged_path)
+        return LocalMedia(
+            path=staged_path,
+            name=media.name,
+            size=media.size,
+            mode=media.mode,
+        )
+
+    async def _cleanup_staged_video(self, path: Path) -> None:
+        try:
+            await asyncio.sleep(VIDEO_SEND_RETENTION_SECONDS)
+        finally:
+            path.unlink(missing_ok=True)
+
+    def _schedule_staged_video_cleanup(self, path: Path) -> None:
+        task = asyncio.create_task(self._cleanup_staged_video(path))
+        self._cleanup_tasks.add(task)
+        task.add_done_callback(self._cleanup_tasks.discard)
+
     async def send_video(
         self,
         bot: Bot,
         event: Event,
         media: LocalMedia,
     ) -> Any:
-        message = MessageSegment.video(file=media.path.as_uri())
-        if isinstance(event, GroupMessageEvent):
-            return await bot.send_group_msg(
-                group_id=event.group_id,
-                message=Message(message),
-            )
-        if isinstance(event, PrivateMessageEvent):
-            return await bot.send_private_msg(
-                user_id=event.user_id,
-                message=Message(message),
-            )
-        raise TypeError("当前事件不支持视频消息")
+        staged = await self._stage_video_for_send(media)
+        try:
+            message = MessageSegment.video(file=staged.path.as_uri())
+            if isinstance(event, GroupMessageEvent):
+                response = await bot.send_group_msg(
+                    group_id=event.group_id,
+                    message=Message(message),
+                )
+            elif isinstance(event, PrivateMessageEvent):
+                response = await bot.send_private_msg(
+                    user_id=event.user_id,
+                    message=Message(message),
+                )
+            else:
+                raise TypeError("当前事件不支持视频消息")
+        except Exception:
+            staged.path.unlink(missing_ok=True)
+            raise
+        self._schedule_staged_video_cleanup(staged.path)
+        return response
 
     async def send_group_video(
         self,
@@ -279,10 +336,19 @@ class MediaDelivery:
         group_id: str | int,
         media: LocalMedia,
     ) -> Any:
-        return await bot.send_group_msg(
-            group_id=int(group_id),
-            message=Message(MessageSegment.video(file=media.path.as_uri())),
-        )
+        staged = await self._stage_video_for_send(media)
+        try:
+            response = await bot.send_group_msg(
+                group_id=int(group_id),
+                message=Message(
+                    MessageSegment.video(file=staged.path.as_uri())
+                ),
+            )
+        except Exception:
+            staged.path.unlink(missing_ok=True)
+            raise
+        self._schedule_staged_video_cleanup(staged.path)
+        return response
 
     async def upload_file(
         self,
@@ -410,4 +476,5 @@ media_delivery = MediaDelivery(
     upload_timeout=madoka_config.group_file_upload_timeout,
     ffmpeg_path=madoka_config.ffmpeg_path,
     ffprobe_path=madoka_config.ffprobe_path,
+    ffmpeg_timeout=madoka_config.ffmpeg_timeout,
 )

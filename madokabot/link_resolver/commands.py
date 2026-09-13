@@ -45,9 +45,6 @@ RESOLVER_USAGE = (
     "解析 开启评论 | 解析 关闭评论 | 解析 切换评论模式 | 解析 重载评论模板\n"
     "解析 帮助"
 )
-RESOLVER_WHITELIST_MESSAGE = "本群未加入群白名单，无法使用链接解析功能。"
-RESOLVER_GROUP_ONLY_MESSAGE = "链接解析功能仅限群白名单中的群聊使用。"
-
 config = get_plugin_config(Config)
 disabled_resolvers = split_config_list(config.global_resolve_controller, ",")
 resolve_shutdown_list: list = load_resolver_shutdown_list()
@@ -56,23 +53,15 @@ comment_mode_map: dict = load_comment_mode_map()
 
 
 async def resolver_access_rule(bot: Bot, event: Event) -> bool:
-    if not isinstance(event, GroupMessageEvent):
-        await bot.send(event, RESOLVER_GROUP_ONLY_MESSAGE)
-        return False
-    if not is_group_whitelisted(event.group_id):
-        await bot.send(event, RESOLVER_WHITELIST_MESSAGE)
-        return False
-    return True
+    """白名单群可用；私聊只允许超级用户。"""
+    if isinstance(event, GroupMessageEvent):
+        return is_group_whitelisted(event.group_id)
+    return await SUPERUSER(bot, event)
 
 
-async def resolver_prefix_rule(event: Event) -> bool:
-    """平台解析器只接收白名单群中的 Resolver 主命令。"""
-    if not isinstance(event, GroupMessageEvent):
-        return False
-    if not is_group_whitelisted(event.group_id):
-        return False
-    text = event.get_plaintext().lstrip()
-    return bool(re.match(r"^(?:解析|resolver)(?=\s|$)", text, re.IGNORECASE))
+async def resolver_group_rule(bot: Bot, event: Event) -> bool:
+    """平台解析器接受白名单群消息及超级用户私聊。"""
+    return await resolver_access_rule(bot, event)
 
 
 resolver_command = Alconna(
@@ -84,7 +73,7 @@ resolver_command = Alconna(
 )
 resolver = on_alconna(
     resolver_command,
-    aliases={"resolver"},
+    aliases={"resolver", "/解析", "/resolver"},
     rule=resolver_access_rule,
     use_cmd_start=False,
     use_cmd_sep=False,
@@ -98,16 +87,23 @@ def resolve_handler(func):
 
     @wraps(func)
     async def wrapper(*args, **kwargs):
+        bot = kwargs.get("bot") or next(
+            (value for value in args if isinstance(value, Bot)),
+            None,
+        )
         event = kwargs.get("event") or next(
             (value for value in args if isinstance(value, Event)),
             None,
         )
-        if not isinstance(event, GroupMessageEvent):
+        if event is None or bot is None:
             return None
-        if not is_group_whitelisted(event.group_id):
-            return None
-        if event.group_id in resolve_shutdown_list:
-            logger.info(f"群 {event.group_id} 已关闭解析，不再执行")
+        if isinstance(event, GroupMessageEvent):
+            if not is_group_whitelisted(event.group_id):
+                return None
+            if event.group_id in resolve_shutdown_list:
+                logger.info(f"群 {event.group_id} 已关闭解析，不再执行")
+                return None
+        elif not await SUPERUSER(bot, event):
             return None
         return await func(*args, **kwargs)
 
