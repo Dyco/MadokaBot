@@ -22,6 +22,7 @@ from ..download import (
     cancel_download,
     delete_download_files,
     download_tasks,
+    get_download_record_messages,
     retry_upload_to_group,
     select_download_files,
     start_download,
@@ -30,6 +31,7 @@ from ..utils import get_proxy
 from .matchers import (
     rss_close_cmd,
     rss_delete_file_cmd,
+    rss_file_records_cmd,
     rss_retry_upload_cmd,
     rss_select_file_cmd,
     rss_upload_cmd,
@@ -259,7 +261,7 @@ async def handle_retry_upload(
         await rss_retry_upload_cmd.finish()
         return
     await rss_retry_upload_cmd.finish(
-        f"✅ GID：{gid}\n当前群待重试的文件已上传完成。"
+        f"✅ GID：{gid}\n当前群待重试的文件已加入上传队列。"
     )
 
 
@@ -273,6 +275,7 @@ async def prepare_delete_files(matcher: Matcher, content: AlcMatch[str]) -> None
     "DELETE_FILE_GID", prompt="请输入要删除下载文件的任务 GID"
 )
 async def handle_delete_files(
+    event: MessageEvent,
     gid: str = ArgPlainText("DELETE_FILE_GID"),
 ) -> None:
     gid = gid.strip()
@@ -281,7 +284,12 @@ async def handle_delete_files(
         return
 
     try:
-        deleted_count, failed_paths = await delete_download_files(gid)
+        group_id = (
+            str(event.group_id) if isinstance(event, GroupMessageEvent) else None
+        )
+        deleted_count, failed_paths = await delete_download_files(
+            gid, group_id
+        )
     except Aria2Error as exc:
         await rss_delete_file_cmd.finish(f"❌ 删除下载文件失败：{exc}")
         return
@@ -296,4 +304,20 @@ async def handle_delete_files(
         return
     await rss_delete_file_cmd.finish(
         f"✅ GID：{gid}\n已删除 {deleted_count} 个下载文件并清理任务记录。"
+    )
+
+
+@rss_file_records_cmd.handle()
+async def handle_file_records(event: MessageEvent) -> None:
+    group_id = (
+        str(event.group_id) if isinstance(event, GroupMessageEvent) else None
+    )
+    records = get_download_record_messages(group_id)
+    if not records:
+        scope = "当前群" if group_id else "当前"
+        await rss_file_records_cmd.finish(f"{scope}没有保留的下载文件记录。")
+        return
+    scope = "当前群" if group_id else "全部"
+    await rss_file_records_cmd.finish(
+        f"{scope}保留的下载文件记录：\n\n" + "\n\n".join(records)
     )

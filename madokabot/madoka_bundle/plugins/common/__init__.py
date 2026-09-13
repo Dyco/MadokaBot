@@ -27,6 +27,13 @@ __plugin_meta__ = PluginMetadata(
 from . import matchers as matchers  # noqa: E402
 from . import group_whitelist as group_whitelist  # noqa: E402
 from .group_whitelist import is_group_whitelisted  # noqa: E402,F401
+from .media import (  # noqa: E402,F401
+    LocalMedia,
+    MediaDelivery,
+    MediaDeliveryMode,
+    MediaDeliveryResult,
+    media_delivery,
+)
 from . import registration as registration  # noqa: E402
 from . import profile as profile  # noqa: E402
 from . import shop as shop  # noqa: E402

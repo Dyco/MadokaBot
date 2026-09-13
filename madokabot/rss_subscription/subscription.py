@@ -151,6 +151,35 @@ class Rss:
         feed_list = Rss.read_rss()
         return next((feed for feed in feed_list if feed.name == name), None)
 
+    @staticmethod
+    def normalize_url(url: str) -> str:
+        """Normalize a feed URL for duplicate checks without changing its meaning."""
+        rss = Rss()
+        rss.url = url.strip()
+        parsed = URL(rss.get_url()).with_fragment(None)
+        path = parsed.path.rstrip("/") or "/"
+        query = list(parsed.query.items())
+        if (
+            parsed.host == "danbooru.donmai.us"
+            and path in {"/posts", "/posts.atom", "/posts.json"}
+        ):
+            path = "/posts"
+            query = [(key, value) for key, value in query if key != "format"]
+        query.sort()
+        return str(parsed.with_path(path).with_query(query))
+
+    @staticmethod
+    def get_one_by_url(url: str) -> Optional["Rss"]:
+        normalized_url = Rss.normalize_url(url)
+        return next(
+            (
+                rss
+                for rss in Rss.read_rss()
+                if Rss.normalize_url(rss.url) == normalized_url
+            ),
+            None,
+        )
+
     # 添加订阅
     def add_user_or_group_or_channel(
         self,

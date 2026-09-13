@@ -22,6 +22,9 @@
 RSS订阅
 基于 ELF_RSS 适配的 RSS/RSSHub 动态订阅、更新推送、图片处理、去重及可选 aria2 种子下载上传（内容按原文展示）
 
+链接解析
+从 nonebot-plugin-resolver 复制并针对 MadokaBot 独立改造，支持 Bilibili、抖音、TikTok、ACFun、X、小红书、YouTube、网易云、酷狗和微博链接。临时文件统一写入 LocalStore 缓存目录。
+
 
 # 引用插件
 

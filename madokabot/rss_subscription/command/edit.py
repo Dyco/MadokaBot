@@ -185,10 +185,12 @@ async def filter_rss_by_permissions(
             await rss_edit_cmd.finish(
                 "❌ 禁止在群组中修改订阅账号！如要取消订阅请使用 RSS 删除命令！"
             )
+        # 多群共享订阅由最早加入的群管理设置，后加入的群只接收推送或退出。
         rss_list = [
             rss
             for rss in rss_list
-            if rss.group_id == [str(group_id)]
+            if rss.group_id
+            and rss.group_id[0] == str(group_id)
             and not rss.user_id
             and not rss.guild_channel_id
         ]

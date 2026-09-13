@@ -20,6 +20,9 @@ PLUGIN_DATA_NAME = "madokabot_rss_subscription"
 DATA_PATH = store.get_data_dir(PLUGIN_DATA_NAME)
 JSON_PATH = store.get_data_file(PLUGIN_DATA_NAME, "rss.json")
 CACHE_DB_PATH = store.get_data_file(PLUGIN_DATA_NAME, "cache.db")
+DOWNLOAD_RECORD_PATH = store.get_data_file(
+    PLUGIN_DATA_NAME, "download_records.json"
+)
 
 # Used only as a read-only migration source for an older standalone ELF_RSS
 # installation.  New writes always go to LocalStore.
@@ -56,6 +59,10 @@ class RSSConfig(Config):
     debug: bool = (
         False  # 是否开启 debug 模式，开启后会打印更多的日志信息，同时检查更新时不会使用缓存,便于调试
     )
+    rss_auto_forward: bool = Field(
+        default=True,
+        description="是否默认使用合并消息推送 RSS 自动更新",
+    )
 
     zip_size: int = 2 * 1024
     gif_zip_size: int = 6 * 1024
@@ -75,24 +82,39 @@ class RSSConfig(Config):
         None  # aria2 下载目录，必须是 MadokaBot 能访问到的本地路径
     )
     aria2_acquire_timeout: int = Field(
-        default=120,
+        default=60,
         gt=0,
         description="下载链接、种子文件及磁力元数据的获取超时，单位秒",
     )
     aria2_file_cleanup_delay: int = Field(
-        default=600,
+        default=3600,
         ge=0,
         description="下载文件的自动清理延迟，单位秒；设为 0 时关闭",
     )
     aria2_max_file_size_mb: int = Field(
-        default=2048,
+        default=512,
         gt=0,
         description="单个下载文件的大小上限，单位 MiB",
     )
     aria2_max_total_size_mb: int = Field(
-        default=4096,
+        default=1024,
         gt=0,
         description="单个下载任务的总文件大小上限，单位 MiB",
+    )
+    rss_upload_verify_delay: int = Field(
+        default=3600,
+        gt=0,
+        description="群文件上传后延迟核验的时间，单位秒",
+    )
+    rss_upload_max_retries: int = Field(
+        default=1,
+        ge=0,
+        description="群文件核验失败后的最大自动重传次数",
+    )
+    rss_upload_concurrency: int = Field(
+        default=1,
+        ge=1,
+        description="群文件上传队列并发数",
     )
     down_status_msg_group: Optional[List[int]] = None  # 下载进度消息提示群组
     down_status_msg_date: int = Field(

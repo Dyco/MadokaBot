@@ -170,7 +170,7 @@ class FeedProcessor:
 
         self.state.update(
             {
-                "header_message": f"【{rss_title}】更新了!",
+                "header_message": f"订阅更新\n订阅：{self.rss.name}",
                 "messages": [],
                 "items": [],
             }

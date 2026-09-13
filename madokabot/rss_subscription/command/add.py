@@ -22,8 +22,7 @@ async def prepare_rss_add(matcher: Matcher, content: AlcMatch[str]) -> None:
 
 
 prompt = """\
-请输入
-    名称 订阅地址
+通过 RSS 添加 <名称> <RSS 地址> 命令添加订阅
 空格分割
 默认订阅到当前群组
 更多信息可通过 RSS 修改 命令修改订阅设置\
@@ -58,6 +57,20 @@ async def add_feed(
     event: MessageEvent,
     matcher: Matcher,
 ) -> None:
+    if existing := Rss.get_one_by_url(url):
+        current_group = (
+            str(event.group_id) if isinstance(event, GroupMessageEvent) else None
+        )
+        if current_group and current_group in existing.group_id:
+            await matcher.finish(
+                f"当前群已经订阅该地址，订阅名为：{existing.name}"
+            )
+        message = f"该地址已经存在，订阅名为：{existing.name}"
+        if current_group:
+            message += f"\n请使用 /RSS 加入 {existing.name} 让当前群接收推送。"
+        await matcher.finish(message)
+        return
+
     rss = Rss()
     rss.name = name
     rss.url = url

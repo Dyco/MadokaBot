@@ -1,4 +1,5 @@
 import asyncio
+import re
 from collections import defaultdict
 from contextlib import suppress
 from typing import Any, Callable, Coroutine, DefaultDict, Dict, List, Tuple, Union
@@ -40,7 +41,7 @@ async def send_msg(
                         int(user_id),
                         items,
                         header_message,
-                        rss.send_forward_msg,
+                        config.rss_auto_forward or rss.send_forward_msg,
                     )
                     for user_id in rss.user_id
                 ]
@@ -64,7 +65,7 @@ async def send_msg(
                             int(group_id),
                             items,
                             header_message,
-                            rss.send_forward_msg,
+                            config.rss_auto_forward or rss.send_forward_msg,
                         )
                         for group_id in group_ids
                     ]
@@ -210,13 +211,13 @@ async def send_msgs_with_lock(
 ) -> bool:
     start_time = arrow.now()
     async with sending_lock[(target_id, target_type)]:
-        if len(messages) == 1:
-            flag = await send_single_msg(
-                messages[0], target_id, items[0], header_message, send_func
-            )
-        elif send_forward_msg and target_type != "guild_channel":
+        if send_forward_msg and target_type != "guild_channel":
             flag = await try_sending_forward_msg(
                 bot, messages, target_id, target_type, items, header_message, send_func
+            )
+        elif len(messages) == 1:
+            flag = await send_single_msg(
+                messages[0], target_id, items[0], header_message, send_func
             )
         else:
             flag = await send_multiple_msgs(
@@ -235,7 +236,9 @@ async def try_sending_forward_msg(
     header_message: str,
     send_func: Callable[[Union[int, str], str], Coroutine[Any, Any, Dict[str, Any]]],
 ) -> bool:
-    forward_messages = handle_forward_message(bot, [header_message] + messages)
+    forward_messages = handle_forward_message(
+        bot, _forward_message_contents(header_message, messages)
+    )
     try:
         if target_type == "private":
             await bot.send_private_forward_msg(
@@ -270,6 +273,22 @@ def handle_forward_message(bot: Bot, messages: List[str]) -> Message:
             for message in messages
         ]
     )
+
+
+def _forward_message_contents(
+    header_message: str, messages: List[str]
+) -> List[str]:
+    """把每条更新拆成链接节点和详情节点。"""
+    contents = [header_message]
+    link_pattern = re.compile(r"(?m)^链接：([^\r\n]+)\r?\n?")
+    for message in messages:
+        links = link_pattern.findall(message)
+        details = link_pattern.sub("", message).strip()
+        if links:
+            contents.append("链接地址：\n" + "\n".join(links))
+        if details:
+            contents.append(details)
+    return contents
 
 
 # 发送消息并写入文件

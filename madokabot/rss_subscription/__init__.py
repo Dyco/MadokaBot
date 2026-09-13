@@ -14,6 +14,7 @@ from . import scheduler
 from .command.matchers import RSS_USAGE
 from .config import DATA_PATH, RSSConfig
 from .config import config as plugin_config
+from .download import restore_upload_records
 from .subscription import Rss
 from .utils import send_message_to_admin
 
@@ -64,3 +65,4 @@ async def start(bot: Bot) -> None:
     await asyncio.gather(
         *[scheduler.add_job(rss) for rss in rss_list if not rss.stop]
     )
+    await restore_upload_records(bot)
