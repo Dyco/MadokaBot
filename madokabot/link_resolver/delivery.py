@@ -13,7 +13,7 @@ from .config import Config
 from .core.downloads import download_video
 
 resolver_config = get_plugin_config(Config)
-download_proxy = resolver_config.resolver_proxy or madoka_config.proxy
+download_proxy = resolver_config.resolver_proxy
 
 
 async def send_resolved_video(

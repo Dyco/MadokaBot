@@ -106,7 +106,7 @@ IS_OVERSEA = global_config.is_oversea
 VIDEO_DURATION_MAXIMUM = global_config.video_duration_maximum
 BILI_SESSDATA = global_config.bili_sessdata.strip()
 
-resolver_proxy = global_config.resolver_proxy or madoka_config.proxy
+resolver_proxy = global_config.resolver_proxy
 if resolver_proxy:
     resolver_proxy = str(resolver_proxy).strip()
     if resolver_proxy and "://" not in resolver_proxy:
