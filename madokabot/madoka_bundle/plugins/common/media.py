@@ -1,4 +1,5 @@
 import asyncio
+import json
 import os
 import re
 import shutil
@@ -8,6 +9,7 @@ from enum import Enum
 from pathlib import Path
 from typing import Any
 
+from nonebot import logger
 from nonebot.adapters.onebot.v11 import (
     Bot,
     Event,
@@ -195,6 +197,112 @@ class MediaDelivery:
             raise RuntimeError("视频时长无效，无法计算压缩码率")
         return duration
 
+    async def _probe_video_codecs(
+        self,
+        path: Path,
+    ) -> tuple[str, str, str | None]:
+        output = await self._run_media_command(
+            self.ffprobe_path,
+            "-v",
+            "error",
+            "-show_entries",
+            "stream=codec_type,codec_name,pix_fmt",
+            "-of",
+            "json",
+            str(path),
+        )
+        try:
+            streams = json.loads(output).get("streams") or []
+        except (AttributeError, json.JSONDecodeError) as exc:
+            raise RuntimeError("FFprobe 未能读取视频流信息") from exc
+
+        video_stream = next(
+            (
+                stream
+                for stream in streams
+                if stream.get("codec_type") == "video"
+            ),
+            None,
+        )
+        if not video_stream:
+            raise RuntimeError("媒体文件中没有视频流")
+        audio_stream = next(
+            (
+                stream
+                for stream in streams
+                if stream.get("codec_type") == "audio"
+            ),
+            None,
+        )
+        return (
+            str(video_stream.get("codec_name") or "").lower(),
+            str(video_stream.get("pix_fmt") or "").lower(),
+            (
+                str(audio_stream.get("codec_name") or "").lower()
+                if audio_stream
+                else None
+            ),
+        )
+
+    @staticmethod
+    def _is_video_message_compatible(
+        media: LocalMedia,
+        video_codec: str,
+        pixel_format: str,
+        audio_codec: str | None,
+    ) -> bool:
+        return (
+            media.path.suffix.lower() == ".mp4"
+            and video_codec == "h264"
+            and pixel_format in {"yuv420p", "yuvj420p"}
+            and audio_codec in {None, "aac"}
+        )
+
+    async def _transcode_video_message(self, media: LocalMedia) -> LocalMedia:
+        """将不兼容的视频转换为 QQ 视频消息常用的 H.264/AAC。"""
+        output_path = media.path.with_name(
+            f"{media.path.stem}.compatible-{uuid.uuid4().hex[:8]}.mp4"
+        )
+        output_name = f"{Path(media.name).stem}.mp4"
+        try:
+            await self._run_media_command(
+                self.ffmpeg_path,
+                "-loglevel",
+                "error",
+                "-y",
+                "-i",
+                str(media.path),
+                "-map",
+                "0:v:0",
+                "-map",
+                "0:a:0?",
+                "-c:v",
+                "libx264",
+                "-preset",
+                "medium",
+                "-crf",
+                "23",
+                "-pix_fmt",
+                "yuv420p",
+                "-c:a",
+                "aac",
+                "-b:a",
+                "128k",
+                "-movflags",
+                "+faststart",
+                str(output_path),
+            )
+            converted = self.inspect(output_path, output_name)
+            if converted.mode is MediaDeliveryMode.VIDEO_COMPRESS:
+                try:
+                    return await self.compress_video(converted)
+                finally:
+                    output_path.unlink(missing_ok=True)
+            return converted
+        except Exception:
+            output_path.unlink(missing_ok=True)
+            raise
+
     async def compress_video(self, media: LocalMedia) -> LocalMedia:
         """使用双遍 H.264 编码，将视频压到配置的目标大小附近。"""
         if media.mode is not MediaDeliveryMode.VIDEO_COMPRESS:
@@ -275,6 +383,23 @@ class MediaDelivery:
     async def prepare(self, media: LocalMedia) -> LocalMedia:
         if media.mode is MediaDeliveryMode.VIDEO_COMPRESS:
             return await self.compress_video(media)
+        if media.mode is MediaDeliveryMode.VIDEO_MESSAGE:
+            video_codec, pixel_format, audio_codec = (
+                await self._probe_video_codecs(media.path)
+            )
+            if not self._is_video_message_compatible(
+                media,
+                video_codec,
+                pixel_format,
+                audio_codec,
+            ):
+                logger.info(
+                    "视频编码不适合直接发送，开始转换为 H.264/AAC："
+                    f"video={video_codec or 'unknown'}, "
+                    f"audio={audio_codec or 'none'}, "
+                    f"pix_fmt={pixel_format or 'unknown'}"
+                )
+                return await self._transcode_video_message(media)
         return media
 
     @staticmethod

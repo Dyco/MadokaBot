@@ -85,7 +85,12 @@ async def download_ytb_video(
         if cookie_file.is_file():
             ydl_opts["cookiefile"] = str(cookie_file)
         if "shorts" not in url:
-            ydl_opts["format"] = "bv*[width=1280][height=720]+ba"
+            ydl_opts["format"] = (
+                "bv*[vcodec^=avc1][height<=720]+"
+                "ba[acodec^=mp4a]/"
+                "b[ext=mp4][vcodec^=avc1][acodec^=mp4a][height<=720]/"
+                "bv*[height<=720]+ba/b[height<=720]"
+            )
     try:
         def run_download() -> None:
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
