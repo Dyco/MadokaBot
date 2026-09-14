@@ -1,0 +1,250 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <style>
+    :root {
+      color-scheme: light;
+      font-family: Arial, Helvetica, "Microsoft YaHei", sans-serif;
+      font-size: 14px;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      min-width: 810px;
+      background: #e5e7ea;
+      color: #444;
+    }
+
+    body {
+      padding: 2px 3px 5px;
+    }
+
+    .rating-card {
+      width: 799px;
+      overflow: hidden;
+    }
+
+    .map-nav {
+      display: flex;
+      align-items: center;
+      height: 43px;
+      padding: 0 12px;
+      border: 1px solid #cccccc;
+      background: #f6f6f9;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, .18);
+      color: #3376ad;
+      white-space: nowrap;
+    }
+
+    .map-nav a {
+      color: #3376ad;
+      text-decoration: none;
+    }
+
+    .map-nav a {
+      margin-right: 14px;
+    }
+
+    .map-nav a:first-child {
+      color: #2d6d9f;
+      font-weight: 700;
+    }
+
+    .team-block {
+      margin-top: 12px;
+      background: #f6f6f9;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, .2);
+    }
+
+    .team-block + .team-block {
+      margin-top: 10px;
+    }
+
+    .stats-table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+    }
+
+    .stats-table col.player-col { width: 418px; }
+    .stats-table col.kd-col { width: 81px; }
+    .stats-table col.swing-col { width: 82px; }
+    .stats-table col.adr-col { width: 66px; }
+    .stats-table col.kast-col { width: 76px; }
+    .stats-table col.rating-col { width: 75px; }
+
+    .stats-table th,
+    .stats-table td {
+      height: 38px;
+      padding: 0 8px;
+      border: 1px solid #cccccc;
+      white-space: nowrap;
+    }
+
+    .stats-table thead th {
+      height: 37px;
+      background: #f6f6f9;
+      font-size: 14px;
+      font-weight: 700;
+      text-align: center;
+    }
+
+    .stats-table thead th:first-child {
+      padding-left: 10px;
+      text-align: left;
+    }
+
+    .stats-table tbody tr:nth-child(odd) td {
+      background: #ffffff;
+    }
+
+    .stats-table tbody tr:nth-child(even) td {
+      background: #f6f6f9;
+    }
+
+    .team-heading {
+      display: flex;
+      align-items: center;
+      min-width: 0;
+      height: 36px;
+      color: #2d6d9f;
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    .team-heading img {
+      width: 25px;
+      height: 25px;
+      margin-right: 8px;
+      object-fit: contain;
+    }
+
+    .team-heading span {
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .player-cell {
+      display: flex;
+      align-items: center;
+      min-width: 0;
+      height: 37px;
+      padding-left: 4px;
+      color: #2d6d9f;
+    }
+
+    .flag {
+      flex: 0 0 auto;
+      width: 22px;
+      height: 15px;
+      margin-right: 7px;
+      border: 1px solid rgba(0, 0, 0, .25);
+      object-fit: cover;
+    }
+
+    .player-name {
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .player-name strong {
+      font-weight: 700;
+    }
+
+    .player-photo {
+      width: 24px;
+      height: 24px;
+      margin-left: 5px;
+      object-fit: contain;
+      vertical-align: middle;
+    }
+
+    .numeric {
+      color: #4b4b4b;
+      text-align: center;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .swing-positive { color: #06a516; }
+    .swing-negative { color: #ff2028; }
+    .rating-positive { color: #079b16; font-weight: 700; }
+    .rating-negative { color: #fa1019; font-weight: 700; }
+    .rating-neutral { color: #454545; font-weight: 700; }
+
+    .rating-label {
+      display: block;
+      line-height: 15px;
+    }
+
+    .rating-version {
+      display: block;
+      font-size: 10px;
+      font-weight: 400;
+      line-height: 10px;
+    }
+  </style>
+</head>
+<body>
+  <main class="rating-card">
+    <nav class="map-nav" aria-label="Map filters">
+      <a href="#all">All maps</a>
+      {% for map_name in maps %}<a href="#map-{{ loop.index }}">{{ map_name }}</a>{% endfor %}
+    </nav>
+
+    {% for team in teams %}
+    <section class="team-block">
+      <table class="stats-table">
+        <colgroup>
+          <col class="player-col"><col class="kd-col"><col class="swing-col">
+          <col class="adr-col"><col class="kast-col"><col class="rating-col">
+        </colgroup>
+        <thead>
+          <tr>
+            <th>
+              <div class="team-heading">
+                {% if team.logo_src %}<img src="{{ team.logo_src }}" alt="{{ team.name }}">{% endif %}
+                <span>{{ team.name }}</span>
+              </div>
+            </th>
+            <th>K-D</th>
+            <th>Swing</th>
+            <th>ADR</th>
+            <th>KAST</th>
+            <th><span class="rating-label">Rating</span><span class="rating-version">3.0</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for player in team.players %}
+          <tr>
+            <td>
+              <div class="player-cell">
+                {% if player.flag_src %}<img class="flag" src="{{ player.flag_src }}" alt="country">{% endif %}
+                <span class="player-name">
+                  {% if player.nickname and ("'" ~ player.nickname ~ "'") in player.full_name %}
+                    {{ player.name_before_nick }}'<strong>{{ player.nickname }}</strong>'{{ player.name_after_nick }}
+                  {% else %}
+                    {{ player.full_name }}
+                  {% endif %}
+                </span>
+                {% if show_player_photos and player.photo_src %}
+                  <img class="player-photo" src="{{ player.photo_src }}" alt="{{ player.full_name }}">
+                {% endif %}
+              </div>
+            </td>
+            <td class="numeric">{{ player.kd }}</td>
+            <td class="numeric {% if player.swing.startswith('+') %}swing-positive{% elif player.swing.startswith('-') %}swing-negative{% endif %}">{{ player.swing }}</td>
+            <td class="numeric">{{ player.adr }}</td>
+            <td class="numeric">{{ player.kast }}</td>
+            <td class="numeric rating-{{ player.rating_class }}">{{ player.rating }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </section>
+    {% endfor %}
+  </main>
+</body>
+</html>
