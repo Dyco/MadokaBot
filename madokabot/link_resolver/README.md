@@ -48,6 +48,8 @@ GROUP_FILE_UPLOAD_TIMEOUT=3600
 
 `FFMPEG_TIMEOUT` 默认是 `1800` 秒。视频探测、合并或压缩超过该时间后会终止对应子进程，避免阻塞后续解析与 RSS 上传队列。
 
+视频大小不超过 `VIDEO_MESSAGE_MAX_MB`（默认 `95` MiB）时直接发送；超过 `95` 且不超过 `VIDEO_COMPRESS_MAX_MB`（默认 `300` MiB）时压缩后发送；超过 `300` MiB 时拒绝发送。上述媒体阈值由 `madoka_bundle` 的通用配置统一提供，RSS 与 Resolver 共用。
+
 ### Bilibili 视频信息发送顺序
 
 视频信息会合并为一条转发消息，节点顺序如下：

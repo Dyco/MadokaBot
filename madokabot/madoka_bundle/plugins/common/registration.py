@@ -1,6 +1,4 @@
-from nonebot import on_message
 from nonebot.adapters.onebot.v11 import MessageEvent
-from nonebot.rule import fullmatch
 from nonebot_plugin_datastore import create_session
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -8,13 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from ...db.models import SignRecord, UserInventory, UserStats
 from ...registry import SKIN_SHOP
 from .config import config
-
-
-register_matcher = on_message(
-    rule=fullmatch(config.register_keywords),
-    priority=10,
-    block=True,
-)
+from .matchers import register_cmd
 
 
 async def register_user(
@@ -75,11 +67,11 @@ async def register_user(
     return user, sign, True
 
 
-@register_matcher.handle()
+@register_cmd.handle()
 async def _register(event: MessageEvent):
     async with create_session() as session:
         _, _, created = await register_user(session, event.get_user_id())
 
     if created:
-        await register_matcher.finish("注册成功，已发放默认立绘。")
-    await register_matcher.finish("你已经注册过了。")
+        await register_cmd.finish("事务所信息注册成功。")
+    await register_cmd.finish("制作人，你已经注册过了事务所信息了。")

@@ -102,6 +102,7 @@ ARIA2_FILE_CLEANUP_DELAY=3600
 ARIA2_MAX_FILE_SIZE_MB=512
 ARIA2_MAX_TOTAL_SIZE_MB=1024
 RSS_AUTO_FORWARD=true
+# MadokaBot 通用媒体配置，由 madoka_bundle 统一读取，RSS 与 Resolver 共用
 VIDEO_MESSAGE_MAX_MB=95
 VIDEO_COMPRESS_MAX_MB=300
 VIDEO_COMPRESS_TARGET_MB=90
@@ -122,7 +123,7 @@ DOWN_STATUS_MSG_RECALL_DELAY=60
 
 订阅开启 `downopen=1` 后，RSS 中的磁力链接或 `.torrent` 链接会提交给 aria2。机器人提交的任务会设置 `seed-time=0`，下载完成后不继续做种。`ARIA2_ACQUIRE_TIMEOUT` 控制 torrent 链接、aria2 RPC 初始信息及磁力元数据的获取时限，单位为秒，默认是 `60`；获取失败或超时后会放弃任务，进入正式文件下载后不再受该时限影响。`ARIA2_FILE_CLEANUP_DELAY` 控制上传处理结束后的文件保留时间，单位为秒，默认是 `3600`；设为 `0` 可以关闭自动清理。`ARIA2_MAX_FILE_SIZE_MB` 限制单个普通文件大小，默认是 `512` MiB；`ARIA2_MAX_TOTAL_SIZE_MB` 限制单个种子任务的总大小，默认是 `1024` MiB。视频另受 `VIDEO_COMPRESS_MAX_MB` 限制，超过默认 `300` MiB 时不会开始内容下载。触发任一大小限制时只会停止内容文件，已经取得的 `.torrent` 仍会加入上传队列。`DOWN_STATUS_MSG_DATE` 控制下载进度检查及提示间隔，单位为秒，默认是 `300`；`DOWN_STATUS_MSG_RECALL_DELAY` 控制每条进度消息独立撤回的延迟，默认是 `110` 秒，设为 `0` 时不自动撤回。
 
-下载完成后，原始 `.torrent` 文件和下载内容会一起写入持久化记录，再进入默认单并发的上传队列。视频小于 `VIDEO_MESSAGE_MAX_MB`（默认 `95` MiB）时直接发送；95–300 MiB 的视频通过 FFmpeg 双遍压缩到约 `VIDEO_COMPRESS_TARGET_MB`（默认 `90` MiB）后发送；其他文件上传为群文件。请确保 `FFMPEG_PATH` 和 `FFPROBE_PATH` 指向可执行程序。上传前会检查 Bot 群关系、本地文件完整性、群文件状态和同名同大小文件；重复群文件会直接跳过。`GROUP_FILE_UPLOAD_TIMEOUT` 控制通用群文件上传 API 等待时间，默认 `3600` 秒。上传 API 返回后不会立即反查，而是在 `RSS_UPLOAD_VERIFY_DELAY`（默认 `3600` 秒）后读取群文件列表确认结果；未找到时最多自动重传 `RSS_UPLOAD_MAX_RETRIES` 次，默认 `1` 次。`RSS_UPLOAD_CONCURRENCY` 默认是 `1`。GID、任务名、文件路径、大小、目标群、尝试时间、尝试次数、重传次数、核验时间、成功状态和最近错误都会保存在 LocalStore 数据目录的 `download_records.json`，应用重启后会自动恢复未完成的队列和核验任务，也可以使用 `RSS 文件记录` 查看。全部发送成功后才会重新开始文件清理倒计时；不再需要保留文件时，可以使用 `RSS 删除文件 <GID>`。若 aria2 和 MadokaBot 使用 Docker，两个容器必须挂载同一个下载目录，并使用相同的容器内路径；此时 `ARIA2_RPC_URL` 应填写 aria2 服务名（例如 `http://aria2:6800/jsonrpc`），不能填写指向 MadokaBot 容器自身的 `127.0.0.1`。
+下载完成后，原始 `.torrent` 文件和下载内容会一起写入持久化记录，再进入默认单并发的上传队列。视频大小不超过 `VIDEO_MESSAGE_MAX_MB`（默认 `95` MiB）时直接发送；超过 `95` 且不超过 `VIDEO_COMPRESS_MAX_MB`（默认 `300` MiB）的视频通过 FFmpeg 双遍压缩到约 `VIDEO_COMPRESS_TARGET_MB`（默认 `90` MiB）后发送；超过 `300` MiB 的视频拒绝发送，其他文件上传为群文件。请确保 `FFMPEG_PATH` 和 `FFPROBE_PATH` 指向可执行程序。上传前会检查 Bot 群关系、本地文件完整性、群文件状态和同名同大小文件；重复群文件会直接跳过。`GROUP_FILE_UPLOAD_TIMEOUT` 控制通用群文件上传 API 等待时间，默认 `3600` 秒。上传 API 返回后不会立即反查，而是在 `RSS_UPLOAD_VERIFY_DELAY`（默认 `3600` 秒）后读取群文件列表确认结果；未找到时最多自动重传 `RSS_UPLOAD_MAX_RETRIES` 次，默认 `1` 次。`RSS_UPLOAD_CONCURRENCY` 默认是 `1`。GID、任务名、文件路径、大小、目标群、尝试时间、尝试次数、重传次数、核验时间、成功状态和最近错误都会保存在 LocalStore 数据目录的 `download_records.json`，应用重启后会自动恢复未完成的队列和核验任务，也可以使用 `RSS 文件记录` 查看。全部发送成功后才会重新开始文件清理倒计时；不再需要保留文件时，可以使用 `RSS 删除文件 <GID>`。若 aria2 和 MadokaBot 使用 Docker，两个容器必须挂载同一个下载目录，并使用相同的容器内路径；此时 `ARIA2_RPC_URL` 应填写 aria2 服务名（例如 `http://aria2:6800/jsonrpc`），不能填写指向 MadokaBot 容器自身的 `127.0.0.1`。
 
 RSS 自动更新默认通过合并消息发送；`RSS_AUTO_FORWARD=false` 可以恢复为逐条消息，此时仍可用订阅的 `forward` 设置单独开启合并消息。合并消息会按“订阅更新、链接地址、详情信息”拆分节点。
 

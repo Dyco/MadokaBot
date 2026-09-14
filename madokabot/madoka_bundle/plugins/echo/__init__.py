@@ -14,6 +14,9 @@ __plugin_meta__ = PluginMetadata(
     config=EchoConfig,
 )
 
+echo_reply: str = "我在" # 回复内容
+echo_keywords: list[str] = ["ping", "円香"] # 触发关键词
+
 echo_matcher = on_message(
     rule=fullmatch(config.echo_keywords),
     priority=10,

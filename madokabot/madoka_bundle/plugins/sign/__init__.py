@@ -22,6 +22,8 @@ __plugin_meta__ = PluginMetadata(
 
 sign_locks: defaultdict[str, asyncio.Lock] = defaultdict(asyncio.Lock)
 
+sign_keywords: list[str] = ["打卡", "签到","sign"] # 打卡关键词
+
 sign_matcher = on_message(
     rule=fullmatch(config.sign_keywords),
     priority=10,
@@ -68,5 +70,5 @@ async def _handle_sign(event: MessageEvent):
         sign_locks.pop(uid, None)
 
     if image_message is None:
-        await sign_matcher.finish("抱歉，円香现在心情不太好，稍后再来吧。")
+        await sign_matcher.finish("抱歉，円香现在心情不太好，无法签到。")
     await sign_matcher.finish(image_message)

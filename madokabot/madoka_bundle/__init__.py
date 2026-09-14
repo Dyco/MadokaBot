@@ -9,8 +9,8 @@ from .db.models import init_madoka_db
 
 __plugin_meta__ = PluginMetadata(
     name="圆香聊天机器人",
-    description="包含戳一戳、每日签到、商店和聊天等功能的本地插件集合",
-    usage="当前包含功能：每日签到、戳一戳、商店、聊天",
+    description="包含戳一戳、每日签到、商店等功能的本地插件集合",
+    usage="当前包含功能：每日签到、戳一戳、商店",
     type="application",
     config=MainConfig,
 )

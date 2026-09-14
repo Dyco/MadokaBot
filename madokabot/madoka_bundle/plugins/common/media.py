@@ -1,5 +1,3 @@
-"""OneBot 本地媒体发送、视频压缩与群文件操作。"""
-
 import asyncio
 import os
 import re
@@ -125,7 +123,7 @@ class MediaDelivery:
                 f"{self.group_file_limit / MIB:g} MiB"
             )
 
-        if is_video and size < self.video_message_limit:
+        if is_video and size <= self.video_message_limit:
             mode = MediaDeliveryMode.VIDEO_MESSAGE
         elif is_video:
             mode = MediaDeliveryMode.VIDEO_COMPRESS
