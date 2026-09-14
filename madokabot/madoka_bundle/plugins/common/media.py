@@ -19,11 +19,13 @@ from nonebot.adapters.onebot.v11 import (
 import nonebot_plugin_localstore as store
 
 from ...config import config as madoka_config
+from .file_cleanup import register_cleanup_path
 
 MIB = 1024 * 1024
 VIDEO_SEND_RETENTION_SECONDS = 300
 VIDEO_SEND_CACHE_DIR = store.get_cache_dir("madoka_bundle") / "video_send"
 VIDEO_SEND_CACHE_DIR.mkdir(parents=True, exist_ok=True)
+register_cleanup_path("common-video-send", VIDEO_SEND_CACHE_DIR)
 VIDEO_SUFFIXES = frozenset(
     {
         ".mp4",
@@ -45,6 +47,10 @@ class MediaDeliveryMode(str, Enum):
     VIDEO_MESSAGE = "video_message"
     VIDEO_COMPRESS = "video_compress"
     GROUP_FILE = "group_file"
+
+
+class MediaSizeLimitExceeded(ValueError):
+    """媒体文件超过配置的大小限制。"""
 
 
 @dataclass(frozen=True)
@@ -113,12 +119,12 @@ class MediaDelivery:
             raise ValueError(f"本地媒体文件为空：{local_path}")
         is_video = self.is_video(local_path)
         if is_video and size > self.video_compress_limit:
-            raise ValueError(
+            raise MediaSizeLimitExceeded(
                 f"视频大小 {size / MIB:.2f} MiB 超过允许下载和处理的上限 "
                 f"{self.video_compress_limit / MIB:g} MiB"
             )
         if not is_video and size > self.group_file_limit:
-            raise ValueError(
+            raise MediaSizeLimitExceeded(
                 f"文件大小 {size / MIB:.2f} MiB 超过群文件上限 "
                 f"{self.group_file_limit / MIB:g} MiB"
             )
@@ -467,11 +473,11 @@ class MediaDelivery:
 
 
 media_delivery = MediaDelivery(
-    video_message_max_mb=madoka_config.video_message_max_mb,
-    video_compress_max_mb=madoka_config.video_compress_max_mb,
-    video_compress_target_mb=madoka_config.video_compress_target_mb,
-    group_file_max_mb=madoka_config.group_file_max_mb,
-    upload_timeout=madoka_config.group_file_upload_timeout,
+    video_message_max_mb=95,
+    video_compress_max_mb=300,
+    video_compress_target_mb=90,
+    group_file_max_mb=1024,
+    upload_timeout=3000,
     ffmpeg_path=madoka_config.ffmpeg_path,
     ffprobe_path=madoka_config.ffprobe_path,
     ffmpeg_timeout=madoka_config.ffmpeg_timeout,

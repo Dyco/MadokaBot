@@ -73,11 +73,9 @@ class RSSConfig(Config):
         None  # aria2 下载目录，必须是 MadokaBot 能访问到的本地路径
     )
     aria2_acquire_timeout: int = 60 # 下载链接、种子文件及磁力元数据的获取超时，单位秒
-    aria2_file_cleanup_delay: int = 3600 # 下载文件的自动清理延迟，单位秒；设为 0 时关闭
     aria2_max_file_size_mb: int = 512 # 单个下载文件的大小上限，单位 MiB
     aria2_max_total_size_mb: int = 1024 # 单个下载任务的总文件大小上限，单位 MiB
     rss_upload_verify_delay: int = 3600 # 群文件上传后延迟核验的时间，单位秒
-    rss_upload_max_retries: int = 1 # 群文件核验失败后的最大自动重传次数
     rss_upload_concurrency: int = 1 # 群文件上传队列并发数
     down_status_msg_group: Optional[List[int]] = None  # 下载进度消息提示群组
     down_status_msg_date: int = 90 # 下载进度检查及提示间隔时间，单位秒

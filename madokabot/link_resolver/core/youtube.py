@@ -4,6 +4,8 @@ from pathlib import Path
 
 from nonebot import logger
 
+from ...madoka_bundle.plugins.common import MediaSizeLimitExceeded
+
 try:
     import yt_dlp
 except ImportError:  # yt-dlp 仅在用户启用对应平台时需要。
@@ -17,8 +19,7 @@ def _require_yt_dlp() -> None:
 
 async def get_video_title(
     url: str,
-    is_oversea: bool,
-    my_proxy: str | None = None,
+    proxy: str | None = None,
     video_type: str = "youtube",
 ) -> str:
     _require_yt_dlp()
@@ -26,9 +27,8 @@ async def get_video_title(
         "quiet": True,
         "skip_download": True,
         "force_generic_extractor": True,
+        "proxy": proxy or "",
     }
-    if not is_oversea and my_proxy:
-        ydl_opts["proxy"] = my_proxy
 
     cookie_file = Path.cwd() / "ytb_cookies.txt"
     if video_type == "youtube" and cookie_file.is_file():
@@ -45,9 +45,8 @@ async def get_video_title(
 
 async def download_ytb_video(
     url: str,
-    is_oversea: bool,
     path: str | Path,
-    my_proxy: str | None = None,
+    proxy: str | None = None,
     video_type: str = "youtube",
     max_size: int | None = None,
 ) -> str:
@@ -68,7 +67,7 @@ async def download_ytb_video(
             int(data.get("downloaded_bytes") or 0),
         )
         if sum(downloaded_by_file.values()) > max_size:
-            raise RuntimeError(
+            raise MediaSizeLimitExceeded(
                 f"视频下载大小超过上限 {max_size / 1024 / 1024:g} MiB"
             )
 
@@ -77,6 +76,7 @@ async def download_ytb_video(
         "merge_output_format": "mp4",
         "noplaylist": True,
         "progress_hooks": [check_download_progress],
+        "proxy": proxy or "",
     }
     if max_size is not None:
         ydl_opts["max_filesize"] = max_size
@@ -86,9 +86,6 @@ async def download_ytb_video(
             ydl_opts["cookiefile"] = str(cookie_file)
         if "shorts" not in url:
             ydl_opts["format"] = "bv*[width=1280][height=720]+ba"
-    if not is_oversea and my_proxy:
-        ydl_opts["proxy"] = my_proxy
-
     try:
         def run_download() -> None:
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
@@ -110,7 +107,7 @@ async def download_ytb_video(
                     ]
                     estimated_size = sum(known_sizes)
                     if estimated_size > max_size:
-                        raise RuntimeError(
+                        raise MediaSizeLimitExceeded(
                             f"视频预计大小 {estimated_size / 1024 / 1024:.2f} MiB "
                             f"超过上限 {max_size / 1024 / 1024:g} MiB"
                         )
@@ -136,6 +133,10 @@ async def download_ytb_video(
         logger.error(f"yt-dlp 下载失败: {exc}")
         for candidate in output_dir.glob(f"{output_stem}.*"):
             candidate.unlink(missing_ok=True)
+        if isinstance(exc, MediaSizeLimitExceeded):
+            raise
+        if "超过上限" in str(exc):
+            raise MediaSizeLimitExceeded(str(exc)) from exc
         if isinstance(exc, RuntimeError):
             raise
         raise RuntimeError(f"视频下载失败：{exc}") from exc

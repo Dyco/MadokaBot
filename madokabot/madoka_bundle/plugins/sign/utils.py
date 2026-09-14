@@ -8,7 +8,6 @@ from ...db.models import SignRecord, UserStats
 
 _SHANGHAI_TZ = ZoneInfo("Asia/Shanghai")
 
-
 def calculate_reward(continuous_days: int) -> tuple[int, int, int]:
     """
     计算签到奖励。

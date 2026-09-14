@@ -4,21 +4,20 @@ from nonebot.plugin import PluginMetadata
 from nonebot.rule import fullmatch
 
 from ...utils import get_latency_ms
-from .config import EchoConfig, config
 
 __plugin_meta__ = PluginMetadata(
     name="状态测试",
     description="简单的存活测试插件",
     usage="发送关键词获取响应",
     type="application",
-    config=EchoConfig,
 )
+
 
 echo_reply: str = "我在" # 回复内容
 echo_keywords: list[str] = ["ping", "円香"] # 触发关键词
 
 echo_matcher = on_message(
-    rule=fullmatch(config.echo_keywords),
+    rule=fullmatch(echo_keywords),
     priority=10,
     block=True,
 )
@@ -27,4 +26,4 @@ echo_matcher = on_message(
 @echo_matcher.handle()
 async def _handle_echo(event: MessageEvent):
     ms = get_latency_ms(event)
-    await echo_matcher.finish(f"{config.echo_reply} ({ms:.0f}ms)")
+    await echo_matcher.finish(f"{echo_reply} ({ms:.0f}ms)")

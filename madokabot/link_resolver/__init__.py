@@ -1,12 +1,16 @@
 from nonebot.plugin import PluginMetadata
-
-from .commands import RESOLVER_USAGE
 from .config import Config
 
 __plugin_meta__ = PluginMetadata(
     name="Madoka 链接分享解析器",
-    description="MadokaBot 内置的链接分享解析器，支持视频、图片和音乐链接。",
-    usage=RESOLVER_USAGE,
+    description="MadokaBot 内置的链接分享解析器，支持视频、图片和音乐链接。。",
+    usage= (
+    "用法：\n"
+    "解析 <B站/抖音/TikTok/ACFun/X/小红书/YouTube/网易云/酷狗/微博链接>\n"
+    "解析 开启解析 | 解析 关闭解析 | 解析 查看关闭解析\n"
+    "解析 开启评论 | 解析 关闭评论 | 解析 切换评论模式 | 解析 重载评论模板\n"
+    "解析 帮助"
+),
     type="application",
     homepage="https://github.com/Dyco/MadokaBot",
     config=Config,

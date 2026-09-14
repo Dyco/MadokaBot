@@ -12,12 +12,17 @@ from nonebot.adapters.onebot.v11 import (
     PrivateMessageEvent,
 )
 
-from ..madoka_bundle.plugins.common import media_delivery
+from .delivery import media_delivery
 from .config import Config
 
-NICKNAME = get_plugin_config(Config).r_global_nickname.strip()
+NICKNAME = get_plugin_config(Config).global_prefix_nickname.strip()
 IMAGE_SUFFIXES = frozenset({".jpg", ".jpeg", ".png", ".gif"})
 VIDEO_SUFFIXES = frozenset({".mp4", ".mov", ".webm"})
+
+
+def get_resolver_message(event: Event) -> str:
+    """返回可供解析器检查的消息内容，不包含图片段及其 URL。"""
+    return str(event.get_message().exclude("image")).strip()
 
 
 def build_media_node(

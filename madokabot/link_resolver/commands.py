@@ -36,15 +36,9 @@ from .state import (
     split_config_list,
 )
 from .messages import get_target_id
+from . import __plugin_meta__
 
-RESOLVER_USAGE = (
-    "用法：\n"
-    "解析 <B站/抖音/TikTok/ACFun/X/小红书/YouTube/网易云/酷狗/微博链接>\n"
-    "resolver <链接>\n"
-    "解析 开启解析 | 解析 关闭解析 | 解析 查看关闭解析\n"
-    "解析 开启评论 | 解析 关闭评论 | 解析 切换评论模式 | 解析 重载评论模板\n"
-    "解析 帮助"
-)
+
 config = get_plugin_config(Config)
 disabled_resolvers = split_config_list(config.global_resolve_controller, ",")
 resolve_shutdown_list: list = load_resolver_shutdown_list()
@@ -217,7 +211,7 @@ async def handle_resolver_command(
     if result.subcommands:
         return
     if not content.available or not content.result.strip():
-        await resolver.finish(RESOLVER_USAGE)
+        await resolver.finish(__plugin_meta__.usage)
 
     command = " ".join(content.result.strip().split())
     manage_permission = GROUP_ADMIN | GROUP_OWNER | SUPERUSER
@@ -250,4 +244,4 @@ async def handle_resolver_command(
 
 @resolver.assign("help")
 async def handle_resolver_help() -> None:
-    await resolver.finish(RESOLVER_USAGE)
+    await resolver.finish(__plugin_meta__.usage)

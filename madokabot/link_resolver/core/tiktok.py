@@ -49,13 +49,18 @@ def generate_random_str(self, randomlength=16):
     return random_str
 
 
-async def dou_transfer_other(dou_url):
+async def dou_transfer_other(dou_url, proxy: str | None = None):
     """
         图集临时解决方案
     :param dou_url:
     :return:
     """
-    async with httpx.AsyncClient(timeout=20, follow_redirects=True) as client:
+    async with httpx.AsyncClient(
+        timeout=20,
+        follow_redirects=True,
+        proxy=proxy,
+        trust_env=False,
+    ) as client:
         response = await client.get(
             f"https://api.xingzhige.com/API/douyin/?url={dou_url}"
         )

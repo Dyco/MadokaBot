@@ -15,11 +15,16 @@ import nonebot_plugin_localstore as store
 from nonebot import logger, require
 
 from ..constants import COMMON_HEADER, PLUGIN_NAME
+from ...madoka_bundle.plugins.common import (
+    MediaSizeLimitExceeded,
+    register_cleanup_path,
+)
 
 require("nonebot_plugin_localstore")
 
-CACHE_DIR = Path(store.get_cache_dir(PLUGIN_NAME))
+CACHE_DIR = Path(store.get_cache_dir(PLUGIN_NAME)) / "media"
 CACHE_DIR.mkdir(parents=True, exist_ok=True)
+register_cleanup_path("resolver-media", CACHE_DIR)
 
 
 class DownloadBudget:
@@ -33,7 +38,7 @@ class DownloadBudget:
     async def consume(self, size: int) -> None:
         async with self._lock:
             if self.downloaded + size > self.limit:
-                raise ValueError(
+                raise MediaSizeLimitExceeded(
                     f"视频下载大小超过上限 {self.limit / 1024 / 1024:g} MiB"
                 )
             self.downloaded += size
@@ -76,7 +81,7 @@ async def ensure_remote_total_within_limit(
 
     known_total = sum(size for size in sizes if size is not None)
     if known_total > limit:
-        raise ValueError(
+        raise MediaSizeLimitExceeded(
             f"视频已知总大小 {known_total / 1024 / 1024:.2f} MiB "
             f"超过上限 {limit / 1024 / 1024:g} MiB"
         )
@@ -116,7 +121,7 @@ async def download_video(
                     max_size is not None
                     and expected_size > max_size
                 ):
-                    raise ValueError(
+                    raise MediaSizeLimitExceeded(
                         f"视频大小 {expected_size / 1024 / 1024:.2f} MiB "
                         f"超过上限 {max_size / 1024 / 1024:g} MiB"
                     )
@@ -125,12 +130,15 @@ async def download_video(
                     async for chunk in response.aiter_bytes():
                         downloaded += len(chunk)
                         if max_size is not None and downloaded > max_size:
-                            raise ValueError(
+                            raise MediaSizeLimitExceeded(
                                 f"视频下载大小超过上限 "
                                 f"{max_size / 1024 / 1024:g} MiB"
                             )
                         await file.write(chunk)
         return str(path)
+    except MediaSizeLimitExceeded:
+        path.unlink(missing_ok=True)
+        raise
     except ValueError:
         path.unlink(missing_ok=True)
         raise

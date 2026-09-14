@@ -9,7 +9,7 @@ import httpx
 from nonebot import logger
 
 from ..constants import BILIBILI_HEADER
-from .downloads import DownloadBudget
+from .downloads import DownloadBudget, MediaSizeLimitExceeded
 
 DOWNLOAD_PROGRESS_INTERVAL = 3.0  # 下载进度日志的最短间隔（秒）
 
@@ -81,7 +81,7 @@ async def download_b_file(
             current_len = 0
             total_len = int(resp.headers.get('content-length', 0))
             if max_size is not None and total_len > max_size:
-                raise ValueError(
+                raise MediaSizeLimitExceeded(
                     f"视频流大小超过 {max_size / 1024 / 1024:g} MiB"
                 )
             async with aiofiles.open(target, "wb") as f:
@@ -91,7 +91,7 @@ async def download_b_file(
                     if budget is not None:
                         await budget.consume(len(chunk))
                     if max_size is not None and current_len > max_size:
-                        raise ValueError(
+                        raise MediaSizeLimitExceeded(
                             f"视频流下载大小超过 {max_size / 1024 / 1024:g} MiB"
                         )
                     await f.write(chunk)

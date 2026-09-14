@@ -21,6 +21,7 @@ from ..madoka_bundle.plugins.common import (
     MediaDeliveryMode,
     is_group_whitelisted,
     media_delivery,
+    register_cleanup_path,
 )
 from .config import DOWNLOAD_RECORD_PATH, config
 from .subscription import Rss
@@ -30,6 +31,9 @@ from .utils import (
     get_bot_group_list,
     send_message_to_admin,
 )
+
+if config.aria2_download_path:
+    register_cleanup_path("rss-downloads", config.aria2_download_path)
 
 
 class DownloadStatus(str, Enum):
@@ -211,7 +215,6 @@ def _new_upload_item(
         "status": DownloadStatus.UPLOAD_QUEUED.value,
         "upload_success": False,
         "attempt_count": 0,
-        "retry_count": 0,
         "verification_error_count": 0,
         "manual_retry_count": 0,
         "last_attempt_at": None,
@@ -815,7 +818,6 @@ def get_download_record_messages(group_id: Optional[str] = None) -> List[str]:
                 MediaDeliveryMode.GROUP_FILE.value: "群文件",
             }.get(str(item.get("delivery_mode") or ""), "待判定")
             attempts = _int_value(item.get("attempt_count"))
-            retries = _int_value(item.get("retry_count"))
             verification_errors = _int_value(
                 item.get("verification_error_count")
             )
@@ -827,8 +829,7 @@ def get_download_record_messages(group_id: Optional[str] = None) -> List[str]:
             )
             file_lines.append(
                 f"- {file_name}[{file_size}]：{status_label}（{delivery_mode}）\n"
-                f"  尝试 {attempts} 次，自动重传 {retries} 次，"
-                f"核验异常 {verification_errors} 次，"
+                f"  尝试 {attempts} 次，核验异常 {verification_errors} 次，"
                 f"手动重试 {manual_retries} 次\n"
                 f"  上次尝试：{last_attempt}{verify_message}"
             )
@@ -1108,9 +1109,6 @@ async def _finish_upload_record_if_complete(
     ):
         return False
     _save_upload_record(gid, record)
-    info = record.get("download_status")
-    if isinstance(info, dict):
-        schedule_file_cleanup(gid, info)
     _clear_download_tracking(gid)
     message = (
         f"✅ {record.get('name', '下载任务')}\nGID：{gid}\n"
@@ -1148,22 +1146,6 @@ async def _process_upload_item(bot: Bot, gid: str, item_id: str) -> None:
         )
     except Exception as exc:
         item["last_error"] = f"上传前检查失败：{type(exc).__name__}: {exc}"
-        retry_count = _int_value(item.get("retry_count"))
-        if retry_count < int(config.rss_upload_max_retries):
-            item["retry_count"] = retry_count + 1
-            item["status"] = DownloadStatus.UPLOAD_QUEUED.value
-            item["next_verify_at"] = None
-            _save_upload_record(gid, record)
-            await _safe_upload_notice(
-                bot,
-                f"⚠️ {record.get('name', '下载任务')}\nGID：{gid}\n"
-                f"文件上传前检查未通过，开始第 {item['retry_count']} 次自动重试："
-                f"{item.get('file_name')}\n原因：{exc}",
-                group_id,
-            )
-            _enqueue_upload_item(gid, item_id)
-            return
-
         item["status"] = DownloadStatus.UPLOAD_FAILED.value
         item["verified_at"] = _now_iso()
         item["next_verify_at"] = None
@@ -1172,7 +1154,7 @@ async def _process_upload_item(bot: Bot, gid: str, item_id: str) -> None:
             bot,
             f"❌ {record.get('name', '下载任务')}\nGID：{gid}\n"
             f"文件上传前检查未通过：{item.get('file_name')}\n"
-            f"原因：{exc}\n已达到自动重试上限，文件仍会保留，"
+            f"原因：{exc}\n文件会保留等待定期清理，"
             f"可使用 /RSS 重试 {gid}。",
             group_id,
         )
@@ -1219,30 +1201,17 @@ async def _process_upload_item(bot: Bot, gid: str, item_id: str) -> None:
                 bot, group_id, prepared
             )
         except Exception as exc:
-            retry_count = _int_value(item.get("retry_count"))
             item["upload_success"] = False
             item["last_error"] = f"视频消息发送失败：{type(exc).__name__}: {exc}"
-            if retry_count < int(config.rss_upload_max_retries):
-                item["retry_count"] = retry_count + 1
-                item["status"] = DownloadStatus.UPLOAD_QUEUED.value
-                _save_upload_record(gid, record)
-                await _safe_upload_notice(
-                    bot,
-                    f"⚠️ {record.get('name', '下载任务')}\nGID：{gid}\n"
-                    f"视频消息发送失败，开始第 {item['retry_count']} 次自动重试："
-                    f"{item.get('file_name')}",
-                    group_id,
-                )
-                _enqueue_upload_item(gid, item_id)
-                return
-
             item["status"] = DownloadStatus.UPLOAD_FAILED.value
             item["verified_at"] = _now_iso()
             _save_upload_record(gid, record)
             await _safe_upload_notice(
                 bot,
                 f"❌ {record.get('name', '下载任务')}\nGID：{gid}\n"
-                f"视频消息发送失败：{item.get('file_name')}\n原因：{exc}",
+                f"视频消息发送失败：{item.get('file_name')}\n"
+                f"原因：{exc}\n文件会保留等待定期清理，"
+                f"可使用 /RSS 重试 {gid}。",
                 group_id,
             )
             return
@@ -1375,12 +1344,6 @@ async def verify_uploaded_file(gid: str, item_id: str) -> None:
         error_count = _int_value(item.get("verification_error_count")) + 1
         item["verification_error_count"] = error_count
         item["last_error"] = message
-        if error_count <= int(config.rss_upload_max_retries):
-            run_at = datetime.now().astimezone() + timedelta(minutes=10)
-            _schedule_upload_verification(gid, item, run_at)
-            _save_upload_record(gid, record)
-            return
-
         item["status"] = DownloadStatus.UPLOAD_FAILED.value
         item["upload_success"] = False
         item["verified_at"] = _now_iso()
@@ -1390,8 +1353,9 @@ async def verify_uploaded_file(gid: str, item_id: str) -> None:
             await _safe_upload_notice(
                 bot,
                 f"❌ {record.get('name', '下载任务')}\nGID：{gid}\n"
-                f"群文件核验连续失败：{item.get('file_name')}\n"
-                f"原因：{message}\n已停止自动核验，可使用 /RSS 重试 {gid}。",
+                f"群文件核验失败：{item.get('file_name')}\n"
+                f"原因：{message}\n已停止自动处理，"
+                f"可使用 /RSS 重试 {gid}。",
                 str(item.get("group_id")),
             )
 
@@ -1434,35 +1398,18 @@ async def verify_uploaded_file(gid: str, item_id: str) -> None:
             )
         return
 
-    retry_count = _int_value(item.get("retry_count"))
-    if retry_count < int(config.rss_upload_max_retries):
-        item["retry_count"] = retry_count + 1
-        item["status"] = DownloadStatus.UPLOAD_QUEUED.value
-        item["next_verify_at"] = None
-        item["last_error"] = "群文件中未找到同名且同大小的文件"
-        _save_upload_record(gid, record)
-        await _safe_upload_notice(
-            bot,
-            f"⚠️ {record.get('name', '下载任务')}\nGID：{gid}\n"
-            f"{_upload_verify_delay_text()}后仍未找到群文件：{item.get('file_name')}\n"
-            f"开始第 {item['retry_count']} 次自动重传。",
-            group_id,
-        )
-        _enqueue_upload_item(gid, item_id)
-        return
-
     item["status"] = DownloadStatus.UPLOAD_FAILED.value
     item["upload_success"] = False
     item["verified_at"] = _now_iso()
     item["next_verify_at"] = None
-    item["last_error"] = "达到自动重传上限后仍未在群文件中找到文件"
+    item["last_error"] = "群文件中未找到同名且同大小的文件"
     _save_upload_record(gid, record)
     await _safe_upload_notice(
         bot,
         f"❌ {record.get('name', '下载任务')}\nGID：{gid}\n"
         f"群文件上传未成功：{item.get('file_name')}\n"
-        f"已达到自动重传上限 {config.rss_upload_max_retries} 次，"
-        f"文件仍会保留，可使用 /RSS 重试 {gid}。",
+        f"文件会保留等待定期清理，"
+        f"可使用 /RSS 重试 {gid}。",
         group_id,
     )
 
@@ -1566,7 +1513,7 @@ async def retry_upload_to_group(bot: Bot, gid: str, group_id: str) -> bool:
 
 
 async def restore_upload_records(_: Bot) -> None:
-    """恢复重启前尚未完成的上传、核验和自动重传任务。"""
+    """恢复重启前尚未完成的上传和核验任务。"""
     restored_queue = 0
     restored_verifications = 0
     now = datetime.now().astimezone()
@@ -1613,19 +1560,7 @@ async def restore_upload_records(_: Bot) -> None:
                 run_at = _parse_record_time(item.get("next_verify_at")) or now
                 _schedule_upload_verification(gid, item, max(run_at, now))
                 restored_verifications += 1
-            elif (
-                status == DownloadStatus.UPLOAD_FAILED.value
-                and _int_value(item.get("retry_count"))
-                < int(config.rss_upload_max_retries)
-            ):
-                item["status"] = DownloadStatus.UPLOAD_QUEUED.value
-                _enqueue_upload_item(gid, item_id)
-                restored_queue += 1
         _save_upload_record(gid, record)
-        if str(record.get("status")) == DownloadStatus.UPLOAD_COMPLETE.value:
-            info = record.get("download_status")
-            if isinstance(info, dict):
-                schedule_file_cleanup(gid, info)
     if restored_queue or restored_verifications:
         logger.info(
             f"已恢复群文件任务：上传队列 {restored_queue} 个，"
@@ -1670,61 +1605,6 @@ def _cleanup_paths(status: Dict[str, Any]) -> tuple[Path, List[Path]]:
     return download_dir, paths
 
 
-async def cleanup_download_files(
-    gid: str,
-    download_dir: Path,
-    paths: List[Path],
-) -> None:
-    """删除一个已完成任务的文件，并移除空的子目录。"""
-    for path in paths:
-        current_path = path.resolve()
-        if current_path == download_dir or download_dir not in current_path.parents:
-            logger.warning(f"跳过已离开下载目录的清理路径：{current_path}")
-            continue
-        try:
-            current_path.unlink(missing_ok=True)
-        except OSError as exc:
-            logger.warning(f"自动清理下载文件失败[{current_path}]：{exc}")
-
-    parent_dirs = sorted(
-        {path.parent for path in paths},
-        key=lambda path: len(path.parts),
-        reverse=True,
-    )
-    for parent in parent_dirs:
-        while parent != download_dir and download_dir in parent.parents:
-            try:
-                parent.rmdir()
-            except OSError:
-                break
-            parent = parent.parent
-
-    await _remove_download(gid, "complete")
-    _remove_download_record(gid)
-    logger.info(f"aria2 任务[{gid}]的下载文件已自动清理")
-
-
-def schedule_file_cleanup(gid: str, status: Dict[str, Any]) -> None:
-    """按照配置为已完成任务安排一次文件清理。"""
-    delay = int(config.aria2_file_cleanup_delay)
-    if delay <= 0:
-        return
-
-    download_dir, paths = _cleanup_paths(status)
-    if not paths:
-        logger.warning(f"aria2 任务[{gid}]没有可安全清理的文件路径")
-        return
-    scheduler.add_job(
-        func=cleanup_download_files,
-        trigger="date",
-        run_date=datetime.now().astimezone() + timedelta(seconds=delay),
-        args=(gid, download_dir, paths),
-        id=f"rss-file-cleanup-{gid}",
-        misfire_grace_time=300,
-        replace_existing=True,
-    )
-
-
 async def delete_download_files(
     gid: str, group_id: Optional[str] = None
 ) -> tuple[int, List[Path]]:
@@ -1738,9 +1618,6 @@ async def delete_download_files(
     if not paths:
         raise Aria2Error("该任务没有可安全删除的文件路径")
 
-    cleanup_job_id = f"rss-file-cleanup-{gid}"
-    if scheduler.get_job(cleanup_job_id):
-        scheduler.remove_job(cleanup_job_id)
     _stop_status_check(gid)
     aria2_status = str(info.get("status", ""))
     if aria2_status not in {"complete", "error", "removed"}:
@@ -2085,7 +1962,6 @@ async def check_download_status(
             )
             return
 
-        schedule_file_cleanup(gid, info)
         _clear_download_tracking(gid)
         return
 

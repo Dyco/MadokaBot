@@ -4,6 +4,7 @@ import asyncio
 import json
 import os
 import re
+import shutil
 import tempfile
 from pathlib import Path
 from urllib.parse import parse_qs, urlparse
@@ -12,7 +13,7 @@ import aiohttp
 import httpx
 
 try:
-    from bilibili_api import article, live, video, Credential
+    from bilibili_api import article, live, request_settings, video, Credential
     from bilibili_api.favorite_list import get_video_favorite_list_content
     from bilibili_api.opus import Opus
     from bilibili_api.video import VideoCodecs, VideoDownloadURLDataDetecter
@@ -20,6 +21,7 @@ try:
     BILIBILI_AVAILABLE = True
 except ImportError:
     article = live = video = Credential = None
+    request_settings = None
     get_video_favorite_list_content = None
     Opus = VideoCodecs = VideoDownloadURLDataDetecter = None
     BILIBILI_AVAILABLE = False
@@ -74,7 +76,7 @@ from .core.downloads import (
 from .core.tiktok import dou_transfer_other, generate_x_bogus_url
 from .core.weibo import mid2id
 from .core.youtube import download_ytb_video, get_video_title
-from .delivery import send_resolved_video
+from .delivery import media_delivery, send_resolved_video
 from .matchers import (
     acfun_matcher as acfun,
     bilibili_matcher as bili23,
@@ -89,6 +91,7 @@ from .matchers import (
 )
 from .messages import (
     build_media_node,
+    get_resolver_message,
     get_target_id,
     make_forward_nodes,
     send_forward,
@@ -96,25 +99,43 @@ from .messages import (
 )
 
 from ..madoka_bundle.config import config as madoka_config
-from ..madoka_bundle.plugins.common import media_delivery
+from ..madoka_bundle.plugins.common import (
+    MediaSizeLimitExceeded,
+)
 
 
-# 配置加载。解析器的独立代理为空时复用 MadokaBot 的全局 PROXY。
+# 配置加载。解析器代理为空时直连。
 global_config = get_plugin_config(Config)
-GLOBAL_NICKNAME = global_config.r_global_nickname.strip()
-IS_OVERSEA = global_config.is_oversea
+GLOBAL_NICKNAME = global_config.global_prefix_nickname.strip()
 VIDEO_DURATION_MAXIMUM = global_config.video_duration_maximum
 BILI_SESSDATA = global_config.bili_sessdata.strip()
 
-resolver_proxy = global_config.resolver_proxy
-if resolver_proxy:
-    resolver_proxy = str(resolver_proxy).strip()
-    if resolver_proxy and "://" not in resolver_proxy:
-        resolver_proxy = f"http://{resolver_proxy}"
-else:
-    resolver_proxy = None
+resolver_proxy = str(global_config.resolver_proxy or "").strip() or None
+if resolver_proxy and "://" not in resolver_proxy:
+    resolver_proxy = f"http://{resolver_proxy}"
 
-credential = Credential(sessdata=BILI_SESSDATA) if BILIBILI_AVAILABLE else None
+
+def _platform_proxy(enabled: bool) -> str | None:
+    return resolver_proxy if enabled else None
+
+
+BILIBILI_PROXY = _platform_proxy(global_config.bilibili_use_proxy)
+DOUYIN_PROXY = _platform_proxy(global_config.douyin_use_proxy)
+TIKTOK_PROXY = _platform_proxy(global_config.tiktok_use_proxy)
+ACFUN_PROXY = _platform_proxy(global_config.acfun_use_proxy)
+TWITTER_PROXY = _platform_proxy(global_config.twitter_use_proxy)
+XIAOHONGSHU_PROXY = _platform_proxy(global_config.xiaohongshu_use_proxy)
+YOUTUBE_PROXY = _platform_proxy(global_config.youtube_use_proxy)
+NETEASE_PROXY = _platform_proxy(global_config.netease_use_proxy)
+KUGOU_PROXY = _platform_proxy(global_config.kugou_use_proxy)
+WEIBO_PROXY = _platform_proxy(global_config.weibo_use_proxy)
+
+if BILIBILI_AVAILABLE:
+    request_settings.set_trust_env(False)
+    request_settings.set_proxy(BILIBILI_PROXY or "")
+    credential = Credential(sessdata=BILI_SESSDATA, proxy=BILIBILI_PROXY)
+else:
+    credential = None
 
 
 async def _gather_downloads(*coroutines):
@@ -143,7 +164,7 @@ async def bilibili(bot: Bot, event: Event) -> None:
         await bili23.finish("当前环境未安装 bilibili-api-python，暂时无法解析 B 站链接。")
 
     # 消息
-    url: str = str(event.message).strip()
+    url = get_resolver_message(event)
     # 正则匹配
     url_reg = (
         r"https?://(?:space|www|live|t)\.bilibili\.com/"
@@ -168,7 +189,7 @@ async def bilibili(bot: Bot, event: Event) -> None:
             b_short_url,
             headers=BILIBILI_HEADER,
             follow_redirects=True,
-            proxy=resolver_proxy,
+            proxy=BILIBILI_PROXY,
             trust_env=False,
         )
         url: str = str(resp.url)
@@ -213,7 +234,10 @@ async def bilibili(bot: Bot, event: Event) -> None:
         if not room_match:
             await bili23.finish("无法从 Bilibili 直播链接中提取房间号。")
         room_id = room_match.group(1)
-        room = live.LiveRoom(room_display_id=int(room_id))
+        room = live.LiveRoom(
+            room_display_id=int(room_id),
+            credential=credential,
+        )
         room_info = (await room.get_room_info())['room_info']
         title, cover, keyframe = room_info['title'], room_info['cover'], room_info['keyframe']
         await send_forward(
@@ -232,7 +256,7 @@ async def bilibili(bot: Bot, event: Event) -> None:
     # 专栏识别
     if 'read' in url:
         read_id = re.search(r'read\/cv(\d+)', url).group(1)
-        ar = article.Article(read_id)
+        ar = article.Article(read_id, credential=credential)
         # 如果专栏为公开笔记，则转换为笔记类
         # NOTE: 笔记类的函数与专栏类的函数基本一致
         if ar.is_note():
@@ -258,7 +282,12 @@ async def bilibili(bot: Bot, event: Event) -> None:
     if 'favlist' in url and BILI_SESSDATA != '':
         # https://space.bilibili.com/22990202/favlist?fid=2344812202
         fav_id = re.search(r'favlist\?fid=(\d+)', url).group(1)
-        fav_list = (await get_video_favorite_list_content(fav_id))['medias'][:10]
+        fav_list = (
+            await get_video_favorite_list_content(
+                fav_id,
+                credential=credential,
+            )
+        )['medias'][:10]
         favs = []
         for fav in fav_list:
             title, cover, intro, link = fav['title'], fav['cover'], fav['intro'], fav['link']
@@ -326,6 +355,14 @@ async def bilibili(bot: Bot, event: Event) -> None:
     # 删除特殊字符
     video_title = clean_title(video_title)
 
+    if video_duration > VIDEO_DURATION_MAXIMUM:
+        logger.warning(
+            "[Bilibili] 视频时长超过限制，已跳过发送："
+            f"当前 {video_duration // 60} 分钟，"
+            f"上限 {VIDEO_DURATION_MAXIMUM // 60} 分钟"
+        )
+        return
+
     # B 站视频信息统一放进同一条合并转发：封面、标题/简介、数据。
     # 评论（如果开启）放在第 4 个节点，AI 总结放在评论之后；这里不再请求在线人数接口。
     send_id = get_target_id(event)
@@ -339,13 +376,6 @@ async def bilibili(bot: Bot, event: Event) -> None:
         MessageSegment.text(f"📊 数据\n{extra_bili_info(video_info)}"),
     ]
 
-    if video_duration > VIDEO_DURATION_MAXIMUM:
-        bili_info_nodes[-1] = MessageSegment.text(
-            f"📊 数据\n{extra_bili_info(video_info)}\n"
-            "---------\n"
-            f"⚠️ 当前视频时长 {video_duration // 60} 分钟，超过管理员设置的最长时间 "
-            f"{VIDEO_DURATION_MAXIMUM // 60} 分钟！"
-        )
     # 评论模式为图片时，评论整体作为第 4 个节点；文字模式沿用原有的
     # 多节点评论格式，并把这些评论节点放到 AI 总结之前。
     comment_forward_nodes: list[MessageSegment] = []
@@ -358,7 +388,10 @@ async def bilibili(bot: Bot, event: Event) -> None:
             aid = video_info.get("aid")
             bvid = video_info.get("bvid")
 
-            async with aiohttp.ClientSession() as session:
+            async with aiohttp.ClientSession(
+                proxy=BILIBILI_PROXY,
+                trust_env=False,
+            ) as session:
                 comments = await get_bilibili_comments(session, aid, BILI_SESSDATA, bvid, up_mid)
 
             if comments:
@@ -409,8 +442,6 @@ async def bilibili(bot: Bot, event: Event) -> None:
         event,
         bili_forward_nodes,
     )
-    if video_duration > VIDEO_DURATION_MAXIMUM:
-        return
     # 获取下载链接
     logger.info(page_num)
     download_url_data = await v.get_download_url(page_index=page_num)
@@ -480,58 +511,64 @@ async def bilibili(bot: Bot, event: Event) -> None:
             await bili23.finish("解析失败：B站流媒体接口发生不兼容的变更。")
             return
     # 每次解析使用独立目录，避免同一视频被并发解析时互相覆盖。
-    with tempfile.TemporaryDirectory(
-        prefix=f"bili-{video_id}-",
-        dir=CACHE_DIR,
-    ) as temp_dir:
-        work_dir = Path(temp_dir)
-        video_file = work_dir / "video.m4s"
-        audio_file = work_dir / "audio.m4s"
-        output_file = work_dir / "result.mp4"
-        try:
-            stream_urls = [video_url, *([audio_url] if audio_url else [])]
-            await ensure_remote_total_within_limit(
-                stream_urls,
+    work_dir = Path(
+        tempfile.mkdtemp(prefix=f"bili-{video_id}-", dir=CACHE_DIR)
+    )
+    video_file = work_dir / "video.m4s"
+    audio_file = work_dir / "audio.m4s"
+    output_file = work_dir / "result.mp4"
+    try:
+        stream_urls = [video_url, *([audio_url] if audio_url else [])]
+        await ensure_remote_total_within_limit(
+            stream_urls,
+            media_delivery.video_compress_limit,
+            BILIBILI_PROXY,
+            BILIBILI_HEADER,
+        )
+        budget = DownloadBudget(media_delivery.video_compress_limit)
+        download_tasks = [
+            download_b_file(
+                video_url,
+                video_file,
+                logger.info,
+                BILIBILI_PROXY,
                 media_delivery.video_compress_limit,
-                resolver_proxy,
-                BILIBILI_HEADER,
-            )
-            budget = DownloadBudget(media_delivery.video_compress_limit)
-            download_tasks = [
+                budget,
+            ),
+        ]
+        if audio_url:
+            download_tasks.append(
                 download_b_file(
-                    video_url,
-                    video_file,
+                    audio_url,
+                    audio_file,
                     logger.info,
-                    resolver_proxy,
+                    BILIBILI_PROXY,
                     media_delivery.video_compress_limit,
                     budget,
-                ),
-            ]
-            if audio_url:
-                download_tasks.append(
-                    download_b_file(
-                        audio_url,
-                        audio_file,
-                        logger.info,
-                        resolver_proxy,
-                        media_delivery.video_compress_limit,
-                        budget,
-                    )
                 )
-            await _gather_downloads(*download_tasks)
-            await merge_file_to_mp4(
-                str(video_file),
-                str(audio_file) if audio_url else None,
-                str(output_file),
-                ffmpeg_path=madoka_config.ffmpeg_path,
-                timeout=madoka_config.ffmpeg_timeout,
-                transcode_video=transcode_video,
             )
-            await send_resolved_video(event, str(output_file))
-        except ValueError as exc:
-            await bili23.finish(f"视频无法下载：{exc}")
-        except RuntimeError as exc:
-            await bili23.finish(f"视频处理失败：{exc}")
+        await _gather_downloads(*download_tasks)
+        await merge_file_to_mp4(
+            str(video_file),
+            str(audio_file) if audio_url else None,
+            str(output_file),
+            ffmpeg_path=madoka_config.ffmpeg_path,
+            timeout=madoka_config.ffmpeg_timeout,
+            transcode_video=transcode_video,
+        )
+        if await send_resolved_video(
+            event,
+            str(output_file),
+            BILIBILI_PROXY,
+        ):
+            shutil.rmtree(work_dir, ignore_errors=True)
+    except MediaSizeLimitExceeded as exc:
+        logger.warning(f"[Bilibili] 视频超过大小限制，已跳过下载和发送：{exc}")
+        return
+    except ValueError as exc:
+        await bili23.finish(f"视频无法下载：{exc}")
+    except RuntimeError as exc:
+        await bili23.finish(f"视频处理失败：{exc}")
 
 
 @douyin.handle()
@@ -545,7 +582,7 @@ async def dy(bot: Bot, event: Event) -> None:
     :return:
     """
     # 消息
-    msg: str = str(event.message).strip()
+    msg = get_resolver_message(event)
     logger.info(msg)
     # 短链先跟随跳转，长链直接提取视频/图集 ID。
     reg = (
@@ -562,7 +599,8 @@ async def dy(bot: Bot, event: Event) -> None:
             headers=COMMON_HEADER,
             follow_redirects=True,
             timeout=20,
-            proxy=resolver_proxy,
+            proxy=DOUYIN_PROXY,
+            trust_env=False,
         )
         dou_url_2 = str(response.url)
     except httpx.HTTPError as exc:
@@ -571,7 +609,10 @@ async def dy(bot: Bot, event: Event) -> None:
 
     # 实况图集临时解决方案，eg.  https://v.douyin.com/iDsVgJKL/
     if "share/slides" in dou_url_2:
-        cover, author, title, images = await dou_transfer_other(dou_url)
+        cover, author, title, images = await dou_transfer_other(
+            dou_url,
+            DOUYIN_PROXY,
+        )
         # 如果第一个不为None 大概率是成功
         if author is not None:
             slide_segments = [
@@ -620,7 +661,10 @@ async def dy(bot: Bot, event: Event) -> None:
     except RuntimeError as exc:
         logger.error(str(exc))
         await douyin.finish(str(exc))
-    async with aiohttp.ClientSession() as session:
+    async with aiohttp.ClientSession(
+        proxy=DOUYIN_PROXY,
+        trust_env=False,
+    ) as session:
         async with session.get(api_url, headers=headers, timeout=10) as response:
             detail = await response.json()
             if detail is None:
@@ -710,7 +754,11 @@ async def dy(bot: Bot, event: Event) -> None:
                 # 发送视频
                 # logger.info(player_addr)
                 # await douyin.send(Message(MessageSegment.video(player_addr)))
-                await send_resolved_video(event, player_real_addr)
+                await send_resolved_video(
+                    event,
+                    player_real_addr,
+                    DOUYIN_PROXY,
+                )
             elif url_type == 'image':
                 # 无水印图片列表/No watermark image list
                 no_watermark_image_list = []
@@ -742,10 +790,7 @@ async def tiktok(bot: Bot, event: Event) -> None:
     :return:
     """
     # 消息
-    url: str = str(event.message).strip()
-
-    # 海外服务器判断
-    proxy = None if IS_OVERSEA else resolver_proxy
+    url = get_resolver_message(event)
 
     url_reg = r"(http:|https:)\/\/www.tiktok.com\/[A-Za-z\d._?%&+\-=\/#@]*"
     url_short_reg = r"(http:|https:)\/\/vt.tiktok.com\/[A-Za-z\d._?%&+\-=\/#]*"
@@ -753,7 +798,12 @@ async def tiktok(bot: Bot, event: Event) -> None:
 
     if "vt.tiktok" in url:
         temp_url = re.search(url_short_reg, url)[0]
-        temp_resp = httpx.get(temp_url, follow_redirects=True, proxy=proxy)
+        temp_resp = httpx.get(
+            temp_url,
+            follow_redirects=True,
+            proxy=TIKTOK_PROXY,
+            trust_env=False,
+        )
         url = str(temp_resp.url)
     elif "vm.tiktok" in url:
         temp_url = re.search(url_short_reg2, url)[0]
@@ -761,22 +811,25 @@ async def tiktok(bot: Bot, event: Event) -> None:
             temp_url,
             headers={"User-Agent": "facebookexternalhit/1.1"},
             follow_redirects=True,
-            proxy=proxy,
+            proxy=TIKTOK_PROXY,
+            trust_env=False,
         )
         url = str(temp_resp.url)
         # logger.info(url)
     else:
         url = re.search(url_reg, url)[0]
     try:
-        title = await get_video_title(url, IS_OVERSEA, resolver_proxy, "tiktok")
+        title = await get_video_title(url, TIKTOK_PROXY, "tiktok")
         target_tik_video_path = await download_ytb_video(
             url,
-            IS_OVERSEA,
             CACHE_DIR,
-            resolver_proxy,
+            TIKTOK_PROXY,
             "tiktok",
             media_delivery.video_compress_limit,
         )
+    except MediaSizeLimitExceeded as exc:
+        logger.warning(f"[TikTok] 视频超过大小限制，已跳过下载和发送：{exc}")
+        return
     except RuntimeError as exc:
         await tik.finish(str(exc))
 
@@ -789,7 +842,7 @@ async def tiktok(bot: Bot, event: Event) -> None:
         ),
     )
 
-    await send_resolved_video(event, target_tik_video_path)
+    await send_resolved_video(event, target_tik_video_path, TIKTOK_PROXY)
 
 
 @acfun.handle()
@@ -803,7 +856,7 @@ async def ac(bot: Bot, event: Event) -> None:
     :return:
     """
     # 消息
-    inputMsg: str = str(event.message).strip()
+    inputMsg = get_resolver_message(event)
 
     # 短号处理
     if "m.acfun.cn" in inputMsg:
@@ -813,7 +866,7 @@ async def ac(bot: Bot, event: Event) -> None:
         if acfun_match:
             inputMsg = acfun_match.group(0)
 
-    url_m3u8s, video_name = parse_url(inputMsg, resolver_proxy)
+    url_m3u8s, video_name = parse_url(inputMsg, ACFUN_PROXY)
     await send_forward(
         bot,
         event,
@@ -824,41 +877,41 @@ async def ac(bot: Bot, event: Event) -> None:
     )
     m3u8_full_urls, ts_names, _, output_file_name = parse_m3u8(
         url_m3u8s,
-        resolver_proxy,
+        ACFUN_PROXY,
     )
     # logger.info(output_folder_name, output_file_name)
     try:
         await ensure_remote_total_within_limit(
             m3u8_full_urls,
             media_delivery.video_compress_limit,
-            resolver_proxy,
+            ACFUN_PROXY,
         )
         budget = DownloadBudget(media_delivery.video_compress_limit)
-        with tempfile.TemporaryDirectory(
-            prefix="acfun-",
-            dir=CACHE_DIR,
-        ) as temp_dir:
-            work_dir = Path(temp_dir)
-            await _gather_downloads(
-                *[
-                    download_m3u8_videos(
-                        url,
-                        i,
-                        work_dir,
-                        resolver_proxy,
-                        budget,
-                    )
-                    for i, url in enumerate(m3u8_full_urls)
-                ]
-            )
-            output_path = await merge_ac_file_to_mp4(
-                ts_names,
-                output_file_name,
-                work_dir=work_dir,
-                ffmpeg_path=madoka_config.ffmpeg_path,
-                timeout=madoka_config.ffmpeg_timeout,
-            )
-            await send_resolved_video(event, output_path)
+        work_dir = Path(tempfile.mkdtemp(prefix="acfun-", dir=CACHE_DIR))
+        await _gather_downloads(
+            *[
+                download_m3u8_videos(
+                    url,
+                    i,
+                    work_dir,
+                    ACFUN_PROXY,
+                    budget,
+                )
+                for i, url in enumerate(m3u8_full_urls)
+            ]
+        )
+        output_path = await merge_ac_file_to_mp4(
+            ts_names,
+            output_file_name,
+            work_dir=work_dir,
+            ffmpeg_path=madoka_config.ffmpeg_path,
+            timeout=madoka_config.ffmpeg_timeout,
+        )
+        if await send_resolved_video(event, output_path, ACFUN_PROXY):
+            shutil.rmtree(work_dir, ignore_errors=True)
+    except MediaSizeLimitExceeded as exc:
+        logger.warning(f"[ACFun] 视频超过大小限制，已跳过下载和发送：{exc}")
+        return
     except ValueError as exc:
         await acfun.finish(f"视频无法下载：{exc}")
     except RuntimeError as exc:
@@ -875,7 +928,7 @@ async def twitter(bot: Bot, event: Event) -> None:
     :param event:
     :return:
     """
-    msg: str = str(event.message).strip()
+    msg = get_resolver_message(event)
     url_match = re.search(
         r"https?:\/\/x.com\/[0-9-a-zA-Z_]{1,20}\/status\/([0-9]+)",
         msg,
@@ -901,7 +954,7 @@ async def twitter(bot: Bot, event: Event) -> None:
     try:
         async with httpx.AsyncClient(
             headers=request_headers,
-            proxy=resolver_proxy,
+            proxy=TWITTER_PROXY,
             timeout=20,
             trust_env=False,
         ) as client:
@@ -922,16 +975,13 @@ async def twitter(bot: Bot, event: Event) -> None:
         await twit.finish("X 链接解析失败，接口没有返回媒体地址。")
     x_url_res = str(x_data["url"])
 
-    # 海外服务器判断
-    proxy = None if IS_OVERSEA else resolver_proxy
-
     info_node = make_forward_nodes(
         bot.self_id,
         MessageSegment.text(f"{GLOBAL_NICKNAME}识别：小蓝鸟学习版"),
     )
 
     if Path(urlparse(x_url_res).path).suffix.lower() in {".jpg", ".jpeg", ".png"}:
-        res = await download_image(x_url_res, "", proxy)
+        res = await download_image(x_url_res, "", TWITTER_PROXY)
         try:
             media_node = build_media_node(int(bot.self_id), res)
             if media_node is None:
@@ -945,18 +995,18 @@ async def twitter(bot: Bot, event: Event) -> None:
     try:
         res = await download_video(
             x_url_res,
-            proxy,
+            TWITTER_PROXY,
             max_size=media_delivery.video_compress_limit,
         )
+    except MediaSizeLimitExceeded as exc:
+        logger.warning(f"[X] 视频超过大小限制，已跳过下载和发送：{exc}")
+        return
     except ValueError as exc:
         await twit.finish(f"视频无法下载：{exc}")
     if not res:
         await twit.finish("X 视频下载失败，请稍后重试。")
-    try:
-        await send_forward(bot, event, info_node)
-        await send_resolved_video(event, res)
-    finally:
-        Path(res).unlink(missing_ok=True)
+    await send_forward(bot, event, info_node)
+    await send_resolved_video(event, res, TWITTER_PROXY)
 
 
 @xhs.handle()
@@ -968,7 +1018,7 @@ async def xiaohongshu(bot: Bot, event: Event):
     :param event:
     :return:
     """
-    message_text = str(event.message).replace("&amp;", "&").strip()
+    message_text = get_resolver_message(event).replace("&amp;", "&")
     url_match = re.search(
         r"https?://(?:xhslink|(?:www\.)?xiaohongshu)\.com/"
         r"[A-Za-z\d._?%&+\-=/#@]*",
@@ -1006,7 +1056,7 @@ async def xiaohongshu(bot: Bot, event: Event):
             msg_url,
             headers=headers,
             follow_redirects=True,
-            proxy=resolver_proxy,
+            proxy=XIAOHONGSHU_PROXY,
             timeout=20,
             trust_env=False,
         ).url
@@ -1029,7 +1079,7 @@ async def xiaohongshu(bot: Bot, event: Event):
     html = httpx.get(
         f"{XHS_REQ_LINK}{xhs_id}?xsec_source={xsec_source}&xsec_token={xsec_token}",
         headers=headers,
-        proxy=resolver_proxy,
+        proxy=XIAOHONGSHU_PROXY,
         timeout=20,
         trust_env=False,
     ).text
@@ -1065,13 +1115,16 @@ async def xiaohongshu(bot: Bot, event: Event):
     if type == 'normal':
         image_list = note_data['imageList']
         # 批量下载
-        async with aiohttp.ClientSession() as session:
+        async with aiohttp.ClientSession(
+            proxy=XIAOHONGSHU_PROXY,
+            trust_env=False,
+        ) as session:
             for index, item in enumerate(image_list):
                 aio_task.append(asyncio.create_task(
                     download_image(
                         item["urlDefault"],
                         str(CACHE_DIR / f"{index}.jpg"),
-                        proxy=resolver_proxy,
+                        proxy=XIAOHONGSHU_PROXY,
                         session=session,
                     )
                 )
@@ -1089,13 +1142,16 @@ async def xiaohongshu(bot: Bot, event: Event):
         try:
             path = await download_video(
                 video_url,
-                resolver_proxy,
+                XIAOHONGSHU_PROXY,
                 max_size=media_delivery.video_compress_limit,
             )
+        except MediaSizeLimitExceeded as exc:
+            logger.warning(f"[小红书] 视频超过大小限制，已跳过下载和发送：{exc}")
+            return
         except ValueError as exc:
             await xhs.finish(f"视频无法下载：{exc}")
         # await xhs.send(Message(MessageSegment.video(path)))
-        await send_resolved_video(event, path)
+        await send_resolved_video(event, path, XIAOHONGSHU_PROXY)
         return
     else:
         await xhs.finish(f"暂不支持的小红书内容类型：{type}")
@@ -1124,21 +1180,20 @@ async def youtube(bot: Bot, event: Event):
     msg_url = re.search(
         r"(?:https?://)?(?:www\.)?youtube\.com/[A-Za-z\d._?%&+\-=/#]*"
         r"|(?:https?://)?youtu\.be/[A-Za-z\d._?%&+\-=/#]*",
-        str(event.message).strip(),
+        get_resolver_message(event),
     )[0]
 
-    # 海外服务器判断
-    proxy = None if IS_OVERSEA else resolver_proxy
-
     try:
-        title = await get_video_title(msg_url, IS_OVERSEA, proxy)
+        title = await get_video_title(msg_url, YOUTUBE_PROXY)
         target_ytb_video_path = await download_ytb_video(
             msg_url,
-            IS_OVERSEA,
             CACHE_DIR,
-            proxy,
+            YOUTUBE_PROXY,
             max_size=media_delivery.video_compress_limit,
         )
+    except MediaSizeLimitExceeded as exc:
+        logger.warning(f"[YouTube] 视频超过大小限制，已跳过下载和发送：{exc}")
+        return
     except RuntimeError as exc:
         await y2b.finish(str(exc))
 
@@ -1151,20 +1206,20 @@ async def youtube(bot: Bot, event: Event):
         ),
     )
 
-    await send_resolved_video(event, target_ytb_video_path)
+    await send_resolved_video(event, target_ytb_video_path, YOUTUBE_PROXY)
 
 
 @ncm.handle()
 @resolve_handler
 @resolve_controller
 async def netease(bot: Bot, event: Event):
-    message = str(event.message)
+    message = get_resolver_message(event)
     # 识别短链接
     if "163cn.tv" in message:
         try:
             short_url = re.search(r"(http:|https:)\/\/163cn\.tv\/([a-zA-Z0-9]+)", message).group(0)
             async with httpx.AsyncClient(
-                proxy=resolver_proxy,
+                proxy=NETEASE_PROXY,
                 timeout=20,
                 trust_env=False,
             ) as client:
@@ -1195,7 +1250,7 @@ async def netease(bot: Bot, event: Event):
     for api_name, api_url in api_candidates:
         try:
             async with httpx.AsyncClient(
-                proxy=resolver_proxy,
+                proxy=NETEASE_PROXY,
                 timeout=15,
                 trust_env=False,
             ) as client:
@@ -1259,7 +1314,7 @@ async def netease(bot: Bot, event: Event):
 
     ncm_music_path = None
     try:
-        ncm_music_path = await download_audio(ncm_url, resolver_proxy)
+        ncm_music_path = await download_audio(ncm_url, NETEASE_PROXY)
         ncm_forward_nodes = list(
             make_forward_nodes(
                 bot.self_id,
@@ -1294,7 +1349,7 @@ async def netease(bot: Bot, event: Event):
 @resolve_handler
 @resolve_controller
 async def kugou(bot: Bot, event: Event):
-    message = str(event.message)
+    message = get_resolver_message(event)
     # logger.info(message)
     reg1 = r"https?://.*?kugou\.com.*?(?=\s|$|\n)"
     reg2 = r'jumpUrl":\s*"(https?:\\/\\/[^"]+)"'
@@ -1329,7 +1384,7 @@ async def kugou(bot: Bot, event: Event):
     response = httpx.get(
         url,
         follow_redirects=True,
-        proxy=resolver_proxy,
+        proxy=KUGOU_PROXY,
         timeout=20,
         trust_env=False,
     )
@@ -1342,7 +1397,7 @@ async def kugou(bot: Bot, event: Event):
             kugou_vip_data = httpx.get(
                 KUGOU_TEMP_API.replace("{}", kugou_title),
                 headers=COMMON_HEADER,
-                proxy=resolver_proxy,
+                proxy=KUGOU_PROXY,
                 timeout=20,
                 trust_env=False,
             ).json()
@@ -1354,7 +1409,10 @@ async def kugou(bot: Bot, event: Event):
             # 下载音频文件后会返回一个下载路径
             kugou_music_path = None
             try:
-                kugou_music_path = await download_audio(kugou_url, resolver_proxy)
+                kugou_music_path = await download_audio(
+                    kugou_url,
+                    KUGOU_PROXY,
+                )
                 kugou_forward_nodes = list(
                     make_forward_nodes(
                         bot.self_id,
@@ -1411,7 +1469,7 @@ async def kugou(bot: Bot, event: Event):
 @resolve_handler
 @resolve_controller
 async def wb(bot: Bot, event: Event):
-    message = str(event.message)
+    message = get_resolver_message(event)
     weibo_id = None
     reg = r'(jumpUrl|qqdocurl)": ?"(.*?)"'
 
@@ -1469,7 +1527,7 @@ async def wb(bot: Bot, event: Event):
     resp = httpx.get(
         WEIBO_SINGLE_INFO.format(weibo_id),
         headers=headers,
-        proxy=resolver_proxy,
+        proxy=WEIBO_PROXY,
         timeout=20,
         trust_env=False,
     ).json()
@@ -1506,7 +1564,7 @@ async def wb(bot: Bot, event: Event):
                 download_image(
                     item,
                     "",
-                    resolver_proxy,
+                    WEIBO_PROXY,
                     headers=image_headers,
                 )
             )
@@ -1541,10 +1599,13 @@ async def wb(bot: Bot, event: Event):
             try:
                 path = await download_video(
                     video_url,
-                    resolver_proxy,
+                    WEIBO_PROXY,
                     ext_headers=video_headers,
                     max_size=media_delivery.video_compress_limit,
                 )
+            except MediaSizeLimitExceeded as exc:
+                logger.warning(f"[微博] 视频超过大小限制，已跳过下载和发送：{exc}")
+                return
             except ValueError as exc:
                 await weibo.finish(f"视频无法下载：{exc}")
-            await send_resolved_video(event, path)
+            await send_resolved_video(event, path, WEIBO_PROXY)

@@ -9,7 +9,6 @@ from nonebot_plugin_datastore import create_session
 
 from ...render.utils import render_sign_card
 from ..common.registration import register_user
-from .config import SignConfig, config
 from .utils import can_sign_today, execute_sign_update
 
 __plugin_meta__ = PluginMetadata(
@@ -17,15 +16,15 @@ __plugin_meta__ = PluginMetadata(
     description="每日签到插件",
     usage="每日签到，用于获取积分",
     type="application",
-    config=SignConfig,
 )
+
 
 sign_locks: defaultdict[str, asyncio.Lock] = defaultdict(asyncio.Lock)
 
 sign_keywords: list[str] = ["打卡", "签到","sign"] # 打卡关键词
 
 sign_matcher = on_message(
-    rule=fullmatch(config.sign_keywords),
+    rule=fullmatch(sign_keywords),
     priority=10,
     block=True,
 )

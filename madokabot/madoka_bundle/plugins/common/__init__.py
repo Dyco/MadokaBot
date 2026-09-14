@@ -8,16 +8,10 @@ __plugin_meta__ = PluginMetadata(
     usage=(
         "请使用以下指令：\n"
         "注册\n"
-        "set chara <立绘ID>\n"
-        "query chara\n"
-        "query data\n"
-        "shop help\n"
-        "shop chara\n"
-        "shop list\n"
-        "shop buy <编号>\n"
-        "群白名单 添加 [群号]\n"
-        "群白名单 删除 [群号]\n"
-        "群白名单 列表 [页码]"
+        "设置 立绘 <立绘ID>\n"
+        "查询 立绘/数据\n"
+        "商店 立绘/列表/购买 <编号>\n"
+        "群白名单 添加/删除/列表 <群号>\n"
     ),
     type="application",
     config=CommonConfig,
@@ -27,11 +21,16 @@ __plugin_meta__ = PluginMetadata(
 from . import matchers as matchers  # noqa: E402
 from . import group_whitelist as group_whitelist  # noqa: E402
 from .group_whitelist import is_group_whitelisted  # noqa: E402,F401
+from .file_cleanup import (  # noqa: E402,F401
+    cleanup_expired_files,
+    register_cleanup_path,
+)
 from .media import (  # noqa: E402,F401
     LocalMedia,
     MediaDelivery,
     MediaDeliveryMode,
     MediaDeliveryResult,
+    MediaSizeLimitExceeded,
     media_delivery,
 )
 from . import registration as registration  # noqa: E402

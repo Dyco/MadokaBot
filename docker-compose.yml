@@ -25,8 +25,8 @@ services:
       https_proxy: http://mihomo:7890
       all_proxy: socks5://mihomo:7890
 
-      NO_PROXY: localhost,127.0.0.1,mihomo
-      no_proxy: localhost,127.0.0.1,mihomo
+      NO_PROXY: localhost,127.0.0.1,mihomo,172.18.0.1
+      no_proxy: localhost,127.0.0.1,mihomo,172.18.0.1
 
     networks:
       - default
