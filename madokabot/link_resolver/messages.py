@@ -2,7 +2,7 @@
 
 from pathlib import Path
 
-from nonebot import get_plugin_config
+from nonebot import get_plugin_config, logger
 from nonebot.adapters.onebot.v11 import (
     Bot,
     Event,
@@ -63,6 +63,24 @@ def make_forward_nodes(
     return make_node(segments)
 
 
+def _build_forward_fallback(messages: list[MessageSegment]) -> str:
+    """提取合并转发中的文字，作为媒体发送失败时的降级内容。"""
+    texts: list[str] = []
+    for node in messages:
+        content = node.data.get("content")
+        if isinstance(content, Message):
+            text = content.extract_plain_text().strip()
+            if text:
+                texts.append(text)
+
+    if texts:
+        return (
+            "\n".join(texts)
+            + "\n\n⚠️ 合并转发发送失败，图片/媒体内容已省略。"
+        )
+    return "⚠️ 合并转发发送失败，图片/媒体内容暂时无法发送，请稍后重试。"
+
+
 async def send_forward(
     bot: Bot,
     event: Event,
@@ -70,16 +88,20 @@ async def send_forward(
 ) -> None:
     """向群聊或私聊发送合并转发。"""
     messages = segments if isinstance(segments, list) else [segments]
-    if isinstance(event, GroupMessageEvent):
-        await bot.send_group_forward_msg(
-            group_id=event.group_id,
-            messages=messages,
-        )
-    elif isinstance(event, PrivateMessageEvent):
-        await bot.send_private_forward_msg(
-            user_id=event.user_id,
-            messages=messages,
-        )
+    try:
+        if isinstance(event, GroupMessageEvent):
+            await bot.send_group_forward_msg(
+                group_id=event.group_id,
+                messages=messages,
+            )
+        elif isinstance(event, PrivateMessageEvent):
+            await bot.send_private_forward_msg(
+                user_id=event.user_id,
+                messages=messages,
+            )
+    except Exception as exc:
+        logger.warning(f"合并转发发送失败，已降级为普通文本：{exc}")
+        await bot.send(event, _build_forward_fallback(messages))
 
 
 async def upload_file(

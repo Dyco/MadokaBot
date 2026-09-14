@@ -6,3 +6,7 @@ __pycache__/
 /assets/cache/
 /assets/data/
 *.rar
+/.vs/MadokaBot
+.vs/ProjectSettings.json
+.vs/slnx.sqlite
+.vs/VSWorkspaceState.json

@@ -1,5 +1,6 @@
 import asyncio
 import shutil
+import time
 from collections.abc import Callable
 from pathlib import Path
 
@@ -9,6 +10,8 @@ from nonebot import logger
 
 from ..constants import BILIBILI_HEADER
 from .downloads import DownloadBudget
+
+DOWNLOAD_PROGRESS_INTERVAL = 3.0  # 下载进度日志的最短间隔（秒）
 
 
 async def is_ffmpeg_installed(
@@ -82,6 +85,7 @@ async def download_b_file(
                     f"视频流大小超过 {max_size / 1024 / 1024:g} MiB"
                 )
             async with aiofiles.open(target, "wb") as f:
+                last_progress_at = time.monotonic() - DOWNLOAD_PROGRESS_INTERVAL
                 async for chunk in resp.aiter_bytes():
                     current_len += len(chunk)
                     if budget is not None:
@@ -93,7 +97,10 @@ async def download_b_file(
                     await f.write(chunk)
                     if progress_callback:
                         progress = current_len / total_len if total_len else 0
-                        progress_callback(f'下载进度：{progress:.3f}')
+                        now = time.monotonic()
+                        if now - last_progress_at >= DOWNLOAD_PROGRESS_INTERVAL:
+                            progress_callback(f'下载进度：{progress:.3f}')
+                            last_progress_at = now
     return True
 
 

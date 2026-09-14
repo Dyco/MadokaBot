@@ -5,7 +5,7 @@ from nonebot import get_plugin_config
 from nonebot.config import Config
 from nonebot.log import logger
 import nonebot_plugin_localstore as store
-from pydantic import AnyHttpUrl, Field, SecretStr
+from pydantic import AnyHttpUrl, SecretStr
 
 try:
     from pydantic import ConfigDict
@@ -37,15 +37,9 @@ class RSSConfig(Config):
 
         class Config:
             extra = "allow"
-
-    # 代理地址
-    # ``rss_proxy`` is kept for backwards-compatible configuration loading.
-    # Runtime requests prefer MadokaBot's shared PROXY setting; see
-    # utils.get_proxy().
     rss_proxy: Optional[str] = None
     rsshub: AnyHttpUrl = "https://rsshub.app"  # type: ignore
-    # 备用 rsshub 地址
-    rsshub_backup: List[AnyHttpUrl] = Field(default_factory=list)
+    rsshub_backup: List[AnyHttpUrl] = [] # 备用 rsshub 地址
     db_cache_expire: int = 30
     limit: int = 200
     max_length: int = 1024  # 正文长度限制，防止消息太长刷屏，以及消息过长发送失败的情况
@@ -59,10 +53,7 @@ class RSSConfig(Config):
     debug: bool = (
         False  # 是否开启 debug 模式，开启后会打印更多的日志信息，同时检查更新时不会使用缓存,便于调试
     )
-    rss_auto_forward: bool = Field(
-        default=True,
-        description="是否默认使用合并消息推送 RSS 自动更新",
-    )
+    rss_auto_forward: bool = True # 是否默认使用合并消息推送 RSS 自动更新
 
     zip_size: int = 2 * 1024
     gif_zip_size: int = 6 * 1024
@@ -81,57 +72,18 @@ class RSSConfig(Config):
     aria2_download_path: Optional[str] = (
         None  # aria2 下载目录，必须是 MadokaBot 能访问到的本地路径
     )
-    aria2_acquire_timeout: int = Field(
-        default=60,
-        gt=0,
-        description="下载链接、种子文件及磁力元数据的获取超时，单位秒",
-    )
-    aria2_file_cleanup_delay: int = Field(
-        default=3600,
-        ge=0,
-        description="下载文件的自动清理延迟，单位秒；设为 0 时关闭",
-    )
-    aria2_max_file_size_mb: int = Field(
-        default=512,
-        gt=0,
-        description="单个下载文件的大小上限，单位 MiB",
-    )
-    aria2_max_total_size_mb: int = Field(
-        default=1024,
-        gt=0,
-        description="单个下载任务的总文件大小上限，单位 MiB",
-    )
-    rss_upload_verify_delay: int = Field(
-        default=3600,
-        gt=0,
-        description="群文件上传后延迟核验的时间，单位秒",
-    )
-    rss_upload_max_retries: int = Field(
-        default=1,
-        ge=0,
-        description="群文件核验失败后的最大自动重传次数",
-    )
-    rss_upload_concurrency: int = Field(
-        default=1,
-        ge=1,
-        description="群文件上传队列并发数",
-    )
+    aria2_acquire_timeout: int = 60 # 下载链接、种子文件及磁力元数据的获取超时，单位秒
+    aria2_file_cleanup_delay: int = 3600 # 下载文件的自动清理延迟，单位秒；设为 0 时关闭
+    aria2_max_file_size_mb: int = 512 # 单个下载文件的大小上限，单位 MiB
+    aria2_max_total_size_mb: int = 1024 # 单个下载任务的总文件大小上限，单位 MiB
+    rss_upload_verify_delay: int = 3600 # 群文件上传后延迟核验的时间，单位秒
+    rss_upload_max_retries: int = 1 # 群文件核验失败后的最大自动重传次数
+    rss_upload_concurrency: int = 1 # 群文件上传队列并发数
     down_status_msg_group: Optional[List[int]] = None  # 下载进度消息提示群组
-    down_status_msg_date: int = Field(
-        default=90,
-        gt=0,
-        description="下载进度检查及提示间隔时间，单位秒",
-    )
-    down_status_msg_recall_delay: int = Field(
-        default=60,
-        ge=0,
-        lt=120,
-        description="下载进度消息的自动撤回延迟，单位秒；设为 0 时不自动撤回",
-    )
+    down_status_msg_date: int = 90 # 下载进度检查及提示间隔时间，单位秒
+    down_status_msg_recall_delay: int = 60 # 下载进度消息的自动撤回延迟，单位秒；设为 0 时不自动撤回
 
-    telegram_admin_ids: List[int] = Field(
-        default_factory=list
-    )  # Telegram 管理员 ID 列表，用于接收离线通知和管理机器人
+    telegram_admin_ids: List[int] = [] # Telegram 管理员 ID 列表，用于接收离线通知和管理机器人
     telegram_bot_token: Optional[str] = None  # Telegram 机器人的 token
 
 

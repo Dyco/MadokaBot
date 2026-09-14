@@ -4,8 +4,7 @@ from pydantic import BaseModel, ConfigDict
 class Config(BaseModel):
     """链接解析器配置。
 
-    `resolver_proxy` 为空时复用 MadokaBot 的全局 `PROXY`，这样该插件不需要
-    再维护一份默认代理地址。
+    `resolver_proxy` 为空时视为不走代理
     """
 
     model_config = ConfigDict(extra="ignore")

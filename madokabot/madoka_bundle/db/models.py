@@ -27,7 +27,6 @@ class UserStats(data.Model):
     )
     points: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     favorability: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
-    # 只保存稳定文件名；skin06 等运行时编号由当前资源列表生成。
     skin_asset: Mapped[str] = mapped_column(String, default="", nullable=False)
 
 

@@ -2,24 +2,15 @@ import json
 from typing import Any
 
 from nonebot import get_plugin_config
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, field_validator
 
 
 class ChatConfig(BaseModel):
-    model_api_key: str = Field(default="", description="NVIDIA API Key")
-    model_base_url: str = Field(
-        default="https://integrate.api.nvidia.com/v1",
-        description="OpenAI-compatible API base URL",
-    )
-    set_model: list[str] = Field(
-        default_factory=lambda: ["meta/llama-3.1-70b-instruct"],
-        description="Ordered fallback model list for the chat plugin",
-    )
-    chat_timeout: float = Field(default=60.0, description="Request timeout in seconds")
-    chat_max_tokens: int = Field(
-        default=2048,
-        description="Maximum output tokens for each chat request",
-    )
+    model_api_key: str = "" # NVIDIA API 密钥
+    model_base_url: str = "https://integrate.api.nvidia.com/v1" # OpenAI 兼容 API 地址
+    set_model: list[str] = ["meta/llama-3.1-70b-instruct"] # 聊天模型列表
+    chat_timeout: float = 60.0 # 请求超时时间，单位秒
+    chat_max_tokens: int = 2048 # 单次聊天最大输出 token 数
 
     @field_validator("set_model", mode="before")
     @classmethod
