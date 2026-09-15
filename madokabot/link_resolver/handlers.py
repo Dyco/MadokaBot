@@ -52,8 +52,6 @@ from .constants import (
 )
 from .commands import (
     comment_mode_map as comment_mode_map_in_memory,
-    comment_shutdown_list as comment_shutdown_list_in_memory,
-    resolve_shutdown_list as resolve_shutdown_list_in_memory,
     resolve_controller,
     resolve_handler,
 )
@@ -97,6 +95,7 @@ from .messages import (
     send_forward,
     upload_file,
 )
+from .state import is_content_enabled
 
 from ..madoka_bundle.config import config as madoka_config
 from ..madoka_bundle.plugins.common import (
@@ -379,7 +378,7 @@ async def bilibili(bot: Bot, event: Event) -> None:
     # 评论模式为图片时，评论整体作为第 4 个节点；文字模式沿用原有的
     # 多节点评论格式，并把这些评论节点放到 AI 总结之前。
     comment_forward_nodes: list[MessageSegment] = []
-    if send_id not in comment_shutdown_list_in_memory:
+    if is_content_enabled(send_id, "bilibili", "comment"):
         try:
             from .core.comment import get_bilibili_comments, render_bili_comments_image, \
                 format_bili_comments_to_nodes
@@ -692,8 +691,7 @@ async def dy(bot: Bot, event: Event) -> None:
             comment_forward_nodes: list[MessageSegment] = []
             send_id = get_target_id(event)
             if (
-                send_id not in comment_shutdown_list_in_memory
-                and send_id not in resolve_shutdown_list_in_memory
+                is_content_enabled(send_id, "douyin", "comment")
             ):
                 try:
                     from .core.comment import (

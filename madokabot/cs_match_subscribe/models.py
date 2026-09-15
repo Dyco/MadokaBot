@@ -5,6 +5,7 @@ from __future__ import annotations
 import hashlib
 import json
 from dataclasses import asdict, dataclass, field
+from datetime import datetime
 from typing import Any
 
 
@@ -41,6 +42,17 @@ class PlayerStats:
             return self.full_name.split(marker, 1)[1]
         return ""
 
+    @property
+    def swing_class(self) -> str:
+        """按 Swing 数值返回颜色类别，-1% 到 +1% 保持黑色。"""
+        try:
+            value = float(self.swing.rstrip("%"))
+        except ValueError:
+            return "neutral"
+        if -1 <= value <= 1:
+            return "neutral"
+        return "positive" if value > 0 else "negative"
+
 
 @dataclass(slots=True)
 class TeamStats:
@@ -52,6 +64,57 @@ class TeamStats:
     logo_src: str | None = None
     score: str | None = None
     players: list[PlayerStats] = field(default_factory=list)
+
+
+@dataclass(slots=True)
+class EventData:
+    """HLTV 赛事列表中的一项赛事。"""
+
+    event_id: str
+    name: str
+    event_type: str = ""
+    prize_pool: int | None = None
+    start_at: datetime | None = None
+    end_at: datetime | None = None
+    prize_display: str = "TBA"
+    team_count: str = "-"
+    location: str = ""
+    flag_url: str | None = None
+    flag_src: str | None = None
+    banner_url: str | None = None
+    banner_src: str | None = None
+    date_display: str = ""
+    date_display_zh: str = ""
+    url: str = ""
+    format_text: str = ""
+
+
+@dataclass(slots=True)
+class EventMatchRef:
+    """赛事页面中发现的一场比赛链接。"""
+
+    match_id: str
+    url: str
+    section: str = "upcoming"
+
+
+@dataclass(slots=True)
+class MapScore:
+    """HLTV 比赛页中的单张地图比分。"""
+
+    name: str
+    team1_score: str | None = None
+    team2_score: str | None = None
+
+    @property
+    def is_finished(self) -> bool:
+        """判断地图是否已经产生最终回合比分。"""
+        return self.team1_score is not None and self.team2_score is not None
+
+    @property
+    def score_display(self) -> str:
+        """返回适合推送的地图比分。"""
+        return f"{self.team1_score or '-'}:{self.team2_score or '-'}"
 
 
 @dataclass(slots=True)
@@ -68,12 +131,24 @@ class MatchData:
     match_date: str = ""
     teams: list[TeamStats] = field(default_factory=list)
     maps: list[str] = field(default_factory=list)
+    map_stats: dict[str, list[TeamStats]] = field(default_factory=dict)
+    map_results: list[MapScore] = field(default_factory=list)
+    format_text: str = ""
+    format_code: str = ""
+    round_text: str = ""
     has_stats: bool = False
     fetched_at: str = ""
 
     @property
     def is_finished(self) -> bool:
         return self.status == "finished"
+
+    @property
+    def has_started(self) -> bool:
+        """用 HLTV 的实时状态或系列赛比分判断比赛是否已开始。"""
+        return self.status == "live" or any(
+            team.score is not None for team in self.teams[:2]
+        )
 
     @property
     def display_title(self) -> str:
@@ -86,6 +161,9 @@ class MatchData:
         payload: dict[str, Any] = {
             "status": self.status,
             "status_text": self.status_text,
+            "format_text": self.format_text,
+            "format_code": self.format_code,
+            "round_text": self.round_text,
             "teams": [
                 {
                     "name": team.name,
@@ -104,16 +182,33 @@ class MatchData:
                 }
                 for team in self.teams
             ],
+            "map_results": [
+                {
+                    "name": result.name,
+                    "team1_score": result.team1_score,
+                    "team2_score": result.team2_score,
+                }
+                for result in self.map_results
+            ],
         }
         encoded = json.dumps(payload, ensure_ascii=False, sort_keys=True).encode()
         return hashlib.sha256(encoded).hexdigest()
 
-    def to_template_context(self, *, show_player_photos: bool = False) -> dict[str, Any]:
+    def to_template_context(
+        self,
+        *,
+        show_player_photos: bool = False,
+        map_name: str | None = None,
+    ) -> dict[str, Any]:
         """转换为 Jinja 模板使用的普通字典。"""
         context = asdict(self)
-        for team_data, team in zip(context["teams"], self.teams):
+        selected_teams = self.map_stats.get(map_name or "", self.teams)
+        context["teams"] = [asdict(team) for team in selected_teams]
+        context["selected_map"] = map_name if map_name in self.map_stats else None
+        for team_data, team in zip(context["teams"], selected_teams):
             for player_data, player in zip(team_data["players"], team.players):
                 player_data["name_before_nick"] = player.name_before_nick
                 player_data["name_after_nick"] = player.name_after_nick
+                player_data["swing_class"] = player.swing_class
         context["show_player_photos"] = show_player_photos
         return context

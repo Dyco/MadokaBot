@@ -13,6 +13,3 @@ COMMON_HEADER = {
 
 # 插件名字
 PLUGIN_NAME = "madoka_link_resolver"
-
-# 解析列表文件名
-RESOLVE_SHUTDOWN_LIST_NAME = "resolver_shutdown_list.json"

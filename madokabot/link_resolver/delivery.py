@@ -14,6 +14,11 @@ from ..madoka_bundle.plugins.common import (
 )
 from .config import Config
 from .core.downloads import download_video
+from .state import (
+    current_resolver_key,
+    current_resolver_target,
+    is_content_enabled,
+)
 
 resolver_config = get_plugin_config(Config)
 media_delivery = MediaDelivery(
@@ -39,6 +44,17 @@ async def send_resolved_video(
     sent = False
     try:
         bot = cast(Bot, current_bot.get())
+        resolver_key = current_resolver_key.get()
+        target_id = current_resolver_target.get()
+        if (
+            resolver_key is not None
+            and not is_content_enabled(target_id, resolver_key, "video")
+        ):
+            logger.info(
+                f"目标 {target_id} 已关闭 {resolver_key} 的视频内容，跳过发送"
+            )
+            return False
+
         value = str(source) if source is not None else ""
         if value.startswith(("http://", "https://")):
             value = await download_video(

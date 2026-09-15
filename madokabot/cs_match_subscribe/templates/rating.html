@@ -42,13 +42,10 @@
     .map-nav a {
       color: #3376ad;
       text-decoration: none;
-    }
-
-    .map-nav a {
       margin-right: 14px;
     }
 
-    .map-nav a:first-child {
+    .map-nav a.active {
       color: #2d6d9f;
       font-weight: 700;
     }
@@ -170,6 +167,7 @@
 
     .swing-positive { color: #06a516; }
     .swing-negative { color: #ff2028; }
+    .swing-neutral { color: #454545; }
     .rating-positive { color: #079b16; font-weight: 700; }
     .rating-negative { color: #fa1019; font-weight: 700; }
     .rating-neutral { color: #454545; font-weight: 700; }
@@ -190,8 +188,8 @@
 <body>
   <main class="rating-card">
     <nav class="map-nav" aria-label="Map filters">
-      <a href="#all">All maps</a>
-      {% for map_name in maps %}<a href="#map-{{ loop.index }}">{{ map_name }}</a>{% endfor %}
+      <a class="{% if not selected_map %}active{% endif %}" href="#all">All Maps</a>
+      {% for map_name in maps %}<a class="{% if selected_map == map_name %}active{% endif %}" href="#map-{{ loop.index }}">{{ map_name }}</a>{% endfor %}
     </nav>
 
     {% for team in teams %}
@@ -235,7 +233,7 @@
               </div>
             </td>
             <td class="numeric">{{ player.kd }}</td>
-            <td class="numeric {% if player.swing.startswith('+') %}swing-positive{% elif player.swing.startswith('-') %}swing-negative{% endif %}">{{ player.swing }}</td>
+            <td class="numeric swing-{{ player.swing_class }}">{{ player.swing }}</td>
             <td class="numeric">{{ player.adr }}</td>
             <td class="numeric">{{ player.kast }}</td>
             <td class="numeric rating-{{ player.rating_class }}">{{ player.rating }}</td>

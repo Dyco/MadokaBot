@@ -1,5 +1,7 @@
 """Resolver 主命令、访问控制与开关状态。"""
 
+from __future__ import annotations
+
 import re
 from functools import wraps
 
@@ -11,7 +13,6 @@ from nonebot.adapters.onebot.v11 import (
     Bot,
     Event,
     GroupMessageEvent,
-    Message,
 )
 from nonebot.permission import SUPERUSER
 from nonebot_plugin_alconna import (
@@ -25,25 +26,248 @@ from nonebot_plugin_alconna import (
 )
 
 from ..madoka_bundle.plugins.common import is_group_whitelisted
+from . import __plugin_meta__
 from .config import Config
+from .messages import get_target_id
 from .state import (
-    load_comment_shutdown_list,
+    CONTENT_KEYS,
+    RESOLVER_KEYS,
+    current_resolver_key,
+    current_resolver_target,
+    is_resolver_enabled,
     load_comment_mode_map,
-    load_resolver_shutdown_list,
-    save_comment_shutdown_list,
     save_comment_mode_map,
-    save_resolver_shutdown_list,
+    save_resolver_control_map,
+    set_all_content_enabled,
+    set_all_resolvers_enabled,
+    set_resolver_content_enabled,
+    set_resolver_enabled,
     split_config_list,
 )
-from .messages import get_target_id
-from . import __plugin_meta__
+from .status import render_resolver_status_card
 
 
 config = get_plugin_config(Config)
-disabled_resolvers = split_config_list(config.global_resolve_controller, ",")
-resolve_shutdown_list: list = load_resolver_shutdown_list()
-comment_shutdown_list: list = load_comment_shutdown_list()
+disabled_resolvers = {
+    item.casefold()
+    for item in split_config_list(config.global_resolve_controller, ",")
+}
 comment_mode_map: dict = load_comment_mode_map()
+
+HANDLER_RESOLVER_KEYS = {
+    "bilibili": "bilibili",
+    "dy": "douyin",
+    "tiktok": "tiktok",
+    "ac": "acfun",
+    "twitter": "twitter",
+    "xiaohongshu": "xiaohongshu",
+    "youtube": "youtube",
+    "netease": "netease",
+    "kugou": "kugou",
+    "wb": "weibo",
+}
+RESOLVER_ALIASES = {
+    "b站": "bilibili",
+    "bilibili": "bilibili",
+    "bili": "bilibili",
+    "哔哩哔哩": "bilibili",
+    "dy": "douyin",
+    "douyin": "douyin",
+    "抖音": "douyin",
+    "tiktok": "tiktok",
+    "tk": "tiktok",
+    "抖音国际版": "tiktok",
+    "acfun": "acfun",
+    "ac": "acfun",
+    "a站": "acfun",
+    "twitter": "twitter",
+    "x": "twitter",
+    "推特": "twitter",
+    "小蓝鸟": "twitter",
+    "xhs": "xiaohongshu",
+    "xiaohongshu": "xiaohongshu",
+    "小红书": "xiaohongshu",
+    "youtube": "youtube",
+    "ytb": "youtube",
+    "yt": "youtube",
+    "油管": "youtube",
+    "网易云": "netease",
+    "网易云音乐": "netease",
+    "netease": "netease",
+    "ncm": "netease",
+    "酷狗": "kugou",
+    "酷狗音乐": "kugou",
+    "kugou": "kugou",
+    "kg": "kugou",
+    "微博": "weibo",
+    "weibo": "weibo",
+    "wb": "weibo",
+}
+CONTENT_ALIASES = {
+    "图片": "image",
+    "image": "image",
+    "img": "image",
+    "视频": "video",
+    "video": "video",
+    "评论": "comment",
+    "comment": "comment",
+    "comments": "comment",
+}
+CONTENT_LABELS = {
+    "image": "图片",
+    "video": "视频",
+    "comment": "评论",
+}
+RESOLVER_LABELS = {
+    "bilibili": "B站",
+    "douyin": "抖音",
+    "tiktok": "TikTok",
+    "acfun": "ACFun",
+    "twitter": "X",
+    "xiaohongshu": "小红书",
+    "youtube": "YouTube",
+    "netease": "网易云",
+    "kugou": "酷狗",
+    "weibo": "微博",
+}
+OPEN_ACTIONS = {"打开"}
+CLOSE_ACTIONS = {"关闭"}
+
+
+def _resolver_key_for_handler(handler_name: str) -> str:
+    """将处理器函数名转换为统一的平台标识。"""
+    return HANDLER_RESOLVER_KEYS.get(handler_name, handler_name)
+
+
+def _event_target_id(event: Event) -> int | None:
+    """获取群聊或私聊对应的控制目标编号。"""
+    if isinstance(event, GroupMessageEvent):
+        return event.group_id
+    return getattr(event, "user_id", None)
+
+
+def _split_control_tokens(content: Match[str]) -> list[str]:
+    """将主命令参数拆分为支持空格和逗号的控制项。"""
+    value = content.result
+    if isinstance(value, str):
+        raw_value = value
+    elif value is None:
+        return []
+    else:
+        raw_value = " ".join(str(item) for item in value)
+    return [
+        item
+        for item in re.split(r"[\s,，、]+", raw_value.strip())
+        if item
+    ]
+
+
+def _is_control_command(tokens: list[str]) -> bool:
+    """判断参数是否属于 Resolver 开关控制命令。"""
+    if not tokens:
+        return False
+    first = tokens[0].casefold()
+    return first in OPEN_ACTIONS or first in CLOSE_ACTIONS
+
+
+def _control_scope_text(
+    all_selected: bool,
+    resolver_keys: set[str],
+    content_keys: set[str],
+) -> str:
+    """生成开关操作的目标范围说明。"""
+    if content_keys:
+        target = (
+            "全部平台"
+            if all_selected or not resolver_keys
+            else "、".join(
+                RESOLVER_LABELS[key]
+                for key in RESOLVER_KEYS
+                if key in resolver_keys
+            )
+        )
+        contents = "、".join(
+            CONTENT_LABELS[key] for key in CONTENT_KEYS if key in content_keys
+        )
+        return f"{target}的{contents}内容"
+    if all_selected:
+        return "全部平台解析"
+    return (
+        "、".join(
+            RESOLVER_LABELS[key]
+            for key in RESOLVER_KEYS
+            if key in resolver_keys
+        )
+        + "解析"
+    )
+
+
+async def _apply_control_command(
+    event: Event,
+    tokens: list[str],
+) -> None:
+    """应用 Resolver 的全局、平台和内容类型开关。"""
+    target_id = _event_target_id(event)
+    if target_id is None:
+        await resolver.finish("该解析控制命令只能在群聊或私聊中使用。")
+
+    enabled = tokens[0].casefold() in OPEN_ACTIONS
+    parameters = tokens[1:]
+    if not parameters:
+        await resolver.finish("请指定要打开或关闭的平台、内容类型或“全部”。")
+
+    resolver_keys: set[str] = set()
+    content_keys: set[str] = set()
+    all_selected = False
+    unknown: list[str] = []
+    for parameter in parameters:
+        normalized = parameter.casefold()
+        if normalized in {"all", "全部", "所有"}:
+            all_selected = True
+        elif normalized in RESOLVER_ALIASES:
+            resolver_keys.add(RESOLVER_ALIASES[normalized])
+        elif normalized in CONTENT_ALIASES:
+            content_keys.add(CONTENT_ALIASES[normalized])
+        else:
+            unknown.append(parameter)
+
+    if unknown:
+        await resolver.finish(
+            "无法识别控制参数："
+            + "、".join(unknown)
+            + "。可使用平台名称或“全部/图片/视频/评论”。"
+        )
+
+    if all_selected:
+        resolver_keys.clear()
+    if not all_selected and not resolver_keys and not content_keys:
+        await resolver.finish("没有找到有效的解析控制参数。")
+
+    if content_keys:
+        for content_key in content_keys:
+            if all_selected or not resolver_keys:
+                set_all_content_enabled(target_id, content_key, enabled)
+            else:
+                for resolver_key in resolver_keys:
+                    set_resolver_content_enabled(
+                        target_id,
+                        resolver_key,
+                        content_key,
+                        enabled,
+                    )
+    elif all_selected:
+        set_all_resolvers_enabled(target_id, enabled)
+    else:
+        for resolver_key in resolver_keys:
+            set_resolver_enabled(target_id, resolver_key, enabled)
+
+    save_resolver_control_map()
+
+    action_name = "打开" if enabled else "关闭"
+    await resolver.finish(
+        f"已{action_name}"
+        f"{_control_scope_text(all_selected, resolver_keys, content_keys)}"
+    )
 
 
 async def resolver_access_rule(bot: Bot, event: Event) -> bool:
@@ -91,92 +315,55 @@ def resolve_handler(func):
         )
         if event is None or bot is None:
             return None
+        resolver_key = _resolver_key_for_handler(func.__name__)
         if isinstance(event, GroupMessageEvent):
             if not is_group_whitelisted(event.group_id):
                 return None
-            if event.group_id in resolve_shutdown_list:
-                logger.info(f"群 {event.group_id} 已关闭解析，不再执行")
-                return None
         elif not await SUPERUSER(bot, event):
             return None
-        return await func(*args, **kwargs)
+
+        target_id = _event_target_id(event)
+        if not is_resolver_enabled(target_id, resolver_key):
+            logger.info(
+                f"目标 {target_id} 已关闭 {resolver_key} 解析，不再执行"
+            )
+            return None
+
+        resolver_token = current_resolver_key.set(resolver_key)
+        target_token = current_resolver_target.set(
+            str(target_id) if target_id is not None else None
+        )
+        try:
+            return await func(*args, **kwargs)
+        finally:
+            current_resolver_key.reset(resolver_token)
+            current_resolver_target.reset(target_token)
 
     return wrapper
 
 
 def resolve_controller(func):
     """根据配置禁用指定平台解析器。"""
-    status = "禁止" if func.__name__ in disabled_resolvers else "允许"
+    resolver_key = _resolver_key_for_handler(func.__name__)
+    status = (
+        "禁止"
+        if func.__name__.casefold() in disabled_resolvers
+        or resolver_key.casefold() in disabled_resolvers
+        else "允许"
+    )
     logger.debug(f"[link_resolver] 加载 {func.__name__}: {status}")
 
     @wraps(func)
     async def wrapper(*args, **kwargs):
-        if func.__name__ in disabled_resolvers:
+        if (
+            func.__name__.casefold() in disabled_resolvers
+            or resolver_key.casefold() in disabled_resolvers
+        ):
             logger.warning(f"[link_resolver] {func.__name__} 被禁止执行")
             return None
         return await func(*args, **kwargs)
 
     return wrapper
-
-
-async def enable(_: Bot, event: Event) -> None:
-    target_id = get_target_id(event)
-    if target_id in resolve_shutdown_list:
-        resolve_shutdown_list.remove(target_id)
-        save_resolver_shutdown_list(resolve_shutdown_list)
-        await resolver.finish("解析已开启")
-    await resolver.finish("解析已开启，无需重复开启")
-
-
-async def disable(_: Bot, event: Event) -> None:
-    target_id = get_target_id(event)
-    if target_id not in resolve_shutdown_list:
-        resolve_shutdown_list.append(target_id)
-        save_resolver_shutdown_list(resolve_shutdown_list)
-        await resolver.finish("解析已关闭")
-    await resolver.finish("解析已关闭，无需重复关闭")
-
-
-async def check_disable(bot: Bot, event: Event) -> None:
-    async def describe(items: list) -> str:
-        result = []
-        for item in items:
-            try:
-                group = await bot.get_group_info(group_id=int(item))
-                name = group.get("group_name", "未知群组")
-            except Exception:
-                name = "无法获取群名"
-            result.append(f"{item}--{name}")
-        return "\n".join(result) or "（空）"
-
-    memory = await describe(resolve_shutdown_list)
-    persistent = await describe(load_resolver_shutdown_list())
-    message = (
-        "[Madoka 链接解析器关闭名单如下：]\n\n"
-        f"1. 在【内存】中的名单有：\n{memory}\n\n"
-        f"2. 在【持久层】中的名单有：\n{persistent}\n\n"
-        "🌟 温馨提示：使用“解析 关闭解析”可关闭本群解析"
-    )
-    await bot.send(event, message=Message("已经发送到私信了~"))
-    await bot.send_private_msg(user_id=event.user_id, message=Message(message))
-
-
-async def enable_comments(_: Bot, event: Event) -> None:
-    target_id = get_target_id(event)
-    if target_id in comment_shutdown_list:
-        comment_shutdown_list.remove(target_id)
-        save_comment_shutdown_list(comment_shutdown_list)
-        await resolver.finish("评论已开启")
-    await resolver.finish("评论已开启，无需重复开启")
-
-
-async def disable_comments(_: Bot, event: Event) -> None:
-    target_id = get_target_id(event)
-    if target_id not in comment_shutdown_list:
-        comment_shutdown_list.append(target_id)
-        save_comment_shutdown_list(comment_shutdown_list)
-        await resolver.finish("评论已关闭")
-    await resolver.finish("评论已关闭，无需重复关闭")
 
 
 async def switch_comment_mode(_: Bot, event: Event) -> None:
@@ -200,6 +387,29 @@ async def reload_comment_templates(_: Bot, __: Event) -> None:
     await resolver.finish("评论 HTML 模板重载成功！")
 
 
+async def view_resolver_status(_: Bot, event: Event) -> None:
+    """渲染并发送当前目标的 Resolver 内容状态表。"""
+    target_id = _event_target_id(event)
+    if target_id is None:
+        await resolver.finish("该解析查看命令只能在群聊或私聊中使用。")
+
+    if isinstance(event, GroupMessageEvent):
+        scope_name = f"当前群组 {event.group_id}"
+    else:
+        scope_name = f"当前私聊 {getattr(event, 'user_id', target_id)}"
+
+    try:
+        status_card = await render_resolver_status_card(
+            target_id,
+            scope_name,
+            disabled_resolvers,
+        )
+    except Exception as exc:
+        logger.exception(f"Resolver 状态表渲染失败：{exc}")
+        await resolver.finish("解析状态渲染失败，请检查 htmlrender 配置。")
+    await resolver.finish(status_card)
+
+
 @resolver.handle()
 async def handle_resolver_command(
     bot: Bot,
@@ -210,22 +420,22 @@ async def handle_resolver_command(
     """处理主命令；链接由对应的平台 matcher 继续处理。"""
     if result.subcommands:
         return
-    if not content.available or not content.result.strip():
+    tokens = _split_control_tokens(content) if content.available else []
+    if not tokens:
         await resolver.finish(__plugin_meta__.usage)
 
-    command = " ".join(content.result.strip().split())
+    command = " ".join(tokens)
     manage_permission = GROUP_ADMIN | GROUP_OWNER | SUPERUSER
+    if _is_control_command(tokens):
+        if not await manage_permission(bot, event):
+            await resolver.finish("你没有权限执行这个解析器管理命令。")
+        await _apply_control_command(event, tokens)
+        return
+
     command_handlers = {
-        "开启解析": (enable, manage_permission),
-        "开启": (enable, manage_permission),
-        "关闭解析": (disable, manage_permission),
-        "关闭": (disable, manage_permission),
-        "查看关闭解析": (check_disable, SUPERUSER),
-        "查看": (check_disable, SUPERUSER),
-        "开启评论": (enable_comments, manage_permission),
-        "关闭评论": (disable_comments, manage_permission),
-        "切换评论模式": (switch_comment_mode, manage_permission),
-        "重载评论模板": (reload_comment_templates, SUPERUSER),
+        "查看": (view_resolver_status, manage_permission),
+        "切换评论": (switch_comment_mode, manage_permission),
+        "重载评论": (reload_comment_templates, SUPERUSER),
     }
     if command_handler := command_handlers.get(command):
         handler, permission = command_handler

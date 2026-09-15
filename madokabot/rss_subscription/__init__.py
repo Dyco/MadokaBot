@@ -22,7 +22,7 @@ VERSION = "2.6.25"
 
 __plugin_meta__ = PluginMetadata(
     name="MadokaRSS",
-    description="Madoka机器人RSS订阅插件，订阅源建议选择RSSHub",
+    description="Madoka机器人RSS订阅插件，主指令为RSS",
     usage=RSS_USAGE,
     type="application",
     homepage="https://github.com/Dyco/MadokaBot",

@@ -2,12 +2,13 @@ import asyncio
 from collections import defaultdict
 
 from nonebot import logger, on_message
-from nonebot.adapters.onebot.v11 import MessageEvent
+from nonebot.adapters.onebot.v11 import Bot, MessageEvent
 from nonebot.plugin import PluginMetadata
 from nonebot.rule import fullmatch
 from nonebot_plugin_datastore import create_session
 
 from ...render.utils import render_sign_card
+from ..common import respond
 from ..common.registration import register_user
 from .utils import can_sign_today, execute_sign_update
 
@@ -31,7 +32,7 @@ sign_matcher = on_message(
 
 
 @sign_matcher.handle()
-async def _handle_sign(event: MessageEvent):
+async def _handle_sign(bot: Bot, event: MessageEvent):
     uid = event.get_user_id()
     username = event.sender.card or event.sender.nickname or uid
     lock = sign_locks[uid]
@@ -41,16 +42,11 @@ async def _handle_sign(event: MessageEvent):
     image_message = None
     try:
         async with lock:
+            await respond(bot, event)
             reward_data = None
             async with create_session() as session:
                 user, sign, _ = await register_user(session, uid)
                 is_new_sign = can_sign_today(sign)
-
-                if is_new_sign:
-                    prompt = "签到成功！正在获得数据…"
-                else:
-                    prompt = "你已经签到过了。正在生成个人数据…"
-                await sign_matcher.send(prompt)
 
                 if is_new_sign:
                     reward_data = await execute_sign_update(user, sign, session)

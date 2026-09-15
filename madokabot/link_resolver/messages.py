@@ -12,8 +12,13 @@ from nonebot.adapters.onebot.v11 import (
     PrivateMessageEvent,
 )
 
-from .delivery import media_delivery
 from .config import Config
+from .delivery import media_delivery
+from .state import (
+    current_resolver_key,
+    current_resolver_target,
+    is_content_enabled,
+)
 
 NICKNAME = get_plugin_config(Config).global_prefix_nickname.strip()
 IMAGE_SUFFIXES = frozenset({".jpg", ".jpeg", ".png", ".gif"})
@@ -86,6 +91,49 @@ def _build_forward_fallback(messages: list[MessageSegment]) -> str:
     return "⚠️ 合并转发发送失败，图片/媒体内容暂时无法发送，请稍后重试。"
 
 
+def _filter_disabled_images(
+    messages: list[MessageSegment],
+) -> list[MessageSegment]:
+    """按当前群组设置移除被关闭的解析图片。"""
+    resolver_key = current_resolver_key.get()
+    target_id = current_resolver_target.get()
+    if (
+        resolver_key is None
+        or is_content_enabled(target_id, resolver_key, "image")
+    ):
+        return messages
+
+    filtered: list[MessageSegment] = []
+    for segment in messages:
+        if segment.type == "image":
+            continue
+        if segment.type != "node":
+            filtered.append(segment)
+            continue
+
+        content = segment.data.get("content")
+        if not isinstance(content, Message):
+            filtered.append(segment)
+            continue
+        content = content.exclude("image")
+        if not content:
+            continue
+
+        user_id = segment.data.get("user_id")
+        nickname = segment.data.get("nickname")
+        if user_id is None or nickname is None:
+            filtered.append(segment)
+            continue
+        filtered.append(
+            MessageSegment.node_custom(
+                user_id=user_id,
+                nickname=nickname,
+                content=content,
+            )
+        )
+    return filtered
+
+
 async def send_forward(
     bot: Bot,
     event: Event,
@@ -93,6 +141,10 @@ async def send_forward(
 ) -> None:
     """向群聊或私聊发送合并转发。"""
     messages = segments if isinstance(segments, list) else [segments]
+    messages = _filter_disabled_images(messages)
+    if not messages:
+        logger.info("当前群组已关闭该 Resolver 的图片内容，跳过合并转发")
+        return
     try:
         if isinstance(event, GroupMessageEvent):
             await bot.send_group_forward_msg(

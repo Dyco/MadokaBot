@@ -15,8 +15,7 @@ from nonebot.log import logger
 
 from ..madoka_bundle.config import config as madoka_config
 from .config import config, ensure_asset_dirs
-from .models import MatchData
-
+from .models import EventData, MatchData
 
 _EXTENSIONS = {
     "image/png": ".png",
@@ -121,14 +120,16 @@ async def _download_one(
 async def enrich_match_assets(match: MatchData) -> MatchData:
     """下载并将赛事图片转换为渲染可直接使用的 data URL。"""
     refs: dict[str, tuple[str, str]] = {}
-    for team in match.teams:
-        if team.logo_url:
-            refs.setdefault(team.logo_url, ("team", team.name))
-        for player in team.players:
-            if player.flag_url:
-                refs.setdefault(player.flag_url, ("flag", player.nickname))
-            if player.photo_url:
-                refs.setdefault(player.photo_url, ("player", player.nickname))
+    team_groups = [match.teams, *match.map_stats.values()]
+    for teams in team_groups:
+        for team in teams:
+            if team.logo_url:
+                refs.setdefault(team.logo_url, ("team", team.name))
+            for player in team.players:
+                if player.flag_url:
+                    refs.setdefault(player.flag_url, ("flag", player.nickname))
+                if player.photo_url:
+                    refs.setdefault(player.photo_url, ("player", player.nickname))
 
     if not refs:
         return match
@@ -161,15 +162,67 @@ async def enrich_match_assets(match: MatchData) -> MatchData:
 
         results = dict(await asyncio.gather(*(download(url) for url in refs)))
 
-    for team in match.teams:
-        if team.logo_url:
-            path = results.get(team.logo_url)
-            team.logo_src = _data_url(path) if path else _placeholder_data_url(team.name, "team")
-        for player in team.players:
-            if player.flag_url:
-                path = results.get(player.flag_url)
-                player.flag_src = _data_url(path) if path else _placeholder_data_url(player.nickname, "flag")
-            if player.photo_url:
-                path = results.get(player.photo_url)
-                player.photo_src = _data_url(path) if path else _placeholder_data_url(player.nickname, "player")
+    for teams in team_groups:
+        for team in teams:
+            if team.logo_url:
+                path = results.get(team.logo_url)
+                team.logo_src = _data_url(path) if path else _placeholder_data_url(team.name, "team")
+            for player in team.players:
+                if player.flag_url:
+                    path = results.get(player.flag_url)
+                    player.flag_src = _data_url(path) if path else _placeholder_data_url(player.nickname, "flag")
+                if player.photo_url:
+                    path = results.get(player.photo_url)
+                    player.photo_src = _data_url(path) if path else _placeholder_data_url(player.nickname, "player")
     return match
+
+
+async def enrich_event_assets(events: list[EventData]) -> list[EventData]:
+    """下载赛事横幅和国旗，并转换为渲染可直接使用的 data URL。"""
+    refs: dict[str, tuple[str, str]] = {}
+    for event in events:
+        if event.banner_url:
+            refs.setdefault(event.banner_url, ("event", event.name))
+        if event.flag_url:
+            refs.setdefault(event.flag_url, ("flag", event.location))
+
+    if not refs:
+        return events
+
+    headers = {
+        "User-Agent": "Mozilla/5.0 (compatible; MadokaBot/1.0; +https://github.com/Dyco/MadokaBot)",
+        "Accept": "image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8",
+        "Referer": str(config.hltv_base_url).rstrip("/") + "/",
+    }
+    limits = httpx.Limits(max_connections=8, max_keepalive_connections=4)
+    async with httpx.AsyncClient(
+        proxy=_proxy(),
+        trust_env=False,
+        follow_redirects=True,
+        headers=headers,
+        timeout=httpx.Timeout(config.hltv_request_timeout, connect=10.0),
+        limits=limits,
+    ) as client:
+        semaphore = asyncio.Semaphore(8)
+
+        async def download(url: str) -> tuple[str, Path | None]:
+            """按并发限制下载一项赛事资源。"""
+            async with semaphore:
+                category, label = refs[url]
+                return url, await _download_one(
+                    client,
+                    url,
+                    category=category,
+                    label=label,
+                )
+
+        results = dict(await asyncio.gather(*(download(url) for url in refs)))
+
+    for event in events:
+        if event.banner_url:
+            path = results.get(event.banner_url)
+            event.banner_src = _data_url(path) if path else _placeholder_data_url(event.name, "event")
+        if event.flag_url:
+            path = results.get(event.flag_url)
+            event.flag_src = _data_url(path) if path else _placeholder_data_url(event.location, "flag")
+    return events

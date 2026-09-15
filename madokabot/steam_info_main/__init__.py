@@ -60,14 +60,14 @@ from .utils import (
 
 __plugin_meta__ = PluginMetadata(
     name="Steam Info",
-    description="Steam 好友状态查询与播报",
+    description="Steam 好友状态查询与播报，主指令为steam",
     usage=(
         "steam help\n"
         "steam bind <SteamID|好友码>\n"
         "steam unbind\n"
         "steam add <@用户|QQ号> <SteamID|好友码>\n"
         "steam remove <@用户|QQ号>\n"
-        "steam info [@用户|QQ号]\n"
+        "steam info <@用户|QQ号>\n"
         "steam check\n"
         "steam list\n"
         "steam enable\n"
