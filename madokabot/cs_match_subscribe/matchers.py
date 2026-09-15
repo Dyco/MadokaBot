@@ -15,6 +15,7 @@ from nonebot_plugin_alconna import (
 )
 from nonebot_plugin_apscheduler import scheduler
 
+from ..madoka_bundle.plugins.common import respond
 from .assets import enrich_event_assets
 from .client import (
     HltvError,
@@ -25,7 +26,14 @@ from .client import (
     match_id_from_url,
 )
 from .config import config
-from .render import render_event_list_card
+from .player_stats import (
+    PlayerStatsError,
+    bind_player,
+    fetch_player_stats,
+    get_binding,
+    platform_label,
+)
+from .render import render_event_list_card, render_player_stats_card
 from .service import render_check_rating_messages, send_rating_forward
 from .storage import subscribe_event, target_from_event
 
@@ -37,6 +45,9 @@ CS help
 CS list event  列出当前及未来三个月的高奖金国际 LAN 和 Major 赛事
 CS sub <赛事ID>  订阅赛事并推送其中的比赛结果
 CS check <比赛链接>  查询一场比赛的 Rating
+CS bind <5e|5E|pw|PW|完美> <昵称>  绑定平台战绩查询对象
+CS 5e [昵称]  查询 5E 聚合战绩
+CS pw [昵称]  查询完美平台聚合战绩
 
 示例：
 CS sub 8057
@@ -58,6 +69,35 @@ cs_command = Alconna(
         Args["event_id", StrMulti],
         alias=["订阅"],
         help_text="订阅 HLTV 赛事并推送其中的比赛结果",
+    ),
+    Subcommand(
+        "bind",
+        Subcommand(
+            "5e",
+            Args["nickname?", StrMulti],
+            alias=["5E"],
+            help_text="绑定 5E 玩家昵称",
+        ),
+        Subcommand(
+            "pw",
+            Args["nickname?", StrMulti],
+            alias=["PW", "完美"],
+            help_text="绑定完美平台玩家昵称",
+        ),
+        alias=["绑定"],
+        help_text="绑定 5E 或完美平台玩家昵称",
+    ),
+    Subcommand(
+        "5e",
+        Args["nickname?", StrMulti],
+        alias=["5E", "5e战绩", "5e查询"],
+        help_text="查询 5E 玩家战绩",
+    ),
+    Subcommand(
+        "pw",
+        Args["nickname?", StrMulti],
+        alias=["PW", "完美", "完美战绩", "pw查询"],
+        help_text="查询完美平台玩家战绩",
     ),
     Subcommand(
         "check",
@@ -110,6 +150,95 @@ async def handle_cs_list(params: Match[str]) -> None:
     await cs_cmd.finish(Message([image]))
 
 
+async def _handle_cs_bind(
+    event: MessageEvent,
+    platform: str,
+    nickname: Match[str],
+) -> None:
+    """保存当前 QQ 指定平台的查询绑定。"""
+    raw_nickname = nickname.result.strip() if nickname.available else ""
+    if not raw_nickname:
+        await cs_cmd.finish(f"用法：CS bind {platform} <昵称>")
+
+    await cs_cmd.send(f"正在解析{platform_label(platform)}玩家 {raw_nickname}…")
+    try:
+        binding = await bind_player(str(event.user_id), platform, raw_nickname)
+    except PlayerStatsError as exc:
+        await cs_cmd.finish(f"绑定失败：{exc}")
+        return
+    except Exception:
+        logger.exception("CS 玩家绑定失败：platform=%s, nickname=%s", platform, nickname)
+        await cs_cmd.finish("绑定失败，请稍后重试。")
+        return
+
+    if platform == "pw" and not binding.uuid:
+        await cs_cmd.finish(
+            f"已记录完美平台昵称：{binding.player_name}\n"
+            "当前未配置完美平台登录态，查询前请准备 pw_session.json。"
+        )
+        return
+    await cs_cmd.finish(
+        f"绑定成功：{platform_label(platform)} {binding.player_name}\n"
+        f"平台 ID：{binding.domain or '-'}\n"
+        f"账号 ID：{binding.uuid or '-'}"
+    )
+
+
+@cs_cmd.assign("bind.5e")
+async def handle_cs_bind_5e(event: MessageEvent, nickname: Match[str]) -> None:
+    """处理 5E 昵称绑定。"""
+    await _handle_cs_bind(event, "5e", nickname)
+
+
+@cs_cmd.assign("bind.pw")
+async def handle_cs_bind_pw(event: MessageEvent, nickname: Match[str]) -> None:
+    """处理完美平台昵称绑定。"""
+    await _handle_cs_bind(event, "pw", nickname)
+
+
+async def _handle_cs_player_stats(
+    event: MessageEvent,
+    platform: str,
+    nickname: Match[str],
+) -> None:
+    """读取绑定或昵称并渲染平台战绩卡片。"""
+    raw_nickname = nickname.result.strip() if nickname.available else ""
+    if not raw_nickname and get_binding(str(event.user_id), platform) is None:
+        await cs_cmd.finish(
+            f"未绑定{platform_label(platform)}账号，请先使用 CS bind {platform} <昵称>"
+        )
+
+    target = raw_nickname or "已绑定账号"
+    await cs_cmd.send(f"正在查询{platform_label(platform)}玩家 {target} 的战绩…")
+    try:
+        data = await fetch_player_stats(
+            str(event.user_id),
+            platform,
+            raw_nickname,
+        )
+        image = await render_player_stats_card(data)
+    except PlayerStatsError as exc:
+        await cs_cmd.finish(f"查询失败：{exc}")
+        return
+    except Exception:
+        logger.exception("CS 玩家战绩查询失败：platform=%s, nickname=%s", platform, raw_nickname)
+        await cs_cmd.finish("战绩查询或图片渲染失败，请稍后重试。")
+        return
+    await cs_cmd.finish(Message([image]))
+
+
+@cs_cmd.assign("5e")
+async def handle_cs_5e(event: MessageEvent, nickname: Match[str]) -> None:
+    """处理 5E 聚合战绩查询。"""
+    await _handle_cs_player_stats(event, "5e", nickname)
+
+
+@cs_cmd.assign("pw")
+async def handle_cs_pw(event: MessageEvent, nickname: Match[str]) -> None:
+    """处理完美平台聚合战绩查询。"""
+    await _handle_cs_player_stats(event, "pw", nickname)
+
+
 @cs_cmd.assign("check")
 async def handle_cs_check(
     bot: Bot,
@@ -117,6 +246,7 @@ async def handle_cs_check(
     match_url: Match[str],
 ) -> None:
     """解析比赛链接并发送单图或合并转发 Rating。"""
+    await respond(bot, event)
     raw_url = match_url.result.strip() if match_url.available else ""
     match_id = match_id_from_url(raw_url) if len(raw_url.split()) == 1 else None
     if match_id is None:

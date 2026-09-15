@@ -42,7 +42,6 @@ from .constants import (
     COMMON_HEADER,
     DOUYIN_VIDEO,
     DY_TOUTIAO_INFO,
-    GENERAL_REQ_LINK,
     KUGOU_TEMP_API,
     NETEASE_TEMP_API,
     NETEASE_TEMP_API_FALLBACK,
@@ -72,8 +71,13 @@ from .core.downloads import (
     ensure_remote_total_within_limit,
 )
 from .core.tiktok import dou_transfer_other, generate_x_bogus_url
+from .core.twitter import (
+    TwitterParseError,
+    fetch_twitter_post,
+    select_twitter_video_url,
+)
 from .core.weibo import mid2id
-from .core.youtube import download_ytb_video, get_video_title
+from .core.youtube import download_ytb_video, get_video_info, get_video_title
 from .delivery import media_delivery, send_resolved_video
 from .matchers import (
     acfun_matcher as acfun,
@@ -88,7 +92,6 @@ from .matchers import (
     youtube_matcher as y2b,
 )
 from .messages import (
-    build_media_node,
     get_resolver_message,
     get_target_id,
     make_forward_nodes,
@@ -920,91 +923,65 @@ async def ac(bot: Bot, event: Event) -> None:
 @resolve_handler
 @resolve_controller
 async def twitter(bot: Bot, event: Event) -> None:
-    """
-        X解析
-    :param bot:
-    :param event:
-    :return:
-    """
+    """解析 X 帖子并按媒体类型分别发送。"""
     msg = get_resolver_message(event)
-    url_match = re.search(
-        r"https?:\/\/x.com\/[0-9-a-zA-Z_]{1,20}\/status\/([0-9]+)",
-        msg,
-    )
-    if not url_match:
-        await twit.finish("未识别到有效的 X 帖子链接。")
-    x_url = url_match.group(0)
-
-    x_url = GENERAL_REQ_LINK.replace("{}", x_url)
-
-    request_headers = {
-        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,"
-        "image/avif,image/webp,image/apng,*/*;q=0.8,"
-        "application/signed-exchange;v=b3;q=0.7",
-        "Accept-Encoding": "gzip, deflate",
-        "Accept-Language": "zh-CN,zh;q=0.9",
-        "Host": "47.99.158.118",
-        "Proxy-Connection": "keep-alive",
-        "Upgrade-Insecure-Requests": "1",
-        "Sec-Fetch-User": "?1",
-        **COMMON_HEADER,
-    }
     try:
-        async with httpx.AsyncClient(
-            headers=request_headers,
-            proxy=TWITTER_PROXY,
-            timeout=20,
-            trust_env=False,
-        ) as client:
-            response = await client.get(x_url)
-            response.raise_for_status()
-            x_data: object = response.json().get("data")
-            if x_data is None:
-                photo_url = f"{x_url}/photo/1"
-                logger.info(photo_url)
-                response = await client.get(photo_url)
-                response.raise_for_status()
-                x_data = response.json().get("data")
-    except (httpx.HTTPError, ValueError, AttributeError) as exc:
-        logger.warning(f"X 链接解析接口请求失败：{exc}")
+        post = await fetch_twitter_post(msg, TWITTER_PROXY)
+    except TwitterParseError as exc:
+        logger.warning(f"[X] FxTwitter 解析失败：{exc}")
         await twit.finish("X 链接解析失败，请稍后重试。")
 
-    if not isinstance(x_data, dict) or not x_data.get("url"):
-        await twit.finish("X 链接解析失败，接口没有返回媒体地址。")
-    x_url_res = str(x_data["url"])
-
-    info_node = make_forward_nodes(
-        bot.self_id,
-        MessageSegment.text(f"{GLOBAL_NICKNAME}识别：小蓝鸟学习版"),
+    await bot.send(event, Message(f"{GLOBAL_NICKNAME}识别：X"))
+    author = post.author_name or "未知用户"
+    if post.author_screen_name:
+        author = f"{author} (@{post.author_screen_name})"
+    await bot.send(
+        event,
+        Message(f"用户：{author}\n内容：{post.text or '无正文'}"),
     )
 
-    if Path(urlparse(x_url_res).path).suffix.lower() in {".jpg", ".jpeg", ".png"}:
-        res = await download_image(x_url_res, "", TWITTER_PROXY)
-        try:
-            media_node = build_media_node(int(bot.self_id), res)
-            if media_node is None:
-                await twit.finish("X 媒体格式暂不支持。")
-            await send_forward(bot, event, [info_node, media_node])
-        finally:
-            Path(res).unlink(missing_ok=True)
-        return
+    target_id = get_target_id(event)
+    image_enabled = is_content_enabled(target_id, "twitter", "image")
+    video_enabled = is_content_enabled(target_id, "twitter", "video")
+    for media in post.media:
+        if media.kind == "photo":
+            if not image_enabled:
+                continue
+            image_path: str | None = None
+            try:
+                image_path = await download_image(media.url, proxy=TWITTER_PROXY)
+                image_file = Path(image_path).resolve().as_uri()
+                await bot.send(event, Message(MessageSegment.image(file=image_file)))
+            except Exception as exc:
+                logger.warning(f"[X] 图片下载或发送失败，跳过当前图片：{exc}")
+            finally:
+                if image_path:
+                    try:
+                        Path(image_path).unlink(missing_ok=True)
+                    except OSError as exc:
+                        logger.warning(f"[X] 图片临时文件清理失败：{exc}")
+            continue
 
-    # 视频交给统一媒体服务判断直发、压缩或拒绝。
-    try:
-        res = await download_video(
-            x_url_res,
-            TWITTER_PROXY,
-            max_size=media_delivery.video_compress_limit,
-        )
-    except MediaSizeLimitExceeded as exc:
-        logger.warning(f"[X] 视频超过大小限制，已跳过下载和发送：{exc}")
-        return
-    except ValueError as exc:
-        await twit.finish(f"视频无法下载：{exc}")
-    if not res:
-        await twit.finish("X 视频下载失败，请稍后重试。")
-    await send_forward(bot, event, info_node)
-    await send_resolved_video(event, res, TWITTER_PROXY)
+        if media.kind not in {"video", "gif"} or not video_enabled:
+            continue
+        video_url = select_twitter_video_url(media)
+        if not video_url:
+            logger.warning("[X] 没有可用的 MP4/H.264 视频格式，跳过当前视频")
+            continue
+        try:
+            video_path = await download_video(
+                video_url,
+                TWITTER_PROXY,
+                max_size=media_delivery.video_compress_limit,
+            )
+        except MediaSizeLimitExceeded as exc:
+            logger.warning(f"[X] 视频超过大小限制，跳过当前视频：{exc}")
+            continue
+        except ValueError as exc:
+            logger.warning(f"[X] 视频下载失败，跳过当前视频：{exc}")
+            continue
+        if video_path:
+            await send_resolved_video(event, video_path, TWITTER_PROXY)
 
 
 @xhs.handle()
@@ -1182,7 +1159,7 @@ async def youtube(bot: Bot, event: Event):
     )[0]
 
     try:
-        title = await get_video_title(msg_url, YOUTUBE_PROXY)
+        video_info = await get_video_info(msg_url, YOUTUBE_PROXY)
         target_ytb_video_path = await download_ytb_video(
             msg_url,
             CACHE_DIR,
@@ -1195,14 +1172,55 @@ async def youtube(bot: Bot, event: Event):
     except RuntimeError as exc:
         await y2b.finish(str(exc))
 
-    await send_forward(
-        bot,
-        event,
+    description = re.sub(
+        r"\r\n?",
+        "\n",
+        video_info["description"],
+    ).strip()
+    if len(description) > 3000:
+        description = description[:3000] + "…"
+    description = description or "暂无简介"
+
+    cover_path: str | None = None
+    thumbnail_url = video_info["thumbnail"]
+    # 图片关闭时不下载封面，避免产生无意义的代理请求。
+    if (
+        thumbnail_url
+        and is_content_enabled(get_target_id(event), "youtube", "image")
+    ):
+        try:
+            cover_path = await download_image(
+                thumbnail_url,
+                proxy=YOUTUBE_PROXY,
+            )
+        except Exception as exc:
+            logger.warning(f"[YouTube] 封面下载失败，跳过封面：{exc}")
+
+    forward_nodes: list[MessageSegment] = []
+    if cover_path:
+        forward_nodes.append(
+            make_forward_nodes(
+                bot.self_id,
+                MessageSegment.image(
+                    file=Path(cover_path).resolve().as_uri(),
+                ),
+            )
+        )
+    forward_nodes.append(
         make_forward_nodes(
             bot.self_id,
-            MessageSegment.text(f"{GLOBAL_NICKNAME}识别：油管\n标题：{title}"),
-        ),
+            MessageSegment.text(
+                f"{GLOBAL_NICKNAME}识别：油管\n"
+                f"标题：{video_info['title']}\n"
+                f"简介：{description}"
+            ),
+        )
     )
+    try:
+        await send_forward(bot, event, forward_nodes)
+    finally:
+        if cover_path:
+            Path(cover_path).unlink(missing_ok=True)
 
     await send_resolved_video(event, target_ytb_video_path, YOUTUBE_PROXY)
 

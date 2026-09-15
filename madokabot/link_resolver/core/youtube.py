@@ -1,6 +1,7 @@
 import asyncio
 import uuid
 from pathlib import Path
+from typing import TypedDict
 
 from nonebot import logger
 
@@ -17,16 +18,25 @@ def _require_yt_dlp() -> None:
         raise RuntimeError("YouTube/TikTok 解析需要安装 yt-dlp")
 
 
-async def get_video_title(
+class VideoInfo(TypedDict):
+    """yt-dlp 返回的 Resolver 视频基础信息。"""
+
+    title: str
+    description: str
+    thumbnail: str
+
+
+async def get_video_info(
     url: str,
     proxy: str | None = None,
     video_type: str = "youtube",
-) -> str:
+) -> VideoInfo:
+    """获取视频标题、简介和封面地址。"""
     _require_yt_dlp()
     ydl_opts = {
         "quiet": True,
         "skip_download": True,
-        "force_generic_extractor": True,
+        "noplaylist": True,
         "proxy": proxy or "",
     }
 
@@ -37,10 +47,23 @@ async def get_video_title(
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info_dict = await asyncio.to_thread(ydl.extract_info, url, download=False)
-            return info_dict.get("title", "-")
+            return {
+                "title": str(info_dict.get("title") or "-"),
+                "description": str(info_dict.get("description") or ""),
+                "thumbnail": str(info_dict.get("thumbnail") or ""),
+            }
     except Exception as exc:
-        logger.error(f"yt-dlp 获取标题失败: {exc}")
-        return "-"
+        logger.error(f"yt-dlp 获取视频信息失败：{exc}")
+        return {"title": "-", "description": "", "thumbnail": ""}
+
+
+async def get_video_title(
+    url: str,
+    proxy: str | None = None,
+    video_type: str = "youtube",
+) -> str:
+    """兼容旧调用方，仅返回视频标题。"""
+    return (await get_video_info(url, proxy, video_type))["title"]
 
 
 async def download_ytb_video(

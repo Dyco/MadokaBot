@@ -14,6 +14,7 @@ from .tiktok import (
     TIKTOK_VIDEO,
     URL_TYPE_CODE_DICT,
 )
+from .twitter import FXTWITTER_STATUS_API
 from .weibo import WEIBO_SINGLE_INFO
 from .xiaohongshu import XHS_REQ_LINK
 
@@ -22,6 +23,7 @@ __all__ = [
     "COMMON_HEADER",
     "DOUYIN_VIDEO",
     "DY_TOUTIAO_INFO",
+    "FXTWITTER_STATUS_API",
     "GENERAL_REQ_LINK",
     "KUGOU_TEMP_API",
     "NETEASE_API_CN",

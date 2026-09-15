@@ -2,13 +2,16 @@
 
 from __future__ import annotations
 
+import base64
 from datetime import datetime, timezone
 from pathlib import Path
 
+import httpx
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 from nonebot.adapters.onebot.v11 import MessageSegment
 from nonebot_plugin_htmlrender import html_to_pic
 
+from ..madoka_bundle.config import config as madoka_config
 from .config import config
 from .models import EventData, MatchData
 
@@ -16,6 +19,7 @@ from .models import EventData, MatchData
 TEMPLATE_DIR = Path(__file__).parent / "templates"
 HTML_FILE_PATH = TEMPLATE_DIR / "rating.html"
 EVENT_HTML_FILE_PATH = TEMPLATE_DIR / "event_list.html"
+STATS_HTML_FILE_PATH = TEMPLATE_DIR / "stats.html"
 _template_env = Environment(
     loader=FileSystemLoader(str(TEMPLATE_DIR)),
     autoescape=select_autoescape(("html", "xml")),
@@ -100,6 +104,64 @@ async def render_event_list_card(events: list[EventData]) -> MessageSegment:
         html=html,
         template_path=TEMPLATE_DIR.resolve().as_uri(),
         viewport={"width": config.cs_rating_width, "height": 10},
+        device_scale_factor=config.cs_rating_device_scale_factor,
+        full_page=True,
+    )
+    return MessageSegment.image(image_bytes)
+
+
+def _stats_proxy() -> str | None:
+    """返回玩家头像请求使用的代理。"""
+    value = config.hltv_proxy or madoka_config.proxy
+    if value is None:
+        return None
+    proxy = str(value).strip()
+    if not proxy:
+        return None
+    return proxy if "://" in proxy else f"http://{proxy}"
+
+
+async def _avatar_data_url(url: str) -> str:
+    """把头像下载为内联图片，避免 Playwright 渲染时依赖外部资源。"""
+    value = str(url or "").strip()
+    if not value or value.startswith("data:"):
+        return value
+    if not value.startswith(("http://", "https://")):
+        return ""
+    try:
+        async with httpx.AsyncClient(
+            proxy=_stats_proxy(),
+            trust_env=False,
+            follow_redirects=True,
+            timeout=5.0,
+        ) as client:
+            response = await client.get(value)
+            response.raise_for_status()
+            if len(response.content) > config.hltv_max_asset_size:
+                return ""
+            content_type = response.headers.get("content-type", "image/png").split(";", 1)[0]
+            if not content_type.startswith("image/"):
+                return ""
+            encoded = base64.b64encode(response.content).decode("ascii")
+            return f"data:{content_type};base64,{encoded}"
+    except (httpx.HTTPError, OSError):
+        return ""
+
+
+def render_player_stats_html(data: dict[str, object]) -> str:
+    """把标准化后的平台战绩转换为独立 HTML。"""
+    template = _template_env.get_template(STATS_HTML_FILE_PATH.name)
+    return template.render(**data)
+
+
+async def render_player_stats_card(data: dict[str, object]) -> MessageSegment:
+    """通过 Playwright 把平台战绩卡片渲染为 QQ 图片。"""
+    context = dict(data)
+    context["avatar_src"] = await _avatar_data_url(str(data.get("avatar_url") or ""))
+    image_bytes = await html_to_pic(
+        html=render_player_stats_html(context),
+        template_path=TEMPLATE_DIR.resolve().as_uri(),
+        viewport={"width": config.cs_stats_width, "height": 10},
         device_scale_factor=config.cs_rating_device_scale_factor,
         full_page=True,
     )

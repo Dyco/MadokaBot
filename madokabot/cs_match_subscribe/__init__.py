@@ -15,6 +15,9 @@ __plugin_meta__ = PluginMetadata(
         "CS list event\n"
         "CS sub <赛事ID>\n"
         "CS check <比赛链接>\n"
+        "CS bind <5e|5E|pw|PW|完美> <昵称>\n"
+        "CS 5e [昵称]\n"
+        "CS pw [昵称]\n"
         "例如：CS sub 8057"
     ),
     type="application",

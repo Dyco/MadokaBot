@@ -1,5 +1,7 @@
 """HLTV 赛事插件配置与本地文件路径。"""
 
+from __future__ import annotations
+
 from pathlib import Path
 
 import nonebot_plugin_localstore as store
@@ -13,6 +15,8 @@ DATA_DIR = store.get_data_dir(PLUGIN_NAME)
 CACHE_DIR = store.get_cache_dir(PLUGIN_NAME)
 SUBSCRIPTIONS_PATH = store.get_data_file(PLUGIN_NAME, "subscriptions.json")
 ASSET_DIR = CACHE_DIR / "assets"
+PLAYER_BINDINGS_PATH = DATA_DIR / "player_bindings.sqlite3"
+PW_SESSION_PATH = DATA_DIR / "pw_session.json"
 
 
 class Config(NoneBotConfig):
@@ -47,6 +51,11 @@ class Config(NoneBotConfig):
     )
     cs_rating_width: int = Field(default=810, ge=400)
     cs_rating_device_scale_factor: float = Field(default=1.0, ge=0.5, le=3.0)
+    cs_stats_width: int = Field(default=900, ge=600)
+    cs_pw_session_path: str | None = Field(
+        default=None,
+        description="完美平台会话文件路径；为空时使用插件数据目录中的 pw_session.json",
+    )
 
 
 config = get_plugin_config(Config)
