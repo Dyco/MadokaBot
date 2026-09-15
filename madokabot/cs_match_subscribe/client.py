@@ -42,10 +42,24 @@ _FLARESOLVERR_SESSION: FlaresolverrSession | None = None
 _FLARESOLVERR_API_SESSION_ID: str | None = None
 _FLARESOLVERR_API_SESSION_PROXY: str | None = None
 _CHALLENGE_MARKERS = (
-    "just a moment",
     "checking your browser",
     "verify you are human",
     "enable javascript and cookies",
+    "performing security verification",
+)
+_CHALLENGE_TITLE_MARKERS = (
+    "just a moment",
+    "checking your browser",
+    "verify you are human",
+)
+_CHALLENGE_SELECTORS = (
+    "#challenge-stage",
+    "#challenge-error-text",
+    "#cf-chl-widget",
+    ".cf-chl-widget",
+    "form#challenge-form",
+    "[name='cf-turnstile-response']",
+    "iframe[src*='challenges.cloudflare.com']",
 )
 
 
@@ -94,9 +108,19 @@ def _is_challenge_html(html: str) -> bool:
     """识别 FlareSolverr 偶尔返回的未完成浏览器验证页。"""
     soup = BeautifulSoup(html, "html.parser")
     title = soup.title.get_text(" ", strip=True) if soup.title else ""
+    title_text = " ".join(title.casefold().split())
+    if any(marker in title_text for marker in _CHALLENGE_TITLE_MARKERS):
+        return True
+    if any(soup.select_one(selector) is not None for selector in _CHALLENGE_SELECTORS):
+        return True
+
+    # 正常 HLTV 比赛页可能在新闻、回放描述等正文中出现诸如
+    # “just a moment”的普通短语，不能再对整篇正文做无条件匹配。
     body = soup.body.get_text(" ", strip=True) if soup.body else ""
-    text = f"{title}\n{body}".casefold()
-    return any(marker in text for marker in _CHALLENGE_MARKERS)
+    body_text = " ".join(body.casefold().split())
+    return len(body_text) <= 4_000 and any(
+        marker in body_text for marker in _CHALLENGE_MARKERS
+    )
 
 
 def get_flaresolverr_session() -> FlaresolverrSession | None:

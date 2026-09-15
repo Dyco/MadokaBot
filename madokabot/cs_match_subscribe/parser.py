@@ -21,7 +21,6 @@ from .models import (
     TeamStats,
 )
 
-_PLAYER_ID_RE = re.compile(r"/player/(\d+)(?:/|$)")
 _EVENT_ID_RE = re.compile(r"/events/(\d+)(?:/|\?|$)")
 _MATCH_ID_RE = re.compile(r"/matches/(\d+)(?:/|\?|$)")
 _BEST_OF_RE = re.compile(r"best\s+of\s+(\d+)", re.IGNORECASE)
@@ -63,15 +62,6 @@ def _image_source(image: Tag | None) -> str | None:
         if value:
             return value.split(",", 1)[0].strip().split(" ", 1)[0]
     return None
-
-
-def _href_key(href: str | None) -> str | None:
-    if not href:
-        return None
-    match = _PLAYER_ID_RE.search(href)
-    if match:
-        return match.group(1)
-    return href.split("?", 1)[0].rstrip("/")
 
 
 def _event_timestamp(node: Tag | None) -> datetime | None:
@@ -323,24 +313,12 @@ def _rating_class(cell: Tag | None) -> str:
     return "neutral"
 
 
-def _player_photo_map(soup: BeautifulSoup, base_url: str) -> dict[str, str]:
-    photos: dict[str, str] = {}
-    for image in soup.select("img.player-photo"):
-        link = image.find_parent("a", href=True)
-        key = _href_key(link.get("href") if link else None)
-        src = _absolute_url(_image_source(image), base_url)
-        if key and src:
-            photos.setdefault(key, src)
-    return photos
-
-
-def _parse_player(row: Tag, base_url: str, photo_map: dict[str, str]) -> PlayerStats | None:
+def _parse_player(row: Tag, base_url: str) -> PlayerStats | None:
     link = row.select_one("td.players a[href*='/player/']")
     if link is None:
         return None
 
     profile_url = _absolute_url(link.get("href"), base_url) or base_url
-    key = _href_key(link.get("href"))
     name_node = link.select_one(".gtSmartphone-only.statsPlayerName")
     full_name = _text(name_node) or _text(link)
     nickname_node = row.select_one(".player-nick")
@@ -363,7 +341,6 @@ def _parse_player(row: Tag, base_url: str, photo_map: dict[str, str]) -> PlayerS
         nickname=nickname,
         profile_url=profile_url,
         flag_url=flag_url,
-        photo_url=photo_map.get(key) if key else None,
         kd=_visible_stat(row, "td.kd"),
         swing=_cell_text(row, "td.roundSwing"),
         adr=_visible_stat(row, "td.adr"),
@@ -376,7 +353,6 @@ def _parse_player(row: Tag, base_url: str, photo_map: dict[str, str]) -> PlayerS
 def _parse_stats_table(
     table: Tag,
     base_url: str,
-    photo_map: dict[str, str],
 ) -> TeamStats | None:
     """解析一张 HLTV Rating 表。"""
     header = table.select_one("tr.header-row")
@@ -395,7 +371,7 @@ def _parse_stats_table(
     for row in table.select("tbody > tr"):
         if "header-row" in row.get("class", []):
             continue
-        player = _parse_player(row, base_url, photo_map)
+        player = _parse_player(row, base_url)
         if player is not None:
             team.players.append(player)
     return team
@@ -404,14 +380,13 @@ def _parse_stats_table(
 def _parse_stats_section(
     section: Tag | None,
     base_url: str,
-    photo_map: dict[str, str],
 ) -> list[TeamStats]:
     """解析一个统计范围中的两支队伍总表。"""
     if section is None:
         return []
     teams: list[TeamStats] = []
     for table in section.select("table.totalstats")[:2]:
-        team = _parse_stats_table(table, base_url, photo_map)
+        team = _parse_stats_table(table, base_url)
         if team is not None:
             teams.append(team)
     return teams
@@ -420,16 +395,15 @@ def _parse_stats_section(
 def _parse_stats_tables(
     soup: BeautifulSoup,
     base_url: str,
-    photo_map: dict[str, str],
 ) -> tuple[list[TeamStats], dict[str, list[TeamStats]]]:
     stats_root = soup.select_one("#match-stats")
     if stats_root is None:
         return [], {}
 
     all_section = stats_root.select_one("#all-content")
-    teams = _parse_stats_section(all_section, base_url, photo_map)
+    teams = _parse_stats_section(all_section, base_url)
     if not teams:
-        teams = _parse_stats_section(stats_root, base_url, photo_map)
+        teams = _parse_stats_section(stats_root, base_url)
 
     map_names_by_section: dict[str, str] = {}
     for holder in soup.select(".mapholder"):
@@ -447,7 +421,7 @@ def _parse_stats_tables(
         map_name = map_names_by_section.get(section.get("id", ""))
         if not map_name:
             map_name = next(fallback_names, "")
-        parsed = _parse_stats_section(section, base_url, photo_map)
+        parsed = _parse_stats_section(section, base_url)
         if map_name and parsed:
             map_stats[map_name] = parsed
     return teams, map_stats
@@ -537,9 +511,8 @@ def parse_match_html(
     header_teams, event_name, match_time, match_date, status_text, event_url = (
         _parse_header_teams(soup, page_url)
     )
-    photo_map = _player_photo_map(soup, page_url)
     map_names = _parse_maps(soup)
-    stats_teams, map_stats = _parse_stats_tables(soup, page_url, photo_map)
+    stats_teams, map_stats = _parse_stats_tables(soup, page_url)
 
     # Rating 表通常包含更可靠的队名和队标；用头部比分补回去。
     if stats_teams:
@@ -551,12 +524,6 @@ def parse_match_html(
         teams = stats_teams
     else:
         teams = header_teams
-
-    for team in [*stats_teams, *[team for group in map_stats.values() for team in group]]:
-        for player in team.players:
-            # 兼容上游图片缺少 src、只有 data-src 的情况。
-            if not player.photo_url:
-                player.photo_url = photo_map.get(_href_key(player.profile_url))
 
     format_text, format_code, round_text = _normalize_preformatted_text(
         soup.select_one(".padding.preformatted-text, .preformatted-text")

@@ -89,10 +89,6 @@ class Config(NoneBotConfig):
         ge=64 * 1024,
         description="单张赛事资源图片最大大小（字节）",
     )
-    cs_rating_show_player_photos: bool = Field(
-        default=False,
-        description="是否在 Rating 行中显示选手头像；默认保持 HLTV Rating 页面布局",
-    )
     cs_rating_width: int = Field(default=810, ge=400)
     cs_rating_device_scale_factor: float = Field(default=2.0, ge=0.5, le=3.0)
     cs_stats_width: int = Field(default=900, ge=600)

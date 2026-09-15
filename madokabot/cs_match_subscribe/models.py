@@ -17,7 +17,6 @@ class PlayerStats:
     nickname: str
     profile_url: str
     flag_url: str | None = None
-    photo_url: str | None = None
     kd: str = "-"
     swing: str = "-"
     adr: str = "-"
@@ -25,7 +24,6 @@ class PlayerStats:
     rating: str = "-"
     rating_class: str = "neutral"
     flag_src: str | None = None
-    photo_src: str | None = None
 
     @property
     def name_before_nick(self) -> str:
@@ -236,7 +234,6 @@ class MatchData:
     def to_template_context(
         self,
         *,
-        show_player_photos: bool = False,
         map_name: str | None = None,
     ) -> dict[str, Any]:
         """转换为 Jinja 模板使用的普通字典。"""
@@ -252,5 +249,4 @@ class MatchData:
                 player_data["name_before_nick"] = player.name_before_nick
                 player_data["name_after_nick"] = player.name_after_nick
                 player_data["swing_class"] = player.swing_class
-        context["show_player_photos"] = show_player_photos
         return context

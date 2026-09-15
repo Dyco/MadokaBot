@@ -31,7 +31,6 @@ def render_rating_html(match: MatchData, *, map_name: str | None = None) -> str:
     """把赛事数据渲染为可独立打开的 rating.html 内容。"""
     template = _template_env.get_template(HTML_FILE_PATH.name)
     context = match.to_template_context(
-        show_player_photos=config.cs_rating_show_player_photos,
         map_name=map_name,
     )
     context.update(font_context())

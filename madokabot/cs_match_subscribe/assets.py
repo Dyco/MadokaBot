@@ -188,13 +188,30 @@ async def _download_one(
         if response is not None and response.status >= 400:
             logger.warning("HLTV 资源浏览器请求失败：%s (HTTP %s)", url, response.status)
             return None
-        image = page.locator("img").first
-        await image.wait_for(state="visible", timeout=timeout_ms)
-        content = await image.screenshot(type="png")
+        if response is None:
+            logger.warning("HLTV 资源浏览器没有返回响应：%s", url)
+            return None
+
+        content_type = (
+            await response.header_value("content-type") or ""
+        ).split(";", 1)[0].strip().lower()
+        if not content_type.startswith("image/"):
+            logger.warning(
+                "HLTV 资源响应不是图片，已跳过：%s (%s)",
+                url,
+                content_type or "未知类型",
+            )
+            return None
+
+        # 直接保存 HTTP 响应，保留队标 PNG/SVG 原本的透明通道。
+        # 不能对 img 元素截图，否则透明区域会被浏览器图片文档的背景色填充。
+        content = await response.body()
+        if not content:
+            logger.warning("HLTV 资源响应为空：%s", url)
+            return None
         if len(content) > config.hltv_max_asset_size:
             logger.warning("HLTV 资源过大，已跳过：%s", url)
             return None
-        content_type = "image/png"
         path = target_dir / _asset_name(url, category, content_type)
         path.write_bytes(content)
         return path
@@ -297,8 +314,6 @@ async def enrich_match_assets(match: MatchData) -> MatchData:
             for player in team.players:
                 if player.flag_url:
                     refs.setdefault(player.flag_url, ("flag", player.nickname))
-                if player.photo_url:
-                    refs.setdefault(player.photo_url, ("player", player.nickname))
 
     if not refs:
         return match
@@ -317,9 +332,6 @@ async def enrich_match_assets(match: MatchData) -> MatchData:
                 if player.flag_url:
                     path = results.get(player.flag_url)
                     player.flag_src = _data_url(path) if path else None
-                if player.photo_url:
-                    path = results.get(player.photo_url)
-                    player.photo_src = _data_url(path) if path else _placeholder_data_url(player.nickname, "player")
     return match
 
 

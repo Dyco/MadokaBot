@@ -161,14 +161,6 @@
       font-weight: 700;
     }
 
-    .player-photo {
-      width: 24px;
-      height: 24px;
-      margin-left: 5px;
-      object-fit: contain;
-      vertical-align: middle;
-    }
-
     .numeric {
       color: #4b4b4b;
       text-align: center;
@@ -237,9 +229,6 @@
                     {{ player.full_name }}
                   {% endif %}
                 </span>
-                {% if show_player_photos and player.photo_src %}
-                  <img class="player-photo" src="{{ player.photo_src }}" alt="{{ player.full_name }}">
-                {% endif %}
               </div>
             </td>
             <td class="numeric">{{ player.kd }}</td>
