@@ -16,14 +16,14 @@ CACHE_DIR = store.get_cache_dir(PLUGIN_NAME)
 SUBSCRIPTIONS_PATH = store.get_data_file(PLUGIN_NAME, "subscriptions.json")
 ASSET_DIR = CACHE_DIR / "assets"
 PLAYER_BINDINGS_PATH = DATA_DIR / "player_bindings.sqlite3"
-PW_SESSION_PATH = DATA_DIR / "pw_session.json"
+PW_SESSION_PATH = store.get_data_file(PLUGIN_NAME, "pw_session.json")
 
 
 class Config(NoneBotConfig):
     """插件配置。
 
-    HLTV 访问默认跟随 MadokaBot 的全局 proxy 配置；
-    hltv_proxy 仅用于需要单独代理时覆盖它。
+    HLTV 页面通过 FlareSolverr 获取，目标站点代理默认跟随 MadokaBot 的全局
+    proxy 配置；hltv_proxy 仅用于需要单独代理时覆盖它。
     """
 
     hltv_base_url: str = Field(
@@ -34,11 +34,37 @@ class Config(NoneBotConfig):
         default=None,
         description="HLTV 请求代理；为空时使用 MadokaBot 全局 proxy",
     )
+    hltv_flaresolverr_url: str = Field(
+        default="http://127.0.0.1:8191/v1",
+        description="FlareSolverr API 地址，可填写到 /v1 或服务根地址",
+    )
+    hltv_flaresolverr_timeout: float = Field(
+        default=60.0,
+        ge=5.0,
+        le=180.0,
+        description="FlareSolverr 单次 request.get 的最大等待时间（秒）",
+    )
+    hltv_flaresolverr_wait_seconds: float = Field(
+        default=1.0,
+        ge=0.0,
+        le=30.0,
+        description="FlareSolverr 返回页面前额外等待动态内容的时间（秒）",
+    )
+    hltv_flaresolverr_proxy: str | None = Field(
+        default=None,
+        description="FlareSolverr 访问目标时使用的代理；为空时沿用 hltv_proxy",
+    )
     hltv_request_timeout: float = Field(default=25.0, ge=1.0)
     hltv_poll_interval: int = Field(
-        default=90,
+        default=300,
         ge=30,
         description="订阅比赛轮询间隔（秒）",
+    )
+    hltv_subscribe_push_each_map: bool = Field(
+        default=True,
+        description=(
+            "赛事订阅是否按地图单独推送开始和结束消息；关闭时按系列赛级别推送"
+        ),
     )
     hltv_max_asset_size: int = Field(
         default=5 * 1024 * 1024,
@@ -50,11 +76,23 @@ class Config(NoneBotConfig):
         description="是否在 Rating 行中显示选手头像；默认保持 HLTV Rating 页面布局",
     )
     cs_rating_width: int = Field(default=810, ge=400)
-    cs_rating_device_scale_factor: float = Field(default=1.0, ge=0.5, le=3.0)
+    cs_rating_device_scale_factor: float = Field(default=2.0, ge=0.5, le=3.0)
     cs_stats_width: int = Field(default=900, ge=600)
     cs_pw_session_path: str | None = Field(
         default=None,
         description="完美平台会话文件路径；为空时使用插件数据目录中的 pw_session.json",
+    )
+    cs_pw_api_token: str | None = Field(
+        default=None,
+        description="完美平台公开战绩接口令牌；为空时使用当前客户端公开令牌",
+    )
+    cs_pw_api_version: str = Field(
+        default="3.7.9.203",
+        description="完美平台公开战绩接口使用的客户端版本",
+    )
+    cs_pw_api_device: str = Field(
+        default="rGPSR1772436611LrL5aF8eKG3",
+        description="完美平台公开战绩接口使用的客户端设备标识",
     )
 
 

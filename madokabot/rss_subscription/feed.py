@@ -10,6 +10,7 @@ from yarl import URL
 
 from . import handlers as _handlers  # noqa: F401  # 注册默认及站点处理器
 from ..madoka_bundle.plugins.common import is_group_whitelisted
+from ..madoka_bundle.plugins.greeting import send_message_to_admin
 from .cache import cache_filter, dict_hash
 from .config import DATA_PATH, config
 from .parser import FeedProcessor
@@ -22,7 +23,6 @@ from .utils import (
     get_bot,
     get_http_caching_headers,
     get_proxy,
-    send_message_to_admin,
 )
 
 HEADERS = {

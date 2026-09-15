@@ -3,6 +3,34 @@
 <head>
   <meta charset="utf-8">
   <style>
+    {% if font_regular_path %}
+    @font-face {
+      font-family: "CS Inter";
+      src: url("{{ font_regular_path }}") format("woff2");
+      font-style: normal;
+      font-weight: 400;
+      font-display: block;
+    }
+    {% endif %}
+    {% if font_light_path %}
+    @font-face {
+      font-family: "CS Inter";
+      src: url("{{ font_light_path }}") format("woff2");
+      font-style: normal;
+      font-weight: 300;
+      font-display: block;
+    }
+    {% endif %}
+    {% if font_bold_path %}
+    @font-face {
+      font-family: "CS Inter";
+      src: url("{{ font_bold_path }}") format("woff2");
+      font-style: normal;
+      font-weight: 700;
+      font-display: block;
+    }
+    {% endif %}
+
     * { box-sizing: border-box; }
     html, body {
       margin: 0;
@@ -13,7 +41,7 @@
       width: 100%;
       background: #e5e7e9;
       color: #202328;
-      font-family: Arial, "Microsoft YaHei", sans-serif;
+      font-family: "CS Inter", Arial, "Microsoft YaHei", sans-serif;
     }
     .page {
       width: 100%;
@@ -82,7 +110,7 @@
       white-space: nowrap;
     }
     .event-id {
-      margin-right: 4px;
+      margin-left: 4px;
       color: #d94141;
       font-size: 11px;
       font-weight: 700;
@@ -156,7 +184,7 @@
                 </div>
                 <div class="event-info">
                   <div class="event-name">
-                    <span class="event-id">&lt;{{ event.event_id }}&gt;</span>{{ event.name }}
+                    {{ event.name }}<span class="event-id">&lt;id: {{ event.event_id }}&gt;</span>
                   </div>
                   <div class="event-location">
                     {% if event.flag_src or event.flag_url %}
@@ -167,10 +195,11 @@
                   <div class="additional-info">
                     <div class="info-cell">
                       <div class="info-value">{{ event.date_display_zh or event.date_display or "日期待定" }}</div>
-                      <div class="info-label">赛事</div>
+                      <div class="info-label">时间</div>
                     </div>
                     <div class="info-cell">
-                      <div class="info-value">{{ "待定" if event.prize_display == "TBA" else event.prize_display }}</div>
+                      {% set prize_display = (event.prize_display or "")|trim %}
+                      <div class="info-value">{{ "无" if prize_display|lower == "other" else ("待定" if not prize_display or prize_display|upper == "TBA" else prize_display) }}</div>
                       <div class="info-label">奖池</div>
                     </div>
                     <div class="info-cell">

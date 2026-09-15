@@ -19,7 +19,10 @@ __plugin_meta__ = PluginMetadata(
 
 # Import matcher definitions before attaching command handlers.
 from . import matchers as matchers  # noqa: E402
+from . import help as help  # noqa: E402
 from . import group_whitelist as group_whitelist  # noqa: E402
+from . import auto_leave_group as auto_leave_group  # noqa: E402
+from .auto_leave_group import schedule_auto_leave_group  # noqa: E402,F401
 from .group_whitelist import is_group_whitelisted  # noqa: E402,F401
 from .file_cleanup import (  # noqa: E402,F401
     cleanup_expired_files,

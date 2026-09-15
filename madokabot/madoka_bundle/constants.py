@@ -9,6 +9,8 @@ class ResType(Enum):
 
 
 class SubFolder(Enum):
+    CS = "cs"
+    CSTEAM = "csteam"
     POKE = "poke"
     SIGN = "sign"
     CHAR = "madoka"

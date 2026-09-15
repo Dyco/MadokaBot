@@ -12,6 +12,7 @@ from nonebot.adapters.onebot.v11 import Bot, Message, MessageSegment
 
 from .assets import enrich_match_assets
 from .client import HltvError, fetch_event_match_refs, fetch_match
+from .config import config
 from .models import EventMatchRef, MapScore, MatchData
 from .render import render_rating_card
 from .storage import (
@@ -69,6 +70,25 @@ def _map_result_message(match: MatchData, result: MapScore, index: int) -> Messa
         f"比分为 {first} {result.score_display} {second}"
     )
     return Message(MessageSegment.text(text))
+
+
+def _map_start_message(
+    match: MatchData,
+    map_name: str,
+    index: int,
+    event_name: str = "",
+) -> Message:
+    """生成单张地图开始的合并转发文本节点。"""
+    first, second = _team_names(match)
+    label = _MAP_LABELS[index] if index < len(_MAP_LABELS) else str(index + 1)
+    event_prefix = f"【{event_name}】" if event_name else ""
+    name_suffix = f"（{map_name}）" if map_name else ""
+    return Message(
+        MessageSegment.text(
+            f"{event_prefix}订阅赛事更新\n"
+            f"{first} 对阵 {second} 的图{label}{name_suffix}开始"
+        )
+    )
 
 
 def _final_message(match: MatchData) -> Message:
@@ -219,16 +239,104 @@ def _current_map_scores(match: MatchData) -> dict[str, str]:
     return scores
 
 
-def _new_match_state(section: str) -> dict[str, Any]:
+def _is_placeholder_map_name(value: str) -> bool:
+    """判断 HLTV 是否只给出了尚未确定的地图占位名。"""
+    return not value or value.casefold() in {"tba", "tbd", "unknown", "-"}
+
+
+def _map_name_for_index(match: MatchData, index: int) -> str:
+    """按地图序号尽量还原当前已经确定的地图名。"""
+    if index < len(match.map_results):
+        name = match.map_results[index].name.strip()
+        if not _is_placeholder_map_name(name):
+            return name
+    if index < len(match.maps):
+        name = match.maps[index].strip()
+        if not _is_placeholder_map_name(name):
+            return name
+    stat_names = [str(value).strip() for value in match.map_stats]
+    if index < len(stat_names):
+        name = stat_names[index]
+        if not _is_placeholder_map_name(name):
+            return name
+    return ""
+
+
+def _started_map_candidates(match: MatchData) -> list[tuple[int, str]]:
+    """返回页面已经显示为进行过的地图序号和名称。
+
+    HLTV 在地图间歇期会把下一张地图也列出来，但仍保持 TBA 且没有统计区块。
+    因此不能简单把所有 map_results 当成已开始；优先使用 HLTV 的 played 标记、
+    最终比分和已出现的 Rating 统计区块，只有整场刚开始且页面没有任何地图信号
+    时才回退到第一张图。
+    """
+    if not match.has_started:
+        return []
+
+    results = match.map_results
+    candidates: set[int] = {
+        index for index, result in enumerate(results) if result.is_started
+    }
+    result_indexes: dict[str, list[int]] = {}
+    for index, result in enumerate(results):
+        name = result.name.strip()
+        if _is_placeholder_map_name(name):
+            continue
+        result_indexes.setdefault(name.casefold(), []).append(index)
+
+    unmatched_stats: list[str] = []
+    for raw_name in match.map_stats:
+        name = str(raw_name).strip()
+        if _is_placeholder_map_name(name):
+            continue
+        indexes = result_indexes.get(name.casefold())
+        if indexes:
+            candidates.add(indexes[0])
+        else:
+            unmatched_stats.append(name)
+
+    # 当比赛页的地图比分仍显示 TBA，但统计页已经出现实际地图名时，
+    # 通过顺序把这些统计区块映射到尚未占用的地图槽位。
+    free_indexes = [
+        index for index in range(max(len(results), len(match.maps)))
+        if index not in candidates
+    ]
+    for _name in unmatched_stats:
+        if not free_indexes:
+            break
+        candidates.add(free_indexes.pop(0))
+
+    if not candidates:
+        map_count = max(len(results), len(match.maps), len(match.map_stats), 1)
+        candidates.add(
+            next(
+                (
+                    index
+                    for index in range(map_count)
+                    if not _is_placeholder_map_name(_map_name_for_index(match, index))
+                ),
+                0,
+            )
+        )
+
+    return [
+        (index, _map_name_for_index(match, index))
+        for index in sorted(candidates)
+    ]
+
+
+def _new_match_state(section: str, page_url: str = "") -> dict[str, Any]:
     """创建一场新发现比赛的轮询状态。"""
     return {
         "source": section,
+        "url": page_url,
         "initialized": False,
         "historical": False,
         "started_sent": False,
         "final_sent": False,
         "completed": False,
         "map_scores": {},
+        "started_maps": [],
         "notified_maps": [],
     }
 
@@ -269,7 +377,7 @@ async def _rating_message(
     """渲染指定统计范围的 Rating 图片节点。"""
     if not match.has_stats:
         return None
-    if map_name and map_name not in match.map_stats:
+    if map_name and map_name not in match.rating_map_names:
         return None
     cache_key = map_name or "all"
     if cache_key not in cache:
@@ -284,22 +392,31 @@ async def render_check_rating_messages(match: MatchData) -> list[Message]:
         return []
 
     match = await enrich_match_assets(match)
-    map_names = [name for name in match.maps if name in match.map_stats]
-    if not map_names:
-        map_names = list(match.map_stats)
+    map_names = match.rating_map_names
 
     if len(map_names) <= 1:
         map_name = map_names[0] if map_names else None
         return [Message(await render_rating_card(match, map_name=map_name))]
 
     messages: list[Message] = []
+    first, second = _team_names(match)
     for index, map_name in enumerate(map_names):
         image = await render_rating_card(match, map_name=map_name)
         label = _MAP_LABELS[index] if index < len(_MAP_LABELS) else str(index + 1)
+        score = next(
+            (
+                result.score_display.replace(":", "-")
+                for result in match.map_results
+                if result.name == map_name and result.is_finished
+            ),
+            "-",
+        )
         messages.append(
             Message(
                 [
-                    MessageSegment.text(f"图{label}（{map_name}）\n"),
+                    MessageSegment.text(
+                        f"图{label}（{map_name} {first} {score} {second}）\n"
+                    ),
                     image,
                 ]
             )
@@ -326,7 +443,25 @@ async def _process_event_match(
     if not initialized and not match.has_started:
         previous_scores = _current_map_scores(match)
 
-    if match.has_started and not state.get("started_sent", False):
+    push_each_map = bool(config.hltv_subscribe_push_each_map)
+    if push_each_map:
+        started_maps = state.get("started_maps")
+        if not isinstance(started_maps, list):
+            started_maps = []
+            state["started_maps"] = started_maps
+        started_set = {str(value) for value in started_maps}
+        for index, map_name in _started_map_candidates(match):
+            key = str(index)
+            if key in started_set:
+                continue
+            messages.append(_map_start_message(match, map_name, index, event_name))
+            started_maps.append(key)
+            started_set.add(key)
+        if match.has_started:
+            # 保留该字段供旧版状态迁移和人工查看；每图模式的去重以
+            # started_maps 为准。
+            state["started_sent"] = True
+    elif match.has_started and not state.get("started_sent", False):
         messages.append(_start_message(match, event_name))
         state["started_sent"] = True
 
@@ -344,18 +479,19 @@ async def _process_event_match(
         score = result.score_display
         if key in notified_set or previous_scores.get(key) == score:
             continue
-        messages.append(_map_result_message(match, result, index))
-        image = await _rating_message(match, rating_cache, result.name)
-        if image is not None:
-            messages.append(image)
+        if push_each_map:
+            messages.append(_map_result_message(match, result, index))
+            image = await _rating_message(match, rating_cache, result.name)
+            if image is not None:
+                messages.append(image)
         notified.append(key)
         notified_set.add(key)
 
     if match.is_finished and not state.get("final_sent", False):
         messages.append(_final_message(match))
-        image = await _rating_message(match, rating_cache)
-        if image is not None:
-            messages.append(image)
+        # 整场结束时始终补发一次即时查询同款的完整解析：实际进行的每张
+        # 地图 + 全图总数据。rating_map_names 会自动排除 BP 但未进行的地图。
+        messages.extend(await render_check_rating_messages(match))
         state["final_sent"] = True
         state["completed"] = True
 
@@ -373,7 +509,10 @@ async def _load_event_matches(
     async def load(ref: EventMatchRef) -> tuple[EventMatchRef, MatchData] | None:
         async with semaphore:
             try:
-                return ref, await fetch_match(ref.match_id)
+                return ref, await fetch_match(
+                    ref.match_id,
+                    page_url=ref.url or None,
+                )
             except HltvError as exc:
                 logger.warning("轮询 HLTV 比赛 %s 失败：%s", ref.match_id, exc)
             except Exception:
@@ -421,13 +560,15 @@ async def _poll_event_subscription(
     for ref in refs:
         state = matches.get(ref.match_id)
         if isinstance(state, dict):
+            if ref.url:
+                state["url"] = ref.url
             if not state.get("completed", False):
                 pending_refs.append(ref)
             continue
         if ref.section == "result" and ref.match_id in baseline_ids:
             matches[ref.match_id] = _historical_match_state()
             continue
-        matches[ref.match_id] = _new_match_state(ref.section)
+        matches[ref.match_id] = _new_match_state(ref.section, ref.url)
         pending_refs.append(ref)
 
     # 页面列表可能暂时漏掉刚从 matches 移到 results 的比赛，继续跟踪已有状态。
@@ -441,7 +582,7 @@ async def _poll_event_subscription(
             pending_refs.append(
                 EventMatchRef(
                     match_id=str(match_id),
-                    url="",
+                    url=str(state.get("url", "")),
                     section=str(state.get("source", "upcoming")),
                 )
             )

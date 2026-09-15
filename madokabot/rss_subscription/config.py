@@ -43,13 +43,6 @@ class RSSConfig(Config):
     db_cache_expire: int = 30
     limit: int = 200
     max_length: int = 1024  # 正文长度限制，防止消息太长刷屏，以及消息过长发送失败的情况
-    enable_boot_message: bool = True  # 是否启用启动时的提示消息推送
-    # 首次启动且没有任何订阅时发送的提示消息
-    first_boot_message: str = (
-        "首次启动，目前没有订阅，请添加！\n另外，请检查配置文件的内容（详见部署教程）！"
-    )
-    # 启动成功时发送的提示消息
-    boot_success_message: str = "Madoka机器人订阅器启动成功！"
     debug: bool = (
         False  # 是否开启 debug 模式，开启后会打印更多的日志信息，同时检查更新时不会使用缓存,便于调试
     )

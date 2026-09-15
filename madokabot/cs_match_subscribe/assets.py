@@ -10,10 +10,14 @@ import re
 from pathlib import Path
 from urllib.parse import urlparse
 
-import httpx
 from nonebot.log import logger
+from playwright.async_api import BrowserContext, Error as PlaywrightError, async_playwright
 
+from ..madoka_bundle.config import assets as resource_assets
 from ..madoka_bundle.config import config as madoka_config
+from ..madoka_bundle.constants import ResType, SubFolder
+from ..madoka_bundle.utils import get_file, get_files
+from .client import FlaresolverrSession, get_flaresolverr_session
 from .config import config, ensure_asset_dirs
 from .models import EventData, MatchData
 
@@ -35,16 +39,28 @@ _MIME_TYPES = {
     ".svg": "image/svg+xml",
 }
 _SAFE_NAME_RE = re.compile(r"[^a-zA-Z0-9._-]+")
+_CSTEAM_CATEGORIES = {"team", "flag"}
 
 
-def _proxy() -> str | None:
-    value = config.hltv_proxy or madoka_config.proxy
+def _asset_proxy() -> str | None:
+    value = (
+        config.hltv_flaresolverr_proxy
+        or config.hltv_proxy
+        or madoka_config.proxy
+    )
     if value is None:
         return None
     proxy = str(value).strip()
     if not proxy:
         return None
     return proxy if "://" in proxy else f"http://{proxy}"
+
+
+def _asset_stem(url: str, category: str) -> str:
+    parsed = urlparse(url)
+    source_name = Path(parsed.path).name or category
+    source_name = _SAFE_NAME_RE.sub("-", source_name).strip("-") or category
+    return Path(source_name).stem[:40] or category
 
 
 def _asset_name(url: str, category: str, content_type: str | None = None) -> str:
@@ -57,9 +73,8 @@ def _asset_name(url: str, category: str, content_type: str | None = None) -> str
         suffix = _EXTENSIONS[normalized_type]
     elif suffix not in _MIME_TYPES:
         suffix = ".png"
-    stem = Path(source_name).stem[:40] or category
     digest = hashlib.sha256(url.encode("utf-8")).hexdigest()[:16]
-    return f"{category}-{stem}-{digest}{suffix}"
+    return f"{category}-{_asset_stem(url, category)}-{digest}{suffix}"
 
 
 def _data_url(path: Path) -> str:
@@ -83,38 +98,192 @@ def _placeholder_data_url(label: str, category: str) -> str:
     return f"data:image/svg+xml;base64,{encoded}"
 
 
+def _asset_dir(category: str) -> Path:
+    """返回资源分类目录；队标和国旗使用通用 CSTEAM 资源目录。"""
+    if category in _CSTEAM_CATEGORIES:
+        return resource_assets.get_dir(ResType.IMAGE, SubFolder.CSTEAM)
+    return ensure_asset_dirs() / category
+
+
+def _find_cached_asset(url: str, category: str) -> Path | None:
+    """按 URL 哈希查找本地图片，队标和国旗优先走 assets/image/csteam。"""
+    digest = hashlib.sha256(url.encode("utf-8")).hexdigest()[:16]
+    target_dir = _asset_dir(category)
+    if category in _CSTEAM_CATEGORIES:
+        expected_name = _asset_name(url, category, "image/png")
+        cached = get_file(ResType.IMAGE, SubFolder.CSTEAM, expected_name)
+        if cached is not None and cached.stat().st_size:
+            return cached
+        # 兼容同一 URL 曾以其他图片扩展名保存的本地资源。
+        cached_files = get_files(ResType.IMAGE, SubFolder.CSTEAM)
+        exact_cached = next(
+            (
+                path
+                for path in cached_files
+                if path.name.startswith(f"{category}-")
+                and digest in path.name
+                and path.stat().st_size
+            ),
+            None,
+        )
+        if exact_cached is not None:
+            return exact_cached
+        return next(
+            (
+                path
+                for path in cached_files
+                if path.name.startswith(f"{category}-{_asset_stem(url, category)}-")
+                and path.stat().st_size
+            ),
+            None,
+        )
+
+    cached_candidates = list(target_dir.glob(f"{category}-*"))
+    return next(
+        (
+            path
+            for path in cached_candidates
+            if digest in path.name and path.is_file() and path.stat().st_size
+        ),
+        None,
+    )
+
+
+def _playwright_cookies(session: FlaresolverrSession) -> list[dict[str, object]]:
+    """转换为 Playwright 可接受的 Cookie 字段。"""
+    cookies: list[dict[str, object]] = []
+    for raw_cookie in session.cookies:
+        cookie = dict(raw_cookie)
+        if not cookie.get("domain") and not cookie.get("url"):
+            continue
+        expires = cookie.get("expires")
+        if (
+            not isinstance(expires, (int, float))
+            or isinstance(expires, bool)
+            or expires <= 0
+        ):
+            cookie.pop("expires", None)
+        cookies.append(cookie)
+    return cookies
+
+
 async def _download_one(
-    client: httpx.AsyncClient,
+    context: BrowserContext,
     url: str,
     *,
     category: str,
     label: str,
+    timeout_ms: int,
 ) -> Path | None:
-    target_dir = ensure_asset_dirs() / category
+    target_dir = _asset_dir(category)
     target_dir.mkdir(parents=True, exist_ok=True)
-    cached_candidates = list(target_dir.glob(f"{category}-*"))
-    # 文件名含 URL 哈希；避免每次请求都触发网络访问。
-    digest = hashlib.sha256(url.encode("utf-8")).hexdigest()[:16]
-    cached = next((path for path in cached_candidates if digest in path.name), None)
+    cached = _find_cached_asset(url, category)
     if cached is not None and cached.is_file() and cached.stat().st_size:
         return cached
 
+    page = None
     try:
-        response = await client.get(url)
-        response.raise_for_status()
-        content_type = response.headers.get("content-type", "")
-        if not content_type.lower().startswith("image/"):
-            logger.warning("HLTV 资源不是图片，已跳过：%s (%s)", url, content_type)
+        page = await context.new_page()
+        response = await page.goto(url, wait_until="load", timeout=timeout_ms)
+        if response is not None and response.status >= 400:
+            logger.warning("HLTV 资源浏览器请求失败：%s (HTTP %s)", url, response.status)
             return None
-        if len(response.content) > config.hltv_max_asset_size:
+        image = page.locator("img").first
+        await image.wait_for(state="visible", timeout=timeout_ms)
+        content = await image.screenshot(type="png")
+        if len(content) > config.hltv_max_asset_size:
             logger.warning("HLTV 资源过大，已跳过：%s", url)
             return None
+        content_type = "image/png"
         path = target_dir / _asset_name(url, category, content_type)
-        path.write_bytes(response.content)
+        path.write_bytes(content)
         return path
-    except (httpx.HTTPError, OSError) as exc:
+    except (PlaywrightError, OSError) as exc:
         logger.warning("下载 HLTV %s 失败（%s）：%s", label, url, exc)
         return None
+    finally:
+        if page is not None:
+            await page.close()
+
+
+async def _download_assets(
+    refs: dict[str, tuple[str, str]],
+    *,
+    referer: str,
+) -> dict[str, Path | None]:
+    """复用 FlareSolverr 的浏览器会话，通过 Playwright 下载图片。"""
+    if not refs:
+        return {}
+
+    results: dict[str, Path | None] = {}
+    missing_refs: dict[str, tuple[str, str]] = {}
+    for url, reference in refs.items():
+        cached = _find_cached_asset(url, reference[0])
+        results[url] = cached
+        if cached is None:
+            missing_refs[url] = reference
+    if not missing_refs:
+        return results
+
+    session = get_flaresolverr_session()
+    if session is None:
+        logger.warning("没有可复用的 FlareSolverr 浏览器会话，跳过 HLTV 图片下载。")
+        return results
+
+    launch_options: dict[str, object] = {"headless": True}
+    proxy = _asset_proxy()
+    if proxy:
+        launch_options["proxy"] = {"server": proxy}
+
+    timeout_ms = max(1_000, int(float(config.hltv_request_timeout) * 1000))
+    try:
+        async with async_playwright() as playwright:
+            browser = await playwright.chromium.launch(**launch_options)
+            try:
+                context_options: dict[str, object] = {
+                    "viewport": {"width": 1280, "height": 900},
+                }
+                if session.user_agent:
+                    context_options["user_agent"] = session.user_agent
+                context = await browser.new_context(**context_options)
+                try:
+                    cookies = _playwright_cookies(session)
+                    if cookies:
+                        await context.add_cookies(cookies)
+                    await context.set_extra_http_headers(
+                        {
+                            "Accept": "image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8",
+                            "Referer": referer,
+                        }
+                    )
+                    semaphore = asyncio.Semaphore(4)
+
+                    async def download(url: str) -> tuple[str, Path | None]:
+                        async with semaphore:
+                            category, label = missing_refs[url]
+                            return url, await _download_one(
+                                context,
+                                url,
+                                category=category,
+                                label=label,
+                                timeout_ms=timeout_ms,
+                            )
+
+                    results.update(
+                        dict(
+                            await asyncio.gather(
+                                *(download(url) for url in missing_refs)
+                            )
+                        )
+                    )
+                    return results
+                finally:
+                    await context.close()
+            finally:
+                await browser.close()
+    except (PlaywrightError, OSError) as exc:
+        logger.warning("启动 HLTV 资源浏览器失败：%s", exc)
+        return results
 
 
 async def enrich_match_assets(match: MatchData) -> MatchData:
@@ -134,43 +303,20 @@ async def enrich_match_assets(match: MatchData) -> MatchData:
     if not refs:
         return match
 
-    headers = {
-        "User-Agent": "Mozilla/5.0 (compatible; MadokaBot/1.0; +https://github.com/Dyco/MadokaBot)",
-        "Accept": "image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8",
-        "Referer": str(config.hltv_base_url).rstrip("/") + "/",
-    }
-    limits = httpx.Limits(max_connections=8, max_keepalive_connections=4)
-    async with httpx.AsyncClient(
-        proxy=_proxy(),
-        trust_env=False,
-        follow_redirects=True,
-        headers=headers,
-        timeout=httpx.Timeout(config.hltv_request_timeout, connect=10.0),
-        limits=limits,
-    ) as client:
-        semaphore = asyncio.Semaphore(8)
-
-        async def download(url: str) -> tuple[str, Path | None]:
-            async with semaphore:
-                category, label = refs[url]
-                return url, await _download_one(
-                    client,
-                    url,
-                    category=category,
-                    label=label,
-                )
-
-        results = dict(await asyncio.gather(*(download(url) for url in refs)))
+    results = await _download_assets(
+        refs,
+        referer=match.url or str(config.hltv_base_url).rstrip("/") + "/",
+    )
 
     for teams in team_groups:
         for team in teams:
             if team.logo_url:
                 path = results.get(team.logo_url)
-                team.logo_src = _data_url(path) if path else _placeholder_data_url(team.name, "team")
+                team.logo_src = _data_url(path) if path else None
             for player in team.players:
                 if player.flag_url:
                     path = results.get(player.flag_url)
-                    player.flag_src = _data_url(path) if path else _placeholder_data_url(player.nickname, "flag")
+                    player.flag_src = _data_url(path) if path else None
                 if player.photo_url:
                     path = results.get(player.photo_url)
                     player.photo_src = _data_url(path) if path else _placeholder_data_url(player.nickname, "player")
@@ -189,34 +335,11 @@ async def enrich_event_assets(events: list[EventData]) -> list[EventData]:
     if not refs:
         return events
 
-    headers = {
-        "User-Agent": "Mozilla/5.0 (compatible; MadokaBot/1.0; +https://github.com/Dyco/MadokaBot)",
-        "Accept": "image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8",
-        "Referer": str(config.hltv_base_url).rstrip("/") + "/",
-    }
-    limits = httpx.Limits(max_connections=8, max_keepalive_connections=4)
-    async with httpx.AsyncClient(
-        proxy=_proxy(),
-        trust_env=False,
-        follow_redirects=True,
-        headers=headers,
-        timeout=httpx.Timeout(config.hltv_request_timeout, connect=10.0),
-        limits=limits,
-    ) as client:
-        semaphore = asyncio.Semaphore(8)
-
-        async def download(url: str) -> tuple[str, Path | None]:
-            """按并发限制下载一项赛事资源。"""
-            async with semaphore:
-                category, label = refs[url]
-                return url, await _download_one(
-                    client,
-                    url,
-                    category=category,
-                    label=label,
-                )
-
-        results = dict(await asyncio.gather(*(download(url) for url in refs)))
+    referer = next((event.url for event in events if event.url), "")
+    results = await _download_assets(
+        refs,
+        referer=referer or str(config.hltv_base_url).rstrip("/") + "/",
+    )
 
     for event in events:
         if event.banner_url:
@@ -224,5 +347,5 @@ async def enrich_event_assets(events: list[EventData]) -> list[EventData]:
             event.banner_src = _data_url(path) if path else _placeholder_data_url(event.name, "event")
         if event.flag_url:
             path = results.get(event.flag_url)
-            event.flag_src = _data_url(path) if path else _placeholder_data_url(event.location, "flag")
+            event.flag_src = _data_url(path) if path else None
     return events

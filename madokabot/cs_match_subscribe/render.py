@@ -13,6 +13,7 @@ from nonebot_plugin_htmlrender import html_to_pic
 
 from ..madoka_bundle.config import config as madoka_config
 from .config import config
+from .constants import font_context
 from .models import EventData, MatchData
 
 
@@ -29,12 +30,12 @@ _template_env = Environment(
 def render_rating_html(match: MatchData, *, map_name: str | None = None) -> str:
     """把赛事数据渲染为可独立打开的 rating.html 内容。"""
     template = _template_env.get_template(HTML_FILE_PATH.name)
-    return template.render(
-        **match.to_template_context(
-            show_player_photos=config.cs_rating_show_player_photos,
-            map_name=map_name,
-        )
+    context = match.to_template_context(
+        show_player_photos=config.cs_rating_show_player_photos,
+        map_name=map_name,
     )
+    context.update(font_context())
+    return template.render(**context)
 
 
 async def render_rating_card(
@@ -94,7 +95,9 @@ def render_event_list_html(
 ) -> str:
     """把赛事列表渲染为可独立打开的赛事卡片 HTML。"""
     template = _template_env.get_template(EVENT_HTML_FILE_PATH.name)
-    return template.render(sections=_event_sections(events, now=now))
+    context = font_context()
+    context["sections"] = _event_sections(events, now=now)
+    return template.render(**context)
 
 
 async def render_event_list_card(events: list[EventData]) -> MessageSegment:
@@ -151,7 +154,9 @@ async def _avatar_data_url(url: str) -> str:
 def render_player_stats_html(data: dict[str, object]) -> str:
     """把标准化后的平台战绩转换为独立 HTML。"""
     template = _template_env.get_template(STATS_HTML_FILE_PATH.name)
-    return template.render(**data)
+    context = dict(data)
+    context.update(font_context())
+    return template.render(**context)
 
 
 async def render_player_stats_card(data: dict[str, object]) -> MessageSegment:

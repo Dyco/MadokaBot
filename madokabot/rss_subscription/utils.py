@@ -119,24 +119,6 @@ async def get_bot_guild_channel_list(
     return []
 
 
-async def send_message_to_admin(message: str, bot: Optional[Bot] = None) -> None:
-    if bot is None:
-        bot = await get_bot()
-    if bot is None:
-        return
-    superusers = list(getattr(config, "superusers", set()))
-    if not superusers:
-        logger.warning("未配置 SUPERUSERS，无法发送 RSS 管理员通知")
-        return
-    try:
-        await bot.send_private_msg(
-            user_id=int(superusers[0]), message=message
-        )
-    except Exception as e:
-        logger.error(f"管理员消息推送失败：{e}")
-        logger.error(f"消息内容：{message}")
-
-
 async def send_msg(
     msg: str,
     user_ids: Optional[List[str]] = None,

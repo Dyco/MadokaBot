@@ -23,13 +23,13 @@ from ..madoka_bundle.plugins.common import (
     media_delivery,
     register_cleanup_path,
 )
+from ..madoka_bundle.plugins.greeting import send_message_to_admin
 from .config import DOWNLOAD_RECORD_PATH, config
 from .subscription import Rss
 from .utils import (
     convert_size,
     get_bot,
     get_bot_group_list,
-    send_message_to_admin,
 )
 
 if config.aria2_download_path:

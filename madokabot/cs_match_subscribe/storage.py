@@ -146,15 +146,19 @@ async def subscribe_event(
             if match_id not in baseline_ids:
                 baseline_ids.append(match_id)
             if match_id in matches:
+                if ref.get("url") and isinstance(matches[match_id], dict):
+                    matches[match_id]["url"] = str(ref["url"])
                 continue
             matches[match_id] = {
                 "source": section,
+                "url": str(ref.get("url", "")),
                 "initialized": section == "result",
                 "historical": section == "result",
                 "started_sent": section == "result",
                 "final_sent": section == "result",
                 "completed": section == "result",
                 "map_scores": {},
+                "started_maps": [],
                 "notified_maps": [],
             }
 

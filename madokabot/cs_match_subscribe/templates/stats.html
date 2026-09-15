@@ -3,6 +3,34 @@
 <head>
   <meta charset="UTF-8">
   <style>
+    {% if font_regular_path %}
+    @font-face {
+      font-family: "CS Inter";
+      src: url("{{ font_regular_path }}") format("woff2");
+      font-style: normal;
+      font-weight: 400;
+      font-display: block;
+    }
+    {% endif %}
+    {% if font_light_path %}
+    @font-face {
+      font-family: "CS Inter";
+      src: url("{{ font_light_path }}") format("woff2");
+      font-style: normal;
+      font-weight: 300;
+      font-display: block;
+    }
+    {% endif %}
+    {% if font_bold_path %}
+    @font-face {
+      font-family: "CS Inter";
+      src: url("{{ font_bold_path }}") format("woff2");
+      font-style: normal;
+      font-weight: 700;
+      font-display: block;
+    }
+    {% endif %}
+
     :root {
       --page: #eef1f5;
       --card: #ffffff;
@@ -22,7 +50,7 @@
       padding: 0;
       background: var(--page);
       color: var(--ink);
-      font-family: "Microsoft YaHei", "PingFang SC", Arial, sans-serif;
+      font-family: "CS Inter", "Microsoft YaHei", "PingFang SC", Arial, sans-serif;
     }
 
     body { width: 900px; padding: 22px; }
@@ -160,10 +188,12 @@
     .match.win .match-result { color: var(--green); }
     .match.loss .match-result { color: var(--red); }
     .match.draw .match-result { color: var(--gold); }
-    .match-map { margin-top: 9px; color: #3d4854; font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .match-time { margin-top: 5px; color: var(--muted); font-size: 10px; }
+    .match-map { margin-top: 7px; color: #3d4854; font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .match-score { margin-top: 4px; font-size: 20px; font-weight: 800; }
     .match-rating { margin-top: 5px; color: var(--accent); font-size: 12px; font-weight: 700; }
-    .match-details { margin-top: 4px; color: var(--muted); font-size: 10px; }
+    .match-kd { margin-top: 4px; color: #3d4854; font-size: 11px; font-weight: 700; }
+    .match-details { margin-top: 3px; color: var(--muted); font-size: 10px; }
     .empty { padding: 15px; color: var(--muted); border: 1px dashed var(--line); border-radius: 10px; text-align: center; }
 
     .footer { margin-top: 20px; color: #9aa3ad; font-size: 11px; text-align: right; }
@@ -191,11 +221,11 @@
 
     <div class="main">
       <div class="hero">
-        <div class="rating">
-          <div class="rating-label">{{ hero_label }}</div>
-          <div class="rating-value">{{ hero_value }}</div>
-          <div class="rating-note">平台生涯数据</div>
-        </div>
+          <div class="rating">
+            <div class="rating-label">{{ hero_label }}</div>
+            <div class="rating-value">{{ hero_value }}</div>
+            <div class="rating-note">{{ hero_note }}</div>
+          </div>
         <div class="summary">
           {% for item in summary %}
           <div class="summary-item">
@@ -223,10 +253,12 @@
         {% for match in recent_matches %}
         <div class="match {{ match.result_class }}">
           <div class="match-result">{{ match.result_text }}</div>
+          <div class="match-time">{{ match.time }}</div>
           <div class="match-map">{{ match.map_name }}</div>
-          <div class="match-score">{{ match.score }}</div>
+          <div class="match-score">比分 {{ match.score }}</div>
           <div class="match-rating">Rating {{ match.rating }}</div>
-          <div class="match-details">{{ match.details }}</div>
+          <div class="match-kd">KD {{ match.kd }}</div>
+          {% if match.adr %}<div class="match-details">ADR {{ match.adr }}</div>{% endif %}
         </div>
         {% endfor %}
       </div>

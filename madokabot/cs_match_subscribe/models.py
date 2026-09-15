@@ -87,6 +87,12 @@ class EventData:
     date_display_zh: str = ""
     url: str = ""
     format_text: str = ""
+    event_status: str = "unknown"
+
+    @property
+    def is_finished(self) -> bool:
+        """判断 HLTV 是否已经将赛事标记为结束。"""
+        return self.event_status == "finished"
 
 
 @dataclass(slots=True)
@@ -105,11 +111,20 @@ class MapScore:
     name: str
     team1_score: str | None = None
     team2_score: str | None = None
+    started: bool = False
+    finished: bool | None = None
 
     @property
     def is_finished(self) -> bool:
         """判断地图是否已经产生最终回合比分。"""
+        if self.finished is not None:
+            return self.finished
         return self.team1_score is not None and self.team2_score is not None
+
+    @property
+    def is_started(self) -> bool:
+        """判断地图是否已经进入已进行状态。"""
+        return self.started or self.is_finished
 
     @property
     def score_display(self) -> str:
@@ -156,6 +171,28 @@ class MatchData:
             return f"{self.teams[0].name} vs {self.teams[1].name}"
         return f"HLTV Match {self.match_id}"
 
+    @property
+    def rating_map_names(self) -> list[str]:
+        """返回确实进行且有 Rating 数据的地图，排除未进行的 BP 地图。"""
+        stats_names = set(self.map_stats)
+        finished_names: list[str] = []
+        for result in self.map_results:
+            if (
+                result.is_finished
+                and result.name in stats_names
+                and result.name not in finished_names
+            ):
+                finished_names.append(result.name)
+        if any(result.is_finished for result in self.map_results):
+            return finished_names
+
+        # 某些页面结构没有地图比分节点；此时只能用已有统计区块作为回退。
+        names = [name for name in self.maps if name in stats_names]
+        for name in self.map_stats:
+            if name not in names:
+                names.append(name)
+        return names
+
     def fingerprint(self) -> str:
         """生成订阅轮询用指纹，统计变化也会触发更新。"""
         payload: dict[str, Any] = {
@@ -187,6 +224,8 @@ class MatchData:
                     "name": result.name,
                     "team1_score": result.team1_score,
                     "team2_score": result.team2_score,
+                    "started": result.is_started,
+                    "finished": result.is_finished,
                 }
                 for result in self.map_results
             ],
@@ -202,9 +241,12 @@ class MatchData:
     ) -> dict[str, Any]:
         """转换为 Jinja 模板使用的普通字典。"""
         context = asdict(self)
-        selected_teams = self.map_stats.get(map_name or "", self.teams)
+        rating_maps = self.rating_map_names
+        selected_map = map_name if map_name in rating_maps else None
+        selected_teams = self.map_stats.get(selected_map or "", self.teams)
         context["teams"] = [asdict(team) for team in selected_teams]
-        context["selected_map"] = map_name if map_name in self.map_stats else None
+        context["maps"] = rating_maps
+        context["selected_map"] = selected_map
         for team_data, team in zip(context["teams"], selected_teams):
             for player_data, player in zip(team_data["players"], team.players):
                 player_data["name_before_nick"] = player.name_before_nick

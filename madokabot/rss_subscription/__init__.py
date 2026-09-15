@@ -13,10 +13,8 @@ from . import command  # noqa: F401  # 注册 RSS 命令
 from . import scheduler
 from .command.matchers import RSS_USAGE
 from .config import DATA_PATH, RSSConfig
-from .config import config as plugin_config
 from .download import restore_upload_records
 from .subscription import Rss
-from .utils import send_message_to_admin
 
 VERSION = "2.6.25"
 
@@ -46,21 +44,7 @@ async def start(bot: Bot) -> None:
     if not DATA_PATH.is_dir():
         DATA_PATH.mkdir(parents=True, exist_ok=True)
 
-    boot_message = (
-        f"Version: v{VERSION}\nAuthor：Dyco(原作者:Quan666)\ngithub.com/Dyco/MadokaBot"
-    )
-
     rss_list = Rss.read_rss()  # 读取list
-    if not rss_list:
-        await send_message_to_admin(
-            f"{plugin_config.first_boot_message}\n{boot_message}", bot
-        )
-        logger.info(plugin_config.first_boot_message)
-    if plugin_config.enable_boot_message:
-        await send_message_to_admin(
-            f"{plugin_config.boot_success_message}\n{boot_message}", bot
-        )
-    logger.info(plugin_config.boot_success_message)
     # 上传恢复不依赖任何订阅源，优先执行，避免单个源初始化失败时
     # 连带阻断重启后的上传与核验任务。
     try:
