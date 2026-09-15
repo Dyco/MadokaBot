@@ -10,7 +10,6 @@ from nonebot.matcher import current_bot
 from ..madoka_bundle.config import config as madoka_config
 from ..madoka_bundle.plugins.common import (
     MediaDelivery,
-    MediaDeliveryMode,
     MediaSizeLimitExceeded,
 )
 from .config import Config
@@ -34,7 +33,7 @@ async def send_resolved_video(
     source: str | Path | None,
     proxy: str | None = None,
 ) -> bool:
-    """下载并发送视频；只有发送成功后才删除本地文件。"""
+    """下载并发送视频；发送失败时保留文件，不降级为文件上传。"""
     path: Path | None = None
     bot: Bot | None = None
     sent = False
@@ -54,16 +53,7 @@ async def send_resolved_video(
         path = Path(value)
         media = media_delivery.inspect(path)
         prepared = await media_delivery.prepare(media)
-        try:
-            if prepared.mode is MediaDeliveryMode.VIDEO_MESSAGE:
-                await media_delivery.send_video(bot, event, prepared)
-            else:
-                await media_delivery.upload_file(bot, event, prepared)
-        except Exception:
-            if prepared.mode is not MediaDeliveryMode.VIDEO_MESSAGE:
-                raise
-            logger.warning("视频消息发送失败，尝试改为上传文件")
-            await media_delivery.upload_file(bot, event, prepared)
+        await media_delivery.send_video(bot, event, prepared)
         sent = True
         try:
             media_delivery.discard_prepared(media, prepared)
