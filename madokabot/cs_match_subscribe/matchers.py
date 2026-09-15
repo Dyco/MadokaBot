@@ -244,11 +244,11 @@ async def handle_cs_list(params: Match[str]) -> None:
         await enrich_event_assets(events)
         image = await render_event_list_card(events)
     except HltvError as exc:
-        await cs_cmd.finish(f"HLTV 赛事列表查询失败：{exc}")
+        await cs_cmd.finish(f"HLTV赛事列表查询失败，请之后重试：{exc}")
         return
     except Exception:
         logger.exception("CS 赛事列表查询失败")
-        await cs_cmd.finish("HLTV 赛事列表处理失败，请稍后重试。")
+        await cs_cmd.finish("HLTV赛事列表处理失败，请稍后重试。")
         return
     await cs_cmd.finish(Message([image]))
 
@@ -287,8 +287,8 @@ async def handle_cs_login(
     if not raw_code:
         await cs_cmd.finish(CS_LOGIN_USAGE)
         return
-    if not re.fullmatch(r"\d{4,8}", raw_code):
-        await cs_cmd.finish("验证码格式不正确，请输入 4-8 位数字验证码。")
+    if not re.fullmatch(r"\d{6}", raw_code):
+        await cs_cmd.finish("验证码格式不正确，请输入6位数字验证码。")
         return
 
     await cs_cmd.send("正在登录完美平台并保存 Session…")
@@ -554,11 +554,11 @@ async def handle_cs_check(
         messages = await render_check_rating_messages(match)
     except HltvError as exc:
         logger.warning("CS 比赛链接解析失败：%s (%s)", raw_url, exc)
-        await cs_cmd.finish(f"HLTV 查询失败：{exc}")
+        await cs_cmd.finish(f"HLTV比赛信息查询失败，请之后重试：{exc}")
         return
     except Exception:
         logger.exception("CS 比赛 Rating 查询失败：%s", raw_url)
-        await cs_cmd.finish("HLTV 查询或图片渲染失败，请稍后重试。")
+        await cs_cmd.finish("HLTV比赛信息查询失败或图片渲染失败，请稍后重试。")
         return
 
     if not messages:

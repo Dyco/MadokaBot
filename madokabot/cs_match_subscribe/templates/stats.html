@@ -5,28 +5,10 @@
   <style>
     {% if font_regular_path %}
     @font-face {
-      font-family: "CS Inter";
+      font-family: "CS Source Han Sans SC";
       src: url("{{ font_regular_path }}") format("woff2");
       font-style: normal;
-      font-weight: 400;
-      font-display: block;
-    }
-    {% endif %}
-    {% if font_light_path %}
-    @font-face {
-      font-family: "CS Inter";
-      src: url("{{ font_light_path }}") format("woff2");
-      font-style: normal;
-      font-weight: 300;
-      font-display: block;
-    }
-    {% endif %}
-    {% if font_bold_path %}
-    @font-face {
-      font-family: "CS Inter";
-      src: url("{{ font_bold_path }}") format("woff2");
-      font-style: normal;
-      font-weight: 700;
+      font-weight: 100 900;
       font-display: block;
     }
     {% endif %}
@@ -50,7 +32,7 @@
       padding: 0;
       background: var(--page);
       color: var(--ink);
-      font-family: "CS Inter", "Microsoft YaHei", "PingFang SC", Arial, sans-serif;
+      font-family: "CS Source Han Sans SC", "Microsoft YaHei", "PingFang SC", Arial, sans-serif;
     }
 
     body { width: 900px; padding: 22px; }

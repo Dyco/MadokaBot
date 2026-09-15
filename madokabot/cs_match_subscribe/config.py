@@ -45,10 +45,28 @@ class Config(NoneBotConfig):
         description="FlareSolverr 单次 request.get 的最大等待时间（秒）",
     )
     hltv_flaresolverr_wait_seconds: float = Field(
-        default=1.0,
+        default=2.0,
         ge=0.0,
         le=30.0,
         description="FlareSolverr 返回页面前额外等待动态内容的时间（秒）",
+    )
+    hltv_flaresolverr_retry_attempts: int = Field(
+        default=3,
+        ge=1,
+        le=8,
+        description="FlareSolverr 遇到验证页或临时错误时的最大尝试次数",
+    )
+    hltv_flaresolverr_retry_delay: float = Field(
+        default=2.0,
+        ge=0.0,
+        le=30.0,
+        description="FlareSolverr 重试前的等待秒数，按尝试次数递增",
+    )
+    hltv_flaresolverr_session_ttl_minutes: int = Field(
+        default=15,
+        ge=1,
+        le=1440,
+        description="FlareSolverr 浏览器 session 的有效期（分钟）",
     )
     hltv_flaresolverr_proxy: str | None = Field(
         default=None,

@@ -5,35 +5,17 @@
   <style>
     {% if font_regular_path %}
     @font-face {
-      font-family: "CS Inter";
+      font-family: "CS Source Han Sans SC";
       src: url("{{ font_regular_path }}") format("woff2");
       font-style: normal;
-      font-weight: 400;
-      font-display: block;
-    }
-    {% endif %}
-    {% if font_light_path %}
-    @font-face {
-      font-family: "CS Inter";
-      src: url("{{ font_light_path }}") format("woff2");
-      font-style: normal;
-      font-weight: 300;
-      font-display: block;
-    }
-    {% endif %}
-    {% if font_bold_path %}
-    @font-face {
-      font-family: "CS Inter";
-      src: url("{{ font_bold_path }}") format("woff2");
-      font-style: normal;
-      font-weight: 700;
+      font-weight: 100 900;
       font-display: block;
     }
     {% endif %}
 
     :root {
       color-scheme: light;
-      font-family: "CS Inter", Arial, Helvetica, "Microsoft YaHei", sans-serif;
+      font-family: "CS Source Han Sans SC", Arial, Helvetica, "Microsoft YaHei", sans-serif;
       font-size: 14px;
     }
 

@@ -13,7 +13,7 @@ from nonebot_plugin_htmlrender import html_to_pic
 
 from ..madoka_bundle.config import config as madoka_config
 from .config import config
-from .constants import font_context
+from .constants import event_font_context, font_context
 from .models import EventData, MatchData
 
 
@@ -95,7 +95,7 @@ def render_event_list_html(
 ) -> str:
     """把赛事列表渲染为可独立打开的赛事卡片 HTML。"""
     template = _template_env.get_template(EVENT_HTML_FILE_PATH.name)
-    context = font_context()
+    context = event_font_context()
     context["sections"] = _event_sections(events, now=now)
     return template.render(**context)
 

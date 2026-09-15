@@ -3,30 +3,12 @@
 <head>
   <meta charset="utf-8">
   <style>
-    {% if font_regular_path %}
+    {% if event_font_path %}
     @font-face {
-      font-family: "CS Inter";
-      src: url("{{ font_regular_path }}") format("woff2");
+      font-family: "CS Source Han Sans SC";
+      src: url("{{ event_font_path }}") format("woff2");
       font-style: normal;
-      font-weight: 400;
-      font-display: block;
-    }
-    {% endif %}
-    {% if font_light_path %}
-    @font-face {
-      font-family: "CS Inter";
-      src: url("{{ font_light_path }}") format("woff2");
-      font-style: normal;
-      font-weight: 300;
-      font-display: block;
-    }
-    {% endif %}
-    {% if font_bold_path %}
-    @font-face {
-      font-family: "CS Inter";
-      src: url("{{ font_bold_path }}") format("woff2");
-      font-style: normal;
-      font-weight: 700;
+      font-weight: 100 900;
       font-display: block;
     }
     {% endif %}
@@ -41,7 +23,7 @@
       width: 100%;
       background: #e5e7e9;
       color: #202328;
-      font-family: "CS Inter", Arial, "Microsoft YaHei", sans-serif;
+      font-family: "CS Source Han Sans SC", Arial, "Microsoft YaHei", sans-serif;
     }
     .page {
       width: 100%;
