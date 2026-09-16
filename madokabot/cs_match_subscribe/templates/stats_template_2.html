@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <style>
+    {% if font_regular_path %}
+    @font-face {
+      font-family: "CS Source Han Sans SC";
+      src: url("{{ font_regular_path }}") format("woff2");
+      font-style: normal;
+      font-weight: 100 900;
+      font-display: block;
+    }
+    {% endif %}
+
+    :root {
+      --page: #0b0e14;
+      --card: #131822;
+      --line: #1e2636;
+      --text: #ffffff;
+      --muted: #8b9bb4;
+      --green: #2ecc71;
+      --red: #ca4638;
+      --gold: #f1c40f;
+      --accent: #3498db;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: var(--page);
+      color: var(--text);
+      font-family: "CS Source Han Sans SC", "Microsoft YaHei", "PingFang SC", Arial, sans-serif;
+    }
+
+    body { width: 900px; padding: 20px; }
+
+    .container {
+      width: 100%;
+      padding: 24px;
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, .45);
+    }
+
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+      padding-bottom: 18px;
+    }
+
+    .player-info { display: flex; align-items: center; gap: 15px; min-width: 0; }
+    .avatar, .avatar-fallback {
+      width: 58px;
+      height: 58px;
+      flex: 0 0 58px;
+      border: 2px solid #3498db;
+      border-radius: 50%;
+      object-fit: cover;
+      background: #202a39;
+    }
+    .avatar-fallback {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #73c7f3;
+      font-size: 26px;
+      font-weight: 800;
+    }
+    .player-text { min-width: 0; }
+    .name { overflow: hidden; font-size: 20px; font-weight: 800; text-overflow: ellipsis; white-space: nowrap; }
+    .uid { margin-top: 5px; color: var(--muted); font-size: 12px; }
+    .platform-logo { flex: 0 0 auto; text-align: right; }
+    .platform-logo img { display: block; width: 190px; height: 42px; object-fit: contain; object-position: right center; }
+    .platform-logo .time { margin-top: 5px; color: var(--muted); font-size: 11px; }
+
+    .section-title {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 20px 0 14px;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+    .section-title::before, .section-title::after { content: ""; height: 1px; flex: 1; background: var(--line); }
+
+    .season-panel {
+      display: grid;
+      grid-template-columns: 140px 1fr;
+      gap: 20px;
+      padding: 16px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, .02);
+    }
+    .rank-badge-box {
+      display: flex;
+      min-height: 132px;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 8px;
+      border: 1px solid rgba(52, 152, 219, .3);
+      border-radius: 6px;
+      background: linear-gradient(180deg, rgba(52, 152, 219, .11), transparent);
+    }
+    .rank-icon { width: 88px; height: 78px; object-fit: contain; }
+    .rank-score { margin-top: 4px; color: var(--gold); font-size: 13px; font-weight: 750; }
+    .rank-stars { margin-top: 2px; color: var(--muted); font-size: 11px; }
+    .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; align-content: center; }
+    .stat-item { align-self: center; }
+    .stat-item .label, .sub-stat-card .label { color: var(--muted); font-size: 12px; }
+    .stat-item .value { margin-top: 5px; font-size: 18px; font-weight: 750; }
+    .text-green { color: var(--green) !important; }
+    .text-red { color: var(--red) !important; }
+
+    .sub-stats-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin: 16px 0 22px; text-align: center; }
+    .sub-stat-card { min-height: 68px; padding: 11px 7px; border: 1px solid var(--line); border-radius: 6px; background: rgba(255, 255, 255, .02); }
+    .sub-stat-card .value { margin-top: 6px; font-size: 15px; font-weight: 750; }
+
+    .match-table { width: 100%; border-collapse: collapse; table-layout: fixed; text-align: left; font-size: 12px; }
+    .match-table th { padding: 9px 8px; color: var(--muted); border-bottom: 1px solid var(--line); font-size: 11px; font-weight: 500; white-space: nowrap; }
+    .match-table td { padding: 10px 8px; border-bottom: 1px solid rgba(30, 38, 54, .8); white-space: nowrap; }
+    .match-table tbody tr:last-child td { border-bottom: 0; }
+    .match-table tbody tr:hover { background: rgba(255, 255, 255, .025); }
+    .match-table .col-result { width: 56px; }
+    .match-table .col-time { width: 118px; }
+    .match-table .col-map { width: 120px; overflow: hidden; text-overflow: ellipsis; }
+    .match-table .col-score { width: 76px; font-weight: 750; }
+    .match-table .col-kda { width: 150px; }
+    .match-table .col-rating { width: 100px; }
+    .match-table .col-elo { width: 78px; }
+    .status-indicator { display: inline-block; width: 4px; height: 15px; margin-right: 7px; border-radius: 2px; vertical-align: -3px; }
+    .status-win .status-indicator { background: var(--green); }
+    .status-loss .status-indicator { background: var(--red); }
+    .status-draw .status-indicator { background: var(--gold); }
+    .status-win .result-label { color: var(--green); font-weight: 750; }
+    .status-loss .result-label { color: var(--red); font-weight: 750; }
+    .status-draw .result-label { color: var(--gold); font-weight: 750; }
+    .empty { padding: 18px 12px; color: var(--muted); border: 1px dashed var(--line); border-radius: 7px; text-align: center; font-size: 13px; }
+    .footer { margin-top: 20px; color: #627086; font-size: 11px; text-align: right; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="player-info">
+        {% if avatar_src %}
+        <img class="avatar" src="{{ avatar_src }}" alt="">
+        {% else %}
+        <div class="avatar-fallback">{{ nickname[:1] if nickname else '?' }}</div>
+        {% endif %}
+        <div class="player-text">
+          <div class="name">{{ nickname }}</div>
+          <div class="uid">SteamID：{{ identity }}</div>
+        </div>
+      </div>
+      <div class="platform-logo">
+        {% if perfectworld_logo_src %}<img src="{{ perfectworld_logo_src }}" alt="完美世界电竞">{% endif %}
+        <div class="time">查询时间 {{ updated_at }}</div>
+      </div>
+    </div>
+
+    <div class="section-title">当前赛季 {{ pw_season }}</div>
+    <div class="season-panel">
+      <div class="rank-badge-box">
+        {% if rank_icon_src %}<img class="rank-icon" src="{{ rank_icon_src }}" alt="段位图标">{% endif %}
+        <div class="rank-score">分数 {{ pw_score }}</div>
+        {% if pw_is_s_rank %}<div class="rank-stars">{{ pw_stars }} 颗星</div>{% endif %}
+      </div>
+      <div class="stats-grid">
+        <div class="stat-item">
+          <div class="label">赛季场次</div>
+          <div class="value">{{ pw_season_matches }} 场</div>
+        </div>
+        <div class="stat-item">
+          <div class="label">胜率</div>
+          <div class="value">{{ pw_win_rate }}</div>
+        </div>
+        <div class="stat-item">
+          <div class="label">PW Rating</div>
+          <div class="value{% if pw_rating|float >= 1 %} text-green{% else %} text-red{% endif %}">{{ pw_rating }}</div>
+        </div>
+      </div>
+    </div>
+
+    {% if pw_detail_metrics %}
+    <div class="sub-stats-grid">
+      {% for metric in pw_detail_metrics %}
+      <div class="sub-stat-card">
+        <div class="label">{{ metric.label }}</div>
+        <div class="value">{{ metric.value }}</div>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="section-title">近期战绩</div>
+    {% if recent_matches %}
+    <table class="match-table">
+      <thead>
+        <tr>
+          <th class="col-result">胜负</th>
+          <th class="col-time">时间</th>
+          <th class="col-map">地图</th>
+          <th class="col-score">比分</th>
+          <th class="col-kda">K-D-A</th>
+          <th class="col-rating">PW Rating</th>
+          <th class="col-elo">ELO</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for match in recent_matches %}
+        <tr class="status-{{ match.result_class }}">
+          <td><span class="status-indicator"></span><span class="result-label">{{ match.result_short }}</span></td>
+          <td>{{ match.time }}</td>
+          <td class="col-map">{{ match.map_name }}</td>
+          <td class="col-score">{{ match.score }}</td>
+          <td class="col-kda">{{ match.kda }}</td>
+          <td class="col-rating{% if match.result_class == 'win' %} text-green{% elif match.result_class == 'loss' %} text-red{% endif %}">{{ match.rating }}</td>
+          <td class="col-elo {{ match.score_change_class }}">{{ match.score_change }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div class="empty">———— 该玩家近期暂未进行对局 ————</div>
+    {% endif %}
+
+    <div class="footer">Made By MadokaBot</div>
+  </div>
+</body>
+</html>

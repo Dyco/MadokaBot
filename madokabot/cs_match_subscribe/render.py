@@ -12,6 +12,8 @@ from nonebot.adapters.onebot.v11 import MessageSegment
 from nonebot_plugin_htmlrender import html_to_pic
 
 from ..madoka_bundle.config import config as madoka_config
+from ..madoka_bundle.constants import ResType, SubFolder
+from ..madoka_bundle.utils import get_file
 from .config import config
 from .constants import event_font_context, font_context
 from .models import EventData, MatchData
@@ -21,6 +23,7 @@ TEMPLATE_DIR = Path(__file__).parent / "templates"
 HTML_FILE_PATH = TEMPLATE_DIR / "rating.html"
 EVENT_HTML_FILE_PATH = TEMPLATE_DIR / "event_list.html"
 STATS_HTML_FILE_PATH = TEMPLATE_DIR / "stats.html"
+STATS_TEMPLATE_1_HTML_FILE_PATH = TEMPLATE_DIR / "stats_template_1.html"
 _template_env = Environment(
     loader=FileSystemLoader(str(TEMPLATE_DIR)),
     autoescape=select_autoescape(("html", "xml")),
@@ -152,10 +155,23 @@ async def _avatar_data_url(url: str) -> str:
 
 def render_player_stats_html(data: dict[str, object]) -> str:
     """把标准化后的平台战绩转换为独立 HTML。"""
-    template = _template_env.get_template(STATS_HTML_FILE_PATH.name)
     context = dict(data)
     context.update(font_context())
+    if data.get("platform") == "pw":
+        template = _template_env.get_template(STATS_TEMPLATE_1_HTML_FILE_PATH.name)
+        context["perfectworld_logo_src"] = _perfectworld_asset_uri("wm_logo_big.png")
+        rank_icon = str(data.get("pw_rank_icon") or "Level_Unknown.svg")
+        context["rank_icon_src"] = _perfectworld_asset_uri(rank_icon)
+        return template.render(**context)
+
+    template = _template_env.get_template(STATS_HTML_FILE_PATH.name)
     return template.render(**context)
+
+
+def _perfectworld_asset_uri(filename: str) -> str:
+    """通过通用资源管理器解析完美世界战绩图片。"""
+    path = get_file(ResType.IMAGE, SubFolder.PERFECTWORLD, filename)
+    return path.resolve().as_uri() if path is not None else ""
 
 
 async def render_player_stats_card(data: dict[str, object]) -> MessageSegment:

@@ -419,6 +419,111 @@ def _pw_rank_from_score(score: Any, stars: Any = None, rank: Any = None) -> str:
     return "S"
 
 
+def _pw_rank_icon_filename(
+    score: Any,
+    stars: Any,
+    rank: Any,
+    rank_label: str,
+) -> str:
+    """根据完美段位、星数和排名选择本地段位图标。"""
+    star_number = max(_int(stars) or 0, 0)
+    rank_number = _int(rank)
+    score_number = _float(score)
+
+    if star_number >= 50:
+        level = 4 if rank_number is not None and 0 < rank_number <= 999 else 3
+        return f"Level_S_{level}.png"
+    if (score_number is not None and score_number > 2400) or rank_label.startswith("S"):
+        level = 3 if star_number >= 25 else (2 if star_number >= 10 else 1)
+        return f"Level_S_{level}.png"
+
+    filenames = {
+        "D": "Level_D.svg",
+        "D+": "Level_D+.svg",
+        "C": "Level_C.svg",
+        "C+": "Level_C+.svg",
+        "金色C+": "Level_Golden_C+.svg",
+        "B": "Level_B.svg",
+        "B+": "Level_B+.svg",
+        "金色B+": "Level_Golden_B+.svg",
+        "A": "Level_A.svg",
+        "A+": "Level_A+.svg",
+        "金色A+": "Level_Golden_A+.svg",
+    }
+    return filenames.get(rank_label.replace(" ", ""), "Level_Unknown.svg")
+
+
+def _pw_detail_metrics(
+    stats: dict[str, Any],
+    *,
+    kills: int,
+    deaths: int,
+    assists: Any,
+    kd: Any,
+) -> list[dict[str, str]]:
+    """从完美接口实际返回的字段中筛选可展示的详细指标。"""
+    metric_values = [
+        (
+            "K/D",
+            _number_text(kd),
+            _value(stats, "kd") not in (None, "") or deaths > 0,
+        ),
+        (
+            "K-D-A",
+            f"{_integer_text(kills)} / "
+            f"{_integer_text(deaths)} / "
+            f"{_integer_text(assists)}",
+            any(_value(stats, key) not in (None, "") for key in ("kills", "deaths", "assists")),
+        ),
+        ("ADR", _number_text(_value(stats, "adr"), 1), _value(stats, "adr") not in (None, "")),
+        ("RWS", _number_text(_value(stats, "rws")), _value(stats, "rws") not in (None, "")),
+        (
+            "MVP",
+            f"{_integer_text(_value(stats, 'mvpCount', 'mvp'))} 次",
+            _value(stats, "mvpCount", "mvp") not in (None, ""),
+        ),
+        (
+            "爆头率",
+            _percent_text(_value(stats, "headShotRatio", "headshotRate")),
+            _value(stats, "headShotRatio", "headshotRate") not in (None, ""),
+        ),
+        (
+            "首杀率",
+            _percent_text(_value(stats, "entryKillRatio", "entryRate")),
+            _value(stats, "entryKillRatio", "entryRate") not in (None, ""),
+        ),
+        (
+            "多杀",
+            f"{_integer_text(_value(stats, 'multiKill'))} 次",
+            _value(stats, "multiKill") not in (None, ""),
+        ),
+        (
+            "残局胜利",
+            f"{_integer_text(_value(stats, 'endingWin', 'clutchWin'))} 次",
+            _value(stats, "endingWin", "clutchWin") not in (None, ""),
+        ),
+    ]
+    highest_score = [
+        number
+        for item in _list(stats.get("scoreList"))
+        if (number := _float(_dict(item).get("score"))) is not None
+    ]
+    if not highest_score:
+        highest_score = [
+            number
+            for item in _list(stats.get("historyScores"))
+            if (number := _float(item)) is not None
+        ]
+    if highest_score:
+        metric_values.append(("近期最高分", _score_text(max(highest_score)), True))
+
+    return [
+        {"label": label, "value": value}
+        for label, value, available in metric_values
+        if available
+    ]
+
+
 def _integer_text(value: Any) -> str:
     """格式化击杀、死亡等整数统计。"""
     number = _int(value)
@@ -1260,6 +1365,7 @@ def _build_pw_view(
     """把完美平台原始数据转换为统一卡片上下文。"""
     kills = _int(_value(stats, "kills", "kill")) or 0
     deaths = _int(_value(stats, "deaths", "death")) or 0
+    assists = _value(stats, "assists", "assist")
     kd = _value(stats, "kd")
     if kd is None and deaths:
         kd = kills / deaths
@@ -1292,7 +1398,15 @@ def _build_pw_view(
     if win_rate is None and total:
         win_rate = wins / total
     win_rate_text = _percent_text(win_rate)
-    return _build_view(
+    details = _pw_detail_metrics(
+        stats,
+        kills=kills,
+        deaths=deaths,
+        assists=assists,
+        kd=kd,
+    )
+    recent_matches = _pw_recent_match_views(stats, matches)
+    view = _build_view(
         platform="pw",
         platform_name="完美世界",
         accent="#5b7cff",
@@ -1307,7 +1421,7 @@ def _build_pw_view(
             {"label": "胜 / 平 / 负", "value": f"{wins} / {ties} / {losses}"},
         ],
         metrics=[
-            {"label": "Rating", "value": rating, "note": "平台综合 Rating"},
+            {"label": "PW Rating", "value": rating, "note": "完美平台 PW Rating"},
             {"label": "ADR", "value": _number_text(_value(stats, "adr"), 1), "note": "平均每回合伤害"},
             {"label": "场次（胜率）", "value": f"{total}（{win_rate_text}）", "note": "平台生涯场次"},
             {"label": "爆头率", "value": _percent_text(_value(stats, "headShotRatio", "headshotRate")), "note": "击杀中的爆头比例"},
@@ -1315,9 +1429,58 @@ def _build_pw_view(
             {"label": "RWS", "value": _number_text(_value(stats, "rws")), "note": "胜局贡献"},
             {"label": "MVP", "value": str(_value(stats, "mvpCount", "mvp") or "0"), "note": "局内最佳"},
         ],
-        recent_matches=[_build_pw_match_view(_dict(item)) for item in matches[:10]],
+        recent_matches=recent_matches,
         hero_note=f"分数 {score}",
     )
+    score_number = _float(score_value)
+    view.update(
+        {
+            "pw_season": str(stats.get("seasonId") or "当前赛季"),
+            "pw_score": score,
+            "pw_rank_icon": _pw_rank_icon_filename(
+                score_value,
+                stars,
+                ladder_rank,
+                rank_label,
+            ),
+            "pw_stars": _integer_text(stars),
+            "pw_is_s_rank": (
+                (score_number is not None and score_number > 2400)
+                or rank_label.startswith("S")
+                or (_int(stars) or 0) >= 50
+            ),
+            "pw_season_matches": str(total),
+            "pw_win_rate": win_rate_text,
+            "pw_rating": rating,
+            "pw_detail_metrics": details,
+        }
+    )
+    return view
+
+
+def _pw_recent_match_views(
+    stats: dict[str, Any],
+    matches: list[Any],
+) -> list[dict[str, str]]:
+    """转换近期比赛，并用分数历史补足接口缺失的 ELO 变化。"""
+    score_changes: dict[str, int] = {}
+    score_list = [_dict(item) for item in _list(stats.get("scoreList"))]
+    for current, previous in zip(score_list, score_list[1:]):
+        match_id = str(current.get("matchId") or "").rsplit("@", 1)[-1]
+        current_score = _int(current.get("score"))
+        previous_score = _int(previous.get("score"))
+        if match_id and current_score is not None and previous_score is not None:
+            score_changes[match_id] = current_score - previous_score
+
+    recent: list[dict[str, str]] = []
+    for item in matches[:10]:
+        match = _dict(item).copy()
+        match_id = str(_value(match, "matchId", "match_id") or "").rsplit("@", 1)[-1]
+        score_change = _value(match, "pvpScoreChange", "pvp_score_change")
+        if score_change in (None, "", 0, "0") and match_id in score_changes:
+            match["pvpScoreChange"] = score_changes[match_id]
+        recent.append(_build_pw_match_view(match))
+    return recent
 
 
 def _build_pw_match_view(match: dict[str, Any]) -> dict[str, str]:
@@ -1339,9 +1502,24 @@ def _build_pw_match_view(match: dict[str, Any]) -> dict[str, str]:
     result_class = "win" if is_win else ("draw" if is_tie else "loss")
     kills = _value(match, "kill", "kills", "killCount", "kill_count")
     deaths = _value(match, "death", "deaths", "deathCount", "death_count")
+    assists = _value(match, "assist", "assists", "assistCount", "assist_count")
+    score_change = _int(_value(match, "pvpScoreChange", "pvp_score_change"))
+    score_change_text = (
+        f"{score_change:+d}"
+        if score_change not in (None, 0)
+        else ("0" if score_change == 0 else "-")
+    )
+    score_change_class = (
+        "text-green"
+        if score_change is not None and score_change > 0
+        else "text-red"
+        if score_change is not None and score_change < 0
+        else ""
+    )
     adr = _value(match, "adr", "adpr")
     return {
         "result_text": result_text,
+        "result_short": "胜" if is_win else ("平" if is_tie else "负"),
         "result_class": result_class,
         "time": _time_text(
             _value(
@@ -1360,6 +1538,10 @@ def _build_pw_match_view(match: dict[str, Any]) -> dict[str, str]:
         ),
         "map_name": _map_text(_value(match, "mapName", "map_name", "map")),
         "kd": _kd_text(kills, deaths),
+        "kda": (
+            f"{_integer_text(kills)} / {_integer_text(deaths)} / "
+            f"{_integer_text(assists)}"
+        ),
         "score": _ordered_match_score(
             score1,
             score2,
@@ -1368,6 +1550,9 @@ def _build_pw_match_view(match: dict[str, Any]) -> dict[str, str]:
             is_tie=is_tie,
         ),
         "rating": _number_text(_value(match, "pwRating", "rating")),
+        "we": _number_text(_value(match, "we", "WE")),
+        "score_change": score_change_text,
+        "score_change_class": score_change_class,
         "adr": _number_text(adr, 1) if adr not in (None, "") else "",
     }
 
