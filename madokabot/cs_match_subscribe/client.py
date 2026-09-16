@@ -6,7 +6,6 @@ import asyncio
 import calendar
 from dataclasses import dataclass
 from datetime import datetime, timezone
-from uuid import uuid4
 from urllib.parse import urlencode, urljoin, urlparse
 
 import httpx
@@ -37,10 +36,7 @@ class FlaresolverrSession:
 
 
 _FLARESOLVERR_SEMAPHORE = asyncio.Semaphore(1)
-_FLARESOLVERR_SESSION_LOCK = asyncio.Lock()
 _FLARESOLVERR_SESSION: FlaresolverrSession | None = None
-_FLARESOLVERR_API_SESSION_ID: str | None = None
-_FLARESOLVERR_API_SESSION_PROXY: str | None = None
 _CHALLENGE_MARKERS = (
     "checking your browser",
     "verify you are human",
@@ -94,14 +90,6 @@ def _flaresolverr_proxy() -> dict[str, str] | None:
     if "://" not in value:
         value = f"http://{value}"
     return {"url": value}
-
-
-def _flaresolverr_proxy_value(proxy: dict[str, str] | None) -> str | None:
-    """提取 session 代理地址，用于判断是否需要重建 session。"""
-    if not proxy:
-        return None
-    value = proxy.get("url")
-    return str(value).strip() if value else None
 
 
 def _is_challenge_html(html: str) -> bool:
@@ -287,82 +275,9 @@ async def _call_flaresolverr(
     return result
 
 
-async def _destroy_flaresolverr_api_session(session_id: str) -> None:
-    """销毁一个 FlareSolverr API 浏览器 session。"""
-    try:
-        await _call_flaresolverr(
-            {"cmd": "sessions.destroy", "session": session_id},
-            timeout=httpx.Timeout(15.0, connect=10.0),
-        )
-    except HltvError as exc:
-        logger.debug(f"销毁 FlareSolverr session 失败：{exc}")
-
-
-async def _ensure_flaresolverr_api_session(
-    *,
-    proxy: dict[str, str] | None,
-    timeout: httpx.Timeout,
-) -> str:
-    """获取可复用的 FlareSolverr 浏览器 session。"""
-    global _FLARESOLVERR_API_SESSION_ID, _FLARESOLVERR_API_SESSION_PROXY
-
-    proxy_value = _flaresolverr_proxy_value(proxy)
-    async with _FLARESOLVERR_SESSION_LOCK:
-        if (
-            _FLARESOLVERR_API_SESSION_ID
-            and _FLARESOLVERR_API_SESSION_PROXY == proxy_value
-        ):
-            return _FLARESOLVERR_API_SESSION_ID
-
-        old_session_id = _FLARESOLVERR_API_SESSION_ID
-        _FLARESOLVERR_API_SESSION_ID = None
-        _FLARESOLVERR_API_SESSION_PROXY = None
-        if old_session_id:
-            await _destroy_flaresolverr_api_session(old_session_id)
-
-        requested_session_id = f"madokabot-hltv-{uuid4().hex}"
-        payload: dict[str, object] = {
-            "cmd": "sessions.create",
-            "session": requested_session_id,
-        }
-        if proxy:
-            payload["proxy"] = proxy
-        result = await _call_flaresolverr(payload, timeout=timeout)
-        if result.get("status") != "ok":
-            message = str(result.get("message") or "未提供错误信息").strip()
-            raise HltvError(f"FlareSolverr 无法创建浏览器 session：{message}")
-
-        session_id = result.get("session")
-        if not isinstance(session_id, str) or not session_id.strip():
-            raise HltvError("FlareSolverr 创建 session 后没有返回 session ID。")
-        _FLARESOLVERR_API_SESSION_ID = session_id.strip()
-        _FLARESOLVERR_API_SESSION_PROXY = proxy_value
-        return _FLARESOLVERR_API_SESSION_ID
-
-
-async def _invalidate_flaresolverr_api_session(session_id: str | None) -> None:
-    """清除失效的 FlareSolverr session，并尽量释放浏览器。"""
-    global _FLARESOLVERR_API_SESSION_ID, _FLARESOLVERR_API_SESSION_PROXY
-
-    if not session_id:
-        return
-    async with _FLARESOLVERR_SESSION_LOCK:
-        if _FLARESOLVERR_API_SESSION_ID != session_id:
-            return
-        _FLARESOLVERR_API_SESSION_ID = None
-        _FLARESOLVERR_API_SESSION_PROXY = None
-        await _destroy_flaresolverr_api_session(session_id)
-
-
 def _is_target_http_error(error: HltvError) -> bool:
     """目标页面自身的 4xx/5xx 不需要重复解验证。"""
     return "目标页面返回 HTTP " in str(error)
-
-
-def _is_invalid_session_error(error: HltvError) -> bool:
-    """识别 FlareSolverr session 失效错误。"""
-    lowered = str(error).casefold()
-    return "invalid session" in lowered or "session id" in lowered
 
 
 async def _wait_flaresolverr_retry(attempt: int) -> None:
@@ -393,21 +308,10 @@ async def _fetch_html(page_url: str) -> tuple[str, str]:
     )
     attempts = max(1, int(config.hltv_flaresolverr_retry_attempts))
     for attempt in range(attempts):
-        session_id: str | None = None
         try:
-            session_id = await _ensure_flaresolverr_api_session(
-                proxy=proxy,
-                timeout=api_timeout,
-            )
-            payload = dict(base_payload)
-            payload["session"] = session_id
-            payload["session_ttl_minutes"] = int(
-                config.hltv_flaresolverr_session_ttl_minutes
-            )
-            # session 创建时已经绑定代理；FlareSolverr v2 在 request.get
-            # 中会忽略 session 请求携带的 proxy 参数。
-            payload.pop("proxy", None)
-            result = await _call_flaresolverr(payload, timeout=api_timeout)
+            # 不传 session 时 FlareSolverr 会在请求完成后自动关闭临时浏览器，
+            # 避免低频查询留下常驻 Chromium 进程持续占用内存。
+            result = await _call_flaresolverr(base_payload, timeout=api_timeout)
             if result.get("status") != "ok":
                 message = str(result.get("message") or "未提供错误信息").strip()
                 raise HltvError(f"FlareSolverr 未能获取页面：{message}")
@@ -433,10 +337,6 @@ async def _fetch_html(page_url: str) -> tuple[str, str]:
                     f"FlareSolverr 返回未完成的验证页，将在第 "
                     f"{attempt + 2}/{attempts} 次重试：{page_url}"
                 )
-                # 同一 session 先重试一次；仍然失败时丢弃旧浏览器，
-                # 下一次使用新 session，避免卡在旧的 challenge 页面。
-                if attempt >= 1:
-                    await _invalidate_flaresolverr_api_session(session_id)
                 await _wait_flaresolverr_retry(attempt)
                 continue
 
@@ -448,8 +348,6 @@ async def _fetch_html(page_url: str) -> tuple[str, str]:
         except HltvError as exc:
             if _is_target_http_error(exc) or attempt + 1 >= attempts:
                 raise
-            if _is_invalid_session_error(exc) or attempt >= 1:
-                await _invalidate_flaresolverr_api_session(session_id)
             logger.warning(
                 f"FlareSolverr 请求暂时失败，将在第 {attempt + 2}/{attempts} "
                 f"次重试：{page_url} ({exc})"

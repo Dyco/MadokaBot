@@ -62,12 +62,6 @@ class Config(NoneBotConfig):
         le=30.0,
         description="FlareSolverr 重试前的等待秒数，按尝试次数递增",
     )
-    hltv_flaresolverr_session_ttl_minutes: int = Field(
-        default=15,
-        ge=1,
-        le=1440,
-        description="FlareSolverr 浏览器 session 的有效期（分钟）",
-    )
     hltv_flaresolverr_proxy: str | None = Field(
         default=None,
         description="FlareSolverr 访问目标时使用的代理；为空时沿用 hltv_proxy",
