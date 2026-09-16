@@ -86,9 +86,20 @@ class Config(NoneBotConfig):
     cs_rating_width: int = Field(default=810, ge=400)
     cs_rating_device_scale_factor: float = Field(default=2.0, ge=0.5, le=3.0)
     cs_stats_width: int = Field(default=900, ge=600)
+    cs_stats_template_2_width: int = Field(
+        default=1100,
+        ge=700,
+        description="暖色横版玩家战绩卡片的渲染宽度",
+    )
     cs_pw_session_path: str | None = Field(
         default=None,
         description="完美平台会话文件路径；为空时使用插件数据目录中的 pw_session.json",
+    )
+    cs_stats_template: int = Field(
+        default=1,
+        ge=1,
+        le=2,
+        description="玩家战绩卡片模板版本：1 为默认模板，2 为暖色横版模板",
     )
     cs_pw_api_token: str | None = Field(
         default=None,

@@ -168,9 +168,17 @@ class FeedProcessor:
         )
         self.state, _ = await _run_handlers(self.before_handler, self.rss, self.state)
 
+        header_message = f"订阅更新\n订阅：{self.rss.name}"
+        rss_url = self.rss.get_url()
+        if any(
+            domain in rss_url.lower()
+            for domain in ("yande.re", "danbooru.donmai.us")
+        ):
+            header_message = f"订阅 {self.rss.name} 已推送\n链接地址：{rss_url}"
+
         self.state.update(
             {
-                "header_message": f"订阅更新\n订阅：{self.rss.name}",
+                "header_message": header_message,
                 "messages": [],
                 "items": [],
             }

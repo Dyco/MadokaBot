@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import math
 import os
 import sqlite3
 import tempfile
@@ -20,18 +21,19 @@ import httpx
 from nonebot.log import logger
 
 from ..madoka_bundle.config import config as madoka_config
+from ..madoka_bundle.constants import SubFolder
+from .assets import local_image_uri
 from .config import PLAYER_BINDINGS_PATH, PW_SESSION_PATH, config
+from .net import resolve_proxy
 
 
 FIVE_E_SEARCH_URL = "https://arena.5eplay.com/api/search/player/1/16"
 FIVE_E_ID_URL = "https://gate.5eplay.com/userinterface/http/v1/userinterface/idTransfer"
-FIVE_E_CAREER_URL = "https://gate.5eplay.com/crane/http/api/data/player_career"
 FIVE_E_MATCH_URL = "https://gate.5eplay.com/crane/http/api/data/player_match"
-FIVE_E_PLAYER_URL = "https://arena.5eplay.com/api/data/player"
+FIVE_E_PLAYER_HOME_URL = "https://gate.5eplay.com/crane/http/api/data/v3/player/home"
 # 完美平台旧版接口仍负责返回完整的个人统计，但必须使用当前客户端的
 # 公开请求头，并将 mySteamId 设为 0；使用手机号登录得到的旧 token 已无法
 # 稳定调用这两个接口。
-PW_SEARCH_URL = "https://appengine.wmpvp.com/steamcn/app/search/user"
 PW_CURRENT_SEARCH_URL = "https://gwapi.pwesports.cn/acty/api/v1/search"
 PW_STATS_URL = "https://api.wmpvp.com/api/csgo/home/pvp/detailStats"
 PW_MATCHES_URL = "https://api.wmpvp.com/api/csgo/home/match/list"
@@ -53,17 +55,17 @@ SUPPORTED_PLATFORM_TEXT = "5E、5e、5eplay、wm、pw 或 完美"
 
 # 5E 当前优先排位分段：这里使用每个分段的最高分作为边界，
 # 例如 2001-2150 分归入 A-，2401 分及以上进入 S 星级。
-FIVE_E_RANK_LIMITS = (
-    (1200, "D"),
-    (1350, "C-"),
-    (1500, "C"),
-    (1600, "C+"),
-    (1750, "B-"),
-    (1900, "B"),
-    (2000, "B+"),
-    (2150, "A-"),
-    (2300, "A"),
-    (2400, "A+"),
+FIVE_E_RANK_TIERS = (
+    (1200, "D", "Level_D.avif"),
+    (1350, "C-", "Level_C1.avif"),
+    (1500, "C", "Level_C2.avif"),
+    (1600, "C+", "Level_C3.avif"),
+    (1750, "B-", "Level_B1.avif"),
+    (1900, "B", "Level_B2.avif"),
+    (2000, "B+", "Level_B3.avif"),
+    (2150, "A-", "Level_A1.avif"),
+    (2300, "A", "Level_A2.avif"),
+    (2400, "A+", "Level_A3.avif"),
 )
 
 # 完美世界当前天梯分段。带“金色”的档位与同名普通档位是不同段位，
@@ -100,6 +102,70 @@ class PlayerBinding:
     domain: str = ""
     uuid: str = ""
     avatar_url: str = ""
+
+
+@dataclass(frozen=True, slots=True)
+class MatchViewFields:
+    """一个平台经过确认的近期比赛字段映射。"""
+
+    win: str | None
+    tie: str | None
+    team: str | None
+    winner: str | None
+    direct_score: str | None
+    score1: str
+    score2: str
+    time: str
+    map_name: str
+    kills: str
+    deaths: str
+    assists: str | None
+    rating: str
+    secondary: str
+    score_change: str
+    combat_kind: str
+    secondary_kind: str
+
+
+FIVE_E_MATCH_FIELDS = MatchViewFields(
+    win="is_win",
+    tie="is_tie",
+    team=None,
+    winner=None,
+    direct_score="score",
+    score1="group1_all_score",
+    score2="group2_all_score",
+    time="time",
+    map_name="map",
+    kills="kill",
+    deaths="death",
+    assists=None,
+    rating="rating",
+    secondary="adr",
+    score_change="change_elo",
+    combat_kind="kd",
+    secondary_kind="adr",
+)
+
+PW_MATCH_FIELDS = MatchViewFields(
+    win="isWin",
+    tie=None,
+    team="team",
+    winner="winTeam",
+    direct_score=None,
+    score1="score1",
+    score2="score2",
+    time="matchTime",
+    map_name="mapName",
+    kills="kill",
+    deaths="death",
+    assists="assist",
+    rating="pwRating",
+    secondary="we",
+    score_change="pvpScoreChange",
+    combat_kind="kda",
+    secondary_kind="we",
+)
 
 
 class PlayerBindingStore:
@@ -216,21 +282,10 @@ def platform_label(platform: str) -> str:
     return "5E" if platform == "5e" else "完美世界"
 
 
-def _proxy() -> str | None:
-    """返回平台接口请求使用的代理。"""
-    value = config.hltv_proxy or madoka_config.proxy
-    if value is None:
-        return None
-    proxy = str(value).strip()
-    if not proxy:
-        return None
-    return proxy if "://" in proxy else f"http://{proxy}"
-
-
 def _client() -> httpx.AsyncClient:
     """创建平台接口共用的 HTTP 客户端。"""
     return httpx.AsyncClient(
-        proxy=_proxy(),
+        proxy=resolve_proxy(config.hltv_proxy, madoka_config.proxy),
         trust_env=False,
         follow_redirects=True,
         headers={
@@ -297,7 +352,12 @@ def _float(value: Any) -> float | None:
 def _int(value: Any) -> int | None:
     """把接口数字转换为整数。"""
     number = _float(value)
-    return int(number) if number is not None else None
+    if number is None:
+        return None
+    try:
+        return int(number)
+    except (OverflowError, ValueError):
+        return None
 
 
 def _steam_id(value: Any) -> int | None:
@@ -322,25 +382,20 @@ def _number_text(value: Any, places: int = 2) -> str:
     return "-" if number is None else f"{number:.{places}f}"
 
 
+def _nonzero_number_text(value: Any, places: int = 2) -> str:
+    """将非零有限数值格式化；缺失、零或无效值统一显示横线。"""
+    number = _float(value)
+    if number is None or not math.isfinite(number) or number == 0:
+        return "-"
+    return f"{number:.{places}f}"
+
+
 def _score_text(value: Any) -> str:
     """格式化平台分数，避免把整数分数显示成 1906.0。"""
     number = _float(value)
     if number is None:
         return str(value or "-")
     return str(int(number)) if number.is_integer() else f"{number:.1f}"
-
-
-def _five_e_rank_text(value: Any) -> str:
-    """把 5E 的数字段位标成“段”，避免卡片只显示一个无含义的数字。"""
-    if value in (None, ""):
-        return "-"
-    raw = str(value).strip()
-    if not raw:
-        return "-"
-    number = _float(raw)
-    if number is not None and number.is_integer():
-        return "-" if number <= 0 else f"{int(number)} 段"
-    return raw
 
 
 def _five_e_rank_from_score(score: Any, stars: Any = None) -> str:
@@ -355,34 +410,19 @@ def _five_e_rank_from_score(score: Any, stars: Any = None) -> str:
             rank = "SS"
         else:
             rank = "SSS"
-        return f"{rank} {star_number} 星" if star_number is not None else rank
+        return f"{rank} {star_number}星" if star_number is not None else rank
 
     if score_number is None or score_number <= 0:
         return "-"
-    for limit, rank in FIVE_E_RANK_LIMITS:
+    for limit, rank, _ in FIVE_E_RANK_TIERS:
         if score_number <= limit:
             return rank
     return "S"
 
 
-def _five_e_level_info(matches: list[Any], current_mode: dict[str, Any]) -> dict[str, Any]:
-    """从近期对局中取当前优先排位的段位、星数和排名信息。"""
-    fallback: dict[str, Any] = {}
-    for item in matches:
-        match = _dict(item)
-        level_info = _dict(match.get("level_info"))
-        if not level_info:
-            continue
-        if not fallback:
-            fallback = level_info
-        match_type = str(_value(match, "match_type", "matchType") or "").strip()
-        if match_type == "9":
-            return level_info
-    return fallback or current_mode
-
-
 def _five_e_rank_label(score: Any, stars: Any = None, rank: Any = None) -> str:
     """生成 5E 唯一的段位显示值，Top100 达标时优先显示排名。"""
+    score_number = _float(score)
     star_number = _int(stars)
     rank_number = _int(rank)
     if (
@@ -392,7 +432,47 @@ def _five_e_rank_label(score: Any, stars: Any = None, rank: Any = None) -> str:
         and 0 < rank_number <= FIVE_E_TOP_RANK_MAX
     ):
         return f"TOP{rank_number}"
+    if score_number is None and star_number is not None and star_number > 0:
+        tier = "SSS" if star_number >= 40 else "SS" if star_number >= 20 else "S"
+        return f"{tier} {star_number}星"
     return _five_e_rank_from_score(score, stars)
+
+
+def _five_e_rank_asset(
+    score: Any,
+    stars: Any = None,
+    rank: Any = None,
+    level_id: Any = None,
+) -> tuple[str, dict[str, str] | None]:
+    """根据当前 5E 分数/星数选择段位图，并返回图上的数字覆盖层。"""
+    score_number = _float(score)
+    star_number = _int(stars)
+    rank_number = _int(rank)
+
+    if star_number is not None and star_number >= FIVE_E_TOP_STARS_MIN:
+        if rank_number is not None and 0 < rank_number <= FIVE_E_TOP_RANK_MAX:
+            filename = "Level_TOP10.avif" if rank_number <= 10 else "Level_TOP100.avif"
+            return filename, {"kind": "top", "text": str(rank_number)}
+        return "Level_SSS.avif", {"kind": "stars", "text": str(star_number)}
+    if star_number is not None and star_number >= 20:
+        return "Level_SS.avif", {"kind": "stars", "text": str(star_number)}
+    if star_number is not None and star_number > 0:
+        return "Level_S.avif", {"kind": "stars", "text": str(star_number)}
+
+    if score_number is not None and score_number > 0:
+        for limit, _, filename in FIVE_E_RANK_TIERS:
+            if score_number <= limit:
+                return filename, None
+
+    # 主页仍可能只返回 level_id；仅用已知的 S 段 ID 作为无分数时的安全回退。
+    level_assets = {
+        51: "Level_S.avif",
+        52: "Level_SS.avif",
+        53: "Level_SSS.avif",
+        54: "Level_TOP10.avif",
+        55: "Level_TOP100.avif",
+    }
+    return level_assets.get(_int(level_id), "Level_unknown.avif"), None
 
 
 def _pw_rank_from_score(score: Any, stars: Any = None, rank: Any = None) -> str:
@@ -466,56 +546,52 @@ def _pw_detail_metrics(
         (
             "K/D",
             _number_text(kd),
-            _value(stats, "kd") not in (None, "") or deaths > 0,
+            stats.get("kd") not in (None, "") or deaths > 0,
         ),
         (
             "K-D-A",
             f"{_integer_text(kills)} / "
             f"{_integer_text(deaths)} / "
             f"{_integer_text(assists)}",
-            any(_value(stats, key) not in (None, "") for key in ("kills", "deaths", "assists")),
+            any(stats.get(key) not in (None, "") for key in ("kills", "deaths", "assists")),
         ),
-        ("ADR", _number_text(_value(stats, "adr"), 1), _value(stats, "adr") not in (None, "")),
-        ("RWS", _number_text(_value(stats, "rws")), _value(stats, "rws") not in (None, "")),
+        ("ADR", _number_text(stats.get("adr"), 1), stats.get("adr") not in (None, "")),
+        ("RWS", _number_text(stats.get("rws")), stats.get("rws") not in (None, "")),
         (
             "MVP",
-            f"{_integer_text(_value(stats, 'mvpCount', 'mvp'))} 次",
-            _value(stats, "mvpCount", "mvp") not in (None, ""),
+            f"{_integer_text(stats.get('mvpCount'))} 次",
+            stats.get("mvpCount") not in (None, ""),
         ),
         (
             "爆头率",
-            _percent_text(_value(stats, "headShotRatio", "headshotRate")),
-            _value(stats, "headShotRatio", "headshotRate") not in (None, ""),
+            _percent_text(stats.get("headShotRatio")),
+            stats.get("headShotRatio") not in (None, ""),
         ),
         (
             "首杀率",
-            _percent_text(_value(stats, "entryKillRatio", "entryRate")),
-            _value(stats, "entryKillRatio", "entryRate") not in (None, ""),
+            _percent_text(stats.get("entryKillRatio")),
+            stats.get("entryKillRatio") not in (None, ""),
         ),
         (
             "多杀",
-            f"{_integer_text(_value(stats, 'multiKill'))} 次",
-            _value(stats, "multiKill") not in (None, ""),
+            f"{_integer_text(stats.get('multiKill'))} 次",
+            stats.get("multiKill") not in (None, ""),
         ),
         (
             "残局胜利",
-            f"{_integer_text(_value(stats, 'endingWin', 'clutchWin'))} 次",
-            _value(stats, "endingWin", "clutchWin") not in (None, ""),
+            f"{_integer_text(stats.get('endingWin'))} 次",
+            stats.get("endingWin") not in (None, ""),
         ),
     ]
     highest_score = [
         number
         for item in _list(stats.get("scoreList"))
         if (number := _float(_dict(item).get("score"))) is not None
+        and math.isfinite(number)
+        and number > 0
     ]
-    if not highest_score:
-        highest_score = [
-            number
-            for item in _list(stats.get("historyScores"))
-            if (number := _float(item)) is not None
-        ]
-    if highest_score:
-        metric_values.append(("近期最高分", _score_text(max(highest_score)), True))
+    recent_high_score = _score_text(max(highest_score)) if highest_score else "-"
+    metric_values.append(("历史最高分", recent_high_score, True))
 
     return [
         {"label": label, "value": value}
@@ -617,13 +693,13 @@ def _flag(value: Any) -> bool:
     return value is True or str(value).strip().casefold() in {"1", "true", "yes"}
 
 
-def _image_url(value: Any) -> str:
-    """补全平台返回的头像地址。"""
+def _image_url(value: Any, *, base_url: str = "") -> str:
+    """规范化图片地址；仅在平台明确提供基础地址时补全相对路径。"""
     url = str(value or "").strip()
     if url.startswith("//"):
         return f"https:{url}"
     if url and not url.startswith(("http://", "https://", "data:")):
-        return f"https://oss-arena.5eplay.com/{url.lstrip('/')}"
+        return f"{base_url.rstrip('/')}/{url.lstrip('/')}" if base_url else ""
     return url
 
 
@@ -649,14 +725,17 @@ async def _search_5e_player(
     candidates = []
     for item in _list(user_data.get("list")):
         user = _dict(item)
-        name = str(user.get("username") or user.get("name") or "").strip()
+        name = str(user.get("username") or "").strip()
         domain = str(user.get("domain") or "").strip()
         if name and domain:
             candidates.append(
                 {
                     "name": name,
                     "domain": domain,
-                    "avatar": _image_url(user.get("avatar_url") or user.get("avatar")),
+                    "avatar": _image_url(
+                        user.get("avatar_url"),
+                        base_url="https://oss-arena.5eplay.com",
+                    ),
                 }
             )
     if not candidates:
@@ -818,30 +897,23 @@ async def login_pw(mobile: str, code: str) -> dict[str, Any]:
 
 
 def _pw_identity_candidates(payload: dict[str, Any]) -> list[PlayerBinding]:
-    """解析完美平台新旧搜索接口返回的玩家列表。"""
+    """解析当前完美平台搜索接口返回的玩家列表。"""
+    result = payload.get("result")
+    if not isinstance(result, list):
+        raise PlayerStatsError("完美平台搜索返回了未识别的数据结构")
     users: list[Any] = []
-    for item in _list(payload.get("result")):
+    for item in result:
         group = _dict(item)
-        nested = _list(group.get("data"))
-        users.extend(nested if nested else [group])
+        nested = group.get("data")
+        if not isinstance(nested, list):
+            raise PlayerStatsError("完美平台搜索结果缺少 data 列表")
+        users.extend(nested)
 
     candidates: list[PlayerBinding] = []
     for item in users:
         user = _dict(item)
-        name = str(
-            _value(
-                user,
-                "name",
-                "pvpNickName",
-                "appNickName",
-                "steamNickName",
-                "steamNick",
-            )
-            or ""
-        ).strip()
-        steam_id = str(
-            _value(user, "steamId64Str", "steamId64", "steamId", "steam_id") or ""
-        ).strip()
+        name = str(user.get("name") or "").strip()
+        steam_id = str(user.get("steamId64Str") or "").strip()
         if not name or not steam_id:
             continue
         candidates.append(
@@ -849,13 +921,9 @@ def _pw_identity_candidates(payload: dict[str, Any]) -> list[PlayerBinding]:
                 user_id="",
                 platform="pw",
                 player_name=name,
-                domain=str(
-                    _value(user, "wanmeiId", "userId", "pvpUserId", "appNickName") or ""
-                ).strip(),
+                domain=str(user.get("wanmeiId") or "").strip(),
                 uuid=steam_id,
-                avatar_url=_image_url(
-                    _value(user, "avatar", "pvpAvatar", "avatarUrl", "steamAvatar")
-                ),
+                avatar_url=_image_url(user.get("avatar")),
             )
         )
     return candidates
@@ -872,56 +940,30 @@ def _pick_pw_identity(candidates: list[PlayerBinding], nickname: str) -> PlayerB
 
 async def _resolve_pw_identity(nickname: str) -> PlayerBinding:
     """根据完美平台昵称解析 SteamID；公开搜索不再依赖手机号登录态。"""
-    errors: list[str] = []
     async with _client() as client:
-        try:
-            payload = await _request_json(
-                client,
-                "POST",
-                PW_CURRENT_SEARCH_URL,
-                headers=_pw_public_headers(),
-                json={
-                    "text": nickname,
-                    "searchType": "USER",
-                    "circleId": "0",
-                    "page": 1,
-                    "pageSize": 20,
-                    "gameTypeStr": "1,2",
-                    "platform": "android",
-                    "sortType": 1,
-                },
+        payload = await _request_json(
+            client,
+            "POST",
+            PW_CURRENT_SEARCH_URL,
+            headers=_pw_public_headers(),
+            json={
+                "text": nickname,
+                "searchType": "USER",
+                "circleId": "0",
+                "page": 1,
+                "pageSize": 20,
+                "gameTypeStr": "1,2",
+                "platform": "android",
+                "sortType": 1,
+            },
+        )
+        if payload.get("code") not in (0, "0"):
+            raise PlayerStatsError(
+                str(payload.get("description") or payload.get("message") or "完美平台搜索失败")
             )
-            if payload.get("code") not in (0, "0"):
-                raise PlayerStatsError(
-                    str(payload.get("description") or payload.get("message") or "完美平台搜索失败")
-                )
-            candidates = _pw_identity_candidates(payload)
-            if candidates:
-                return _pick_pw_identity(candidates, nickname)
-        except PlayerStatsError as exc:
-            errors.append(str(exc))
-
-        # 兼容较旧的搜索接口。它目前仍能返回昵称、SteamID、头像和 userId。
-        try:
-            payload = await _request_json(
-                client,
-                "POST",
-                PW_SEARCH_URL,
-                headers=_pw_public_headers(),
-                json={"keyword": nickname, "page": 1},
-            )
-            if payload.get("code") not in (1, "1"):
-                raise PlayerStatsError(
-                    str(payload.get("description") or payload.get("message") or "完美平台搜索失败")
-                )
-            candidates = _pw_identity_candidates(payload)
-            if candidates:
-                return _pick_pw_identity(candidates, nickname)
-        except PlayerStatsError as exc:
-            errors.append(str(exc))
-
-    if errors:
-        logger.warning("完美平台玩家搜索接口失败：%s", "；".join(errors))
+        candidates = _pw_identity_candidates(payload)
+        if candidates:
+            return _pick_pw_identity(candidates, nickname)
     raise PlayerStatsError(f"未找到完美玩家：{nickname}")
 
 
@@ -957,199 +999,320 @@ def get_binding(user_id: str, platform: str) -> PlayerBinding | None:
 
 
 async def _fetch_5e_stats(binding: PlayerBinding) -> dict[str, Any]:
-    """请求 5E 生涯、近期比赛和玩家资料。"""
+    """从 player_home 获取赛季/生涯资料，并单独读取近期逐场记录。"""
     async with _client() as client:
-        career_result, matches_result, arena_result = await asyncio.gather(
-            _request_json(client, "GET", FIVE_E_CAREER_URL, params={"uuid": binding.uuid}),
+        home_result, matches_result = await asyncio.gather(
+            _request_json(
+                client,
+                "GET",
+                FIVE_E_PLAYER_HOME_URL,
+                params={"uuid": binding.uuid},
+            ),
             _request_json(client, "GET", FIVE_E_MATCH_URL, params={"uuid": binding.uuid}),
-            _request_json(client, "GET", f"{FIVE_E_PLAYER_URL}/{binding.domain}"),
             return_exceptions=True,
         )
 
-    career_payload = career_result if isinstance(career_result, dict) else {}
-    matches_payload = matches_result if isinstance(matches_result, dict) else {}
-    arena_payload = arena_result if isinstance(arena_result, dict) else {}
-    career_data = _dict(_dict(career_payload.get("data")).get("career_data"))
-    match_data = _list(_dict(matches_payload.get("data")).get("match_data"))
-    arena_data = _dict(arena_payload.get("data"))
-    if not career_data and not arena_data:
-        error = next(
-            (item for item in (career_result, arena_result) if isinstance(item, Exception)),
-            None,
-        )
-        raise PlayerStatsError(str(error or "未找到有效的 5E 战绩数据"))
-
-    # 生涯接口和玩家资料接口的缓存时间可能不同；优先使用玩家资料中
-    # 当前优先排位的 ELO，避免卡片把当前星段和旧的生涯分数拼在一起。
-    current_mode = _dict(_dict(arena_data.get("level_info")).get("9"))
-    current_elo = _float(current_mode.get("elo"))
-    if current_elo is None or current_elo <= 0:
-        current_level = _five_e_level_info(match_data, current_mode)
-        origin_elo = _float(_value(current_level, "origin_elo", "originElo"))
-        change_elo = _float(_value(current_level, "change_elo", "changeElo"))
-        if origin_elo is not None and origin_elo > 0:
-            current_elo = origin_elo + (change_elo or 0)
-            current_mode["elo"] = current_elo
-    if current_elo is not None and current_elo > 0:
-        career_data["elo_9"] = current_mode["elo"]
-    for source_key, target_key in (
-        ("elo", "elo_9"),
-        ("rating", "rating"),
-        ("adr", "adr"),
-        ("rws", "rws"),
+    if isinstance(home_result, Exception):
+        raise PlayerStatsError(str(home_result))
+    home_data = _dict(home_result.get("data"))
+    expected_sections = ("career", "season_data", "uinfo", "elo_info")
+    if not home_data or any(
+        key not in home_data or not isinstance(home_data[key], dict)
+        for key in expected_sections
     ):
-        current_value = career_data.get(target_key)
-        current_number = _float(current_value)
-        if current_value in (None, "") or current_number == 0:
-            source_value = current_mode.get(source_key)
-            if source_value not in (None, ""):
-                career_data[target_key] = source_value
+        raise PlayerStatsError("5E player_home 返回了未识别的数据结构")
 
-    for source_key, target_key in (
-        ("headshot", "headshot_total"),
-        ("kill", "kill_total"),
-        ("per_headshot", "per_headshot"),
-    ):
-        if target_key not in career_data and arena_data.get(source_key) not in (None, ""):
-            career_data[target_key] = arena_data[source_key]
+    match_data: list[Any] = []
+    if isinstance(matches_result, dict):
+        raw_matches_data = matches_result.get("data")
+        if not isinstance(raw_matches_data, dict):
+            raise PlayerStatsError("5E player_match 返回了未识别的数据结构")
+        matches_data = raw_matches_data
+        raw_matches = matches_data.get("match_data")
+        if not isinstance(raw_matches, list):
+            raise PlayerStatsError("5E player_match 返回了未识别的数据结构")
+        match_data = raw_matches
+    elif isinstance(matches_result, Exception):
+        logger.warning("5E 近期比赛获取失败：%s", matches_result)
 
-    return _build_5e_view(binding, career_data, match_data, current_mode=current_mode)
+    return _build_5e_view(binding, home_data, match_data)
 
 
 def _build_5e_view(
     binding: PlayerBinding,
-    career: dict[str, Any],
+    home: dict[str, Any],
     matches: list[Any],
-    *,
-    current_mode: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
-    """把 5E 原始数据转换为统一卡片上下文。"""
-    kills = _int(_value(career, "kill_total", "kills", "kill")) or 0
-    deaths = _int(_value(career, "death_total", "deaths", "death")) or 0
-    total = _int(_value(career, "match_total", "matches", "cnt")) or 0
-    wins = _int(_value(career, "win_total", "wins", "win")) or 0
-    ties = _int(_value(career, "tie_total", "ties", "tie")) or 0
-    losses = _int(_value(career, "loss_total", "losses", "loss"))
-    if losses is None:
-        losses = max(total - wins - ties, 0)
-    win_rate = _value(career, "win_rate", "winRate")
-    if win_rate is None and total:
-        win_rate = wins / total
-    headshots = _int(_value(career, "headshot_total", "headshots", "headshot"))
-    headshot_rate = (
-        (headshots / kills) if headshots is not None and kills else
-        _value(career, "per_headshot", "headshot_rate", "headshotRate")
+    """把已确认结构的 5E player_home 数据适配为唯一卡片视图。"""
+    career = _dict(home.get("career"))
+    season = _dict(home.get("season_data"))
+    uinfo = _dict(home.get("uinfo"))
+    identity_info = _dict(uinfo.get("identity"))
+
+    total = _int(season.get("match_total")) or 0
+    win_rate = season.get("per_win_match")
+    rating_value = season.get("rating")
+    rating = _number_text(rating_value)
+    adr = season.get("adr")
+    adr_text = _number_text(adr, 1)
+
+    kills = season.get("kill")
+    deaths = season.get("death")
+    assists = season.get("assist")
+    kd_value = season.get("kd")
+    if kd_value is None:
+        kill_number = _float(kills)
+        death_number = _float(deaths)
+        if kill_number is not None and death_number is not None and death_number > 0:
+            kd_value = kill_number / death_number
+    kd_text = _number_text(kd_value)
+
+    kda_value = season.get("kda")
+    if isinstance(kda_value, dict):
+        kda_parts = [
+            kda_value.get("kill"),
+            kda_value.get("death"),
+            kda_value.get("assist"),
+        ]
+        kda_text = " / ".join(_integer_text(part) for part in kda_parts)
+    elif kda_value not in (None, ""):
+        kda_text = str(kda_value)
+    elif any(value not in (None, "") for value in (kills, deaths, assists)):
+        kda_text = " / ".join(_integer_text(value) for value in (kills, deaths, assists))
+    else:
+        kda_text = "-"
+
+    clutch_total = _int(season.get("clutch_win"))
+    clutch_text = f"{clutch_total} 次" if clutch_total is not None else "-"
+
+    # player_home 的 modes["9"] 是唯一的当前优先排位数据源。
+    elo_info = _dict(home.get("elo_info"))
+    modes = _dict(elo_info.get("modes"))
+    current_mode = _dict(modes.get("9"))
+    if not current_mode or "elo" not in current_mode:
+        raise PlayerStatsError("5E player_home 缺少 elo_info.modes.9")
+    current_score_number = _float(current_mode.get("elo"))
+    score_value = (
+        current_score_number
+        if current_score_number is not None and current_score_number > 0
+        else None
     )
-    kd = _value(career, "kd", "k_d")
-    if kd is None and deaths:
-        kd = kills / deaths
-    kpr = _value(career, "kpr", "kills_per_round")
-    rating = _number_text(_value(career, "rating", "rating2"))
-    current_mode = current_mode or {}
-    current_level = _five_e_level_info(matches, current_mode)
-    score_value = _value(career, "elo_9", "elo", "score", "points")
-    stars = _value(current_level, "star_num", "stars", "starNum")
-    top_rank = _value(current_level, "rank", "current_rank", "ranking")
-    if top_rank in (None, ""):
-        top_rank = _value(career, "rank")
+    stars = current_mode.get("star_num")
+    top_rank = current_mode.get("rank")
     rank_label = _five_e_rank_label(score_value, stars, top_rank)
-    rank_value = _value(
-        career,
-        "grade",
-        "rank_name",
-        "rankName",
-        "level_name",
-        "levelName",
-        "level",
-        "elo_level",
+
+    score = _integer_text(score_value)
+    rank_asset, rank_overlay = _five_e_rank_asset(
+        score_value,
+        stars,
+        top_rank,
+        current_mode.get("level_id"),
     )
-    if rank_label == "-" and rank_value is None:
-        rank_value = _value(current_level, "level_name", "levelName", "grade", "name")
-    if rank_label == "-":
-        rank_label = _five_e_rank_text(rank_value)
-    score = _score_text(score_value)
     win_rate_text = _percent_text(win_rate)
-    return _build_view(
-        platform="5e",
+    best_elo = career.get("elo")
+
+    season_name = str(season.get("season") or "").strip().upper()
+
+    detail_metrics = [
+        {"label": "KD", "value": kd_text},
+        {"label": "KDA", "value": kda_text},
+        {"label": "ADR", "value": adr_text},
+        {"label": "RWS", "value": _number_text(season.get("rws"))},
+        {
+            "label": "MVP",
+            "value": f"{_integer_text(season.get('mvp_total'))} 次",
+        },
+        {
+            "label": "爆头率",
+            "value": _percent_text(season.get("per_headshot")),
+        },
+        {
+            "label": "IMPACT",
+            "value": _number_text(season.get("impact")),
+        },
+        {
+            "label": "KPR",
+            "value": _number_text(season.get("kpr")),
+        },
+        {"label": "残局胜利", "value": clutch_text},
+        {"label": "历史最高分", "value": _integer_text(best_elo)},
+    ]
+    username = str(uinfo.get("username") or binding.player_name)
+    avatar_url = _image_url(
+        uinfo.get("avatar_url") or binding.avatar_url,
+        base_url="https://oss-arena.5eplay.com",
+    )
+    identity = identity_info.get("uid") or binding.domain or binding.uuid or "-"
+    return _build_card_view(
         platform_name="5E",
-        accent="#f47b20",
-        binding=binding,
+        platform_brand_name="5E PLAY",
+        platform_logo_src=local_image_uri(SubFolder.FIVE_E, "5ewin_logo.png"),
+        nickname=username,
+        avatar_url=avatar_url,
         identity_label="5E ID",
-        hero_label="段位",
-        hero_value=rank_label,
-        summary=[
-            {"label": "分数", "value": f"{score} 分"},
-            {"label": "总场次", "value": str(total)},
-            {"label": "综合胜率", "value": win_rate_text},
-            {"label": "胜 / 平 / 负", "value": f"{wins} / {ties} / {losses}"},
+        identity=str(identity),
+        season_title=f"当前赛季 · {season_name}" if season_name else "当前赛季",
+        score_label="天梯分数",
+        score=score,
+        score_note=f"段位 {rank_label}" if rank_label != "-" else "",
+        core_class="five-e",
+        core_stats=[
+            {
+                "label": "Rating",
+                "value": rating,
+                "value_class": _rating_class(rating_value),
+            },
+            {"label": "ADR", "value": adr_text, "value_class": "text-neutral"},
+            {
+                "label": "赛季场次",
+                "value": str(total),
+                "unit": "场",
+                "value_class": "text-neutral",
+            },
+            {"label": "胜率", "value": win_rate_text, "value_class": "text-neutral"},
         ],
-        metrics=[
-            {"label": "Rating", "value": rating, "note": "平台综合 Rating"},
-            {"label": "ADR", "value": _number_text(_value(career, "adr"), 1), "note": "平均每回合伤害"},
-            {"label": "场次（胜率）", "value": f"{total}（{win_rate_text}）", "note": "平台生涯场次"},
-            {"label": "爆头率", "value": _percent_text(headshot_rate), "note": "击杀中的爆头比例"},
-            {"label": "K-D", "value": _kd_text(kills, deaths), "note": f"K/D 比值 {_number_text(kd)}"},
-            {"label": "KPR", "value": _number_text(kpr), "note": "场均击杀"},
-            {"label": "RWS", "value": _number_text(_value(career, "rws")), "note": "胜局贡献"},
+        rank_icon_src=local_image_uri(SubFolder.FIVE_E, rank_asset),
+        rank_icon_overlay=rank_overlay,
+        detail_metrics=detail_metrics,
+        recent_combat_label="KD",
+        recent_rating_label="Rating",
+        recent_secondary_label="ADR",
+        recent_matches=[
+            _build_match_view(_dict(item), FIVE_E_MATCH_FIELDS)
+            for item in matches[:10]
+            if isinstance(item, dict)
         ],
-        recent_matches=[_build_5e_match_view(_dict(item)) for item in matches[:10]],
-        hero_note=f"天梯分数 {score}",
     )
 
 
-def _build_5e_match_view(match: dict[str, Any]) -> dict[str, str]:
-    """把一条 5E 近期比赛转换为卡片数据。"""
-    explicit_win = _value(match, "is_win", "isWin", "win", "won")
-    explicit_tie = _value(match, "is_tie", "isTie", "tie", "draw")
+def _rating_class(value: Any) -> str:
+    """返回 Rating 的统一颜色类。"""
+    rating = _float(value)
+    if rating is None:
+        return "text-neutral"
+    if rating >= 1.06:
+        return "text-green"
+    if rating <= 0.94:
+        return "text-red"
+    return "text-neutral"
+
+
+def _build_match_view(
+    match: dict[str, Any],
+    fields: MatchViewFields,
+) -> dict[str, str]:
+    """按平台字段映射生成唯一的近期比赛视图。"""
+    recognized_fields = (
+        fields.win,
+        fields.tie,
+        fields.team,
+        fields.winner,
+        fields.direct_score,
+        fields.score1,
+        fields.score2,
+        fields.time,
+        fields.map_name,
+        fields.kills,
+        fields.deaths,
+        fields.assists,
+        fields.rating,
+        fields.secondary,
+        fields.score_change,
+    )
+    if not any(field is not None and field in match for field in recognized_fields):
+        raise PlayerStatsError("近期比赛返回了未识别的数据结构")
+
+    explicit_win = match.get(fields.win) if fields.win else None
+    explicit_tie = match.get(fields.tie) if fields.tie else None
     is_win = _flag(explicit_win) if explicit_win is not None else False
     is_tie = _flag(explicit_tie) if explicit_tie is not None else False
-    score = _value(match, "score")
-    if not score:
-        score1 = _value(match, "group1_all_score", "score1")
-        score2 = _value(match, "group2_all_score", "score2")
-        score = _ordered_match_score(
+    result_known = explicit_win is not None or is_tie
+
+    if not result_known and fields.team and fields.winner:
+        team = str(match.get(fields.team) or "")
+        winner = str(match.get(fields.winner) or "")
+        if team and winner:
+            is_win = team == winner
+            result_known = True
+
+    score1 = match.get(fields.score1)
+    score2 = match.get(fields.score2)
+    if score1 is not None and score2 is not None and str(score1) == str(score2):
+        is_tie = True
+        result_known = True
+
+    if not result_known:
+        result_text, result_short, result_class = "未知", "?", "unknown"
+    elif is_win:
+        result_text, result_short, result_class = "胜利", "胜", "win"
+    elif is_tie:
+        result_text, result_short, result_class = "平局", "平", "draw"
+    else:
+        result_text, result_short, result_class = "失败", "负", "loss"
+
+    direct_score = match.get(fields.direct_score) if fields.direct_score else None
+    score = (
+        str(direct_score)
+        if direct_score not in (None, "")
+        else _ordered_match_score(
             score1,
             score2,
-            is_win=is_win and not is_tie,
-            is_loss=explicit_win is not None and not is_win and not is_tie,
+            is_win=result_known and is_win and not is_tie,
+            is_loss=result_known and not is_win and not is_tie,
             is_tie=is_tie,
         )
-        if explicit_win is None and explicit_tie is None and score1 is not None and score2 is not None:
-            is_tie = str(score1) == str(score2)
-    result_text = "胜利" if is_win else ("平局" if is_tie else "失败")
-    result_class = "win" if is_win else ("draw" if is_tie else "loss")
-    kills = _value(match, "kill", "kills", "killCount", "kill_count")
-    deaths = _value(match, "death", "deaths", "deathCount", "death_count")
-    adr = _value(match, "adr", "adpr")
+    )
+    kills = match.get(fields.kills)
+    deaths = match.get(fields.deaths)
+    assists = match.get(fields.assists) if fields.assists else None
+    combat = (
+        f"{_integer_text(kills)} / {_integer_text(deaths)} / {_integer_text(assists)}"
+        if fields.combat_kind == "kda"
+        else _kd_text(kills, deaths)
+    )
+
+    rating_value = match.get(fields.rating)
+    rating = _number_text(rating_value)
+    secondary_value = match.get(fields.secondary)
+    if fields.secondary_kind == "we":
+        secondary = _nonzero_number_text(secondary_value)
+        secondary_number = _float(secondary_value)
+        secondary_class = (
+            "text-green"
+            if secondary_number is not None and secondary_number >= 8
+            else "text-red"
+            if secondary_number not in (None, 0)
+            else "text-neutral"
+        )
+    else:
+        secondary = (
+            _number_text(secondary_value, 1)
+            if secondary_value not in (None, "")
+            else "-"
+        )
+        secondary_class = "text-neutral"
+
+    score_change = _int(match.get(fields.score_change))
     return {
         "result_text": result_text,
+        "result_short": result_short,
         "result_class": result_class,
-        "time": _time_text(
-            _value(
-                match,
-                "time",
-                "match_time",
-                "matchTime",
-                "start_time",
-                "startTime",
-                "created_at",
-                "createdAt",
-                "date",
-                "dateTime",
-                "gameTime",
-                "create_time",
-                "createTime",
-                "finish_time",
-                "finishTime",
-            )
+        "time": _time_text(match.get(fields.time)),
+        "map_name": _map_text(match.get(fields.map_name)),
+        "score": score,
+        "combat": combat,
+        "rating": rating,
+        "rating_class": _rating_class(rating_value),
+        "secondary": secondary,
+        "secondary_class": secondary_class,
+        "score_change": "-" if score_change in (None, 0) else f"{score_change:+d}",
+        "score_change_class": (
+            "text-green"
+            if score_change is not None and score_change > 0
+            else "text-red"
+            if score_change is not None and score_change < 0
+            else ""
         ),
-        "map_name": _map_text(
-            _value(match, "map", "map_name", "map_desc", "mapDesc", "mapName")
-        ),
-        "kd": _kd_text(kills, deaths),
-        "score": str(score),
-        "rating": _number_text(_value(match, "rating", "rating2", "pw_rating")),
-        "adr": _number_text(adr, 1) if adr not in (None, "") else "",
     }
 
 
@@ -1166,28 +1329,28 @@ def _aggregate_pw_match_stats(
     ratings: list[float] = []
     pw_ratings: list[float] = []
     for match in matches:
-        team = str(_value(match, "team", "teamId") or "")
-        winner = str(_value(match, "winTeam", "winnerTeam", "win_team") or "")
-        score1 = _value(match, "score1", "teamScore")
-        score2 = _value(match, "score2", "enemyScore")
+        team = str(match.get("team") or "")
+        winner = str(match.get("winTeam") or "")
+        score1 = match.get("score1")
+        score2 = match.get("score2")
         if score1 is not None and score2 is not None and str(score1) == str(score2):
             ties += 1
         elif team and winner and team == winner:
             wins += 1
-        kills += _int(_value(match, "kill", "kills")) or 0
-        deaths += _int(_value(match, "death", "deaths")) or 0
-        rating = _float(_value(match, "rating"))
+        kills += _int(match.get("kill")) or 0
+        deaths += _int(match.get("death")) or 0
+        rating = _float(match.get("rating"))
         if rating is not None:
             ratings.append(rating)
-        pw_rating = _float(_value(match, "pwRating", "rating"))
+        pw_rating = _float(match.get("pwRating"))
         if pw_rating is not None:
             pw_ratings.append(pw_rating)
 
     latest_score = next(
         (
-            _value(match, "pvpScore", "score", "elo", "points")
+            match.get("pvpScore")
             for match in matches
-            if _value(match, "pvpScore", "score", "elo", "points") not in (None, "")
+            if match.get("pvpScore") not in (None, "")
         ),
         None,
     )
@@ -1266,13 +1429,8 @@ async def _fetch_pw_public_stats(binding: PlayerBinding, target_id: int) -> dict
         else:
             raise stats_error or PlayerStatsError("未找到有效的完美平台战绩数据")
 
-    summary = {
-        "nickname": str(stats.get("name") or binding.player_name),
-        "avatar": _image_url(stats.get("avatar")),
-        "steam_id": str(stats.get("steamId") or binding.uuid),
-    }
-    binding.player_name = summary["nickname"]
-    binding.avatar_url = binding.avatar_url or summary["avatar"]
+    binding.player_name = str(stats.get("name") or binding.player_name)
+    binding.avatar_url = binding.avatar_url or _image_url(stats.get("avatar"))
     return _build_pw_view(binding, stats, recent_matches)
 
 
@@ -1327,13 +1485,8 @@ async def _fetch_pw_stats_legacy(binding: PlayerBinding, target_id: int) -> dict
         except PlayerStatsError as exc:
             logger.warning("完美平台旧版近期比赛获取失败：%s", exc)
 
-    summary = {
-        "nickname": str(stats.get("name") or binding.player_name),
-        "avatar": _image_url(stats.get("avatar")),
-        "steam_id": str(stats.get("steamId") or binding.uuid),
-    }
-    binding.player_name = summary["nickname"]
-    binding.avatar_url = binding.avatar_url or summary["avatar"]
+    binding.player_name = str(stats.get("name") or binding.player_name)
+    binding.avatar_url = binding.avatar_url or _image_url(stats.get("avatar"))
     return _build_pw_view(binding, stats, recent_matches)
 
 
@@ -1362,39 +1515,23 @@ def _build_pw_view(
     stats: dict[str, Any],
     matches: list[Any],
 ) -> dict[str, Any]:
-    """把完美平台原始数据转换为统一卡片上下文。"""
-    kills = _int(_value(stats, "kills", "kill")) or 0
-    deaths = _int(_value(stats, "deaths", "death")) or 0
-    assists = _value(stats, "assists", "assist")
-    kd = _value(stats, "kd")
+    """把已确认结构的完美平台数据适配为唯一卡片视图。"""
+    kills = _int(stats.get("kills")) or 0
+    deaths = _int(stats.get("deaths")) or 0
+    assists = stats.get("assists")
+    kd = stats.get("kd")
     if kd is None and deaths:
         kd = kills / deaths
-    total = _int(_value(stats, "cnt", "matchCount", "totalMatch", "matches")) or 0
-    wins = _int(_value(stats, "winCount", "wins", "win_total")) or 0
-    ties = _int(_value(stats, "tieCount", "ties", "tie_total")) or 0
-    losses = _int(_value(stats, "lossCount", "losses", "loss_total"))
-    if losses is None:
-        losses = max(total - wins - ties, 0)
-    rating = _number_text(_value(stats, "pwRating", "rating"))
-    score_value = _value(stats, "pvpScore", "score", "elo", "points")
-    stars = _value(stats, "stars", "star_num", "starNum")
-    ladder_rank = _value(stats, "pvpRank", "rank")
+    total = _int(stats.get("cnt")) or 0
+    wins = _int(stats.get("winCount")) or 0
+    rating_value = stats.get("pwRating")
+    rating = _number_text(rating_value)
+    score_value = stats.get("pvpScore")
+    stars = stats.get("stars")
+    ladder_rank = stats.get("pvpRank")
     rank_label = _pw_rank_from_score(score_value, stars, ladder_rank)
-    if rank_label == "未定级":
-        legacy_rank = _value(
-            stats,
-            "grade",
-            "rankName",
-            "rank_name",
-            "pvpLevelName",
-            "pvpRankName",
-            "levelName",
-            "level",
-        )
-        if legacy_rank not in (None, ""):
-            rank_label = str(legacy_rank)
     score = _score_text(score_value)
-    win_rate = _value(stats, "winRate", "win_rate")
+    win_rate = stats.get("winRate")
     if win_rate is None and total:
         win_rate = wins / total
     win_rate_text = _percent_text(win_rate)
@@ -1406,56 +1543,49 @@ def _build_pw_view(
         kd=kd,
     )
     recent_matches = _pw_recent_match_views(stats, matches)
-    view = _build_view(
-        platform="pw",
-        platform_name="完美世界",
-        accent="#5b7cff",
-        binding=binding,
-        identity_label="SteamID",
-        hero_label="段位",
-        hero_value=rank_label,
-        summary=[
-            {"label": "分数", "value": f"{score} 分"},
-            {"label": "总场次", "value": str(total)},
-            {"label": "综合胜率", "value": win_rate_text},
-            {"label": "胜 / 平 / 负", "value": f"{wins} / {ties} / {losses}"},
-        ],
-        metrics=[
-            {"label": "PW Rating", "value": rating, "note": "完美平台 PW Rating"},
-            {"label": "ADR", "value": _number_text(_value(stats, "adr"), 1), "note": "平均每回合伤害"},
-            {"label": "场次（胜率）", "value": f"{total}（{win_rate_text}）", "note": "平台生涯场次"},
-            {"label": "爆头率", "value": _percent_text(_value(stats, "headShotRatio", "headshotRate")), "note": "击杀中的爆头比例"},
-            {"label": "K-D", "value": _kd_text(kills, deaths), "note": f"K/D 比值 {_number_text(kd)}"},
-            {"label": "RWS", "value": _number_text(_value(stats, "rws")), "note": "胜局贡献"},
-            {"label": "MVP", "value": str(_value(stats, "mvpCount", "mvp") or "0"), "note": "局内最佳"},
-        ],
-        recent_matches=recent_matches,
-        hero_note=f"分数 {score}",
-    )
+    season = str(stats.get("seasonId") or "当前赛季")
     score_number = _float(score_value)
-    view.update(
-        {
-            "pw_season": str(stats.get("seasonId") or "当前赛季"),
-            "pw_score": score,
-            "pw_rank_icon": _pw_rank_icon_filename(
-                score_value,
-                stars,
-                ladder_rank,
-                rank_label,
-            ),
-            "pw_stars": _integer_text(stars),
-            "pw_is_s_rank": (
-                (score_number is not None and score_number > 2400)
-                or rank_label.startswith("S")
-                or (_int(stars) or 0) >= 50
-            ),
-            "pw_season_matches": str(total),
-            "pw_win_rate": win_rate_text,
-            "pw_rating": rating,
-            "pw_detail_metrics": details,
-        }
+    is_s_rank = (
+        (score_number is not None and score_number > 2400)
+        or rank_label.startswith("S")
+        or (_int(stars) or 0) >= 50
     )
-    return view
+    rank_icon = _pw_rank_icon_filename(score_value, stars, ladder_rank, rank_label)
+    return _build_card_view(
+        platform_name="完美世界",
+        platform_brand_name="完美世界电竞",
+        platform_logo_src=local_image_uri(SubFolder.PERFECTWORLD, "wm_logo_big.png"),
+        nickname=binding.player_name,
+        avatar_url=binding.avatar_url,
+        identity_label="SteamID",
+        identity=binding.uuid or "-",
+        season_title=f"当前赛季 · {season}" if season != "当前赛季" else "当前赛季",
+        score_label="天梯分数",
+        score=score,
+        score_note=f"{_integer_text(stars)} 颗星" if is_s_rank else "",
+        core_class="",
+        core_stats=[
+            {
+                "label": "赛季场次",
+                "value": str(total),
+                "unit": "场",
+                "value_class": "text-neutral",
+            },
+            {"label": "胜率", "value": win_rate_text, "value_class": "text-neutral"},
+            {
+                "label": "PW Rating",
+                "value": rating,
+                "value_class": _rating_class(rating_value),
+            },
+        ],
+        rank_icon_src=local_image_uri(SubFolder.PERFECTWORLD, rank_icon),
+        rank_icon_overlay=None,
+        detail_metrics=details,
+        recent_combat_label="K-D-A",
+        recent_rating_label="PW Rating",
+        recent_secondary_label="WE",
+        recent_matches=recent_matches,
+    )
 
 
 def _pw_recent_match_views(
@@ -1475,116 +1605,67 @@ def _pw_recent_match_views(
     recent: list[dict[str, str]] = []
     for item in matches[:10]:
         match = _dict(item).copy()
-        match_id = str(_value(match, "matchId", "match_id") or "").rsplit("@", 1)[-1]
-        score_change = _value(match, "pvpScoreChange", "pvp_score_change")
+        match_id = str(match.get("matchId") or "").rsplit("@", 1)[-1]
+        score_change = match.get("pvpScoreChange")
         if score_change in (None, "", 0, "0") and match_id in score_changes:
             match["pvpScoreChange"] = score_changes[match_id]
-        recent.append(_build_pw_match_view(match))
+        recent.append(_build_match_view(match, PW_MATCH_FIELDS))
     return recent
 
 
-def _build_pw_match_view(match: dict[str, Any]) -> dict[str, str]:
-    """把一条完美平台近期比赛转换为卡片数据。"""
-    explicit_result = _value(match, "isWin", "is_win")
-    is_win = _flag(explicit_result) if explicit_result is not None else False
-    is_tie = False
-    result_known = explicit_result is not None
-    if explicit_result is None:
-        team = str(_value(match, "team", "teamId") or "")
-        winner = str(_value(match, "winTeam", "winnerTeam", "win_team") or "")
-        is_win = bool(team and winner and team == winner)
-        result_known = bool(team and winner)
-    score1 = _value(match, "score1", "teamScore")
-    score2 = _value(match, "score2", "enemyScore")
-    if score1 is not None and score2 is not None:
-        is_tie = str(score1) == str(score2)
-    result_text = "胜利" if is_win else ("平局" if is_tie else "失败")
-    result_class = "win" if is_win else ("draw" if is_tie else "loss")
-    kills = _value(match, "kill", "kills", "killCount", "kill_count")
-    deaths = _value(match, "death", "deaths", "deathCount", "death_count")
-    assists = _value(match, "assist", "assists", "assistCount", "assist_count")
-    score_change = _int(_value(match, "pvpScoreChange", "pvp_score_change"))
-    score_change_text = (
-        f"{score_change:+d}"
-        if score_change not in (None, 0)
-        else ("0" if score_change == 0 else "-")
-    )
-    score_change_class = (
-        "text-green"
-        if score_change is not None and score_change > 0
-        else "text-red"
-        if score_change is not None and score_change < 0
-        else ""
-    )
-    adr = _value(match, "adr", "adpr")
-    return {
-        "result_text": result_text,
-        "result_short": "胜" if is_win else ("平" if is_tie else "负"),
-        "result_class": result_class,
-        "time": _time_text(
-            _value(
-                match,
-                "time",
-                "matchTime",
-                "match_time",
-                "startTime",
-                "start_time",
-                "createdAt",
-                "created_at",
-                "date",
-                "dateTime",
-                "gameTime",
-            )
-        ),
-        "map_name": _map_text(_value(match, "mapName", "map_name", "map")),
-        "kd": _kd_text(kills, deaths),
-        "kda": (
-            f"{_integer_text(kills)} / {_integer_text(deaths)} / "
-            f"{_integer_text(assists)}"
-        ),
-        "score": _ordered_match_score(
-            score1,
-            score2,
-            is_win=is_win and not is_tie,
-            is_loss=result_known and not is_win and not is_tie,
-            is_tie=is_tie,
-        ),
-        "rating": _number_text(_value(match, "pwRating", "rating")),
-        "we": _number_text(_value(match, "we", "WE")),
-        "score_change": score_change_text,
-        "score_change_class": score_change_class,
-        "adr": _number_text(adr, 1) if adr not in (None, "") else "",
-    }
-
-
-def _build_view(
+def _build_card_view(
     *,
-    platform: str,
     platform_name: str,
-    accent: str,
-    binding: PlayerBinding,
+    platform_brand_name: str,
+    platform_logo_src: str,
+    nickname: str,
+    avatar_url: str,
     identity_label: str,
-    hero_label: str,
-    hero_value: str,
-    summary: list[dict[str, str]],
-    metrics: list[dict[str, str]],
+    identity: str,
+    season_title: str,
+    score_label: str,
+    score: str,
+    score_note: str,
+    core_class: str,
+    core_stats: list[dict[str, Any]],
+    rank_icon_src: str,
+    rank_icon_overlay: dict[str, str] | None,
+    detail_metrics: list[dict[str, str]],
+    recent_combat_label: str,
+    recent_rating_label: str,
+    recent_secondary_label: str,
     recent_matches: list[dict[str, str]],
-    hero_note: str = "平台生涯数据",
 ) -> dict[str, Any]:
-    """组装两个平台共用的 HTML 渲染上下文。"""
+    """组装渲染层唯一接受的玩家战绩视图。"""
+    normalized_core_stats = [
+        {"unit": "", "value_class": "text-neutral", **item}
+        for item in core_stats
+    ]
+    normalized_detail_metrics = [
+        {"note": "", **item}
+        for item in detail_metrics
+    ]
     return {
-        "platform": platform,
         "platform_label": platform_name,
-        "accent": accent,
-        "nickname": binding.player_name,
-        "avatar_url": binding.avatar_url,
+        "platform_brand_name": platform_brand_name,
+        "platform_logo_src": platform_logo_src,
+        "nickname": nickname,
+        "avatar_url": avatar_url,
         "identity_label": identity_label,
-        "identity": binding.domain or binding.uuid or "-",
-        "hero_label": hero_label,
-        "hero_value": hero_value,
-        "hero_note": hero_note,
-        "summary": summary,
-        "metrics": metrics,
+        "identity": identity,
+        "season_title": season_title,
+        "season_caption": "本赛季数据",
+        "score_label": score_label,
+        "score": score,
+        "score_note": score_note,
+        "core_class": core_class,
+        "core_stats": normalized_core_stats,
+        "rank_icon_src": rank_icon_src,
+        "rank_icon_overlay": rank_icon_overlay,
+        "detail_metrics": normalized_detail_metrics,
+        "recent_combat_label": recent_combat_label,
+        "recent_rating_label": recent_rating_label,
+        "recent_secondary_label": recent_secondary_label,
         "recent_matches": recent_matches,
         "updated_at": time.strftime("%Y-%m-%d %H:%M"),
     }
@@ -1595,23 +1676,19 @@ async def fetch_player_stats(
     platform: str,
     nickname: str = "",
 ) -> dict[str, Any]:
-    """查询指定昵称或当前用户绑定对象的聚合战绩。"""
+    """查询指定昵称；昵称为空时查询当前用户已经绑定的玩家。"""
     normalized = normalize_platform(platform)
     if normalized not in {"5e", "pw"}:
         raise PlayerStatsError(f"平台仅支持 {SUPPORTED_PLATFORM_TEXT}")
 
     query = nickname.strip()
-    binding = (
-        await _resolve_5e_identity(query)
-        if query and normalized == "5e"
-        else None
-    )
-    if query and normalized == "pw":
-        if query.isdigit() and len(query) >= 10:
-            binding = PlayerBinding("", "pw", query, uuid=query)
-        else:
-            binding = await _resolve_pw_identity(query)
-    if binding is None:
+    if query:
+        binding = (
+            await _resolve_5e_identity(query)
+            if normalized == "5e"
+            else await _resolve_pw_identity(query)
+        )
+    else:
         binding = get_binding(user_id, normalized)
     if binding is None:
         raise PlayerStatsError(

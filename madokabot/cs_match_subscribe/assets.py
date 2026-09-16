@@ -1,4 +1,4 @@
-"""HLTV 队标、国旗和选手图缓存。"""
+"""CS 插件的远程图片获取、缓存与内联资源处理。"""
 
 from __future__ import annotations
 
@@ -10,6 +10,7 @@ import re
 from pathlib import Path
 from urllib.parse import urlparse
 
+import httpx
 from nonebot.log import logger
 from playwright.async_api import BrowserContext, Error as PlaywrightError, async_playwright
 
@@ -20,6 +21,7 @@ from ..madoka_bundle.utils import get_file, get_files
 from .client import FlaresolverrSession, get_flaresolverr_session
 from .config import config, ensure_asset_dirs
 from .models import EventData, MatchData
+from .net import resolve_proxy
 
 _EXTENSIONS = {
     "image/png": ".png",
@@ -40,20 +42,6 @@ _MIME_TYPES = {
 }
 _SAFE_NAME_RE = re.compile(r"[^a-zA-Z0-9._-]+")
 _CSTEAM_CATEGORIES = {"team", "flag"}
-
-
-def _asset_proxy() -> str | None:
-    value = (
-        config.hltv_flaresolverr_proxy
-        or config.hltv_proxy
-        or madoka_config.proxy
-    )
-    if value is None:
-        return None
-    proxy = str(value).strip()
-    if not proxy:
-        return None
-    return proxy if "://" in proxy else f"http://{proxy}"
 
 
 def _asset_stem(url: str, category: str) -> str:
@@ -81,6 +69,40 @@ def _data_url(path: Path) -> str:
     mime = _MIME_TYPES.get(path.suffix.lower()) or mimetypes.guess_type(path.name)[0] or "image/png"
     encoded = base64.b64encode(path.read_bytes()).decode("ascii")
     return f"data:{mime};base64,{encoded}"
+
+
+def local_image_uri(subfolder: SubFolder, filename: str) -> str:
+    """解析资源管理器中的本地图片，供渲染视图直接使用。"""
+    path = get_file(ResType.IMAGE, subfolder, filename)
+    return path.resolve().as_uri() if path is not None else ""
+
+
+async def fetch_image_data_url(url: str) -> str:
+    """获取普通远程图片并转为 data URL；请求结束后立即关闭客户端。"""
+    value = str(url or "").strip()
+    if not value or value.startswith("data:"):
+        return value
+    if not value.startswith(("http://", "https://")):
+        return ""
+
+    try:
+        async with httpx.AsyncClient(
+            proxy=resolve_proxy(config.hltv_proxy, madoka_config.proxy),
+            trust_env=False,
+            follow_redirects=True,
+            timeout=5.0,
+        ) as client:
+            response = await client.get(value)
+            response.raise_for_status()
+            content_type = response.headers.get("content-type", "").split(";", 1)[0]
+            if not content_type.startswith("image/"):
+                return ""
+            if not response.content or len(response.content) > config.hltv_max_asset_size:
+                return ""
+            encoded = base64.b64encode(response.content).decode("ascii")
+            return f"data:{content_type};base64,{encoded}"
+    except (httpx.HTTPError, OSError):
+        return ""
 
 
 def _placeholder_data_url(label: str, category: str) -> str:
@@ -248,7 +270,11 @@ async def _download_assets(
         return results
 
     launch_options: dict[str, object] = {"headless": True}
-    proxy = _asset_proxy()
+    proxy = resolve_proxy(
+        config.hltv_flaresolverr_proxy,
+        config.hltv_proxy,
+        madoka_config.proxy,
+    )
     if proxy:
         launch_options["proxy"] = {"server": proxy}
 

@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
-  <title>完美世界 · 玩家战绩</title>
+  <title>{{ platform_label }} · 玩家战绩</title>
   <style>
     {% if font_regular_path %}
     @font-face {
@@ -86,7 +86,7 @@
       width: 54px;
       height: 54px;
       flex: 0 0 54px;
-      border-radius: 16px 16px 16px 4px;
+      border-radius: 50%;
       object-fit: cover;
       background: #35494d;
     }
@@ -120,13 +120,43 @@
     }
     .rank-label { color: var(--muted); font-size: 12px; }
     .rank-score { margin-top: 9px; color: #294656; font-family: Arial, sans-serif; font-size: 34px; font-weight: 700; letter-spacing: -.8px; line-height: 1.1; }
-    .rank-icon { width: 66px; height: 62px; object-fit: contain; }
+    .rank-badge { position: relative; width: 82px; height: 82px; flex: 0 0 82px; }
+    .rank-icon { display: block; width: 100%; height: 100%; object-fit: contain; }
+    .rank-badge-overlay {
+      position: absolute;
+      z-index: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-family: Arial, sans-serif;
+      font-weight: 800;
+      line-height: 1;
+      pointer-events: none;
+      text-shadow: 0 1px 1px rgba(35, 12, 50, .85);
+    }
+    .rank-badge-overlay-stars {
+      top: 73%;
+      left: 43%;
+      width: 38%;
+      height: 18%;
+      font-size: 14px;
+    }
+    .rank-badge-overlay-top {
+      top: 70%;
+      left: 27%;
+      width: 48%;
+      height: 20%;
+      color: #4b1b09;
+      font-size: 18px;
+      text-shadow: none;
+    }
     .rank-stars { margin-top: 5px; color: var(--muted); font-size: 11px; }
     .core-stats { display: grid; grid-template-columns: 1fr 1fr 1.15fr; gap: 20px; align-items: center; }
+    .core-stats.five-e { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
     .core-stat .label { color: var(--muted); font-size: 12px; }
     .core-stat .value { margin-top: 9px; font-family: Arial, sans-serif; font-size: 29px; font-weight: 700; letter-spacing: -.7px; white-space: nowrap; }
     .core-stat .unit { margin-left: 5px; color: var(--muted); font-size: 11px; font-weight: 400; }
-
     /* 详细指标共用一个浅色区；数量变化时自然换行。 */
     .detail-stats {
       display: grid;
@@ -140,6 +170,7 @@
     }
     .detail-stat .label { color: var(--muted); font-size: 11px; }
     .detail-stat .value { margin-top: 7px; font-size: 16px; font-weight: 650; overflow-wrap: anywhere; }
+    .detail-stat .note { margin-top: 4px; color: var(--muted); font-size: 9px; line-height: 1.4; }
     .detail-stat-kda .value { font-size: 13px; line-height: 24px; }
 
     .recent { padding: 28px 30px 0; }
@@ -168,7 +199,8 @@
     .result-label { display: inline-grid; place-items: center; width: 27px; height: 27px; border-radius: 7px 7px 7px 2px; font-size: 11px; font-weight: 650; }
     .status-win .result-label { color: var(--green); background: var(--green-soft); }
     .status-loss .result-label { color: var(--red); background: var(--red-soft); }
-    .status-draw .result-label { color: var(--gold); background: #efe9da; }
+    .status-draw .result-label,
+    .status-unknown .result-label { color: var(--gold); background: #efe9da; }
     .text-green { color: var(--green); }
     .text-red { color: var(--red); }
     .text-neutral { color: #222829; }
@@ -194,56 +226,57 @@
           {% endif %}
           <div class="player-text">
             <h1 class="name">{{ nickname }}</h1>
-            <div class="uid">SteamID · {{ identity }}</div>
+            <div class="uid">{{ identity_label }} · {{ identity }}</div>
           </div>
         </div>
         <div class="platform">
-          {% if perfectworld_logo_src %}
-          <img src="{{ perfectworld_logo_src }}" alt="完美世界电竞">
+          {% if platform_logo_src %}
+          <img src="{{ platform_logo_src }}" alt="{{ platform_brand_name }}">
           {% else %}
-          <div class="platform-name">完美世界电竞</div>
+          <div class="platform-name">{{ platform_brand_name }}</div>
           {% endif %}
           <div class="platform-caption">COUNTER-STRIKE 2</div>
         </div>
       </header>
 
       <div class="season-heading">
-        <span>当前赛季{% if pw_season != '当前赛季' %} · {{ pw_season }}{% endif %}</span>
-        <span class="caption">本赛季数据</span>
+        <span>{{ season_title }}</span>
+        <span class="caption">{{ season_caption }}</span>
       </div>
       <div class="season-overview">
         <div class="rank-panel">
           <div>
-            <div class="rank-label">天梯分数</div>
-            <div class="rank-score">{{ pw_score }}</div>
-            {% if pw_is_s_rank %}<div class="rank-stars">{{ pw_stars }} 颗星</div>{% endif %}
+            <div class="rank-label">{{ score_label }}</div>
+            <div class="rank-score">{{ score }}</div>
+            {% if score_note %}<div class="rank-stars">{{ score_note }}</div>{% endif %}
           </div>
-          {% if rank_icon_src %}<img class="rank-icon" src="{{ rank_icon_src }}" alt="段位图标">{% endif %}
+          {% if rank_icon_src %}
+          <div class="rank-badge">
+            <img class="rank-icon" src="{{ rank_icon_src }}" alt="段位图标">
+            {% if rank_icon_overlay and rank_icon_overlay.text %}
+            <span class="rank-badge-overlay rank-badge-overlay-{{ rank_icon_overlay.kind }}">{{ rank_icon_overlay.text }}</span>
+            {% endif %}
+          </div>
+          {% endif %}
         </div>
-        <div class="core-stats">
+        <div class="core-stats {{ core_class }}">
+          {% for stat in core_stats %}
           <div class="core-stat">
-            <div class="label">赛季场次</div>
-            <div class="value">{{ pw_season_matches }}<span class="unit">场</span></div>
+            <div class="label">{{ stat.label }}</div>
+            <div class="value {{ stat.value_class }}">{{ stat.value }}{% if stat.unit %}<span class="unit">{{ stat.unit }}</span>{% endif %}</div>
           </div>
-          <div class="core-stat">
-            <div class="label">胜率</div>
-            <div class="value">{{ pw_win_rate }}</div>
-          </div>
-          <div class="core-stat rating">
-            <div class="label">PW Rating</div>
-            {% set rating = pw_rating|float(none) %}
-            <div class="value {% if rating is not none and rating >= 1.06 %}text-green{% elif rating is not none and rating <= 0.94 %}text-red{% else %}text-neutral{% endif %}">{{ pw_rating }}</div>
-          </div>
+          {% endfor %}
         </div>
       </div>
     </section>
 
-    {% if pw_detail_metrics %}
+    {% if detail_metrics %}
     <section class="detail-stats" aria-label="详细数据">
-      {% for metric in pw_detail_metrics %}
-      <div class="detail-stat{% if metric.label == 'K-D-A' %} detail-stat-kda{% endif %}">
+      {% for metric in detail_metrics %}
+      <div class="detail-stat{% if metric.label in ['K-D-A', 'KDA'] %} detail-stat-kda{% endif %}">
         <div class="label">{{ metric.label }}</div>
         <div class="value">{{ metric.value }}</div>
+        {% if metric.note %}<div class="note">{{ metric.note }}</div>{% endif %}
       </div>
       {% endfor %}
     </section>
@@ -262,9 +295,9 @@
             <th class="col-time" scope="col">时间</th>
             <th class="col-map" scope="col">地图</th>
             <th class="col-score" scope="col">比分</th>
-            <th class="col-kda" scope="col">K-D-A</th>
-            <th class="col-rating" scope="col">PW Rating</th>
-            <th class="col-we" scope="col">WE</th>
+            <th class="col-kda" scope="col">{{ recent_combat_label }}</th>
+            <th class="col-rating" scope="col">{{ recent_rating_label }}</th>
+            <th class="col-we" scope="col">{{ recent_secondary_label }}</th>
             <th class="col-elo" scope="col">ELO</th>
           </tr>
         </thead>
@@ -275,12 +308,9 @@
             <td class="col-time">{{ match.time }}</td>
             <td class="col-map">{{ match.map_name }}</td>
             <td class="col-score">{{ match.score }}</td>
-            <td class="col-kda">{{ match.kda }}</td>
-            {% set rating = match.rating|float(none) %}
-            {# WE 从比赛数据映射到 match.we，缺失时显示横线。 #}
-            {% set we = match.we|default('-')|float(none) %}
-            <td class="col-rating {% if rating is not none and rating >= 1.06 %}text-green{% elif rating is not none and rating <= 0.94 %}text-red{% else %}text-neutral{% endif %}">{{ match.rating }}</td>
-            <td class="col-we {% if we is not none %}{% if we >= 8 %}text-green{% else %}text-red{% endif %}{% endif %}">{{ match.we|default('-') }}</td>
+            <td class="col-kda">{{ match.combat }}</td>
+            <td class="col-rating {{ match.rating_class }}">{{ match.rating }}</td>
+            <td class="col-we {{ match.secondary_class }}">{{ match.secondary }}</td>
             <td class="col-elo"><span class="elo-change {{ match.score_change_class }}">{{ match.score_change }}</span></td>
           </tr>
           {% endfor %}
@@ -295,7 +325,7 @@
       <div class="signature">
         <div>
           <div class="signature-name">MadokaBot</div>
-          <div class="signature-caption">PLAYER PERFORMANCE</div>
+          <div class="signature-caption">玩家数据查询</div>
         </div>
       </div>
       <span>查询时间 · {{ updated_at }}</span>

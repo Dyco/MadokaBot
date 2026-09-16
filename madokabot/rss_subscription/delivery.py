@@ -169,9 +169,12 @@ async def send_single_msg(
 ) -> bool:
     flag = False
     try:
-        await send_func(
-            target_id, f"{header_message}\n----------------------\n{message}"
+        formatted_message = (
+            f"{header_message}\n----------------------\n{message}"
+            if header_message
+            else message
         )
+        await send_func(target_id, formatted_message)
         flag = True
     except Exception as e:
         error_msg = f"E: {repr(e)}\n消息发送失败！\n链接：[{item.get('link')}]"
@@ -211,7 +214,31 @@ async def send_msgs_with_lock(
 ) -> bool:
     start_time = arrow.now()
     async with sending_lock[(target_id, target_type)]:
-        if send_forward_msg and target_type != "guild_channel":
+        if _is_imageboard_batch(items):
+            imageboard_entries = _imageboard_entries(messages, items)
+            if not imageboard_entries:
+                flag = True
+            elif send_forward_msg and target_type != "guild_channel":
+                flag = await try_sending_forward_msg(
+                    bot,
+                    messages,
+                    target_id,
+                    target_type,
+                    items,
+                    header_message,
+                    send_func,
+                )
+            else:
+                contents = [header_message] + [
+                    message for message, _ in imageboard_entries
+                ]
+                content_items = [imageboard_entries[0][1]] + [
+                    item for _, item in imageboard_entries
+                ]
+                flag = await send_multiple_msgs(
+                    contents, target_id, content_items, "", send_func
+                )
+        elif send_forward_msg and target_type != "guild_channel":
             flag = await try_sending_forward_msg(
                 bot, messages, target_id, target_type, items, header_message, send_func
             )
@@ -236,9 +263,10 @@ async def try_sending_forward_msg(
     header_message: str,
     send_func: Callable[[Union[int, str], str], Coroutine[Any, Any, Dict[str, Any]]],
 ) -> bool:
-    forward_messages = handle_forward_message(
-        bot, _forward_message_contents(header_message, messages)
-    )
+    contents = _forward_message_contents(header_message, messages, items)
+    if not contents:
+        return True
+    forward_messages = handle_forward_message(bot, contents)
     try:
         if target_type == "private":
             await bot.send_private_forward_msg(
@@ -255,9 +283,21 @@ async def try_sending_forward_msg(
         flag = True
     except Exception as e:
         logger.warning(f"E: {repr(e)}\n合并消息发送失败！将尝试逐条发送！")
-        flag = await send_multiple_msgs(
-            messages, target_id, items, header_message, send_func
-        )
+        if _is_imageboard_batch(items):
+            imageboard_entries = _imageboard_entries(messages, items)
+            fallback_contents = [header_message] + [
+                message for message, _ in imageboard_entries
+            ]
+            fallback_items = [imageboard_entries[0][1]] + [
+                item for _, item in imageboard_entries
+            ]
+            flag = await send_multiple_msgs(
+                fallback_contents, target_id, fallback_items, "", send_func
+            )
+        else:
+            flag = await send_multiple_msgs(
+                messages, target_id, items, header_message, send_func
+            )
     return flag
 
 
@@ -275,10 +315,85 @@ def handle_forward_message(bot: Bot, messages: List[str]) -> Message:
     )
 
 
+def _is_imageboard_item(item: Dict[str, Any]) -> bool:
+    if "danbooru_media_url" in item or "imageboard_character" in item:
+        return True
+    return bool(
+        re.search(
+            r"https?://(?:www\.)?(?:yande\.re|danbooru\.donmai\.us)/",
+            str(item.get("link") or ""),
+            flags=re.IGNORECASE,
+        )
+    )
+
+
+def _is_imageboard_batch(items: List[Dict[str, Any]]) -> bool:
+    return any(_is_imageboard_item(item) for item in items)
+
+
+def _metadata_value(item: Dict[str, Any], message: str, label: str) -> str:
+    value = item.get(
+        "imageboard_character" if label == "角色" else "imageboard_copyright"
+    )
+    if not value:
+        danbooru_key = (
+            "danbooru_character" if label == "角色" else "danbooru_copyright"
+        )
+        value = item.get(danbooru_key)
+    if value:
+        return str(value).strip()
+    match = re.search(rf"(?m)^{re.escape(label)}[：:]\s*(.+?)\s*$", message)
+    return match.group(1).strip() if match else ""
+
+
+def _imageboard_detail(item: Dict[str, Any], message: str) -> str:
+    character = _metadata_value(item, message, "角色")
+    copyright = _metadata_value(item, message, "作品")
+    if not character and not copyright:
+        return ""
+
+    lines = []
+    if character:
+        lines.append(f"角色：{character}")
+    if copyright:
+        lines.append(f"作品：{copyright}")
+
+    post_url = str(item.get("link") or item.get("guid") or "").strip()
+    if post_url:
+        lines.append(f"链接：{post_url}")
+
+    images = re.findall(r"\[CQ:image,[^\]]+\]", message, flags=re.IGNORECASE)
+    lines.extend(images)
+    if not images:
+        image_errors = [
+            line.strip()
+            for line in message.splitlines()
+            if "图片走丢啦" in line or "视频预览" in line
+        ]
+        lines.extend(image_errors)
+    return "\n".join(lines)
+
+
+def _imageboard_entries(
+    messages: List[str], items: List[Dict[str, Any]]
+) -> List[Tuple[str, Dict[str, Any]]]:
+    entries = []
+    for message, item in zip(messages, items):
+        if detail := _imageboard_detail(item, message):
+            entries.append((detail, item))
+    return entries
+
+
 def _forward_message_contents(
-    header_message: str, messages: List[str]
+    header_message: str, messages: List[str], items: List[Dict[str, Any]]
 ) -> List[str]:
-    """把每条更新拆成链接节点和详情节点。"""
+    """图片站每条帖子合成一个详情节点，普通更新仍拆分链接和正文。"""
+    if _is_imageboard_batch(items):
+        imageboard_entries = _imageboard_entries(messages, items)
+        if not imageboard_entries:
+            return []
+        return [header_message] + [message for message, _ in imageboard_entries]
+
     contents = [header_message]
     link_pattern = re.compile(r"(?m)^链接：([^\r\n]+)\r?\n?")
     for message in messages:

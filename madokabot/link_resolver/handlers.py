@@ -1360,7 +1360,6 @@ async def netease(bot: Bot, event: Event):
                         f'{GLOBAL_NICKNAME}识别：网易云音乐\n'
                         f'歌名：{ncm_title} - {ncm_singer}'
                     ),
-                    MessageSegment.record(ncm_music_path),
                 ],
             )
         )
@@ -1458,7 +1457,6 @@ async def kugou(bot: Bot, event: Event):
                                 f'{GLOBAL_NICKNAME}识别：酷狗音乐\n'
                                 f'歌曲：{kugou_name}-{kugou_singer}'
                             ),
-                            MessageSegment.record(kugou_music_path),
                         ],
                     )
                 )

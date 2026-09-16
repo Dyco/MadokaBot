@@ -40,7 +40,6 @@ from .player_stats import (
     PlayerStatsError,
     bind_player,
     fetch_player_stats,
-    get_binding,
     login_pw,
     normalize_platform,
     platform_label,
@@ -56,7 +55,7 @@ UNSUPPORTED_LINK_MESSAGE = f"{BOT_NAME}暂不支持此链接"
 CS_BIND_USAGE = f"用法：CS bind <{SUPPORTED_PLATFORM_TEXT}> <用户昵称>"
 CS_UNBIND_USAGE = f"用法：CS unbind <{SUPPORTED_PLATFORM_TEXT}>"
 CS_LOGIN_USAGE = "用法：CS login <手机号> <验证码>"
-CS_STATS_USAGE = f"用法：CS 战绩 [{SUPPORTED_PLATFORM_TEXT}] [用户昵称]"
+CS_STATS_USAGE = f"用法：CS 战绩 <{SUPPORTED_PLATFORM_TEXT}> [玩家昵称]"
 
 
 def _event_schedule_text(event: EventData) -> str:
@@ -99,9 +98,7 @@ CS check <比赛链接>  查询一场比赛的 Rating
 CS login <手机号> <验证码>  登录完美平台并保存 Session（验证码请自行获取）
 CS bind <5E|5e|5eplay|wm|pw|完美> <用户昵称>  绑定平台战绩查询对象
 CS unbind <5E|5e|5eplay|wm|pw|完美>  解除指定平台绑定
-CS 战绩 [5E|5e|5eplay|wm|pw|完美] [用户昵称]  查询指定玩家或自己的绑定战绩
-CS 5e [昵称]  查询 5E 聚合战绩
-CS pw [昵称]  查询完美平台聚合战绩
+CS 战绩 <5E|5e|5eplay|wm|pw|完美> [玩家昵称]  查询绑定账号或指定玩家的战绩
 
 示例：
 CS sub 8057
@@ -169,35 +166,10 @@ cs_command = Alconna(
         help_text="解除指定平台绑定",
     ),
     Subcommand(
-        "5e",
+        "战绩",
+        Args["platform", str],
         Args["nickname?", StrMulti],
-        alias=["5E", "5eplay", "5EPLAY", "5e战绩", "5e查询"],
-        help_text="查询 5E 玩家战绩",
-    ),
-    Subcommand(
-        "pw",
-        Args["nickname?", StrMulti],
-        alias=["PW", "wm", "WM", "完美", "完美战绩", "pw查询"],
-        help_text="查询完美平台玩家战绩",
-    ),
-    Subcommand(
-        "stats",
-        Subcommand(
-            "5e",
-            Args["nickname?", StrMulti],
-            alias=["5E", "5eplay", "5EPLAY"],
-            help_text="查询 5E 战绩，可指定玩家昵称",
-        ),
-        Subcommand(
-            "pw",
-            Args["nickname?", StrMulti],
-            alias=["PW", "wm", "WM", "完美"],
-            help_text="查询完美平台战绩，可指定玩家昵称",
-        ),
-        Args["platform?", str],
-        Args["nickname?", StrMulti],
-        alias=["战绩", "查询战绩"],
-        help_text="查询指定玩家或按绑定信息查询战绩",
+        help_text="查询指定平台上已绑定的玩家或其他玩家战绩",
     ),
     Subcommand(
         "check",
@@ -310,7 +282,7 @@ async def handle_cs_login(
     ).strip()
     await cs_cmd.finish(
         f"登录成功，欢迎回来，{nickname}。\n"
-        "完美平台 Session 已保存，现可使用 CS pw 或 CS bind pw <昵称>。"
+        "完美平台 Session 已保存，现可使用 CS 战绩 pw 或 CS bind pw <昵称>。"
     )
 
 
@@ -405,134 +377,37 @@ async def _handle_cs_player_stats(
     platform: str,
     nickname: str = "",
 ) -> None:
-    """读取绑定或昵称并渲染平台战绩卡片。"""
-    raw_nickname = nickname.strip()
-    if not raw_nickname and get_binding(str(event.user_id), platform) is None:
-        await cs_cmd.finish(
-            f"未绑定{platform_label(platform)}账号，请先使用 CS bind {platform} <昵称>"
-        )
-
-    target = raw_nickname or "已绑定账号"
-    await cs_cmd.send(f"正在查询{platform_label(platform)}玩家 {target} 的战绩…")
+    """读取绑定或指定昵称，并渲染平台战绩卡片。"""
+    target = nickname.strip()
+    target_text = f"玩家 {target}" if target else "已绑定玩家"
+    await cs_cmd.send(f"正在查询{platform_label(platform)}{target_text}的战绩…")
     try:
-        data = await fetch_player_stats(
-            str(event.user_id),
-            platform,
-            raw_nickname,
-        )
+        data = await fetch_player_stats(str(event.user_id), platform, target)
         image = await render_player_stats_card(data)
     except PlayerStatsError as exc:
         await cs_cmd.finish(f"查询失败：{exc}")
         return
     except Exception:
-        logger.exception("CS 玩家战绩查询失败：platform=%s, nickname=%s", platform, raw_nickname)
+        logger.exception("CS 玩家战绩查询失败：platform=%s", platform)
         await cs_cmd.finish("战绩查询或图片渲染失败，请稍后重试。")
         return
     await cs_cmd.finish(Message([image]))
 
 
-@cs_cmd.assign("5e")
-async def handle_cs_5e(event: MessageEvent, nickname: Match[str]) -> None:
-    """处理 5E 聚合战绩查询。"""
-    await _handle_cs_player_stats(
-        event,
-        "5e",
-        nickname.result.strip() if nickname.available else "",
-    )
-
-
-@cs_cmd.assign("pw")
-async def handle_cs_pw(event: MessageEvent, nickname: Match[str]) -> None:
-    """处理完美平台聚合战绩查询。"""
-    await _handle_cs_player_stats(
-        event,
-        "pw",
-        nickname.result.strip() if nickname.available else "",
-    )
-
-
-def _resolve_stats_platform(user_id: str, requested: str = "") -> str | None:
-    """解析战绩查询平台；未指定时按完美世界、5E 的顺序选择绑定。"""
-    raw_requested = requested.strip()
-    if raw_requested:
-        return normalize_platform(raw_requested)
-    if get_binding(user_id, "pw") is not None:
-        return "pw"
-    if get_binding(user_id, "5e") is not None:
-        return "5e"
-    return None
-
-
-def _stats_requested_platform(result: Arparma) -> str:
-    """读取战绩命令中的显式平台，包括嵌套的 5e/pw 子命令。"""
-    stats_result = result.subcommands.get("stats")
-    if stats_result is None:
-        return ""
-
-    # `/cs 战绩 5e` 和 `/cs 战绩 完美` 会被 Alconna 解析为二级子命令，
-    # 不能只依赖 Match[str] 查找名为 platform 的普通参数。
-    if "5e" in stats_result.subcommands:
-        return "5e"
-    if "pw" in stats_result.subcommands:
-        return "pw"
-
-    raw_platform = stats_result.args.get("platform")
-    return str(raw_platform).strip() if raw_platform is not None else ""
-
-
-def _stats_requested_nickname(result: Arparma) -> str:
-    """读取战绩命令中的可选玩家昵称。"""
-    stats_result = result.subcommands.get("stats")
-    if stats_result is None:
-        return ""
-
-    for platform in ("5e", "pw"):
-        platform_result = stats_result.subcommands.get(platform)
-        if platform_result is not None:
-            raw_nickname = platform_result.args.get("nickname")
-            return str(raw_nickname).strip() if raw_nickname is not None else ""
-
-    raw_nickname = stats_result.args.get("nickname")
-    return str(raw_nickname).strip() if raw_nickname is not None else ""
-
-
-@cs_cmd.assign("stats")
-async def handle_cs_stats(event: MessageEvent, result: Arparma) -> None:
-    """根据显式平台或用户绑定信息查询统一战绩。"""
-    raw_platform = _stats_requested_platform(result)
-    raw_nickname = _stats_requested_nickname(result)
-    selected_platform = _resolve_stats_platform(str(event.user_id), raw_platform)
-    if raw_platform and selected_platform is None:
+@cs_cmd.assign("战绩")
+async def handle_cs_stats(
+    event: MessageEvent,
+    platform: Match[str],
+    nickname: Match[str],
+) -> None:
+    """根据平台及可选昵称查询玩家战绩。"""
+    raw_platform = platform.result.strip() if platform.available else ""
+    selected_platform = normalize_platform(raw_platform)
+    if not raw_platform or selected_platform is None:
         await cs_cmd.finish(CS_STATS_USAGE)
         return
-
-    if selected_platform is None:
-        await cs_cmd.finish(
-            f"尚未绑定平台，请先使用 CS bind <{SUPPORTED_PLATFORM_TEXT}> <用户昵称>"
-        )
-        return
-
-    await _handle_cs_player_stats(event, selected_platform, raw_nickname)
-
-
-@cs_cmd.assign("stats.5e")
-async def handle_cs_stats_5e(event: MessageEvent, nickname: Match[str]) -> None:
-    """处理统一战绩查询中的 5E 平台参数。"""
-    await _handle_cs_player_stats(
-        event,
-        "5e",
-        nickname.result.strip() if nickname.available else "",
-    )
-
-
-@cs_cmd.assign("stats.pw")
-async def handle_cs_stats_pw(event: MessageEvent, nickname: Match[str]) -> None:
-    """处理统一战绩查询中的完美平台参数。"""
-    await _handle_cs_player_stats(
-        event,
-        "pw",
-        nickname.result.strip() if nickname.available else "",
-    )
+    target = nickname.result.strip() if nickname.available else ""
+    await _handle_cs_player_stats(event, selected_platform, target)
 
 
 @cs_cmd.assign("check")

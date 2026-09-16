@@ -19,9 +19,7 @@ __plugin_meta__ = PluginMetadata(
         "CS login <手机号> <验证码>\n"
         "CS bind <5E|5e|5eplay|wm|pw|完美> <用户昵称>\n"
         "CS unbind <5E|5e|5eplay|wm|pw|完美>\n"
-        "CS 战绩 <5E|5e|5eplay|wm|pw|完美>  <用户昵称>\n"
-        "CS 5e <昵称>n"
-        "CS pw <昵称>\n"
+        "CS 战绩 <5E|5e|5eplay|wm|pw|完美> [玩家昵称]\n"
     ),
     type="application",
     homepage="https://github.com/Dyco/MadokaBot",

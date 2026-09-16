@@ -75,6 +75,11 @@ def _post_to_entry(post: Dict[str, Any]) -> Optional[Dict[str, Any]]:
     large_url = str(post.get("large_file_url") or "")
     media_url = preview_url if is_video else large_url or original_url or preview_url
 
+    character_tags = _display_tags(post.get("tag_string_character"))
+    copyright_tags = _display_tags(post.get("tag_string_copyright"))
+    if not character_tags and not copyright_tags:
+        return None
+
     details: List[str] = [
         f"评分：{post.get('score', 0)}",
         f"分级：{RATING_NAMES.get(str(post.get('rating') or ''), '未知')}",
@@ -103,6 +108,8 @@ def _post_to_entry(post: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         "published": post.get("created_at"),
         "updated": post.get("updated_at"),
         "summary": summary,
+        "imageboard_character": character_tags,
+        "imageboard_copyright": copyright_tags,
         "danbooru_media_url": media_url,
         "danbooru_original_url": original_url,
         "danbooru_file_ext": file_ext,

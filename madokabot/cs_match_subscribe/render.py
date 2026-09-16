@@ -2,18 +2,14 @@
 
 from __future__ import annotations
 
-import base64
 from datetime import datetime, timezone
 from pathlib import Path
 
-import httpx
-from jinja2 import Environment, FileSystemLoader, select_autoescape
+from jinja2 import Environment, FileSystemLoader, StrictUndefined, select_autoescape
 from nonebot.adapters.onebot.v11 import MessageSegment
 from nonebot_plugin_htmlrender import html_to_pic
 
-from ..madoka_bundle.config import config as madoka_config
-from ..madoka_bundle.constants import ResType, SubFolder
-from ..madoka_bundle.utils import get_file
+from .assets import fetch_image_data_url
 from .config import config
 from .constants import event_font_context, font_context
 from .models import EventData, MatchData
@@ -22,11 +18,16 @@ from .models import EventData, MatchData
 TEMPLATE_DIR = Path(__file__).parent / "templates"
 HTML_FILE_PATH = TEMPLATE_DIR / "rating.html"
 EVENT_HTML_FILE_PATH = TEMPLATE_DIR / "event_list.html"
-STATS_HTML_FILE_PATH = TEMPLATE_DIR / "stats.html"
 STATS_TEMPLATE_1_HTML_FILE_PATH = TEMPLATE_DIR / "stats_template_1.html"
+STATS_TEMPLATE_2_HTML_FILE_PATH = TEMPLATE_DIR / "stats_template_2.html"
 _template_env = Environment(
     loader=FileSystemLoader(str(TEMPLATE_DIR)),
     autoescape=select_autoescape(("html", "xml")),
+)
+_stats_template_env = Environment(
+    loader=FileSystemLoader(str(TEMPLATE_DIR)),
+    autoescape=select_autoescape(("html", "xml")),
+    undefined=StrictUndefined,
 )
 
 
@@ -115,73 +116,34 @@ async def render_event_list_card(events: list[EventData]) -> MessageSegment:
     return MessageSegment.image(image_bytes)
 
 
-def _stats_proxy() -> str | None:
-    """返回玩家头像请求使用的代理。"""
-    value = config.hltv_proxy or madoka_config.proxy
-    if value is None:
-        return None
-    proxy = str(value).strip()
-    if not proxy:
-        return None
-    return proxy if "://" in proxy else f"http://{proxy}"
-
-
-async def _avatar_data_url(url: str) -> str:
-    """把头像下载为内联图片，避免 Playwright 渲染时依赖外部资源。"""
-    value = str(url or "").strip()
-    if not value or value.startswith("data:"):
-        return value
-    if not value.startswith(("http://", "https://")):
-        return ""
-    try:
-        async with httpx.AsyncClient(
-            proxy=_stats_proxy(),
-            trust_env=False,
-            follow_redirects=True,
-            timeout=5.0,
-        ) as client:
-            response = await client.get(value)
-            response.raise_for_status()
-            if len(response.content) > config.hltv_max_asset_size:
-                return ""
-            content_type = response.headers.get("content-type", "image/png").split(";", 1)[0]
-            if not content_type.startswith("image/"):
-                return ""
-            encoded = base64.b64encode(response.content).decode("ascii")
-            return f"data:{content_type};base64,{encoded}"
-    except (httpx.HTTPError, OSError):
-        return ""
-
-
 def render_player_stats_html(data: dict[str, object]) -> str:
-    """把标准化后的平台战绩转换为独立 HTML。"""
+    """渲染已经由平台适配器标准化的玩家战绩。"""
     context = dict(data)
+    context.setdefault("avatar_src", "")
+    context["template2_width"] = config.cs_stats_template_2_width
     context.update(font_context())
-    if data.get("platform") == "pw":
-        template = _template_env.get_template(STATS_TEMPLATE_1_HTML_FILE_PATH.name)
-        context["perfectworld_logo_src"] = _perfectworld_asset_uri("wm_logo_big.png")
-        rank_icon = str(data.get("pw_rank_icon") or "Level_Unknown.svg")
-        context["rank_icon_src"] = _perfectworld_asset_uri(rank_icon)
-        return template.render(**context)
-
-    template = _template_env.get_template(STATS_HTML_FILE_PATH.name)
+    template_file = (
+        STATS_TEMPLATE_2_HTML_FILE_PATH
+        if config.cs_stats_template == 2
+        else STATS_TEMPLATE_1_HTML_FILE_PATH
+    )
+    template = _stats_template_env.get_template(template_file.name)
     return template.render(**context)
-
-
-def _perfectworld_asset_uri(filename: str) -> str:
-    """通过通用资源管理器解析完美世界战绩图片。"""
-    path = get_file(ResType.IMAGE, SubFolder.PERFECTWORLD, filename)
-    return path.resolve().as_uri() if path is not None else ""
 
 
 async def render_player_stats_card(data: dict[str, object]) -> MessageSegment:
     """通过 Playwright 把平台战绩卡片渲染为 QQ 图片。"""
     context = dict(data)
-    context["avatar_src"] = await _avatar_data_url(str(data.get("avatar_url") or ""))
+    context["avatar_src"] = await fetch_image_data_url(str(data.get("avatar_url") or ""))
+    stats_width = (
+        config.cs_stats_template_2_width
+        if config.cs_stats_template == 2
+        else config.cs_stats_width
+    )
     image_bytes = await html_to_pic(
         html=render_player_stats_html(context),
         template_path=TEMPLATE_DIR.resolve().as_uri(),
-        viewport={"width": config.cs_stats_width, "height": 10},
+        viewport={"width": stats_width, "height": 10},
         device_scale_factor=config.cs_rating_device_scale_factor,
         full_page=True,
     )

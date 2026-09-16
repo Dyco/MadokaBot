@@ -15,6 +15,7 @@ from nonebot.log import logger
 from ..madoka_bundle.config import config as madoka_config
 from .config import config
 from .models import EventData, EventMatchRef, MatchData
+from .net import resolve_proxy
 from .parser import (
     parse_event_html,
     parse_event_match_refs_html,
@@ -59,16 +60,6 @@ _CHALLENGE_SELECTORS = (
 )
 
 
-def _proxy() -> str | None:
-    proxy = config.hltv_proxy or madoka_config.proxy
-    if proxy is None:
-        return None
-    value = str(proxy).strip()
-    if not value:
-        return None
-    return value if "://" in value else f"http://{value}"
-
-
 def _flaresolverr_url() -> str:
     """返回 FlareSolverr 的 v1 API 地址。"""
     value = str(config.hltv_flaresolverr_url).strip().rstrip("/")
@@ -81,7 +72,7 @@ def _flaresolverr_proxy() -> dict[str, str] | None:
     """将插件代理配置转换为 FlareSolverr 的 proxy 参数。"""
     proxy = config.hltv_flaresolverr_proxy
     if proxy is None:
-        proxy = _proxy()
+        proxy = resolve_proxy(config.hltv_proxy, madoka_config.proxy)
     if proxy is None:
         return None
     value = str(proxy).strip()
