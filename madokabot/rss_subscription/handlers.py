@@ -67,11 +67,34 @@ async def filter_entries(rss: Rss, state: Dict[str, Any]) -> Dict[str, Any]:
             write_item(db, item)
             change_data.remove(item)
             continue
-        # 检查是否只推送有图片的消息
+        # 检查是否只推送有图片或视频的消息
         if (rss.only_pic or rss.only_has_pic) and not re.search(
-            r"<img[^>]+>|\[img]", summary
+            r"<img[^>]+>|<video\b|\[img]|\[CQ:(?:image|video)\b",
+            summary,
+            flags=re.IGNORECASE,
         ):
-            logger.info(f"{rss.name} 已开启仅图片/仅含有图片，该消息没有图片，将跳过")
+            media_content = []
+            for field in ("media_content", "enclosures", "links"):
+                values = item.get(field) or []
+                if not isinstance(values, (list, tuple)):
+                    values = [values]
+                media_content.extend(values)
+            has_video_enclosure = any(
+                isinstance(media, dict)
+                and (
+                    str(media.get("type") or "").lower().startswith("video/")
+                    or str(media.get("medium") or "").lower() == "video"
+                    or re.search(
+                        r"\.(?:mp4|m4v|mov|mkv|webm|avi|flv|mpeg|mpg|wmv|ts)(?:[?#]|$)",
+                        str(media.get("url") or media.get("href") or ""),
+                        flags=re.IGNORECASE,
+                    )
+                )
+                for media in media_content
+            )
+            if has_video_enclosure:
+                continue
+            logger.info(f"{rss.name} 已开启仅媒体，该消息没有图片或视频，将跳过")
             write_item(db, item)
             change_data.remove(item)
 

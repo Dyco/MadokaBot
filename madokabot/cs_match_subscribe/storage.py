@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from copy import deepcopy
 from dataclasses import asdict
 from datetime import datetime
 from typing import Any
@@ -228,6 +229,42 @@ async def subscribe_event(
         _write(data)
         _add_group_event_tag(target, normalized_event_id)
         return is_new
+
+
+async def add_event_target_if_exists(
+    event_id: str,
+    target: dict[str, str],
+) -> tuple[bool, dict[str, Any]] | None:
+    """如果本地已有赛事订阅，只追加推送目标并返回本地快照。
+
+    返回 ``None`` 表示本地没有该赛事，调用方此时才需要访问 HLTV；
+    已结束的赛事不会重新打开订阅，也不会追加推送目标。
+    """
+    async with _lock:
+        data = _read()
+        normalized_event_id = str(event_id).strip()
+        entry = data.get(f"event:{normalized_event_id}")
+        if not isinstance(entry, dict) or entry.get("kind") != "event":
+            return None
+
+        snapshot = deepcopy(entry)
+        if (
+            entry.get("completed", False)
+            or str(entry.get("status", "")) == EVENT_STATUS_FINISHED
+        ):
+            return False, snapshot
+
+        targets = entry.get("targets")
+        if not isinstance(targets, list):
+            targets = []
+            entry["targets"] = targets
+        is_new = target not in targets
+        if is_new:
+            targets.append(target)
+            _write(data)
+
+        _add_group_event_tag(target, normalized_event_id)
+        return is_new, deepcopy(entry)
 
 
 async def list_active() -> dict[str, dict[str, Any]]:

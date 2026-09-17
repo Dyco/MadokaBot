@@ -6,14 +6,18 @@ import aiohttp
 from yarl import URL
 
 from ..config import config
-from ..images import handle_img_combo, handle_img_combo_with_content
+from ..images import (
+    handle_img_combo,
+    handle_img_combo_with_content,
+    handle_video_combo,
+)
 from ..parser import HandlerRegistry
 from ..subscription import Rss
 
 
 DANBOORU_HOST = "danbooru.donmai.us"
 DANBOORU_POST_PATHS = {"/posts", "/posts.atom", "/posts.json"}
-VIDEO_EXTENSIONS = {"mp4", "webm", "zip"}
+VIDEO_EXTENSIONS = {"mp4", "webm", "m4v", "mov"}
 RATING_NAMES = {
     "g": "普通",
     "s": "敏感",
@@ -73,7 +77,11 @@ def _post_to_entry(post: Dict[str, Any]) -> Optional[Dict[str, Any]]:
     preview_url = str(post.get("preview_file_url") or "")
     original_url = str(post.get("file_url") or "")
     large_url = str(post.get("large_file_url") or "")
-    media_url = preview_url if is_video else large_url or original_url or preview_url
+    media_url = (
+        (original_url or large_url or preview_url)
+        if is_video
+        else large_url or original_url or preview_url
+    )
 
     character_tags = _display_tags(post.get("tag_string_character"))
     copyright_tags = _display_tags(post.get("tag_string_copyright"))
@@ -178,6 +186,10 @@ async def handle_picture(rss: Rss, item: Dict[str, Any], tmp: str) -> str:
     media_url = str(item.get("danbooru_media_url") or "")
     if not media_url:
         result = "图片地址不可用"
+    elif item.get("danbooru_is_video"):
+        result = await handle_video_combo(
+            media_url, rss.img_proxy, rss, item.get("image_headers")
+        )
     elif item.get("image_content"):
         result = await handle_img_combo_with_content(
             media_url, item["image_content"], rss
@@ -187,6 +199,4 @@ async def handle_picture(rss: Rss, item: Dict[str, Any], tmp: str) -> str:
             media_url, rss.img_proxy, rss, item.get("image_headers")
         )
 
-    if item.get("danbooru_is_video"):
-        result = f"视频预览：{result}"
     return f"{result}\n" if rss.only_pic else f"{tmp + result}\n"

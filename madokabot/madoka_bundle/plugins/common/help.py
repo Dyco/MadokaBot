@@ -1,4 +1,4 @@
-from . import __plugin_meta__
+from ... import __plugin_meta__
 from .matchers import help_cmd
 
 

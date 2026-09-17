@@ -1,1 +1,270 @@
-{}
+{
+    "event:8057": {
+        "kind": "event",
+        "event_id": "8057",
+        "event_data": {
+            "event_id": "8057",
+            "name": "StarLadder StarSeries Fall 2026",
+            "event_type": "",
+            "prize_pool": 500000,
+            "start_at": "2026-09-17T10:00:00+00:00",
+            "end_at": "2026-09-20T10:00:00+00:00",
+            "prize_display": "$500,000",
+            "team_count": "8",
+            "location": "Location",
+            "flag_url": "https://www.hltv.org/img/static/flags/30x20/ES.gif",
+            "flag_src": null,
+            "banner_url": "https://img-cdn.hltv.org/eventlogo/bIYhaEw1Y1M2dRFAEx8Mue.png?ixlib=java-2.1.0&w=50&s=bfdfd2e5184d1ca2cbde100720f77821",
+            "banner_src": null,
+            "date_display": "Sep 17th - Sep 20th 2026",
+            "date_display_zh": "9月17日 - 9月20日",
+            "url": "https://www.hltv.org/events/8057/starladder-starseries-fall-2026",
+            "format_text": "Playoffs：Double elimination Bo3\n- Grand final Bo5",
+            "event_status": "live"
+        },
+        "event_name": "StarLadder StarSeries Fall 2026",
+        "event_url": "https://www.hltv.org/events/8057/starladder-starseries-fall-2026",
+        "event_end": "2026-09-20T10:00:00+00:00",
+        "targets": [
+            {
+                "kind": "group",
+                "id": "927801844"
+            },
+            {
+                "kind": "group",
+                "id": "463835135"
+            }
+        ],
+        "baseline_match_ids": [
+            "2398089",
+            "2398090",
+            "2398091",
+            "2398099",
+            "2398100",
+            "2398101",
+            "2398102",
+            "2398104",
+            "2398103",
+            "2398105",
+            "2398106",
+            "2398107",
+            "2398108",
+            "2398088"
+        ],
+        "matches": {
+            "2398089": {
+                "source": "upcoming",
+                "url": "https://www.hltv.org/matches/2398089/vitality-vs-magic-starladder-starseries-fall-2026",
+                "initialized": true,
+                "historical": false,
+                "started_sent": true,
+                "final_sent": true,
+                "completed": true,
+                "map_scores": {
+                    "0:Mirage": "13:6",
+                    "1:Dust2": "13:9"
+                },
+                "started_maps": [
+                    "0",
+                    "1"
+                ],
+                "notified_maps": [
+                    "0:Mirage",
+                    "1:Dust2"
+                ],
+                "rating_maps": [
+                    "0:Mirage",
+                    "1:Dust2"
+                ],
+                "rating_summary_sent": true
+            },
+            "2398090": {
+                "source": "upcoming",
+                "url": "https://www.hltv.org/matches/2398090/natus-vincere-vs-aurora-starladder-starseries-fall-2026",
+                "initialized": true,
+                "historical": false,
+                "started_sent": true,
+                "final_sent": false,
+                "completed": false,
+                "map_scores": {},
+                "started_maps": [
+                    "0"
+                ],
+                "notified_maps": [],
+                "rating_maps": [],
+                "rating_summary_sent": false
+            },
+            "2398091": {
+                "source": "upcoming",
+                "url": "https://www.hltv.org/matches/2398091/furia-vs-mibr-starladder-starseries-fall-2026",
+                "initialized": true,
+                "historical": false,
+                "started_sent": false,
+                "final_sent": false,
+                "completed": false,
+                "map_scores": {},
+                "started_maps": [],
+                "notified_maps": [],
+                "rating_maps": [],
+                "rating_summary_sent": false
+            },
+            "2398099": {
+                "source": "upcoming",
+                "url": "https://www.hltv.org/matches/2398099/mouz-vs-natus-vincere-aurora-loser-starladder-starseries-fall-2026",
+                "initialized": true,
+                "historical": false,
+                "started_sent": false,
+                "final_sent": false,
+                "completed": false,
+                "map_scores": {},
+                "started_maps": [],
+                "notified_maps": [],
+                "rating_maps": [],
+                "rating_summary_sent": false
+            },
+            "2398100": {
+                "source": "upcoming",
+                "url": "https://www.hltv.org/matches/2398100/magic-vs-furia-mibr-loser-starladder-starseries-fall-2026",
+                "initialized": true,
+                "historical": false,
+                "started_sent": false,
+                "final_sent": false,
+                "completed": false,
+                "map_scores": {},
+                "started_maps": [],
+                "notified_maps": [],
+                "rating_maps": [],
+                "rating_summary_sent": false
+            },
+            "2398101": {
+                "source": "upcoming",
+                "url": "https://www.hltv.org/matches/2398101/nrg-vs-natus-vincere-aurora-winner-starladder-starseries-fall-2026",
+                "initialized": true,
+                "historical": false,
+                "started_sent": false,
+                "final_sent": false,
+                "completed": false,
+                "map_scores": {},
+                "started_maps": [],
+                "notified_maps": [],
+                "rating_maps": [],
+                "rating_summary_sent": false
+            },
+            "2398102": {
+                "source": "upcoming",
+                "url": "https://www.hltv.org/matches/2398102/vitality-vs-furia-mibr-winner-starladder-starseries-fall-2026",
+                "initialized": true,
+                "historical": false,
+                "started_sent": false,
+                "final_sent": false,
+                "completed": false,
+                "map_scores": {},
+                "started_maps": [],
+                "notified_maps": [],
+                "rating_maps": [],
+                "rating_summary_sent": false
+            },
+            "2398104": {
+                "source": "upcoming",
+                "url": "https://www.hltv.org/matches/2398104/starladder-starseries-fall-2026-lower-bracket-semi-final-2-starladder-starseries-fall-2026",
+                "initialized": true,
+                "historical": false,
+                "started_sent": false,
+                "final_sent": false,
+                "completed": false,
+                "map_scores": {},
+                "started_maps": [],
+                "notified_maps": [],
+                "rating_maps": [],
+                "rating_summary_sent": false
+            },
+            "2398103": {
+                "source": "upcoming",
+                "url": "https://www.hltv.org/matches/2398103/starladder-starseries-fall-2026-lower-bracket-semi-final-1-starladder-starseries-fall-2026",
+                "initialized": true,
+                "historical": false,
+                "started_sent": false,
+                "final_sent": false,
+                "completed": false,
+                "map_scores": {},
+                "started_maps": [],
+                "notified_maps": [],
+                "rating_maps": [],
+                "rating_summary_sent": false
+            },
+            "2398105": {
+                "source": "upcoming",
+                "url": "https://www.hltv.org/matches/2398105/starladder-starseries-fall-2026-upper-bracket-final-starladder-starseries-fall-2026",
+                "initialized": true,
+                "historical": false,
+                "started_sent": false,
+                "final_sent": false,
+                "completed": false,
+                "map_scores": {},
+                "started_maps": [],
+                "notified_maps": [],
+                "rating_maps": [],
+                "rating_summary_sent": false
+            },
+            "2398106": {
+                "source": "upcoming",
+                "url": "https://www.hltv.org/matches/2398106/starladder-starseries-fall-2026-lower-bracket-final-starladder-starseries-fall-2026",
+                "initialized": true,
+                "historical": false,
+                "started_sent": false,
+                "final_sent": false,
+                "completed": false,
+                "map_scores": {},
+                "started_maps": [],
+                "notified_maps": [],
+                "rating_maps": [],
+                "rating_summary_sent": false
+            },
+            "2398107": {
+                "source": "upcoming",
+                "url": "https://www.hltv.org/matches/2398107/starladder-starseries-fall-2026-consolidation-final-starladder-starseries-fall-2026",
+                "initialized": true,
+                "historical": false,
+                "started_sent": false,
+                "final_sent": false,
+                "completed": false,
+                "map_scores": {},
+                "started_maps": [],
+                "notified_maps": [],
+                "rating_maps": [],
+                "rating_summary_sent": false
+            },
+            "2398108": {
+                "source": "upcoming",
+                "url": "https://www.hltv.org/matches/2398108/starladder-starseries-fall-2026-grand-final-starladder-starseries-fall-2026",
+                "initialized": true,
+                "historical": false,
+                "started_sent": false,
+                "final_sent": false,
+                "completed": false,
+                "map_scores": {},
+                "started_maps": [],
+                "notified_maps": [],
+                "rating_maps": [],
+                "rating_summary_sent": false
+            },
+            "2398088": {
+                "source": "result",
+                "url": "https://www.hltv.org/matches/2398088/mouz-vs-nrg-starladder-starseries-fall-2026",
+                "initialized": true,
+                "historical": true,
+                "started_sent": true,
+                "final_sent": true,
+                "completed": true,
+                "map_scores": {},
+                "started_maps": [],
+                "notified_maps": [],
+                "rating_maps": [],
+                "rating_summary_sent": false
+            }
+        },
+        "status": "ongoing",
+        "first_match_started_at": "2026-09-17T14:07:46.964745+00:00",
+        "completed": false
+    }
+}

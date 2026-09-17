@@ -18,6 +18,7 @@ __plugin_meta__ = PluginMetadata(
         "商店 立绘/列表/购买 <编号>\n"
         "群白名单 添加/删除/列表 [群号]\n"
         "群黑名单 添加/删除/列表 [群号]\n"
+        "复读 打开/关闭\n"
     ),
     type="application",
     config=CommonConfig,

@@ -35,7 +35,7 @@ from .client import (
     match_id_from_url,
 )
 from .config import config
-from .models import EventData, EventMatchRef
+from .models import EVENT_STATUS_FINISHED, EventData, EventMatchRef
 from .player_stats import (
     PlayerStatsError,
     bind_player,
@@ -48,7 +48,11 @@ from .player_stats import (
 )
 from .render import render_event_list_card, render_player_stats_card
 from .service import render_check_rating_messages, send_rating_forward
-from .storage import subscribe_event, target_from_event
+from .storage import (
+    add_event_target_if_exists,
+    subscribe_event,
+    target_from_event,
+)
 
 BOT_NAME = "圆香"
 UNSUPPORTED_LINK_MESSAGE = f"{BOT_NAME}暂不支持此链接"
@@ -459,6 +463,39 @@ async def handle_cs_sub(event: MessageEvent, event_id: Match[str]) -> None:
     target = target_from_event(event)
     if target is None:
         await cs_cmd.finish("无法识别当前会话，暂时不能建立赛事订阅。")
+
+    # 赛事订阅以 ID 为唯一键；当前会话重复订阅时只需追加推送目标，
+    # 直接复用本地快照，避免再次访问 HLTV/FlareSolverr。
+    try:
+        local_subscription = await add_event_target_if_exists(raw_id, target)
+    except Exception:
+        logger.exception("读取本地 CS 赛事订阅失败：%s", raw_id)
+        local_subscription = None
+
+    if local_subscription is not None:
+        added, stored_entry = local_subscription
+        stored_name = str(stored_entry.get("event_name") or "").strip()
+        if not stored_name:
+            event_data = stored_entry.get("event_data")
+            if isinstance(event_data, dict):
+                stored_name = str(event_data.get("name") or "").strip()
+        stored_name = stored_name or raw_id
+
+        if stored_entry.get("completed", False) or str(
+            stored_entry.get("status", "")
+        ) == EVENT_STATUS_FINISHED:
+            await cs_cmd.finish(f"赛事{stored_name}已结束，无法再订阅")
+            return
+
+        if added:
+            await cs_cmd.finish(
+                f"已订阅此赛事：{stored_name}，已为当前会话加入推送。"
+            )
+            return
+        await cs_cmd.finish(
+            f"赛事{stored_name}已订阅此赛事，当前会话已在推送列表中。"
+        )
+        return
 
     await cs_cmd.send("正在获取 HLTV 赛事信息并记录比赛列表…")
     try:

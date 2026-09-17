@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from nonebot import logger
-from nonebot.adapters.onebot.v11 import MessageEvent
+from nonebot.adapters.onebot.v11 import Bot, MessageEvent
 from nonebot_plugin_alconna import (
     Alconna,
     Args,
@@ -15,6 +15,7 @@ from nonebot_plugin_alconna import (
 
 from .render import normalize_template_id, render_music_card
 from .service import cleanup_image, prepare_image
+from ..common import respond
 
 PIC_USAGE = "用法：/制图 音乐 <图片> [模板 1-4] [标题] [子标题]"
 
@@ -59,6 +60,7 @@ async def handle_picture_root(result: Arparma) -> None:
 
 @pic.assign("music")
 async def handle_music(
+    bot: Bot,
     event: MessageEvent,
     image: Match[Image],
     template: Match[str],
@@ -68,6 +70,8 @@ async def handle_music(
     """接收音乐制图参数并生成图片。"""
     if not image.available or image.result is None:
         await pic.finish(PIC_USAGE)
+
+    await respond(bot, event)
 
     user_id = event.get_user_id()
     display_name = (

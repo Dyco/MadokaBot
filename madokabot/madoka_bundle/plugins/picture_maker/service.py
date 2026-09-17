@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import base64
+import re
 import uuid
 from dataclasses import dataclass
 from pathlib import Path
@@ -21,6 +22,7 @@ _MAX_SOURCE_SIZE = 20 * 1024 * 1024
 _MAX_IMAGE_PIXELS = 20_000_000
 _MAX_IMAGE_DIMENSION = 2560
 _DOWNLOAD_TIMEOUT = 20.0
+_PROXY_SCHEME_RE = re.compile(r"^[a-z][a-z0-9+.-]*://", re.IGNORECASE)
 
 
 @dataclass(frozen=True)
@@ -29,12 +31,43 @@ class PreparedImage:
 
     path: Path
     temporary_paths: tuple[Path, ...]
+    palette: tuple[str, ...] = ()
 
     @property
     def data_url(self) -> str:
         """将规范化后的图片转换为 HTML 可直接使用的 Data URL。"""
         encoded = base64.b64encode(self.path.read_bytes()).decode("ascii")
         return f"data:image/png;base64,{encoded}"
+
+
+def _extract_palette(image: Image.Image, count: int = 5) -> tuple[str, ...]:
+    """从图片中提取与 TrackPic 类似的主色调。"""
+    sample = image.convert("RGB")
+    sample.thumbnail((128, 128), Image.Resampling.LANCZOS)
+    if sample.width == 0 or sample.height == 0:
+        return ()
+
+    quantized = sample.quantize(colors=count, method=Image.Quantize.MEDIANCUT)
+    colors = quantized.getcolors(maxcolors=sample.width * sample.height) or []
+    colors.sort(reverse=True)
+    palette = quantized.getpalette()
+
+    result: list[str] = []
+    for _, palette_index in colors[:count]:
+        offset = palette_index * 3
+        red, green, blue = palette[offset : offset + 3]
+        result.append(f"#{red:02X}{green:02X}{blue:02X}")
+    return tuple(result)
+
+
+def _normalize_proxy_url(proxy: str | None) -> str | None:
+    """将主配置中的代理地址规范化为 httpx 可识别的 URL。"""
+    value = str(proxy or "").strip()
+    if not value:
+        return None
+    if _PROXY_SCHEME_RE.match(value):
+        return value
+    return f"http://{value}"
 
 
 async def _read_image_source(image: UniImage) -> bytes:
@@ -56,7 +89,7 @@ async def _read_image_source(image: UniImage) -> bytes:
             return path.read_bytes()
 
     if image.url:
-        proxy = str(madoka_config.proxy or "").strip() or None
+        proxy = _normalize_proxy_url(madoka_config.proxy)
         async with httpx.AsyncClient(
             proxy=proxy,
             trust_env=False,
@@ -103,7 +136,9 @@ async def prepare_image(image: UniImage) -> PreparedImage:
     try:
         source_path.write_bytes(data)
         _normalize_image(source_path, output_path)
-        return PreparedImage(output_path, temporary_paths)
+        with Image.open(output_path) as normalized:
+            palette = _extract_palette(normalized)
+        return PreparedImage(output_path, temporary_paths, palette)
     except Exception:
         cleanup_image(PreparedImage(output_path, temporary_paths))
         raise

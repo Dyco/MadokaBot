@@ -11,9 +11,11 @@ __plugin_meta__ = PluginMetadata(
     name="圆香聊天机器人",
     description=(
         "包含戳一戳、每日签到、商店等功能的本地插件集合\n"
-        "拓展插件：RSS、解析、CS、Steam"
         ),
-    usage="当前包含功能：每日签到、戳一戳、商店",
+    usage=(
+    "当前包含功能：每日签到、戳一戳、商店\n"
+    "拓展插件：RSS、解析、CS、Steam"
+    ),
     type="application",
     config=MainConfig,
 )

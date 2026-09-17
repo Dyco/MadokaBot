@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from nonebot import __version__ as nonebot_version
 from jinja2 import Environment, FileSystemLoader, StrictUndefined, select_autoescape
 from nonebot.adapters.onebot.v11 import MessageSegment
 from nonebot_plugin_htmlrender import html_to_pic
@@ -12,12 +13,17 @@ from .service import PreparedImage
 
 TEMPLATE_DIR = Path(__file__).parent / "templates"
 TEMPLATE_FILES = {
-    "1": "template_1.html",
+    "1": "trackpic.html",
     "2": "template_2.html",
     "3": "template_3.html",
     "4": "template_4.html",
 }
-VIEWPORT = {"width": 1080, "height": 1920}
+VIEWPORTS = {
+    "1": {"width": 1320, "height": 2868},
+    "2": {"width": 1080, "height": 1920},
+    "3": {"width": 1080, "height": 1920},
+    "4": {"width": 1080, "height": 1920},
+}
 
 _template_env = Environment(
     loader=FileSystemLoader(str(TEMPLATE_DIR)),
@@ -63,16 +69,18 @@ async def render_music_card(
     template = _template_env.get_template(template_name)
     html = template.render(
         image_data_url=image.data_url,
+        palette=list(image.palette),
         title=title,
         subtitle=subtitle,
         author=author,
         user_id=user_id,
+        signature=f"MadokaBot v{nonebot_version or 'unknown'}",
         font_path=_font_uri(),
         theme_class=f"theme-{template_id}",
     )
     image_bytes = await html_to_pic(
         html=html,
         template_path=TEMPLATE_DIR.resolve().as_uri(),
-        viewport=VIEWPORT,
+        viewport=VIEWPORTS[template_id],
     )
     return MessageSegment.image(image_bytes)

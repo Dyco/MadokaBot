@@ -42,14 +42,14 @@ shop_cmd_alc = Alconna(
 )
 group_whitelist_cmd_alc = Alconna(
     "groupWhitelist",
-    Subcommand("add", Args["group_id?", str], alias=["添加"]),
-    Subcommand("delete", Args["group_id?", str], alias=["删除"]),
+    Subcommand("add", Args["group_id?", str], alias=["添加","新增"]),
+    Subcommand("delete", Args["group_id?", str], alias=["删除","移除"]),
     Subcommand("list", alias=["列表"]),
 )
 group_blacklist_cmd_alc = Alconna(
     "groupBlacklist",
-    Subcommand("add", Args["group_id?", str], alias=["添加"]),
-    Subcommand("delete", Args["group_id?", str], alias=["删除"]),
+    Subcommand("add", Args["group_id?", str], alias=["添加","新增"]),
+    Subcommand("delete", Args["group_id?", str], alias=["删除","移除"]),
     Subcommand("list", alias=["列表"]),
 )
 
@@ -84,3 +84,9 @@ group_blacklist_cmd = on_alconna(
     block=True,
 )
 
+help_common_cmd = on_alconna(
+    "help",
+    aliases={"帮助"},
+    priority=10,
+    block=True,
+)

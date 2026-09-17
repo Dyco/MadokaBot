@@ -459,6 +459,29 @@ class MediaDelivery:
         self._schedule_staged_video_cleanup(staged.path)
         return response
 
+    async def prepare_video_segment(
+        self,
+        path: str | Path,
+        name: str | None = None,
+    ) -> MessageSegment:
+        """准备一个可嵌入普通消息或合并转发的视频消息段。
+
+        OneBot 读取本地视频不是即时完成的，因此这里会把视频暂存到
+        通用发送缓存目录，并保留一段时间后再清理。
+        """
+        media = self.inspect(path, name)
+        if media.mode is MediaDeliveryMode.GROUP_FILE:
+            raise ValueError(f"文件不是可发送的视频：{media.path}")
+
+        prepared = await self.prepare(media)
+        try:
+            staged = await self._stage_video_for_send(prepared)
+        finally:
+            self.discard_prepared(media, prepared)
+
+        self._schedule_staged_video_cleanup(staged.path)
+        return MessageSegment.video(file=staged.path.as_uri())
+
     async def send_group_video(
         self,
         bot: Bot,

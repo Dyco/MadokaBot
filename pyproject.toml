@@ -1,9 +1,9 @@
 [project]
 name = "MadokaBot"
-version = "0.1.0"
+version = "0.2.1"
 description = "MadokaBot"
 readme = "README.md"
-requires-python = ">=3.9, <4.0"
+requires-python = ">=3.10, <4.0"
 dependencies = [
     "nonebot2[aiohttp]>=2.4.4",
     "nonebot-adapter-onebot>=2.4.6",

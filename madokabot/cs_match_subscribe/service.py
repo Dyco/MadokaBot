@@ -93,7 +93,8 @@ def _map_start_message(
     name_suffix = f"（{map_name}）" if map_name else ""
     return Message(
         MessageSegment.text(
-            f"{event_prefix}订阅赛事更新\n"
+            f"订阅赛事更新\n"
+            f"{event_prefix}\n"
             f"{first} 对阵 {second} 的图{label}{name_suffix}开始"
         )
     )

@@ -1,1 +1,20 @@
-{}
+{
+    "927801844": {
+        "hltv_sub": [
+            "8057"
+        ],
+        "group_set": {
+            "copying_enabled": true,
+            "threshold": 3
+        }
+    },
+    "463835135": {
+        "group_set": {
+            "copying_enabled": true,
+            "threshold": 3
+        },
+        "hltv_sub": [
+            "8057"
+        ]
+    }
+}

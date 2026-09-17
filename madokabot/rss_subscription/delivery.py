@@ -174,7 +174,7 @@ async def send_single_msg(
             if header_message
             else message
         )
-        await send_func(target_id, formatted_message)
+        await send_func(target_id, Message(formatted_message))
         flag = True
     except Exception as e:
         error_msg = f"E: {repr(e)}\n消息发送失败！\n链接：[{item.get('link')}]"
@@ -182,7 +182,7 @@ async def send_single_msg(
         if item.get("to_send"):
             flag = True
             with suppress(Exception):
-                await send_func(target_id, error_msg)
+                await send_func(target_id, Message(error_msg))
     return flag
 
 
@@ -308,7 +308,7 @@ def handle_forward_message(bot: Bot, messages: List[str]) -> Message:
             MessageSegment.node_custom(
                 user_id=int(bot.self_id),
                 nickname=nicknames[0] if nicknames else "\u200b",
-                content=message,
+                content=Message(message),
             )
             for message in messages
         ]
@@ -362,13 +362,15 @@ def _imageboard_detail(item: Dict[str, Any], message: str) -> str:
     if post_url:
         lines.append(f"链接：{post_url}")
 
-    images = re.findall(r"\[CQ:image,[^\]]+\]", message, flags=re.IGNORECASE)
-    lines.extend(images)
-    if not images:
+    media = re.findall(
+        r"\[CQ:(?:image|video),[^\]]+\]", message, flags=re.IGNORECASE
+    )
+    lines.extend(media)
+    if not media:
         image_errors = [
             line.strip()
             for line in message.splitlines()
-            if "图片走丢啦" in line or "视频预览" in line
+            if "图片走丢啦" in line or "视频" in line
         ]
         lines.extend(image_errors)
     return "\n".join(lines)

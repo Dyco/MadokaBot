@@ -1,9 +1,12 @@
+import asyncio
 import base64
 import random
 import re
+import uuid
 from io import BytesIO
 from pathlib import Path
 from typing import Any, Dict, Mapping, Optional, Tuple, Union
+from urllib.parse import urljoin
 
 import aiohttp
 from nonebot.log import logger
@@ -12,9 +15,36 @@ from pyquery import PyQuery as Pq
 from tenacity import RetryError, retry, stop_after_attempt, stop_after_delay
 from yarl import URL
 
+from ..madoka_bundle.plugins.common import MediaSizeLimitExceeded, media_delivery
+from ..madoka_bundle.plugins.common.media import VIDEO_SEND_CACHE_DIR
 from .config import DATA_PATH, config
 from .subscription import Rss
 from .utils import get_proxy, get_summary
+
+
+VIDEO_SUFFIXES = frozenset(
+    {
+        ".mp4",
+        ".m4v",
+        ".mov",
+        ".mkv",
+        ".webm",
+        ".avi",
+        ".flv",
+        ".mpeg",
+        ".mpg",
+        ".wmv",
+        ".ts",
+    }
+)
+VIDEO_CONTENT_TYPES = {
+    "video/mp4": ".mp4",
+    "video/webm": ".webm",
+    "video/quicktime": ".mov",
+    "video/x-matroska": ".mkv",
+    "video/mpeg": ".mpeg",
+    "video/x-msvideo": ".avi",
+}
 
 
 # 通过 ezgif 压缩 GIF
@@ -258,18 +288,175 @@ async def handle_img_combo_with_content(
     return f"\n图片走丢啦 链接：[{url}]\n" if url else "\n图片走丢啦\n"
 
 
+def _get_media_url(value: Any) -> str:
+    if isinstance(value, Mapping):
+        value = value.get("url") or value.get("href") or value.get("src")
+    return str(value or "").strip()
+
+
+def _is_video_reference(url: str, media_type: str = "") -> bool:
+    normalized_type = media_type.split(";", 1)[0].strip().lower()
+    if normalized_type.startswith("video/"):
+        return True
+    return URL(url).path.lower().endswith(tuple(VIDEO_SUFFIXES))
+
+
+def _video_urls(item: Dict[str, Any], html: Pq) -> list[str]:
+    """从 HTML video/source 和常见 RSS 媒体字段中提取直链视频。"""
+    urls: list[str] = []
+    base_url = str(item.get("link") or "")
+
+    def add_url(value: Any, media_type: str = "") -> None:
+        url = _get_media_url(value)
+        if not url:
+            return
+        url = urljoin(base_url, url)
+        if _is_video_reference(url, media_type) and url not in urls:
+            urls.append(url)
+
+    for video in html("video").items():
+        add_url(video.attr("src"), "video/*")
+        for source in video("source").items():
+            add_url(source.attr("src"), source.attr("type") or "video/*")
+
+    for field in ("media_content", "enclosures"):
+        values = item.get(field) or []
+        if not isinstance(values, (list, tuple)):
+            values = [values]
+        for value in values:
+            if isinstance(value, Mapping):
+                media_type = str(value.get("type") or "")
+                if str(value.get("medium") or "").lower() == "video":
+                    media_type = media_type or "video/*"
+            else:
+                media_type = ""
+            add_url(value, media_type)
+
+    links = item.get("links") or []
+    if isinstance(links, (list, tuple)):
+        for value in links:
+            if not isinstance(value, Mapping):
+                continue
+            relation = str(value.get("rel") or "").lower()
+            media_type = str(value.get("type") or "")
+            if str(value.get("medium") or "").lower() == "video":
+                media_type = media_type or "video/*"
+            if relation == "enclosure" or media_type.startswith("video/"):
+                add_url(value, media_type)
+
+    return urls
+
+
+def _video_suffix(url: str, content_type: str) -> str:
+    suffix = Path(URL(url).path).suffix.lower()
+    if suffix in VIDEO_SUFFIXES:
+        return suffix
+    return VIDEO_CONTENT_TYPES.get(
+        content_type.split(";", 1)[0].strip().lower(), ".mp4"
+    )
+
+
+async def download_video(
+    url: str,
+    img_proxy: bool,
+    headers: Optional[Mapping[str, str]] = None,
+) -> Optional[Path]:
+    """流式下载直链视频，并在下载过程中执行统一大小限制。"""
+    request_headers = {"referer": f"{URL(url).scheme}://{URL(url).host}/"}
+    if headers:
+        request_headers.update(headers)
+
+    max_size = media_delivery.video_compress_limit
+    path: Optional[Path] = None
+    try:
+        timeout = aiohttp.ClientTimeout(total=300)
+        async with aiohttp.ClientSession(
+            raise_for_status=True, timeout=timeout
+        ) as session:
+            async with session.get(
+                url,
+                headers=request_headers,
+                proxy=get_proxy(open_proxy=img_proxy),
+            ) as response:
+                content_type = response.headers.get("Content-Type", "")
+                content_length = response.headers.get("Content-Length")
+                try:
+                    expected_size = int(content_length or 0)
+                except ValueError:
+                    expected_size = 0
+                if expected_size > max_size:
+                    raise MediaSizeLimitExceeded(
+                        f"视频大小 {expected_size / 1024 / 1024:.2f} MiB 超过上限 "
+                        f"{max_size / 1024 / 1024:g} MiB"
+                    )
+
+                path = VIDEO_SEND_CACHE_DIR / (
+                    f"rss-{uuid.uuid4().hex}{_video_suffix(url, content_type)}"
+                )
+                downloaded = 0
+                with path.open("wb") as file:
+                    async for chunk in response.content.iter_chunked(1024 * 1024):
+                        downloaded += len(chunk)
+                        if downloaded > max_size:
+                            raise MediaSizeLimitExceeded(
+                                f"视频下载大小超过上限 "
+                                f"{max_size / 1024 / 1024:g} MiB"
+                            )
+                        await asyncio.to_thread(file.write, chunk)
+        return path
+    except MediaSizeLimitExceeded:
+        if path:
+            path.unlink(missing_ok=True)
+        raise
+    except Exception as exc:
+        if path:
+            path.unlink(missing_ok=True)
+        logger.warning(f"视频[{url}]下载失败：{exc}")
+        return None
+
+
+async def handle_video_combo(
+    url: str,
+    img_proxy: bool,
+    rss: Optional[Rss] = None,
+    headers: Optional[Mapping[str, str]] = None,
+) -> str:
+    """下载、检查并准备可嵌入 RSS 消息的视频。"""
+    path = await download_video(url, img_proxy, headers)
+    if path is None:
+        return f"\n视频走丢啦 链接：[{url}]\n"
+
+    try:
+        segment = await media_delivery.prepare_video_segment(path, path.name)
+        return str(segment)
+    except MediaSizeLimitExceeded as exc:
+        logger.warning(f"视频[{url}]超过发送大小限制，跳过：{exc}")
+        return f"\n视频超过大小限制，已跳过：[{url}]\n"
+    except Exception as exc:
+        logger.warning(f"视频[{url}]处理失败，跳过发送：{exc}")
+        return f"\n视频处理失败，已跳过：[{url}]\n"
+    finally:
+        path.unlink(missing_ok=True)
+
+
 # 处理图片、视频
 async def handle_img(
     item: Dict[str, Any], img_proxy: bool, img_num: int, rss: Optional[Rss] = None
 ) -> str:
+    html = Pq(get_summary(item))
+    video_urls = _video_urls(item, html)
+    cached_image = ""
     if item.get("image_content"):
-        return await handle_img_combo_with_content(
+        cached_image = await handle_img_combo_with_content(
             item.get("gif_url", ""), item["image_content"], rss
         )
-    html = Pq(get_summary(item))
-    img_str = ""
+        # 没有视频时保持原有行为：直接使用缓存图片，避免重复下载。
+        if not video_urls:
+            return cached_image
+
+    img_str = cached_image
     # 处理图片
-    doc_img = list(html("img").items())
+    doc_img = [] if cached_image else list(html("img").items())
     # 只发送限定数量的图片，防止刷屏
     if 0 < img_num < len(doc_img):
         img_str += f"\n因启用图片数量限制，目前只有 {img_num} 张图片："
@@ -280,14 +467,25 @@ async def handle_img(
             url, img_proxy, rss, item.get("image_headers")
         )
 
-    # 处理视频
-    if doc_video := html("video"):
-        img_str += "\n视频封面："
-        for video in doc_video.items():
-            url = video.attr("poster")
-            img_str += await handle_img_combo(
+    # 处理视频本体；只有没有提取到可下载视频时，才回退发送封面。
+    video_str = "".join(
+        [
+            await handle_video_combo(
                 url, img_proxy, rss, item.get("image_headers")
             )
+            for url in video_urls
+        ]
+    )
+    if video_str:
+        img_str += video_str
+    elif html("video"):
+        img_str += "\n视频封面："
+        for video in html("video").items():
+            url = video.attr("poster")
+            if url:
+                img_str += await handle_img_combo(
+                    url, img_proxy, rss, item.get("image_headers")
+                )
 
     return img_str
 

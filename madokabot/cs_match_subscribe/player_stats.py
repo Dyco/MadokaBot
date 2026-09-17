@@ -12,7 +12,7 @@ import threading
 import time
 from contextlib import closing
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timedelta, timezone, tzinfo
 from pathlib import Path
 from typing import Any
 from urllib.parse import quote
@@ -29,8 +29,10 @@ from .net import resolve_proxy
 
 FIVE_E_SEARCH_URL = "https://arena.5eplay.com/api/search/player/1/16"
 FIVE_E_ID_URL = "https://gate.5eplay.com/userinterface/http/v1/userinterface/idTransfer"
-FIVE_E_MATCH_URL = "https://gate.5eplay.com/crane/http/api/data/player_match"
+FIVE_E_MATCH_LIST_URL = "https://gate.5eplay.com/crane/http/api/data/match/list"
 FIVE_E_PLAYER_HOME_URL = "https://gate.5eplay.com/crane/http/api/data/v3/player/home"
+RECENT_MATCH_LIMIT = 10
+CHINA_TIMEZONE = timezone(timedelta(hours=8))
 # 完美平台旧版接口仍负责返回完整的个人统计，但必须使用当前客户端的
 # 公开请求头，并将 mySteamId 设为 0；使用手机号登录得到的旧 token 已无法
 # 稳定调用这两个接口。
@@ -135,7 +137,7 @@ FIVE_E_MATCH_FIELDS = MatchViewFields(
     direct_score="score",
     score1="group1_all_score",
     score2="group2_all_score",
-    time="time",
+    time="start_time",
     map_name="map",
     kills="kill",
     deaths="death",
@@ -635,7 +637,7 @@ def _ordered_match_score(
     return f"{left}-{right}"
 
 
-def _time_text(value: Any) -> str:
+def _time_text(value: Any, *, target_timezone: tzinfo | None = None) -> str:
     """把平台返回的时间戳或日期文本转换为短时间。"""
     if value in (None, ""):
         return "-"
@@ -650,7 +652,13 @@ def _time_text(value: Any) -> str:
     if timestamp > 10_000_000_000:
         timestamp /= 1000
     try:
-        return datetime.fromtimestamp(timestamp).strftime("%m-%d %H:%M")
+        converted = datetime.fromtimestamp(timestamp, tz=timezone.utc)
+        converted = (
+            converted.astimezone(target_timezone)
+            if target_timezone is not None
+            else converted.astimezone()
+        )
+        return converted.strftime("%m-%d %H:%M")
     except (OverflowError, OSError, ValueError):
         return raw[:16] or "-"
 
@@ -998,6 +1006,42 @@ def get_binding(user_id: str, platform: str) -> PlayerBinding | None:
     return binding_store.get(str(user_id), normalized) if normalized else None
 
 
+def _extract_5e_match_list(payload: dict[str, Any]) -> list[Any]:
+    """解析 5E match/list 返回的比赛数组。"""
+    data = payload.get("data")
+    if isinstance(data, list):
+        return data
+    raise PlayerStatsError("5E 近期比赛返回了未识别的数据结构")
+
+
+async def _fetch_5e_recent_matches(
+    client: httpx.AsyncClient,
+    uuid: str,
+) -> list[dict[str, Any]]:
+    """读取 5E 最近十场；仅使用支持 limit 的 match/list 接口。"""
+    payload = await _request_json(
+        client,
+        "GET",
+        FIVE_E_MATCH_LIST_URL,
+        params={
+            "match_type": -1,
+            "page": 1,
+            "date": 0,
+            "start_time": 0,
+            "end_time": int(time.time()),
+            "uuid": uuid,
+            "limit": RECENT_MATCH_LIMIT,
+            "cs_type": 0,
+        },
+    )
+    matches = _extract_5e_match_list(payload)
+    return [
+        dict(item)
+        for item in matches[:RECENT_MATCH_LIMIT]
+        if isinstance(item, dict)
+    ]
+
+
 async def _fetch_5e_stats(binding: PlayerBinding) -> dict[str, Any]:
     """从 player_home 获取赛季/生涯资料，并单独读取近期逐场记录。"""
     async with _client() as client:
@@ -1008,7 +1052,7 @@ async def _fetch_5e_stats(binding: PlayerBinding) -> dict[str, Any]:
                 FIVE_E_PLAYER_HOME_URL,
                 params={"uuid": binding.uuid},
             ),
-            _request_json(client, "GET", FIVE_E_MATCH_URL, params={"uuid": binding.uuid}),
+            _fetch_5e_recent_matches(client, binding.uuid),
             return_exceptions=True,
         )
 
@@ -1023,15 +1067,8 @@ async def _fetch_5e_stats(binding: PlayerBinding) -> dict[str, Any]:
         raise PlayerStatsError("5E player_home 返回了未识别的数据结构")
 
     match_data: list[Any] = []
-    if isinstance(matches_result, dict):
-        raw_matches_data = matches_result.get("data")
-        if not isinstance(raw_matches_data, dict):
-            raise PlayerStatsError("5E player_match 返回了未识别的数据结构")
-        matches_data = raw_matches_data
-        raw_matches = matches_data.get("match_data")
-        if not isinstance(raw_matches, list):
-            raise PlayerStatsError("5E player_match 返回了未识别的数据结构")
-        match_data = raw_matches
+    if isinstance(matches_result, list):
+        match_data = matches_result
     elif isinstance(matches_result, Exception):
         logger.warning("5E 近期比赛获取失败：%s", matches_result)
 
@@ -1082,7 +1119,15 @@ def _build_5e_view(
     else:
         kda_text = "-"
 
-    clutch_total = _int(season.get("clutch_win"))
+    clutch_values = [
+        _int(season.get(field))
+        for field in ("end_1v1", "end_1v2", "end_1v3", "end_1v4", "end_1v5")
+    ]
+    clutch_total = (
+        sum(value or 0 for value in clutch_values)
+        if any(value is not None for value in clutch_values)
+        else None
+    )
     clutch_text = f"{clutch_total} 次" if clutch_total is not None else "-"
 
     # player_home 的 modes["9"] 是唯一的当前优先排位数据源。
@@ -1178,8 +1223,12 @@ def _build_5e_view(
         recent_rating_label="Rating",
         recent_secondary_label="ADR",
         recent_matches=[
-            _build_match_view(_dict(item), FIVE_E_MATCH_FIELDS)
-            for item in matches[:10]
+            _build_match_view(
+                _dict(item),
+                FIVE_E_MATCH_FIELDS,
+                target_timezone=CHINA_TIMEZONE,
+            )
+            for item in matches[:RECENT_MATCH_LIMIT]
             if isinstance(item, dict)
         ],
     )
@@ -1200,6 +1249,8 @@ def _rating_class(value: Any) -> str:
 def _build_match_view(
     match: dict[str, Any],
     fields: MatchViewFields,
+    *,
+    target_timezone: tzinfo | None = None,
 ) -> dict[str, str]:
     """按平台字段映射生成唯一的近期比赛视图。"""
     recognized_fields = (
@@ -1297,7 +1348,10 @@ def _build_match_view(
         "result_text": result_text,
         "result_short": result_short,
         "result_class": result_class,
-        "time": _time_text(match.get(fields.time)),
+        "time": _time_text(
+            match.get(fields.time),
+            target_timezone=target_timezone,
+        ),
         "map_name": _map_text(match.get(fields.map_name)),
         "score": score,
         "combat": combat,
@@ -1603,7 +1657,7 @@ def _pw_recent_match_views(
             score_changes[match_id] = current_score - previous_score
 
     recent: list[dict[str, str]] = []
-    for item in matches[:10]:
+    for item in matches[:RECENT_MATCH_LIMIT]:
         match = _dict(item).copy()
         match_id = str(match.get("matchId") or "").rsplit("@", 1)[-1]
         score_change = match.get("pvpScoreChange")
