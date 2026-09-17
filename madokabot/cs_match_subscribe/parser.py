@@ -243,8 +243,72 @@ def _score_text(node: Tag | None) -> str | None:
     return value if re.fullmatch(r"\d+", value) else None
 
 
+def _map_score_started(*scores: str | None) -> bool:
+    """地图比分至少一方大于 0 时，才标记为已经开始。"""
+    return any(score is not None and int(score) > 0 for score in scores)
+
+
+_SCOREBOARD_MAP_NAMES = {
+    "dust2": "Dust2",
+}
+
+
+def _scoreboard_map_name(scoreboard: Tag) -> str:
+    """读取 Scoreboard 当前地图名称。"""
+    round_text = _text(scoreboard.select_one(".currentRoundText"))
+    if " - " in round_text:
+        return round_text.rsplit(" - ", 1)[1].strip()
+
+    for class_name in scoreboard.get("class", []):
+        if not class_name.startswith("live-map-"):
+            continue
+        map_slug = class_name.removeprefix("live-map-").removeprefix("de_")
+        return _SCOREBOARD_MAP_NAMES.get(map_slug, map_slug.title())
+    return ""
+
+
+def _scoreboard_team_name(scoreboard: Tag, side: str) -> str:
+    """读取 Scoreboard 指定阵营当前对应的队伍名称。"""
+    return _text(scoreboard.select_one(f".{side}TeamHeaderBg .teamName"))
+
+
+def _parse_scoreboard_result(
+    soup: BeautifulSoup,
+) -> tuple[str, str | None, str | None] | None:
+    """读取实时 Scoreboard，并按比赛队伍顺序映射比分。"""
+    scoreboard = soup.select_one("#scoreboardElement")
+    if scoreboard is None:
+        return None
+
+    map_name = _scoreboard_map_name(scoreboard)
+    if not map_name:
+        return None
+
+    headers = [
+        _text(node)
+        for node in scoreboard.select("table.team .teamName")[:2]
+    ]
+    ct_name = _scoreboard_team_name(scoreboard, "ct") or (
+        headers[0] if headers else ""
+    )
+    t_name = _scoreboard_team_name(scoreboard, "t") or (
+        headers[1] if len(headers) > 1 else ""
+    )
+    team1_name = str(scoreboard.get("data-team1-name") or "").strip()
+    team2_name = str(scoreboard.get("data-team2-name") or "").strip()
+    scores = {
+        ct_name.casefold(): _score_text(scoreboard.select_one(".ctScore")),
+        t_name.casefold(): _score_text(scoreboard.select_one(".tScore")),
+    }
+    return (
+        map_name,
+        scores.get(team1_name.casefold()),
+        scores.get(team2_name.casefold()),
+    )
+
+
 def _parse_map_results(soup: BeautifulSoup) -> list[MapScore]:
-    """解析比赛页中的地图名称和回合最终比分。"""
+    """解析比赛页中的地图名称、回合比分和实时状态。"""
     results: list[MapScore] = []
     for holder in soup.select(".mapholder"):
         name = _text(holder.select_one(".mapname, .dynamic-map-name-full"))
@@ -270,10 +334,47 @@ def _parse_map_results(soup: BeautifulSoup) -> list[MapScore]:
             name=name,
             team1_score=team1_score,
             team2_score=team2_score,
-            started=holder.select_one(".played") is not None,
+            started=_map_score_started(team1_score, team2_score),
             finished=scores_are_final,
         )
         results.append(result)
+
+    scoreboard_result = _parse_scoreboard_result(soup)
+    if scoreboard_result is None:
+        return results
+
+    map_name, team1_score, team2_score = scoreboard_result
+    result = next(
+        (
+            item
+            for item in results
+            if item.name.casefold() == map_name.casefold()
+        ),
+        None,
+    )
+    if result is None:
+        results.append(
+            MapScore(
+                name=map_name,
+                team1_score=team1_score,
+                team2_score=team2_score,
+                started=_map_score_started(team1_score, team2_score),
+                finished=False,
+                live=True,
+            )
+        )
+        return results
+
+    # 已有最终比分时保留地图卡片结果，避免 Scoreboard 收尾画面覆盖它。
+    if result.is_finished:
+        return results
+    if team1_score is not None:
+        result.team1_score = team1_score
+    if team2_score is not None:
+        result.team2_score = team2_score
+    result.started = _map_score_started(result.team1_score, result.team2_score)
+    result.finished = False
+    result.live = True
     return results
 
 

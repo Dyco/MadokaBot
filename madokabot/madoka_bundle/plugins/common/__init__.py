@@ -1,6 +1,10 @@
+# -*- coding: utf-8 -*-
+
 from nonebot.plugin import PluginMetadata
 
 from .config import CommonConfig
+from .group_set import GroupSetStore, group_set  # noqa: F401
+from .json_data import JsonDataStore  # noqa: F401
 from .response import StatusResponse, respond, respond_with_status  # noqa: F401
 
 __plugin_meta__ = PluginMetadata(
@@ -12,6 +16,8 @@ __plugin_meta__ = PluginMetadata(
         "设置 立绘 <立绘ID>\n"
         "查询 立绘/数据\n"
         "商店 立绘/列表/购买 <编号>\n"
+        "群白名单 添加/删除/列表 [群号]\n"
+        "群黑名单 添加/删除/列表 [群号]\n"
     ),
     type="application",
     config=CommonConfig,
@@ -20,10 +26,18 @@ __plugin_meta__ = PluginMetadata(
 # Import matcher definitions before attaching command handlers.
 from . import matchers as matchers  # noqa: E402
 from . import help as help  # noqa: E402
-from . import group_whitelist as group_whitelist  # noqa: E402
+from . import group_list as group_list  # noqa: E402
 from . import auto_leave_group as auto_leave_group  # noqa: E402
+from .group_list import (  # noqa: E402,F401
+    GroupAccessStore,
+    GroupAccessType,
+    group_access,
+)
 from .auto_leave_group import schedule_auto_leave_group  # noqa: E402,F401
-from .group_whitelist import is_group_whitelisted  # noqa: E402,F401
+from .group_list import (  # noqa: E402,F401
+    is_group_blacklisted,
+    is_group_whitelisted,
+)
 from .file_cleanup import (  # noqa: E402,F401
     cleanup_expired_files,
     register_cleanup_path,

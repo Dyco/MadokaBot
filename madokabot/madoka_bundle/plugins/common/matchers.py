@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 from nonebot_plugin_alconna import Alconna, Args, Subcommand, on_alconna
 from nonebot import on_message
 from nonebot.rule import fullmatch
@@ -5,10 +7,16 @@ from nonebot.rule import fullmatch
 SET_USAGE = "设置 立绘 <立绘编号>"
 QUERY_USAGE = "查询 立绘\数据"
 SHOP_USAGE = "商店 立绘\n列表\nshop购买 <编号>"
-WHITELIST_USAGE = "群白名单 添加\删除\列表 <群号> "
-
-
-
+WHITELIST_USAGE = (
+    "群白名单 添加 [群号]\n"
+    "群白名单 删除 [群号]\n"
+    "群白名单 列表"
+)
+BLACKLIST_USAGE = (
+    "群黑名单 添加 [群号]\n"
+    "群黑名单 删除 [群号]\n"
+    "群黑名单 列表"
+)
 register_keywords : list[str] = ["注册", "register"]
 help_keywords : list[str] = ["帮助", "help"]
 
@@ -38,6 +46,12 @@ group_whitelist_cmd_alc = Alconna(
     Subcommand("delete", Args["group_id?", str], alias=["删除"]),
     Subcommand("list", alias=["列表"]),
 )
+group_blacklist_cmd_alc = Alconna(
+    "groupBlacklist",
+    Subcommand("add", Args["group_id?", str], alias=["添加"]),
+    Subcommand("delete", Args["group_id?", str], alias=["删除"]),
+    Subcommand("list", alias=["列表"]),
+)
 
 set_cmd = on_alconna(
     set_cmd_alc,
@@ -60,6 +74,12 @@ shop_cmd = on_alconna(
 group_whitelist_cmd = on_alconna(
     group_whitelist_cmd_alc,
     aliases={"群白名单"},
+    priority=10,
+    block=True,
+)
+group_blacklist_cmd = on_alconna(
+    group_blacklist_cmd_alc,
+    aliases={"群黑名单"},
     priority=10,
     block=True,
 )

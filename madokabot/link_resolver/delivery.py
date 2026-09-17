@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import cast
 
 from nonebot import get_plugin_config, logger
-from nonebot.adapters.onebot.v11 import Bot, Event
+from nonebot.adapters.onebot.v11 import Bot, GroupMessageEvent
 from nonebot.matcher import current_bot
 
 from ..madoka_bundle.config import config as madoka_config
@@ -34,7 +34,7 @@ media_delivery = MediaDelivery(
 
 
 async def send_resolved_video(
-    event: Event,
+    event: GroupMessageEvent,
     source: str | Path | None,
     proxy: str | None = None,
 ) -> bool:

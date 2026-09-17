@@ -6,7 +6,7 @@ from nonebot import logger, on_notice
 from nonebot.adapters.onebot.v11 import Bot, GroupIncreaseNoticeEvent
 
 from .config import config
-from .group_whitelist import is_group_whitelisted
+from .group_list import is_group_whitelisted
 
 
 AUTO_LEAVE_DELAY_SECONDS = 3 * 60

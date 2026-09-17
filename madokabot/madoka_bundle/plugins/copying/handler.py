@@ -8,16 +8,16 @@ from nonebot.adapters import Bot, Event, Message
 from nonebot.plugin import on_message
 from nonebot_plugin_alconna import (
     Alconna,
-    Arparma,
     Args,
+    Arparma,
     CommandMeta,
     Subcommand,
     on_alconna,
 )
 
-from ..common.group_whitelist import is_group_whitelisted
+from ..common.group_list import is_group_whitelisted
+from ..common.group_set import group_set
 from .config import config
-
 
 # 命令优先于普通消息处理，避免“复读 设置 3”等控制消息污染复读记录。
 copying = on_message(priority=20, block=False)
@@ -38,10 +38,9 @@ copying_switch_cmd = on_alconna(
 )
 
 
-# 保留这个名称，方便在运行时查看或测试默认阈值。具体群的设置保存在
-# ``copying_numbers`` 中，未单独设置的群使用这里的默认值。
+# 保留这个名称，方便在运行时查看或测试默认阈值。
 copying_number = config.copying_number
-copying_numbers: dict[str, int] = {}
+_GROUP_SETTINGS_NAME = "group_set"
 
 
 @dataclass
@@ -60,7 +59,6 @@ class _CopyingState:
 
 # 每个群独立计数，群 A 的消息不会影响群 B。
 msg_dict: dict[str, _CopyingState] = {}
-_disabled_groups: set[str] = set()
 
 _COPYABLE_SEGMENT_TYPES = {"text", "image"}
 _IMAGE_ID_KEYS = (
@@ -155,10 +153,32 @@ def _get_group_id(event: Event) -> str | None:
     return group_id or None
 
 
-def _get_threshold(group_id: str) -> int:
-    # 配置模型和指令都会保证阈值至少为 1；这里再做一次保护，避免运行时
-    # 直接修改模块变量导致计数逻辑失效。
-    return max(1, copying_numbers.get(group_id, copying_number))
+def _default_group_settings() -> dict[str, Any]:
+    """返回复读机群组设置的默认值。"""
+
+    return {
+        "copying_enabled": True,
+        "threshold": copying_number,
+    }
+
+
+def _get_group_settings(group_id: str) -> dict[str, Any]:
+    """读取群组设置，没有数据时写入默认设置。"""
+
+    settings = group_set.get(group_id, _GROUP_SETTINGS_NAME)
+    if not isinstance(settings, dict):
+        settings = _default_group_settings()
+        group_set.set(group_id, _GROUP_SETTINGS_NAME, settings)
+    return settings
+
+
+def _get_threshold(settings: dict[str, Any]) -> int:
+    # 配置模型和指令都会保证阈值至少为 1；这里再做一次保护，避免群组 JSON
+    # 被手动修改后导致计数逻辑失效。
+    threshold = settings.get("threshold", copying_number)
+    if not isinstance(threshold, int):
+        return max(1, copying_number)
+    return max(1, threshold)
 
 
 def _is_copyable(message: Message) -> bool:
@@ -182,15 +202,19 @@ async def copying_switch_handler(event: Event, result: Arparma):
     if not is_group_whitelisted(group_id):
         await copying_switch_cmd.finish("该群未在白名单中，无法使用复读机功能。")
 
+    settings = _get_group_settings(group_id)
+
     if "on" in result.subcommands:
-        _disabled_groups.discard(group_id)
+        settings["copying_enabled"] = True
+        group_set.set(group_id, _GROUP_SETTINGS_NAME, settings)
         _reset_group_state(group_id)
         await copying_switch_cmd.finish(
-            f"复读机已开启，当前连续 {_get_threshold(group_id)} 条相同消息时触发。"
+            f"复读机已开启，当前连续 {_get_threshold(settings)} 条相同消息时触发。"
         )
 
     if "off" in result.subcommands:
-        _disabled_groups.add(group_id)
+        settings["copying_enabled"] = False
+        group_set.set(group_id, _GROUP_SETTINGS_NAME, settings)
         _reset_group_state(group_id)
         await copying_switch_cmd.finish("复读机已关闭。")
 
@@ -199,7 +223,8 @@ async def copying_switch_handler(event: Event, result: Arparma):
         if not isinstance(number, int) or number < 1:
             await copying_switch_cmd.finish("复读机设置的消息数量必须大于等于1。")
 
-        copying_numbers[group_id] = number
+        settings["threshold"] = number
+        group_set.set(group_id, _GROUP_SETTINGS_NAME, settings)
         _reset_group_state(group_id)
         await copying_switch_cmd.finish(
             f"复读机已设置为连续 {number} 条相同消息时触发。"
@@ -226,7 +251,9 @@ async def copying_handler(bot: Bot, event: Event):
     if not is_group_whitelisted(group_id):
         _reset_group_state(group_id)
         return
-    if group_id in _disabled_groups:
+
+    settings = _get_group_settings(group_id)
+    if not settings.get("copying_enabled", True):
         return
 
     message = event.get_message()
@@ -235,7 +262,7 @@ async def copying_handler(bot: Bot, event: Event):
         _reset_group_state(group_id)
         return
 
-    threshold = _get_threshold(group_id)
+    threshold = _get_threshold(settings)
     state = msg_dict.get(group_id)
     if state is None or state.threshold != threshold:
         state = _CopyingState(threshold=threshold)

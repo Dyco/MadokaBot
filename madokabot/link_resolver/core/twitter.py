@@ -29,6 +29,7 @@ class TwitterMedia:
     kind: str
     url: str
     formats: tuple[dict[str, Any], ...]
+    duration_seconds: float | None = None
 
 
 @dataclass(frozen=True)
@@ -75,14 +76,39 @@ def _normalize_media(media_data: dict[str, Any]) -> tuple[TwitterMedia, ...]:
             if isinstance(raw_formats, list)
             else ()
         )
+        duration_seconds = _read_duration_seconds(item, formats)
         media.append(
             TwitterMedia(
                 kind=str(item.get("type") or ""),
                 url=str(item["url"]),
                 formats=formats,
+                duration_seconds=duration_seconds,
             )
         )
     return tuple(media)
+
+
+def _read_duration_seconds(
+    media_data: dict[str, Any],
+    formats: tuple[dict[str, Any], ...],
+) -> float | None:
+    """读取 X 媒体元数据中的视频时长。"""
+    for item in (media_data, *formats):
+        for key in ("duration_millis", "duration_ms"):
+            try:
+                duration = float(item.get(key)) / 1000
+            except (TypeError, ValueError):
+                continue
+            if duration > 0:
+                return duration
+        for key in ("duration_seconds", "duration"):
+            try:
+                duration = float(item.get(key))
+            except (TypeError, ValueError):
+                continue
+            if duration > 0:
+                return duration
+    return None
 
 
 async def fetch_twitter_post(url: str, proxy: str | None) -> TwitterPost:

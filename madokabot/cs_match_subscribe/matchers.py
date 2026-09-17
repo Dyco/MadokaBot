@@ -493,6 +493,7 @@ async def handle_cs_sub(event: MessageEvent, event_id: Match[str]) -> None:
         added = await subscribe_event(
             raw_id,
             target,
+            event_data=event_data,
             event_name=event_data.name,
             event_url=event_data.url,
             event_end=event_data.end_at.isoformat() if event_data.end_at else "",
@@ -529,6 +530,8 @@ async def handle_cs_sub(event: MessageEvent, event_id: Match[str]) -> None:
     id="madokabot_cs_match_subscribe_poll",
     max_instances=1,
     coalesce=True,
+    # 机器人重启后立即检查持久化状态，避免错过赛事开始后的第一次轮询。
+    next_run_time=datetime.now(timezone.utc),
 )
 async def _poll_cs_match_subscriptions() -> None:
     from .service import poll_subscriptions

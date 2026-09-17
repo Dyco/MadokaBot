@@ -9,11 +9,17 @@ from nonebot import get_plugin_config
 from nonebot.config import Config as NoneBotConfig
 from pydantic import Field
 
+from ..madoka_bundle.config import assets
+from ..madoka_bundle.constants import ResType, SubFolder
+
 
 PLUGIN_NAME = "madokabot_cs_match_subscribe"
 DATA_DIR = store.get_data_dir(PLUGIN_NAME)
 CACHE_DIR = store.get_cache_dir(PLUGIN_NAME)
+# 旧版单场订阅文件，仅用于迁移到 hltv_sub.json。
 SUBSCRIPTIONS_PATH = store.get_data_file(PLUGIN_NAME, "subscriptions.json")
+# HLTV 赛事订阅统一保存于公共 JSON 资源目录。
+HLTV_SUB_PATH = assets.get_dir(ResType.JSON, SubFolder.CS) / "hltv_sub.json"
 ASSET_DIR = CACHE_DIR / "assets"
 PLAYER_BINDINGS_PATH = DATA_DIR / "player_bindings.sqlite3"
 PW_SESSION_PATH = store.get_data_file(PLUGIN_NAME, "pw_session.json")

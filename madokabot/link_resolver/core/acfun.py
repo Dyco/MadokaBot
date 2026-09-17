@@ -54,7 +54,12 @@ def parse_url(url: str, proxy: str | None = None):
     return url_m3u8s, video_name
 
 
-def parse_m3u8(m3u8_url: str, proxy: str | None = None):
+def parse_m3u8(
+    m3u8_url: str,
+    proxy: str | None = None,
+    *,
+    include_duration: bool = False,
+):
     """
         解析m3u8链接
     :param m3u8_url:
@@ -79,6 +84,10 @@ def parse_m3u8(m3u8_url: str, proxy: str | None = None):
     # 修改尾部 去掉尾部多余的结束符
     if not m3u8_relative_links:
         raise ValueError("ACFun m3u8 未返回可下载的视频分片")
+    duration = sum(
+        float(value)
+        for value in re.findall(r"#EXTINF:([0-9.]+)", m3u8_file)
+    )
     # print(m3u8_relative_links)
 
     # 完整链接，直接加m3u8Url的通用前缀
@@ -95,7 +104,8 @@ def parse_m3u8(m3u8_url: str, proxy: str | None = None):
     ).strip("._") or "acfun_video"
     output_file_name = output_folder_name + ".mp4"
     # print(output_file_name)
-    return m3u8_full_urls, ts_names, output_folder_name, output_file_name
+    result = m3u8_full_urls, ts_names, output_folder_name, output_file_name
+    return (*result, duration) if include_duration else result
 
 
 async def download_m3u8_videos(

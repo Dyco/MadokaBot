@@ -24,6 +24,7 @@ class VideoInfo(TypedDict):
     title: str
     description: str
     thumbnail: str
+    duration: float | None
 
 
 async def get_video_info(
@@ -47,14 +48,29 @@ async def get_video_info(
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info_dict = await asyncio.to_thread(ydl.extract_info, url, download=False)
+            duration_value = info_dict.get("duration")
+            try:
+                duration = (
+                    float(duration_value)
+                    if duration_value is not None
+                    else None
+                )
+            except (TypeError, ValueError):
+                duration = None
             return {
                 "title": str(info_dict.get("title") or "-"),
                 "description": str(info_dict.get("description") or ""),
                 "thumbnail": str(info_dict.get("thumbnail") or ""),
+                "duration": duration,
             }
     except Exception as exc:
         logger.error(f"yt-dlp 获取视频信息失败：{exc}")
-        return {"title": "-", "description": "", "thumbnail": ""}
+        return {
+            "title": "-",
+            "description": "",
+            "thumbnail": "",
+            "duration": None,
+        }
 
 
 async def get_video_title(

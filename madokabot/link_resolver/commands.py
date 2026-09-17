@@ -139,11 +139,9 @@ def _resolver_key_for_handler(handler_name: str) -> str:
     return HANDLER_RESOLVER_KEYS.get(handler_name, handler_name)
 
 
-def _event_target_id(event: Event) -> int | None:
-    """获取群聊或私聊对应的控制目标编号。"""
-    if isinstance(event, GroupMessageEvent):
-        return event.group_id
-    return getattr(event, "user_id", None)
+def _event_target_id(event: GroupMessageEvent) -> int:
+    """获取当前群组的控制目标编号。"""
+    return event.group_id
 
 
 def _split_control_tokens(content: Match[str]) -> list[str]:
@@ -203,13 +201,11 @@ def _control_scope_text(
 
 
 async def _apply_control_command(
-    event: Event,
+    event: GroupMessageEvent,
     tokens: list[str],
 ) -> None:
     """应用 Resolver 的全局、平台和内容类型开关。"""
     target_id = _event_target_id(event)
-    if target_id is None:
-        await resolver.finish("该解析控制命令只能在群聊或私聊中使用。")
 
     enabled = tokens[0].casefold() in OPEN_ACTIONS
     parameters = tokens[1:]
@@ -270,15 +266,15 @@ async def _apply_control_command(
     )
 
 
-async def resolver_access_rule(bot: Bot, event: Event) -> bool:
-    """白名单群可用；私聊只允许超级用户。"""
-    if isinstance(event, GroupMessageEvent):
-        return is_group_whitelisted(event.group_id)
-    return await SUPERUSER(bot, event)
+async def resolver_access_rule(_: Bot, event: Event) -> bool:
+    """仅允许白名单群使用 Resolver，私聊消息直接忽略。"""
+    return isinstance(event, GroupMessageEvent) and is_group_whitelisted(
+        event.group_id
+    )
 
 
 async def resolver_group_rule(bot: Bot, event: Event) -> bool:
-    """平台解析器接受白名单群消息及超级用户私聊。"""
+    """平台解析器仅接受白名单群消息。"""
     return await resolver_access_rule(bot, event)
 
 
@@ -313,13 +309,14 @@ def resolve_handler(func):
             (value for value in args if isinstance(value, Event)),
             None,
         )
-        if event is None or bot is None:
+        if (
+            event is None
+            or bot is None
+            or not isinstance(event, GroupMessageEvent)
+        ):
             return None
         resolver_key = _resolver_key_for_handler(func.__name__)
-        if isinstance(event, GroupMessageEvent):
-            if not is_group_whitelisted(event.group_id):
-                return None
-        elif not await SUPERUSER(bot, event):
+        if not is_group_whitelisted(event.group_id):
             return None
 
         target_id = _event_target_id(event)
@@ -366,7 +363,7 @@ def resolve_controller(func):
     return wrapper
 
 
-async def switch_comment_mode(_: Bot, event: Event) -> None:
+async def switch_comment_mode(_: Bot, event: GroupMessageEvent) -> None:
     target_id = str(get_target_id(event))
     current_mode = comment_mode_map.get(target_id, "image")
     new_mode = "text" if current_mode == "image" else "image"
@@ -376,7 +373,10 @@ async def switch_comment_mode(_: Bot, event: Event) -> None:
     await resolver.finish(f"已切换至 {mode_name} 评论模式")
 
 
-async def reload_comment_templates(_: Bot, __: Event) -> None:
+async def reload_comment_templates(
+    _: Bot,
+    __: GroupMessageEvent,
+) -> None:
     try:
         from .core.comment import load_bili_template, load_template
 
@@ -387,16 +387,13 @@ async def reload_comment_templates(_: Bot, __: Event) -> None:
     await resolver.finish("评论 HTML 模板重载成功！")
 
 
-async def view_resolver_status(_: Bot, event: Event) -> None:
+async def view_resolver_status(
+    _: Bot,
+    event: GroupMessageEvent,
+) -> None:
     """渲染并发送当前目标的 Resolver 内容状态表。"""
     target_id = _event_target_id(event)
-    if target_id is None:
-        await resolver.finish("该解析查看命令只能在群聊或私聊中使用。")
-
-    if isinstance(event, GroupMessageEvent):
-        scope_name = f"当前群组 {event.group_id}"
-    else:
-        scope_name = f"当前私聊 {getattr(event, 'user_id', target_id)}"
+    scope_name = f"当前群组 {event.group_id}"
 
     try:
         status_card = await render_resolver_status_card(
@@ -413,7 +410,7 @@ async def view_resolver_status(_: Bot, event: Event) -> None:
 @resolver.handle()
 async def handle_resolver_command(
     bot: Bot,
-    event: Event,
+    event: GroupMessageEvent,
     content: Match[str],
     result: Arparma,
 ) -> None:

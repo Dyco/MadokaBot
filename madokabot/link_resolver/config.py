@@ -24,7 +24,7 @@ class Config(BaseModel):
     netease_use_proxy: bool = False
     kugou_use_proxy: bool = False
     weibo_use_proxy: bool = False
-    video_duration_maximum: int = 300 # 视频时长上限，单位秒
+    video_duration_maximum: int = 300 # 可获取时长的平台上限，单位秒；超限时仅跳过视频下载
     global_resolve_controller: str = "" # 全局解析器开关控制
 
     video_message_max_mb: float = 95 # 不超过此大小的视频直接发送，单位 MiB

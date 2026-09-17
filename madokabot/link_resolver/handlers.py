@@ -29,11 +29,10 @@ except ImportError:
 from nonebot import get_plugin_config, logger
 from nonebot.adapters.onebot.v11 import (
     Bot,
-    Event,
+    GroupMessageEvent,
     Message,
     MessageSegment,
 )
-from nonebot.adapters.onebot.v11.event import GroupMessageEvent
 
 from .config import Config
 # noinspection PyUnresolvedReferences
@@ -77,7 +76,7 @@ from .core.twitter import (
     select_twitter_video_url,
 )
 from .core.weibo import mid2id
-from .core.youtube import download_ytb_video, get_video_info, get_video_title
+from .core.youtube import download_ytb_video, get_video_info
 from .delivery import media_delivery, send_resolved_video
 from .matchers import (
     acfun_matcher as acfun,
@@ -132,6 +131,64 @@ NETEASE_PROXY = _platform_proxy(global_config.netease_use_proxy)
 KUGOU_PROXY = _platform_proxy(global_config.kugou_use_proxy)
 WEIBO_PROXY = _platform_proxy(global_config.weibo_use_proxy)
 
+
+def _duration_seconds(value: object, *, milliseconds: bool = False) -> float | None:
+    """将接口返回的视频时长转换为秒。"""
+    try:
+        duration = float(value)
+    except (TypeError, ValueError):
+        return None
+    if milliseconds:
+        duration /= 1000
+    return duration if duration > 0 else None
+
+
+def _find_video_duration_seconds(value: object) -> float | None:
+    """从嵌套的视频元数据中查找时长。"""
+    if isinstance(value, dict):
+        for key in (
+            "duration_ms",
+            "durationMs",
+            "duration_millis",
+            "durationMillis",
+        ):
+            duration = _duration_seconds(value.get(key), milliseconds=True)
+            if duration is not None:
+                return duration
+        for key in ("duration_seconds", "durationSeconds", "duration"):
+            duration = _duration_seconds(value.get(key))
+            if duration is not None:
+                return duration
+        for nested in value.values():
+            duration = _find_video_duration_seconds(nested)
+            if duration is not None:
+                return duration
+    elif isinstance(value, list):
+        for nested in value:
+            duration = _find_video_duration_seconds(nested)
+            if duration is not None:
+                return duration
+    return None
+
+
+def _skip_video_for_duration(
+    platform: str,
+    duration_seconds: float | None,
+) -> bool:
+    """判断视频是否超时，并在超时时跳过视频下载。"""
+    if (
+        duration_seconds is None
+        or duration_seconds <= VIDEO_DURATION_MAXIMUM
+    ):
+        return False
+    logger.warning(
+        f"[{platform}] 视频时长超过限制，已跳过视频下载和发送："
+        f"当前 {duration_seconds / 60:.1f} 分钟，"
+        f"上限 {VIDEO_DURATION_MAXIMUM / 60:g} 分钟"
+    )
+    return True
+
+
 if BILIBILI_AVAILABLE:
     request_settings.set_trust_env(False)
     request_settings.set_proxy(BILIBILI_PROXY or "")
@@ -155,7 +212,7 @@ async def _gather_downloads(*coroutines):
 @bili23.handle()
 @resolve_handler
 @resolve_controller
-async def bilibili(bot: Bot, event: Event) -> None:
+async def bilibili(bot: Bot, event: GroupMessageEvent) -> None:
     """
         哔哩哔哩解析
     :param bot:
@@ -187,13 +244,18 @@ async def bilibili(bot: Bot, event: Event) -> None:
         if not short_match:
             await bili23.finish("未识别到有效的 Bilibili 短链接。")
         b_short_url = short_match.group(0)
-        resp = httpx.get(
-            b_short_url,
-            headers=BILIBILI_HEADER,
-            follow_redirects=True,
-            proxy=BILIBILI_PROXY,
-            trust_env=False,
-        )
+        try:
+            resp = httpx.get(
+                b_short_url,
+                headers=BILIBILI_HEADER,
+                follow_redirects=True,
+                proxy=BILIBILI_PROXY,
+                trust_env=False,
+            )
+            resp.raise_for_status()
+        except httpx.HTTPError as exc:
+            logger.warning(f"[Bilibili] 短链接响应失败：{exc}")
+            return
         url: str = str(resp.url)
     else:
         url_match = re.search(url_reg, url)
@@ -319,16 +381,13 @@ async def bilibili(bot: Bot, event: Event) -> None:
         await bili23.finish("暂不支持此类 Bilibili 链接。")
     video_id = video_match.group(0).split('/')[1]
     v = video.Video(video_id, credential=credential)
-    video_info = await v.get_info()
+    try:
+        video_info = await v.get_info()
+    except Exception as exc:
+        logger.warning(f"[Bilibili] 获取视频信息响应失败：{exc}")
+        return
     if video_info is None:
-        await send_forward(
-            bot,
-            event,
-            make_forward_nodes(
-                bot.self_id,
-                MessageSegment.text(f"{GLOBAL_NICKNAME}识别：B站，出错，无法获取数据！"),
-            ),
-        )
+        logger.warning("[Bilibili] 获取视频信息响应为空")
         return
     video_title = video_info["title"]
     video_cover = video_info["pic"]
@@ -356,14 +415,6 @@ async def bilibili(bot: Bot, event: Event) -> None:
     video_duration = int(video_duration or 0)
     # 删除特殊字符
     video_title = clean_title(video_title)
-
-    if video_duration > VIDEO_DURATION_MAXIMUM:
-        logger.warning(
-            "[Bilibili] 视频时长超过限制，已跳过发送："
-            f"当前 {video_duration // 60} 分钟，"
-            f"上限 {VIDEO_DURATION_MAXIMUM // 60} 分钟"
-        )
-        return
 
     # B 站视频信息统一放进同一条合并转发：封面、标题/简介、数据。
     # 评论（如果开启）放在第 4 个节点，AI 总结放在评论之后；这里不再请求在线人数接口。
@@ -444,9 +495,22 @@ async def bilibili(bot: Bot, event: Event) -> None:
         event,
         bili_forward_nodes,
     )
+
+    if video_duration > VIDEO_DURATION_MAXIMUM:
+        logger.warning(
+            "[Bilibili] 视频时长超过限制，已跳过视频下载和发送："
+            f"当前 {video_duration // 60} 分钟，"
+            f"上限 {VIDEO_DURATION_MAXIMUM // 60} 分钟"
+        )
+        return
+
     # 获取下载链接
     logger.info(page_num)
-    download_url_data = await v.get_download_url(page_index=page_num)
+    try:
+        download_url_data = await v.get_download_url(page_index=page_num)
+    except Exception as exc:
+        logger.warning(f"[Bilibili] 获取视频流响应失败：{exc}")
+        return
     transcode_video = False
 
     try:
@@ -510,7 +574,6 @@ async def bilibili(bot: Bot, event: Event) -> None:
                     raise Exception("未找到任何可用的视频流")
         except Exception as fallback_err:
             logger.error(f"[Bilibili] 备用流解析也宣告失败: {fallback_err}")
-            await bili23.finish("解析失败：B站流媒体接口发生不兼容的变更。")
             return
     # 每次解析使用独立目录，避免同一视频被并发解析时互相覆盖。
     work_dir = Path(
@@ -576,7 +639,7 @@ async def bilibili(bot: Bot, event: Event) -> None:
 @douyin.handle()
 @resolve_handler
 @resolve_controller
-async def dy(bot: Bot, event: Event) -> None:
+async def dy(bot: Bot, event: GroupMessageEvent) -> None:
     """
         抖音解析
     :param bot:
@@ -607,7 +670,7 @@ async def dy(bot: Bot, event: Event) -> None:
         dou_url_2 = str(response.url)
     except httpx.HTTPError as exc:
         logger.error(f"抖音短链展开失败: {exc}")
-        await douyin.finish("抖音链接展开失败，请稍后重试。")
+        return
 
     # 实况图集临时解决方案，eg.  https://v.douyin.com/iDsVgJKL/
     if "share/slides" in dou_url_2:
@@ -662,28 +725,32 @@ async def dy(bot: Bot, event: Event) -> None:
         api_url = generate_x_bogus_url(api_url, headers)
     except RuntimeError as exc:
         logger.error(str(exc))
-        await douyin.finish(str(exc))
+        return
     async with aiohttp.ClientSession(
         proxy=DOUYIN_PROXY,
         trust_env=False,
     ) as session:
         async with session.get(api_url, headers=headers, timeout=10) as response:
-            detail = await response.json()
-            if detail is None:
-                await send_forward(
-                    bot,
-                    event,
-                    make_forward_nodes(
-                        bot.self_id,
-                        MessageSegment.text(f"{GLOBAL_NICKNAME}识别：抖音，解析失败！"),
-                    ),
-                )
+            try:
+                response.raise_for_status()
+                response_data = await response.json()
+            except (aiohttp.ClientError, ValueError) as exc:
+                logger.warning(f"[抖音] 作品接口请求失败：{exc}")
+                return
+
+            if not isinstance(response_data, dict):
+                logger.warning("[抖音] 作品接口返回了非对象响应")
                 return
             # 获取信息
-            detail = detail['aweme_detail']
+            detail = response_data.get("aweme_detail")
+            if not isinstance(detail, dict):
+                logger.warning(
+                    f"[抖音] 作品接口缺少 aweme_detail，响应字段：{list(response_data)}"
+                )
+                return
             desc = detail.get('desc', '')
             # 判断是图片还是视频
-            url_type_code = detail['aweme_type']
+            url_type_code = detail.get('aweme_type')
             url_type = URL_TYPE_CODE_DICT.get(url_type_code, 'video')
 
             # 抖音的说明、图片和评论统一放进同一条合并转发。
@@ -749,8 +816,21 @@ async def dy(bot: Bot, event: Event) -> None:
                 forward_nodes.extend(comment_forward_nodes)
                 await send_forward(bot, event, forward_nodes)
 
+                video_data = detail.get("video")
+                if not isinstance(video_data, dict):
+                    logger.warning("[抖音] 作品响应缺少 video 字段")
+                    return
+                if _skip_video_for_duration(
+                    "抖音",
+                    _duration_seconds(video_data.get("duration"), milliseconds=True),
+                ):
+                    return
                 # 识别播放地址
-                player_uri = detail.get("video").get("play_addr")['uri']
+                play_addr = video_data.get("play_addr")
+                if not isinstance(play_addr, dict) or not play_addr.get("uri"):
+                    logger.warning("[抖音] 作品响应缺少 play_addr.uri")
+                    return
+                player_uri = str(play_addr["uri"])
                 player_real_addr = DY_TOUTIAO_INFO.replace("{}", player_uri)
                 # 发送视频
                 # logger.info(player_addr)
@@ -783,7 +863,7 @@ async def dy(bot: Bot, event: Event) -> None:
 @tik.handle()
 @resolve_handler
 @resolve_controller
-async def tiktok(bot: Bot, event: Event) -> None:
+async def tiktok(bot: Bot, event: GroupMessageEvent) -> None:
     """
         tiktok解析
     :param bot:
@@ -820,7 +900,22 @@ async def tiktok(bot: Bot, event: Event) -> None:
     else:
         url = re.search(url_reg, url)[0]
     try:
-        title = await get_video_title(url, TIKTOK_PROXY, "tiktok")
+        video_info = await get_video_info(url, TIKTOK_PROXY, "tiktok")
+    except RuntimeError as exc:
+        await tik.finish(str(exc))
+
+    await send_forward(
+        bot,
+        event,
+        make_forward_nodes(
+            bot.self_id,
+            MessageSegment.text(f"{GLOBAL_NICKNAME}识别：TikTok\n标题：{video_info['title']}"),
+        ),
+    )
+    if _skip_video_for_duration("TikTok", video_info.get("duration")):
+        return
+
+    try:
         target_tik_video_path = await download_ytb_video(
             url,
             CACHE_DIR,
@@ -834,22 +929,13 @@ async def tiktok(bot: Bot, event: Event) -> None:
     except RuntimeError as exc:
         await tik.finish(str(exc))
 
-    await send_forward(
-        bot,
-        event,
-        make_forward_nodes(
-            bot.self_id,
-            MessageSegment.text(f"{GLOBAL_NICKNAME}识别：TikTok\n标题：{title}"),
-        ),
-    )
-
     await send_resolved_video(event, target_tik_video_path, TIKTOK_PROXY)
 
 
 @acfun.handle()
 @resolve_handler
 @resolve_controller
-async def ac(bot: Bot, event: Event) -> None:
+async def ac(bot: Bot, event: GroupMessageEvent) -> None:
     """
         acfun解析
     :param bot:
@@ -876,10 +962,13 @@ async def ac(bot: Bot, event: Event) -> None:
             MessageSegment.text(f"{GLOBAL_NICKNAME}识别：猴山\n标题：{video_name}"),
         ),
     )
-    m3u8_full_urls, ts_names, _, output_file_name = parse_m3u8(
+    m3u8_full_urls, ts_names, _, output_file_name, video_duration = parse_m3u8(
         url_m3u8s,
         ACFUN_PROXY,
+        include_duration=True,
     )
+    if _skip_video_for_duration("ACFun", video_duration):
+        return
     # logger.info(output_folder_name, output_file_name)
     try:
         await ensure_remote_total_within_limit(
@@ -922,7 +1011,7 @@ async def ac(bot: Bot, event: Event) -> None:
 @twit.handle()
 @resolve_handler
 @resolve_controller
-async def twitter(bot: Bot, event: Event) -> None:
+async def twitter(bot: Bot, event: GroupMessageEvent) -> None:
     """解析 X 帖子；文字和图片合并转发，视频单独发送。"""
     msg = get_resolver_message(event)
     try:
@@ -975,6 +1064,8 @@ async def twitter(bot: Bot, event: Event) -> None:
 
             if media.kind not in {"video", "gif"} or not video_enabled:
                 continue
+            if _skip_video_for_duration("X", media.duration_seconds):
+                continue
             video_url = select_twitter_video_url(media)
             if not video_url:
                 logger.warning("[X] 没有可用的 MP4/H.264 视频格式，跳过当前视频")
@@ -1007,7 +1098,7 @@ async def twitter(bot: Bot, event: Event) -> None:
 @xhs.handle()
 @resolve_handler
 @resolve_controller
-async def xiaohongshu(bot: Bot, event: Event):
+async def xiaohongshu(bot: Bot, event: GroupMessageEvent):
     """
         小红书解析
     :param event:
@@ -1134,6 +1225,11 @@ async def xiaohongshu(bot: Bot, event: Event):
         # ⚠️ 废弃，解析无水印视频video.consumer.originVideoKey
         # video_url = f"http://sns-video-bd.xhscdn.com/{note_data['video']['consumer']['originVideoKey']}"
         await send_forward(bot, event, xhs_info_node)
+        if _skip_video_for_duration(
+            "小红书",
+            _find_video_duration_seconds(note_data.get("video")),
+        ):
+            return
         try:
             path = await download_video(
                 video_url,
@@ -1171,7 +1267,7 @@ async def xiaohongshu(bot: Bot, event: Event):
 @y2b.handle()
 @resolve_handler
 @resolve_controller
-async def youtube(bot: Bot, event: Event):
+async def youtube(bot: Bot, event: GroupMessageEvent):
     msg_url = re.search(
         r"(?:https?://)?(?:www\.)?youtube\.com/[A-Za-z\d._?%&+\-=/#]*"
         r"|(?:https?://)?youtu\.be/[A-Za-z\d._?%&+\-=/#]*",
@@ -1180,15 +1276,6 @@ async def youtube(bot: Bot, event: Event):
 
     try:
         video_info = await get_video_info(msg_url, YOUTUBE_PROXY)
-        target_ytb_video_path = await download_ytb_video(
-            msg_url,
-            CACHE_DIR,
-            YOUTUBE_PROXY,
-            max_size=media_delivery.video_compress_limit,
-        )
-    except MediaSizeLimitExceeded as exc:
-        logger.warning(f"[YouTube] 视频超过大小限制，已跳过下载和发送：{exc}")
-        return
     except RuntimeError as exc:
         await y2b.finish(str(exc))
 
@@ -1242,13 +1329,29 @@ async def youtube(bot: Bot, event: Event):
         if cover_path:
             Path(cover_path).unlink(missing_ok=True)
 
+    if _skip_video_for_duration("YouTube", video_info.get("duration")):
+        return
+
+    try:
+        target_ytb_video_path = await download_ytb_video(
+            msg_url,
+            CACHE_DIR,
+            YOUTUBE_PROXY,
+            max_size=media_delivery.video_compress_limit,
+        )
+    except MediaSizeLimitExceeded as exc:
+        logger.warning(f"[YouTube] 视频超过大小限制，已跳过下载和发送：{exc}")
+        return
+    except RuntimeError as exc:
+        await y2b.finish(str(exc))
+
     await send_resolved_video(event, target_ytb_video_path, YOUTUBE_PROXY)
 
 
 @ncm.handle()
 @resolve_handler
 @resolve_controller
-async def netease(bot: Bot, event: Event):
+async def netease(bot: Bot, event: GroupMessageEvent):
     message = get_resolver_message(event)
     # 识别短链接
     if "163cn.tv" in message:
@@ -1383,7 +1486,7 @@ async def netease(bot: Bot, event: Event):
 @kg.handle()
 @resolve_handler
 @resolve_controller
-async def kugou(bot: Bot, event: Event):
+async def kugou(bot: Bot, event: GroupMessageEvent):
     message = get_resolver_message(event)
     # logger.info(message)
     reg1 = r"https?://.*?kugou\.com.*?(?=\s|$|\n)"
@@ -1502,7 +1605,7 @@ async def kugou(bot: Bot, event: Event):
 @weibo.handle()
 @resolve_handler
 @resolve_controller
-async def wb(bot: Bot, event: Event):
+async def wb(bot: Bot, event: GroupMessageEvent):
     message = get_resolver_message(event)
     weibo_id = None
     reg = r'(jumpUrl|qqdocurl)": ?"(.*?)"'
@@ -1622,6 +1725,11 @@ async def wb(bot: Bot, event: Event):
         urls = page_info.get("urls") or {}
         video_url = urls.get("mp4_720p_mp4", "") or urls.get("mp4_hd_mp4", "")
         if video_url:
+            if _skip_video_for_duration(
+                "微博",
+                _find_video_duration_seconds(page_info),
+            ):
+                return
             video_headers = {
                 "accept": (
                     "text/html,application/xhtml+xml,application/xml;q=0.9,"

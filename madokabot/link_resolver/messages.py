@@ -5,11 +5,9 @@ from pathlib import Path
 from nonebot import get_plugin_config, logger
 from nonebot.adapters.onebot.v11 import (
     Bot,
-    Event,
     GroupMessageEvent,
     Message,
     MessageSegment,
-    PrivateMessageEvent,
 )
 
 from .config import Config
@@ -25,7 +23,7 @@ IMAGE_SUFFIXES = frozenset({".jpg", ".jpeg", ".png", ".gif"})
 VIDEO_SUFFIXES = frozenset({".mp4", ".mov", ".webm"})
 
 
-def get_resolver_message(event: Event) -> str:
+def get_resolver_message(event: GroupMessageEvent) -> str:
     """返回可供解析器检查的消息内容，不包含图片段及其 URL。"""
     return str(event.get_message().exclude("image")).strip()
 
@@ -136,26 +134,20 @@ def _filter_disabled_images(
 
 async def send_forward(
     bot: Bot,
-    event: Event,
+    event: GroupMessageEvent,
     segments: MessageSegment | list,
 ) -> None:
-    """向群聊或私聊发送合并转发。"""
+    """向群聊发送合并转发。"""
     messages = segments if isinstance(segments, list) else [segments]
     messages = _filter_disabled_images(messages)
     if not messages:
         logger.info("当前群组已关闭该 Resolver 的图片内容，跳过合并转发")
         return
     try:
-        if isinstance(event, GroupMessageEvent):
-            await bot.send_group_forward_msg(
-                group_id=event.group_id,
-                messages=messages,
-            )
-        elif isinstance(event, PrivateMessageEvent):
-            await bot.send_private_forward_msg(
-                user_id=event.user_id,
-                messages=messages,
-            )
+        await bot.send_group_forward_msg(
+            group_id=event.group_id,
+            messages=messages,
+        )
     except Exception as exc:
         logger.warning(f"合并转发发送失败，已降级为普通文本：{exc}")
         await bot.send(event, _build_forward_fallback(messages))
@@ -163,7 +155,7 @@ async def send_forward(
 
 async def upload_file(
     bot: Bot,
-    event: Event,
+    event: GroupMessageEvent,
     file_path: str | Path,
     name: str,
 ) -> None:
@@ -172,9 +164,6 @@ async def upload_file(
     await media_delivery.upload_file(bot, event, media)
 
 
-def get_target_id(event: Event) -> int | None:
-    if isinstance(event, GroupMessageEvent):
-        return event.group_id
-    if isinstance(event, PrivateMessageEvent):
-        return event.user_id
-    return None
+def get_target_id(event: GroupMessageEvent) -> int:
+    """获取当前群组 ID。"""
+    return event.group_id

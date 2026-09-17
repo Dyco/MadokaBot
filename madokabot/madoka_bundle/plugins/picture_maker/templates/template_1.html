@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+
+{% block extra_style %}
+    .template-one .cover-frame {
+        position: absolute;
+        top: 92px;
+        right: 90px;
+        left: 90px;
+        height: 900px;
+        overflow: hidden;
+        border-radius: 34px;
+        box-shadow: 0 26px 70px rgba(40, 52, 58, 0.18);
+    }
+
+    .template-one .cover {
+        width: 100%;
+        height: 100%;
+    }
+
+    .template-one .content {
+        position: absolute;
+        top: 1100px;
+        right: 90px;
+        left: 90px;
+    }
+
+    .template-one .rule {
+        width: 130px;
+        height: 8px;
+        margin-bottom: 48px;
+        background: #6f9ba7;
+    }
+
+    .template-one .subtitle {
+        margin-top: 32px;
+        color: rgba(40, 52, 58, 0.62);
+    }
+
+    .template-one .author {
+        margin-top: 86px;
+        color: #6f9ba7;
+    }
+{% endblock %}
+
+{% block content %}
+<main class="canvas {{ theme_class }} template-one">
+    <div class="cover-frame">
+        <img class="cover" src="{{ image_data_url }}" alt="">
+    </div>
+    <section class="content">
+        <div class="rule"></div>
+        <div class="title">{{ title }}</div>
+        <div class="subtitle">{{ subtitle }}</div>
+        <div class="author">{{ author }}</div>
+    </section>
+    <footer class="footer">
+        <span class="footer-mark">MUSIC / 01</span>
+        <span class="user-id">QQ {{ user_id }}</span>
+    </footer>
+</main>
+{% endblock %}

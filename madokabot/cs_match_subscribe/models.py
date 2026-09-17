@@ -9,6 +9,19 @@ from datetime import datetime
 from typing import Any
 
 
+# 赛事订阅的等待状态：尚未观察到第一场比赛实际进行。
+EVENT_STATUS_WAITING = "waiting"
+# 赛事订阅的进行状态：赛事已进入进行阶段，需要轮询比赛页面。
+EVENT_STATUS_ONGOING = "ongoing"
+# 赛事订阅的结束状态：赛事不再需要轮询。
+EVENT_STATUS_FINISHED = "finished"
+EVENT_STATUSES = {
+    EVENT_STATUS_WAITING,
+    EVENT_STATUS_ONGOING,
+    EVENT_STATUS_FINISHED,
+}
+
+
 @dataclass(slots=True)
 class PlayerStats:
     """Rating 表中的一名选手。"""
@@ -111,6 +124,7 @@ class MapScore:
     team2_score: str | None = None
     started: bool = False
     finished: bool | None = None
+    live: bool = False
 
     @property
     def is_finished(self) -> bool:
@@ -121,8 +135,13 @@ class MapScore:
 
     @property
     def is_started(self) -> bool:
-        """判断地图是否已经进入已进行状态。"""
-        return self.started or self.is_finished
+        """判断地图是否有明确的非零比分开始标记。"""
+        return self.started
+
+    @property
+    def is_live(self) -> bool:
+        """判断地图是否被 HLTV Scoreboard 标记为当前实时地图。"""
+        return self.live
 
     @property
     def score_display(self) -> str:
@@ -155,6 +174,29 @@ class MatchData:
     @property
     def is_finished(self) -> bool:
         return self.status == "finished"
+
+    @property
+    def has_total_rating(self) -> bool:
+        """判断全图 Rating 是否已经解析出选手数据。"""
+        return any(team.players for team in self.teams)
+
+    def has_map_rating(self, map_name: str) -> bool:
+        """判断指定地图 Rating 是否已经解析出选手数据。"""
+        return any(team.players for team in self.map_stats.get(map_name, []))
+
+    @property
+    def rating_is_ready(self) -> bool:
+        """判断即时查询或结束汇总所需的 Rating 是否齐全。"""
+        finished_names: list[str] = []
+        for result in self.map_results:
+            if result.is_finished and result.name not in finished_names:
+                finished_names.append(result.name)
+        rating_names = finished_names or self.rating_map_names
+        if not rating_names or not all(
+            self.has_map_rating(name) for name in rating_names
+        ):
+            return False
+        return len(rating_names) == 1 or self.has_total_rating
 
     @property
     def has_started(self) -> bool:
@@ -224,6 +266,7 @@ class MatchData:
                     "team2_score": result.team2_score,
                     "started": result.is_started,
                     "finished": result.is_finished,
+                    "live": result.is_live,
                 }
                 for result in self.map_results
             ],

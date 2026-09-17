@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+
+{% block extra_style %}
+    .template-four .cover-frame {
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 620px;
+        height: 1920px;
+        overflow: hidden;
+    }
+
+    .template-four .cover {
+        width: 100%;
+        height: 100%;
+    }
+
+    .template-four .cover-frame::after {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(90deg, #171717 0%, rgba(23, 23, 23, 0.12) 45%, rgba(23, 23, 23, 0) 100%);
+        content: "";
+    }
+
+    .template-four .content {
+        position: absolute;
+        top: 470px;
+        left: 84px;
+        width: 540px;
+    }
+
+    .template-four .eyebrow {
+        margin-bottom: 50px;
+        color: #d59c65;
+        font-size: 22px;
+        letter-spacing: 7px;
+    }
+
+    .template-four .title {
+        font-size: 72px;
+        line-height: 1.2;
+    }
+
+    .template-four .subtitle {
+        margin-top: 36px;
+        color: rgba(243, 241, 235, 0.64);
+    }
+
+    .template-four .author {
+        margin-top: 80px;
+        padding-left: 24px;
+        border-left: 8px solid #d59c65;
+        color: #d59c65;
+    }
+
+    .template-four .footer {
+        right: auto;
+        left: 84px;
+        width: 540px;
+        color: rgba(243, 241, 235, 0.68);
+    }
+{% endblock %}
+
+{% block content %}
+<main class="canvas {{ theme_class }} template-four">
+    <div class="cover-frame">
+        <img class="cover" src="{{ image_data_url }}" alt="">
+    </div>
+    <section class="content">
+        <div class="eyebrow">SIDE A / 04</div>
+        <div class="title">{{ title }}</div>
+        <div class="subtitle">{{ subtitle }}</div>
+        <div class="author">{{ author }}</div>
+    </section>
+    <footer class="footer">
+        <span class="footer-mark">TRACKPIC MUSIC</span>
+        <span class="user-id">QQ {{ user_id }}</span>
+    </footer>
+</main>
+{% endblock %}

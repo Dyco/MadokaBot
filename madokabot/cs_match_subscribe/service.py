@@ -11,9 +11,17 @@ from nonebot import get_bots, logger
 from nonebot.adapters.onebot.v11 import Bot, Message, MessageSegment
 
 from .assets import enrich_match_assets
-from .client import HltvError, fetch_event_match_refs, fetch_match
+from .client import HltvError, fetch_event, fetch_event_match_refs, fetch_match
 from .config import config
-from .models import EventMatchRef, MapScore, MatchData
+from .models import (
+    EVENT_STATUS_FINISHED,
+    EVENT_STATUS_ONGOING,
+    EVENT_STATUS_WAITING,
+    EVENT_STATUSES,
+    EventMatchRef,
+    MapScore,
+    MatchData,
+)
 from .render import render_rating_card
 from .storage import (
     list_active,
@@ -239,90 +247,71 @@ def _current_map_scores(match: MatchData) -> dict[str, str]:
     return scores
 
 
-def _is_placeholder_map_name(value: str) -> bool:
-    """判断 HLTV 是否只给出了尚未确定的地图占位名。"""
-    return not value or value.casefold() in {"tba", "tbd", "unknown", "-"}
-
-
-def _map_name_for_index(match: MatchData, index: int) -> str:
-    """按地图序号尽量还原当前已经确定的地图名。"""
-    if index < len(match.map_results):
-        name = match.map_results[index].name.strip()
-        if not _is_placeholder_map_name(name):
-            return name
-    if index < len(match.maps):
-        name = match.maps[index].strip()
-        if not _is_placeholder_map_name(name):
-            return name
-    stat_names = [str(value).strip() for value in match.map_stats]
-    if index < len(stat_names):
-        name = stat_names[index]
-        if not _is_placeholder_map_name(name):
-            return name
-    return ""
-
-
 def _started_map_candidates(match: MatchData) -> list[tuple[int, str]]:
-    """返回页面已经显示为进行过的地图序号和名称。
-
-    HLTV 在地图间歇期会把下一张地图也列出来，但仍保持 TBA 且没有统计区块。
-    因此不能简单把所有 map_results 当成已开始；优先使用 HLTV 的 played 标记、
-    最终比分和已出现的 Rating 统计区块，只有整场刚开始且页面没有任何地图信号
-    时才回退到第一张图。
-    """
+    """返回 Scoreboard 标记且已有非零比分的地图。"""
     if not match.has_started:
         return []
 
-    results = match.map_results
-    candidates: set[int] = {
-        index for index, result in enumerate(results) if result.is_started
-    }
-    result_indexes: dict[str, list[int]] = {}
-    for index, result in enumerate(results):
-        name = result.name.strip()
-        if _is_placeholder_map_name(name):
-            continue
-        result_indexes.setdefault(name.casefold(), []).append(index)
-
-    unmatched_stats: list[str] = []
-    for raw_name in match.map_stats:
-        name = str(raw_name).strip()
-        if _is_placeholder_map_name(name):
-            continue
-        indexes = result_indexes.get(name.casefold())
-        if indexes:
-            candidates.add(indexes[0])
-        else:
-            unmatched_stats.append(name)
-
-    # 当比赛页的地图比分仍显示 TBA，但统计页已经出现实际地图名时，
-    # 通过顺序把这些统计区块映射到尚未占用的地图槽位。
-    free_indexes = [
-        index for index in range(max(len(results), len(match.maps)))
-        if index not in candidates
-    ]
-    for _name in unmatched_stats:
-        if not free_indexes:
-            break
-        candidates.add(free_indexes.pop(0))
-
-    if not candidates:
-        map_count = max(len(results), len(match.maps), len(match.map_stats), 1)
-        candidates.add(
-            next(
-                (
-                    index
-                    for index in range(map_count)
-                    if not _is_placeholder_map_name(_map_name_for_index(match, index))
-                ),
-                0,
-            )
-        )
-
     return [
-        (index, _map_name_for_index(match, index))
-        for index in sorted(candidates)
+        (index, result.name.strip())
+        for index, result in enumerate(match.map_results)
+        if result.is_live and result.is_started and not result.is_finished
     ]
+
+
+def _parse_datetime(value: Any) -> datetime | None:
+    """解析 JSON 中保存的 ISO 时间并统一为 UTC。"""
+    if not isinstance(value, str) or not value:
+        return None
+    try:
+        parsed = datetime.fromisoformat(value)
+    except ValueError:
+        return None
+    return parsed.replace(tzinfo=timezone.utc) if parsed.tzinfo is None else parsed
+
+
+def _event_status(entry: dict[str, Any]) -> str:
+    """读取赛事订阅状态，并兼容旧版没有状态字段的记录。"""
+    if entry.get("completed", False):
+        return EVENT_STATUS_FINISHED
+    status = str(entry.get("status", "")).strip()
+    return status if status in EVENT_STATUSES else EVENT_STATUS_WAITING
+
+
+def _event_start_at(entry: dict[str, Any]) -> datetime | None:
+    """读取赛事官方开始时间，用于避免过早检查等待中的赛事。"""
+    event_data = entry.get("event_data")
+    if not isinstance(event_data, dict):
+        return None
+    return _parse_datetime(event_data.get("start_at"))
+
+
+def _positive_score(value: str | None) -> bool:
+    """判断比分是否已经出现非零回合或系列赛比分。"""
+    try:
+        return int(str(value).strip()) > 0
+    except (TypeError, ValueError):
+        return False
+
+
+def _match_has_actual_start(match: MatchData) -> bool:
+    """按实时地图非零比分判断一场比赛是否实际开始。"""
+    if any(
+        result.is_live and result.is_started and not result.is_finished
+        for result in match.map_results
+    ):
+        return True
+    return match.status == "live" and any(
+        _positive_score(team.score) for team in match.teams[:2]
+    )
+
+
+def _all_matches_completed(matches: dict[str, Any]) -> bool:
+    """判断赛事记录中的比赛是否全部完成。"""
+    return bool(matches) and all(
+        isinstance(state, dict) and state.get("completed", False)
+        for state in matches.values()
+    )
 
 
 def _new_match_state(section: str, page_url: str = "") -> dict[str, Any]:
@@ -338,6 +327,8 @@ def _new_match_state(section: str, page_url: str = "") -> dict[str, Any]:
         "map_scores": {},
         "started_maps": [],
         "notified_maps": [],
+        "rating_maps": [],
+        "rating_summary_sent": False,
     }
 
 
@@ -375,9 +366,10 @@ async def _rating_message(
     map_name: str | None = None,
 ) -> Message | None:
     """渲染指定统计范围的 Rating 图片节点。"""
-    if not match.has_stats:
-        return None
-    if map_name and map_name not in match.rating_map_names:
+    if map_name:
+        if not match.has_map_rating(map_name):
+            return None
+    elif not match.has_total_rating:
         return None
     cache_key = map_name or "all"
     if cache_key not in cache:
@@ -388,7 +380,7 @@ async def _rating_message(
 
 async def render_check_rating_messages(match: MatchData) -> list[Message]:
     """按比赛地图数量生成即时查询所需的 Rating 消息。"""
-    if not match.has_stats:
+    if not match.has_stats or not match.rating_is_ready:
         return []
 
     match = await enrich_match_assets(match)
@@ -437,13 +429,45 @@ async def _process_event_match(
     """根据一次比赛快照生成尚未推送的节点并更新内存状态。"""
     messages: list[Message] = []
     initialized = bool(state.get("initialized", False))
+    push_each_map = bool(config.hltv_subscribe_push_each_map)
     previous_scores = state.get("map_scores")
     if not isinstance(previous_scores, dict):
         previous_scores = {}
-    if not initialized and not match.has_started:
+    notified = state.get("notified_maps")
+    if not isinstance(notified, list):
+        notified = []
+        state["notified_maps"] = notified
+    notified_set = {str(value) for value in notified}
+    rating_maps = state.get("rating_maps")
+    if not isinstance(rating_maps, list):
+        rating_maps = []
+        state["rating_maps"] = rating_maps
+    rating_set = {str(value) for value in rating_maps}
+    if not initialized:
         previous_scores = _current_map_scores(match)
 
-    push_each_map = bool(config.hltv_subscribe_push_each_map)
+        # 订阅时已经结束的地图只建立基线，避免首次轮询补发历史开始通知。
+        if push_each_map:
+            started_maps = state.get("started_maps")
+            if not isinstance(started_maps, list):
+                started_maps = []
+                state["started_maps"] = started_maps
+            started_set = {str(value) for value in started_maps}
+            for index, result in enumerate(match.map_results):
+                if result.is_finished and result.is_started and str(index) not in started_set:
+                    started_maps.append(str(index))
+        # 订阅时已经结束的地图只建立消息和 Rating 基线，避免补发历史数据。
+        for index, result in enumerate(match.map_results):
+            if not result.is_finished:
+                continue
+            key = f"{index}:{result.name}"
+            if key not in notified_set:
+                notified.append(key)
+                notified_set.add(key)
+            if key not in rating_set:
+                rating_maps.append(key)
+                rating_set.add(key)
+
     if push_each_map:
         started_maps = state.get("started_maps")
         if not isinstance(started_maps, list):
@@ -465,11 +489,6 @@ async def _process_event_match(
         messages.append(_start_message(match, event_name))
         state["started_sent"] = True
 
-    notified = state.get("notified_maps")
-    if not isinstance(notified, list):
-        notified = []
-        state["notified_maps"] = notified
-    notified_set = {str(value) for value in notified}
     rating_cache: dict[str, MessageSegment] = {}
     current_scores = _current_map_scores(match)
     for index, result in enumerate(match.map_results):
@@ -477,23 +496,29 @@ async def _process_event_match(
             continue
         key = f"{index}:{result.name}"
         score = result.score_display
-        if key in notified_set or previous_scores.get(key) == score:
-            continue
-        if push_each_map:
+        if push_each_map and key not in notified_set and previous_scores.get(key) != score:
             messages.append(_map_result_message(match, result, index))
+            notified.append(key)
+            notified_set.add(key)
+        if push_each_map and key not in rating_set:
             image = await _rating_message(match, rating_cache, result.name)
             if image is not None:
                 messages.append(image)
-        notified.append(key)
-        notified_set.add(key)
+                rating_maps.append(key)
+                rating_set.add(key)
 
-    if match.is_finished and not state.get("final_sent", False):
-        messages.append(_final_message(match))
-        # 整场结束时始终补发一次即时查询同款的完整解析：实际进行的每张
-        # 地图 + 全图总数据。rating_map_names 会自动排除 BP 但未进行的地图。
-        messages.extend(await render_check_rating_messages(match))
-        state["final_sent"] = True
-        state["completed"] = True
+    if match.is_finished:
+        if not state.get("final_sent", False):
+            messages.append(_final_message(match))
+            state["final_sent"] = True
+        if not state.get("rating_summary_sent", False):
+            # 比赛结束和 Rating 生成不是同一时刻；没有完整 Rating 时保留
+            # 赛事状态，下一次轮询继续尝试，不提前完成订阅。
+            rating_messages = await render_check_rating_messages(match)
+            if rating_messages:
+                messages.extend(rating_messages)
+                state["rating_summary_sent"] = True
+                state["completed"] = True
 
     state["initialized"] = True
     state["map_scores"] = current_scores
@@ -525,20 +550,60 @@ async def _load_event_matches(
 
 def _event_ended(entry: dict[str, Any]) -> bool:
     """判断赛事是否已经结束且所有比赛均已处理。"""
-    value = entry.get("event_end")
-    if not isinstance(value, str) or not value:
+    end_at = _parse_datetime(entry.get("event_end"))
+    if end_at is None:
         return False
-    try:
-        end_at = datetime.fromisoformat(value)
-    except ValueError:
-        return False
-    if end_at.tzinfo is None:
-        end_at = end_at.replace(tzinfo=timezone.utc)
     matches = entry.get("matches")
-    return bool(matches) and end_at <= datetime.now(timezone.utc) and all(
-        isinstance(state, dict) and state.get("completed", False)
-        for state in matches.values()
+    return (
+        isinstance(matches, dict)
+        and end_at <= datetime.now(timezone.utc)
+        and _all_matches_completed(matches)
     )
+
+
+async def _activate_waiting_event(
+    event_id: str,
+    entry: dict[str, Any],
+) -> bool:
+    """检查等待赛事是否进入进行状态；等待时不请求比赛详情页。"""
+    if _event_status(entry) != EVENT_STATUS_WAITING:
+        return True
+
+    now = datetime.now(timezone.utc)
+    first_started_at = _parse_datetime(entry.get("first_match_started_at"))
+    if first_started_at is not None:
+        if first_started_at <= now:
+            entry["status"] = EVENT_STATUS_ONGOING
+            await update_event_state(event_id, status=EVENT_STATUS_ONGOING)
+            return True
+        return False
+
+    scheduled_start = _event_start_at(entry)
+    if scheduled_start is not None and scheduled_start > now:
+        return False
+
+    event = await fetch_event(event_id)
+    if event.is_finished:
+        entry["status"] = EVENT_STATUS_FINISHED
+        entry["completed"] = True
+        await update_event_state(
+            event_id,
+            status=EVENT_STATUS_FINISHED,
+            completed=True,
+        )
+        return False
+    status_is_live = event.event_status == "live"
+    status_is_unknown_after_start = (
+        event.event_status == "unknown"
+        and event.start_at is not None
+        and event.start_at <= now
+    )
+    if not (status_is_live or status_is_unknown_after_start):
+        return False
+
+    entry["status"] = EVENT_STATUS_ONGOING
+    await update_event_state(event_id, status=EVENT_STATUS_ONGOING)
+    return True
 
 
 async def _poll_event_subscription(
@@ -590,11 +655,20 @@ async def _poll_event_subscription(
     loaded = await _load_event_matches(pending_refs)
     messages: list[Message] = []
     event_name = str(entry.get("event_name", ""))
+    observed_first_start: datetime | None = None
     for ref, match in loaded:
         if not _match_belongs_to_event(match, event_id, event_name):
             matches[ref.match_id] = _historical_match_state()
             continue
         state = matches[ref.match_id]
+        if (
+            observed_first_start is None
+            and _match_has_actual_start(match)
+        ):
+            observed_first_start = (
+                _parse_datetime(match.fetched_at)
+                or datetime.now(timezone.utc)
+            )
         messages.extend(await _process_event_match(match, state, event_name))
 
     targets = [
@@ -606,10 +680,23 @@ async def _poll_event_subscription(
         if not await _broadcast_forward(targets, messages):
             return
 
+    first_started_at = entry.get("first_match_started_at")
+    if observed_first_start is not None and not _parse_datetime(first_started_at):
+        first_started_at = observed_first_start.isoformat()
+        entry["first_match_started_at"] = first_started_at
+        entry["status"] = EVENT_STATUS_ONGOING
+
+    event_snapshot = {**entry, "matches": matches}
+    event_finished = _event_ended(event_snapshot)
+    status = EVENT_STATUS_FINISHED if event_finished else _event_status(entry)
     await update_event_state(
         event_id,
         matches=matches,
-        completed=_event_ended({**entry, "matches": matches}),
+        status=status,
+        first_match_started_at=(
+            first_started_at if isinstance(first_started_at, str) else None
+        ),
+        completed=event_finished,
     )
 
 
@@ -649,6 +736,10 @@ async def poll_subscriptions() -> None:
     entries = await list_active_events()
     for event_id, entry in entries.items():
         try:
+            if _event_status(entry) == EVENT_STATUS_WAITING:
+                # 等待中的赛事只检查赛事状态，不抓取比赛详情页。
+                if not await _activate_waiting_event(event_id, entry):
+                    continue
             await _poll_event_subscription(event_id, entry)
         except HltvError as exc:
             logger.warning("轮询 HLTV 赛事 %s 失败：%s", event_id, exc)

@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+
+{% block extra_style %}
+    .template-two .background {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        filter: saturate(0.78);
+    }
+
+    .template-two .shade {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(180deg, rgba(8, 13, 17, 0.08) 20%, rgba(8, 13, 17, 0.88) 86%);
+    }
+
+    .template-two .content {
+        position: absolute;
+        right: 88px;
+        bottom: 230px;
+        left: 88px;
+    }
+
+    .template-two .eyebrow {
+        margin-bottom: 30px;
+        color: rgba(245, 247, 246, 0.68);
+        font-size: 22px;
+        letter-spacing: 8px;
+    }
+
+    .template-two .subtitle {
+        margin-top: 28px;
+        color: rgba(245, 247, 246, 0.72);
+    }
+
+    .template-two .author {
+        margin-top: 54px;
+        color: #a9d0d2;
+    }
+
+    .template-two .footer {
+        color: rgba(245, 247, 246, 0.72);
+    }
+{% endblock %}
+
+{% block content %}
+<main class="canvas {{ theme_class }} template-two">
+    <img class="background cover" src="{{ image_data_url }}" alt="">
+    <div class="shade"></div>
+    <section class="content">
+        <div class="eyebrow">TRACKPIC / MUSIC</div>
+        <div class="title">{{ title }}</div>
+        <div class="subtitle">{{ subtitle }}</div>
+        <div class="author">{{ author }}</div>
+    </section>
+    <footer class="footer">
+        <span class="footer-mark">PLAYLIST 02</span>
+        <span class="user-id">QQ {{ user_id }}</span>
+    </footer>
+</main>
+{% endblock %}

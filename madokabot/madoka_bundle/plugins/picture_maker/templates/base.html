@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <style>
+        @font-face {
+            font-family: "PictureMakerSans";
+            src: url("{{ font_path }}") format("woff2");
+            font-weight: 100 900;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            width: 1080px;
+            height: 1920px;
+            margin: 0;
+            overflow: hidden;
+        }
+
+        body {
+            font-family: "PictureMakerSans", "Noto Sans CJK SC", sans-serif;
+        }
+
+        .canvas {
+            position: relative;
+            width: 1080px;
+            height: 1920px;
+            overflow: hidden;
+        }
+
+        .cover {
+            display: block;
+            object-fit: cover;
+        }
+
+        .title,
+        .subtitle,
+        .author,
+        .user-id {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .title {
+            font-size: 68px;
+            font-weight: 800;
+            line-height: 1.15;
+        }
+
+        .subtitle {
+            font-size: 34px;
+            line-height: 1.3;
+        }
+
+        .author,
+        .user-id {
+            font-size: 24px;
+            letter-spacing: 2px;
+        }
+
+        .theme-1 {
+            color: #28343a;
+            background: #f5f7f6;
+        }
+
+        .theme-2 {
+            color: #f5f7f6;
+            background: #10171c;
+        }
+
+        .theme-3 {
+            color: #3b3029;
+            background: #e9dfd0;
+        }
+
+        .theme-4 {
+            color: #f3f1eb;
+            background: #171717;
+        }
+
+        .footer {
+            position: absolute;
+            right: 76px;
+            bottom: 68px;
+            left: 76px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            opacity: 0.72;
+        }
+
+        .footer-mark {
+            font-size: 20px;
+            letter-spacing: 5px;
+        }
+
+        .user-id {
+            letter-spacing: 1px;
+        }
+
+        {% block extra_style %}{% endblock %}
+    </style>
+</head>
+
+<body>
+    {% block content %}{% endblock %}
+</body>
+
+</html>
