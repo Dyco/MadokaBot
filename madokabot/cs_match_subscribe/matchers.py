@@ -9,11 +9,14 @@ from arclet.alconna import StrMulti
 from nonebot import logger
 from nonebot.adapters.onebot.v11 import (
     Bot,
+    GROUP_ADMIN,
+    GROUP_OWNER,
     GroupMessageEvent,
     Message,
     MessageEvent,
     PrivateMessageEvent,
 )
+from nonebot.permission import SUPERUSER
 from nonebot_plugin_alconna import (
     Alconna,
     Args,
@@ -50,8 +53,11 @@ from .render import render_event_list_card, render_player_stats_card
 from .service import render_check_rating_messages, send_rating_forward
 from .storage import (
     add_event_target_if_exists,
+    remove_event_subscription,
     subscribe_event,
     target_from_event,
+    unsubscribe_all_events,
+    unsubscribe_event,
 )
 
 BOT_NAME = "圆香"
@@ -60,6 +66,8 @@ CS_BIND_USAGE = f"用法：CS bind <{SUPPORTED_PLATFORM_TEXT}> <用户昵称>"
 CS_UNBIND_USAGE = f"用法：CS unbind <{SUPPORTED_PLATFORM_TEXT}>"
 CS_LOGIN_USAGE = "用法：CS login <手机号> <验证码>"
 CS_STATS_USAGE = f"用法：CS 战绩 <{SUPPORTED_PLATFORM_TEXT}> [玩家昵称]"
+CS_UNSUB_USAGE = "用法：CS unsub <赛事ID>"
+CS_REMOVESUB_USAGE = "用法：CS removesub <赛事ID>"
 
 
 def _event_schedule_text(event: EventData) -> str:
@@ -94,10 +102,32 @@ def _event_is_finished(event: EventData, refs: list[EventMatchRef]) -> bool:
         end_at = end_at.replace(tzinfo=timezone.utc)
     return end_at <= datetime.now(timezone.utc)
 
+
+async def _group_subscription_target(
+    bot: Bot,
+    event: MessageEvent,
+) -> dict[str, str] | None:
+    """校验群管理权限并返回当前群的推送目标。"""
+    if not isinstance(event, GroupMessageEvent):
+        await cs_cmd.finish("此命令仅支持群聊。")
+        return None
+    if not (
+        await SUPERUSER(bot, event)
+        or await GROUP_ADMIN(bot, event)
+        or await GROUP_OWNER(bot, event)
+    ):
+        await cs_cmd.finish("权限不足，只有超级用户、群管理员或群主可以使用此命令。")
+        return None
+    return {"kind": "group", "id": str(event.group_id)}
+
+
 CS_USAGE = """用法：
 CS help
 CS list event  列出当前及未来三个月的高奖金国际 LAN 和 Major 赛事
 CS sub <赛事ID>  订阅赛事并推送其中的比赛结果
+CS unsub <赛事ID>  本群退订指定赛事推送
+CS nosub  本群退订全部赛事推送
+CS removesub <赛事ID>  超级用户全局移除赛事订阅
 CS check <比赛链接>  查询一场比赛的 Rating
 CS login <手机号> <验证码>  登录完美平台并保存 Session（验证码请自行获取）
 CS bind <5E|5e|5eplay|wm|pw|完美> <用户昵称>  绑定平台战绩查询对象
@@ -124,6 +154,23 @@ cs_command = Alconna(
         Args["event_id", StrMulti],
         alias=["订阅"],
         help_text="订阅 HLTV 赛事并推送其中的比赛结果",
+    ),
+    Subcommand(
+        "unsub",
+        Args["event_id?", str],
+        alias=["退订"],
+        help_text="让当前群退订指定赛事推送",
+    ),
+    Subcommand(
+        "nosub",
+        alias=["退订全部", "退订所有"],
+        help_text="让当前群退订全部赛事推送",
+    ),
+    Subcommand(
+        "removesub",
+        Args["event_id?", str],
+        alias=["移除订阅", "删除订阅"],
+        help_text="超级用户全局移除指定赛事订阅",
     ),
     Subcommand(
         "login",
@@ -558,6 +605,88 @@ async def handle_cs_sub(event: MessageEvent, event_id: Match[str]) -> None:
         f"{prefix} {event_data.name}，赛程时间为{_event_schedule_text(event_data)}\n"
         f"已记录 {len(refs)} 场比赛，轮询间隔为{config.hltv_poll_interval}秒；"
         f"{push_mode}。"
+    )
+
+
+@cs_cmd.assign("unsub")
+async def handle_cs_unsub(
+    bot: Bot,
+    event: MessageEvent,
+    event_id: Match[str],
+) -> None:
+    """让当前群退订指定赛事，但保留其他目标的订阅。"""
+    target = await _group_subscription_target(bot, event)
+    if target is None:
+        return
+
+    raw_id = event_id.result.strip() if event_id.available else ""
+    if not raw_id.isdigit():
+        await cs_cmd.finish(CS_UNSUB_USAGE)
+        return
+
+    try:
+        removed, event_name = await unsubscribe_event(raw_id, target)
+    except Exception:
+        logger.exception("CS 指定赛事退订失败：event_id=%s", raw_id)
+        await cs_cmd.finish("赛事退订处理失败，请稍后重试。")
+        return
+
+    if not removed:
+        await cs_cmd.finish(f"本群未订阅赛事{event_name}。")
+        return
+    await cs_cmd.finish(
+        f"本群已退订赛事{event_name}（{raw_id}），不再接收该赛事推送。"
+    )
+
+
+@cs_cmd.assign("nosub")
+async def handle_cs_nosub(bot: Bot, event: MessageEvent) -> None:
+    """让当前群退订全部赛事推送。"""
+    target = await _group_subscription_target(bot, event)
+    if target is None:
+        return
+
+    try:
+        removed = await unsubscribe_all_events(target)
+    except Exception:
+        logger.exception("CS 全部赛事退订失败：group_id=%s", event.group_id)
+        await cs_cmd.finish("赛事退订处理失败，请稍后重试。")
+        return
+
+    if not removed:
+        await cs_cmd.finish("本群当前没有赛事订阅。")
+        return
+    await cs_cmd.finish(f"本群已退订全部赛事推送，共移除 {removed} 项订阅。")
+
+
+@cs_cmd.assign("removesub")
+async def handle_cs_removesub(
+    bot: Bot,
+    event: MessageEvent,
+    event_id: Match[str],
+) -> None:
+    """由超级用户全局移除指定赛事订阅。"""
+    if not await SUPERUSER(bot, event):
+        await cs_cmd.finish("权限不足，只有超级用户可以使用此命令。")
+        return
+
+    raw_id = event_id.result.strip() if event_id.available else ""
+    if not raw_id.isdigit():
+        await cs_cmd.finish(CS_REMOVESUB_USAGE)
+        return
+
+    try:
+        removed, event_name = await remove_event_subscription(raw_id)
+    except Exception:
+        logger.exception("CS 全局赛事移除失败：event_id=%s", raw_id)
+        await cs_cmd.finish("赛事移除处理失败，请稍后重试。")
+        return
+
+    if not removed:
+        await cs_cmd.finish(f"未找到赛事订阅：{raw_id}")
+        return
+    await cs_cmd.finish(
+        f"已全局移除赛事{event_name}（{raw_id}），所有推送目标均已删除。"
     )
 
 

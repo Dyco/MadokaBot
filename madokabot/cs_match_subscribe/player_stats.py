@@ -32,6 +32,8 @@ FIVE_E_ID_URL = "https://gate.5eplay.com/userinterface/http/v1/userinterface/idT
 FIVE_E_MATCH_LIST_URL = "https://gate.5eplay.com/crane/http/api/data/match/list"
 FIVE_E_PLAYER_HOME_URL = "https://gate.5eplay.com/crane/http/api/data/v3/player/home"
 RECENT_MATCH_LIMIT = 10
+FIVE_E_RETRY_ATTEMPTS = 2
+FIVE_E_RETRY_DELAY = 0.5
 CHINA_TIMEZONE = timezone(timedelta(hours=8))
 # 完美平台旧版接口仍负责返回完整的个人统计，但必须使用当前客户端的
 # 公开请求头，并将 mySteamId 设为 0；使用手机号登录得到的旧 token 已无法
@@ -304,22 +306,60 @@ async def _request_json(
     client: httpx.AsyncClient,
     method: str,
     url: str,
+    *,
+    retry_attempts: int = 0,
+    retry_delay: float = 0.5,
     **kwargs: Any,
 ) -> dict[str, Any]:
-    """请求 JSON 接口，并把网络错误统一转换为业务异常。"""
-    try:
-        response = await client.request(method, url, **kwargs)
-        response.raise_for_status()
-        payload = response.json()
-    except httpx.HTTPStatusError as exc:
-        raise PlayerStatsError(
-            f"平台接口返回 HTTP {exc.response.status_code}"
-        ) from exc
-    except (httpx.HTTPError, ValueError) as exc:
-        raise PlayerStatsError(f"平台接口请求失败：{exc}") from exc
-    if not isinstance(payload, dict):
-        raise PlayerStatsError("平台接口返回格式异常")
-    return payload
+    """请求 JSON 接口，按配置重试临时错误并统一转换为业务异常。"""
+    attempts = max(0, int(retry_attempts))
+    retryable_statuses = {408, 425, 429, 500, 502, 503, 504}
+
+    for attempt in range(attempts + 1):
+        try:
+            response = await client.request(method, url, **kwargs)
+            response.raise_for_status()
+            payload = response.json()
+        except httpx.HTTPStatusError as exc:
+            status = exc.response.status_code
+            if status not in retryable_statuses or attempt >= attempts:
+                suffix = f"，已重试 {attempts} 次" if status in retryable_statuses else ""
+                raise PlayerStatsError(
+                    f"平台接口返回 HTTP {status}{suffix}（{method} {url}）"
+                ) from exc
+            logger.warning(
+                "平台接口 %s %s 返回 HTTP %s，将在第 %s/%s 次重试",
+                method,
+                url,
+                status,
+                attempt + 1,
+                attempts,
+            )
+        except (httpx.HTTPError, ValueError) as exc:
+            if attempt >= attempts:
+                detail = str(exc).strip() or repr(exc) or type(exc).__name__
+                suffix = f"，已重试 {attempts} 次" if attempts else ""
+                raise PlayerStatsError(
+                    f"平台接口请求失败{suffix}（{method} {url}，"
+                    f"{type(exc).__name__}）：{detail}"
+                ) from exc
+            logger.warning(
+                "平台接口 %s %s 请求异常（%s：%s），将在第 %s/%s 次重试",
+                method,
+                url,
+                type(exc).__name__,
+                str(exc).strip() or repr(exc),
+                attempt + 1,
+                attempts,
+            )
+        else:
+            if not isinstance(payload, dict):
+                raise PlayerStatsError("平台接口返回格式异常")
+            return payload
+
+        await asyncio.sleep(max(0.0, retry_delay) * (attempt + 1))
+
+    raise PlayerStatsError(f"平台接口请求失败（{method} {url}）")
 
 
 def _dict(value: Any) -> dict[str, Any]:
@@ -720,6 +760,8 @@ async def _search_5e_player(
         client,
         "GET",
         FIVE_E_SEARCH_URL,
+        retry_attempts=FIVE_E_RETRY_ATTEMPTS,
+        retry_delay=FIVE_E_RETRY_DELAY,
         params={"keywords": nickname},
         headers={
             "X-Requested-With": "XMLHttpRequest",
@@ -764,6 +806,8 @@ async def _resolve_5e_uuid(
         client,
         "POST",
         FIVE_E_ID_URL,
+        retry_attempts=FIVE_E_RETRY_ATTEMPTS,
+        retry_delay=FIVE_E_RETRY_DELAY,
         json={"trans": {"domain": domain}},
     )
     uuid = str(_dict(payload.get("data")).get("uuid") or "").strip()
@@ -1023,6 +1067,8 @@ async def _fetch_5e_recent_matches(
         client,
         "GET",
         FIVE_E_MATCH_LIST_URL,
+        retry_attempts=FIVE_E_RETRY_ATTEMPTS,
+        retry_delay=FIVE_E_RETRY_DELAY,
         params={
             "match_type": -1,
             "page": 1,
@@ -1045,32 +1091,25 @@ async def _fetch_5e_recent_matches(
 async def _fetch_5e_stats(binding: PlayerBinding) -> dict[str, Any]:
     """从 player_home 获取赛季/生涯资料，并单独读取近期逐场记录。"""
     async with _client() as client:
-        home_result, matches_result = await asyncio.gather(
-            _request_json(
-                client,
-                "GET",
-                FIVE_E_PLAYER_HOME_URL,
-                params={"uuid": binding.uuid},
-            ),
-            _fetch_5e_recent_matches(client, binding.uuid),
-            return_exceptions=True,
+        home_result = await _request_json(
+            client,
+            "GET",
+            FIVE_E_PLAYER_HOME_URL,
+            retry_attempts=FIVE_E_RETRY_ATTEMPTS,
+            retry_delay=FIVE_E_RETRY_DELAY,
+            params={"uuid": binding.uuid},
         )
+        home_data = _dict(home_result.get("data"))
+        expected_sections = ("career", "season_data", "uinfo", "elo_info")
+        if not home_data or any(
+            key not in home_data or not isinstance(home_data[key], dict)
+            for key in expected_sections
+        ):
+            raise PlayerStatsError("5E player_home 返回了未识别的数据结构")
 
-    if isinstance(home_result, Exception):
-        raise PlayerStatsError(str(home_result))
-    home_data = _dict(home_result.get("data"))
-    expected_sections = ("career", "season_data", "uinfo", "elo_info")
-    if not home_data or any(
-        key not in home_data or not isinstance(home_data[key], dict)
-        for key in expected_sections
-    ):
-        raise PlayerStatsError("5E player_home 返回了未识别的数据结构")
-
-    match_data: list[Any] = []
-    if isinstance(matches_result, list):
-        match_data = matches_result
-    elif isinstance(matches_result, Exception):
-        logger.warning("5E 近期比赛获取失败：%s", matches_result)
+        # 两个阶段按顺序执行；比赛列表连续失败时也中断本次查询，
+        # 避免返回缺少近期对局的半成品卡片。
+        match_data = await _fetch_5e_recent_matches(client, binding.uuid)
 
     return _build_5e_view(binding, home_data, match_data)
 

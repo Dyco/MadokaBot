@@ -82,39 +82,43 @@
                 "url": "https://www.hltv.org/matches/2398090/natus-vincere-vs-aurora-starladder-starseries-fall-2026",
                 "initialized": true,
                 "started_sent": true,
-                "final_sent": false,
-                "completed": false,
+                "final_sent": true,
+                "completed": true,
                 "map_scores": {
-                    "0": "8:13"
+                    "0": "8:13",
+                    "1": "7:13"
                 },
                 "started_maps": [
                     "0",
                     "1"
                 ],
                 "notified_maps": [
-                    "0"
+                    "0",
+                    "1"
                 ],
                 "rating_maps": [
                     "0"
                 ],
-                "rating_summary_sent": false
+                "rating_summary_sent": true
             },
             "2398091": {
                 "source": "upcoming",
                 "url": "https://www.hltv.org/matches/2398091/furia-vs-mibr-starladder-starseries-fall-2026",
                 "initialized": true,
-                "started_sent": false,
+                "started_sent": true,
                 "final_sent": false,
                 "completed": false,
                 "map_scores": {},
-                "started_maps": [],
+                "started_maps": [
+                    "0"
+                ],
                 "notified_maps": [],
                 "rating_maps": [],
                 "rating_summary_sent": false
             },
             "2398099": {
                 "source": "upcoming",
-                "url": "https://www.hltv.org/matches/2398099/mouz-vs-natus-vincere-aurora-loser-starladder-starseries-fall-2026",
+                "url": "https://www.hltv.org/matches/2398099/mouz-vs-natus-vincere-starladder-starseries-fall-2026",
                 "initialized": true,
                 "started_sent": false,
                 "final_sent": false,
@@ -140,7 +144,7 @@
             },
             "2398101": {
                 "source": "upcoming",
-                "url": "https://www.hltv.org/matches/2398101/nrg-vs-natus-vincere-aurora-winner-starladder-starseries-fall-2026",
+                "url": "https://www.hltv.org/matches/2398101/nrg-vs-aurora-starladder-starseries-fall-2026",
                 "initialized": true,
                 "started_sent": false,
                 "final_sent": false,

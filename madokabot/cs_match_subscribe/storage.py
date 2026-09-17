@@ -58,6 +58,64 @@ def _add_group_event_tag(target: dict[str, str], event_id: str) -> None:
     group_set.set(target["id"], HLTV_SUB_GROUP_TAG, event_ids)
 
 
+def _remove_group_event_tag(target: dict[str, str], event_id: str) -> None:
+    """从群组的 HLTV 赛事推送标签中移除赛事 ID。"""
+    if target.get("kind") != "group" or not target.get("id"):
+        return
+
+    raw_event_ids = group_set.get(
+        target["id"],
+        HLTV_SUB_GROUP_TAG,
+        [],
+    )
+    if not isinstance(raw_event_ids, list):
+        return
+
+    normalized_event_id = str(event_id).strip()
+    event_ids = [
+        str(value).strip()
+        for value in raw_event_ids
+        if str(value).strip() and str(value).strip() != normalized_event_id
+    ]
+    if len(event_ids) == len(raw_event_ids):
+        return
+    if event_ids:
+        group_set.set(target["id"], HLTV_SUB_GROUP_TAG, event_ids)
+    else:
+        group_set.remove(target["id"], HLTV_SUB_GROUP_TAG)
+
+
+def _remove_event_from_group_tags(event_id: str) -> None:
+    """清理所有群组标签中的赛事 ID。"""
+    normalized_event_id = str(event_id).strip()
+    for group_id, raw_event_ids in group_set.get_all(
+        HLTV_SUB_GROUP_TAG
+    ).items():
+        if not isinstance(raw_event_ids, list):
+            continue
+        event_ids = [
+            str(value).strip()
+            for value in raw_event_ids
+            if str(value).strip() and str(value).strip() != normalized_event_id
+        ]
+        if len(event_ids) == len(raw_event_ids):
+            continue
+        if event_ids:
+            group_set.set(group_id, HLTV_SUB_GROUP_TAG, event_ids)
+        else:
+            group_set.remove(group_id, HLTV_SUB_GROUP_TAG)
+
+
+def _event_name(entry: dict[str, Any], event_id: str) -> str:
+    """读取赛事显示名称，缺失时回退到赛事 ID。"""
+    name = str(entry.get("event_name") or "").strip()
+    if not name:
+        event_data = entry.get("event_data")
+        if isinstance(event_data, dict):
+            name = str(event_data.get("name") or "").strip()
+    return name or str(event_id).strip()
+
+
 def _serialize_event(event: EventData) -> dict[str, Any]:
     """将赛事数据转换为可写入 JSON 的快照。"""
     data = asdict(event)
@@ -217,6 +275,81 @@ async def add_event_target_if_exists(
 
         _add_group_event_tag(target, normalized_event_id)
         return is_new, deepcopy(entry)
+
+
+async def unsubscribe_event(
+    event_id: str,
+    target: dict[str, str],
+) -> tuple[bool, str]:
+    """移除当前目标对指定赛事的订阅。"""
+    async with _lock:
+        data = _read()
+        normalized_event_id = str(event_id).strip()
+        key = f"event:{normalized_event_id}"
+        entry = data.get(key)
+        if not isinstance(entry, dict) or entry.get("kind") != "event":
+            return False, normalized_event_id
+
+        name = _event_name(entry, normalized_event_id)
+        targets = entry.get("targets")
+        if not isinstance(targets, list) or target not in targets:
+            return False, name
+
+        remaining_targets = [value for value in targets if value != target]
+        if remaining_targets:
+            entry["targets"] = remaining_targets
+        else:
+            del data[key]
+        _write(data)
+        _remove_group_event_tag(target, normalized_event_id)
+        return True, name
+
+
+async def unsubscribe_all_events(target: dict[str, str]) -> int:
+    """移除当前目标对全部赛事的订阅，返回实际退订数量。"""
+    async with _lock:
+        data = _read()
+        removed = 0
+        for key, entry in list(data.items()):
+            if not (
+                key.startswith("event:")
+                and isinstance(entry, dict)
+                and entry.get("kind") == "event"
+            ):
+                continue
+            targets = entry.get("targets")
+            if not isinstance(targets, list) or target not in targets:
+                continue
+
+            event_id = key.removeprefix("event:")
+            remaining_targets = [value for value in targets if value != target]
+            if remaining_targets:
+                entry["targets"] = remaining_targets
+            else:
+                del data[key]
+            _remove_group_event_tag(target, event_id)
+            removed += 1
+
+        if removed:
+            _write(data)
+        return removed
+
+
+async def remove_event_subscription(event_id: str) -> tuple[bool, str]:
+    """全局移除指定赛事订阅及其所有推送目标。"""
+    async with _lock:
+        data = _read()
+        normalized_event_id = str(event_id).strip()
+        key = f"event:{normalized_event_id}"
+        entry = data.get(key)
+        if not isinstance(entry, dict) or entry.get("kind") != "event":
+            return False, normalized_event_id
+
+        name = _event_name(entry, normalized_event_id)
+        del data[key]
+        _write(data)
+        _remove_event_from_group_tags(normalized_event_id)
+        return True, name
 
 
 async def list_active_events() -> dict[str, dict[str, Any]]:

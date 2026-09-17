@@ -190,7 +190,12 @@ async def _broadcast_forward(
     targets: list[dict[str, str]],
     messages: list[Message],
 ) -> bool:
-    """将一个赛事更新批次作为合并转发广播。"""
+    """将一个赛事更新批次作为合并转发广播。
+
+    返回值表示本批次是否至少送达一个目标。赛事状态是所有订阅目标共享的；
+    如果部分目标已经成功、部分目标失败，仍必须提交状态，否则成功目标会在
+    下一轮再次收到完全相同的比赛状态。
+    """
     bots = list(_available_bots())
     if not bots:
         logger.warning("没有可用 OneBot 连接，暂不推送 HLTV 赛事更新。")
@@ -199,7 +204,8 @@ async def _broadcast_forward(
         logger.warning("HLTV 赛事订阅没有有效推送目标，暂不更新订阅状态。")
         return False
 
-    delivered_all = True
+    delivered_any = False
+    failed_targets: list[dict[str, str]] = []
     for target in targets:
         delivered = False
         for bot in bots:
@@ -209,8 +215,18 @@ async def _broadcast_forward(
                     break
             except Exception:
                 logger.exception("推送 HLTV 合并转发失败：%s", target)
-        delivered_all = delivered_all and delivered
-    return delivered_all
+        if delivered:
+            delivered_any = True
+        else:
+            failed_targets.append(target)
+
+    if delivered_any and failed_targets:
+        logger.warning(
+            "HLTV 赛事更新仅部分送达；已提交本轮状态以避免成功目标重复收取，"
+            "失败目标：%s",
+            failed_targets,
+        )
+    return delivered_any
 
 
 def _current_map_scores(match: MatchData) -> dict[str, str]:
@@ -728,7 +744,7 @@ async def _poll_event_subscription(
     ]
     if messages:
         if not await _broadcast_forward(targets, messages):
-            # 没有确认发送成功时撤销本轮新键，下一次轮询仍可重试；
+            # 所有目标都没有确认发送成功时撤销本轮新键，下一次轮询仍可重试；
             # 已存在的键不动，避免覆盖此前已经成功发送的通知记忆。
             for key in generated_memory_keys:
                 _notification_memory.pop(key, None)
