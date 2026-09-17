@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Iterable
 from datetime import datetime, timezone
+from time import monotonic
 from typing import Any
 
 from nonebot import get_bots, logger
@@ -24,13 +25,49 @@ from .models import (
 )
 from .render import render_rating_card
 from .storage import (
-    list_active,
     list_active_events,
     update_event_state,
-    update_state,
 )
 
 _MAP_LABELS = "一二三四五六七八九十"
+_NOTIFICATION_MEMORY_TTL = 24 * 60 * 60
+_notification_memory: dict[tuple[str, str], float] = {}
+
+
+def _cleanup_notification_memory() -> None:
+    """清理短期推送幂等记忆，避免长期运行时无限增长。"""
+    deadline = monotonic() - _NOTIFICATION_MEMORY_TTL
+    expired = [
+        key
+        for key, created_at in _notification_memory.items()
+        if created_at < deadline
+    ]
+    for key in expired:
+        _notification_memory.pop(key, None)
+
+
+def _notification_memory_key(match_id: str, notification: str) -> tuple[str, str]:
+    return str(match_id), notification
+
+
+def _notification_was_seen(match_id: str, notification: str) -> bool:
+    """读取短期推送记忆。"""
+    _cleanup_notification_memory()
+    return _notification_memory_key(match_id, notification) in _notification_memory
+
+
+def _remember_notification(match_id: str, notification: str) -> None:
+    """记录已经生成过的推送事件。"""
+    _cleanup_notification_memory()
+    _notification_memory[_notification_memory_key(match_id, notification)] = monotonic()
+
+
+def _clear_notification_memory(match_id: str) -> None:
+    """清理指定比赛的短期推送记忆。"""
+    match_key = str(match_id)
+    for key in tuple(_notification_memory):
+        if key[0] == match_key:
+            _notification_memory.pop(key, None)
 
 
 def _team_names(match: MatchData) -> tuple[str, str]:
@@ -47,12 +84,6 @@ def _format_score(match: MatchData, *, series: bool = False) -> str:
     if series:
         scores = scores.replace(" : ", ":")
     return f"{first} {scores or '-'} {second}"
-
-
-def _summary(match: MatchData) -> str:
-    """生成旧版单场订阅仍使用的简短文本。"""
-    event = f" | {match.event_name}" if match.event_name else ""
-    return f"CS赛事更新：{match.display_title} {_format_score(match)}（{match.status_text or match.status}）{event}"
 
 
 def _start_message(match: MatchData, event_name: str = "") -> Message:
@@ -110,25 +141,6 @@ def _final_message(match: MatchData) -> Message:
     )
 
 
-async def _send_to_target(
-    bot: Bot,
-    target: dict[str, str],
-    message: Message,
-) -> bool:
-    """发送普通 OneBot 消息，兼容历史单场订阅。"""
-    kind = target.get("kind")
-    target_id = target.get("id")
-    if not target_id:
-        return False
-    if kind == "group":
-        await bot.call_api("send_group_msg", group_id=int(target_id), message=message)
-        return True
-    if kind == "private":
-        await bot.call_api("send_private_msg", user_id=int(target_id), message=message)
-        return True
-    return False
-
-
 async def _send_forward_to_target(
     bot: Bot,
     target: dict[str, str],
@@ -145,28 +157,18 @@ async def _send_forward_to_target(
         MessageSegment.node_custom(sender_id, "HLTV赛事订阅", content)
         for content in messages
     ]
-    try:
-        if kind == "group":
-            await bot.send_group_forward_msg(
-                group_id=int(target_id),
-                messages=nodes,
-            )
-            return True
-        if kind == "private":
-            await bot.send_private_forward_msg(
-                user_id=int(target_id),
-                messages=nodes,
-            )
-            return True
-    except Exception as exc:
-        logger.warning("HLTV 合并转发发送失败，降级为普通文本：%s", exc)
-        fallback = "\n\n".join(
-            message.extract_plain_text().strip()
-            for message in messages
-            if message.extract_plain_text().strip()
+    if kind == "group":
+        await bot.send_group_forward_msg(
+            group_id=int(target_id),
+            messages=nodes,
         )
-        if fallback:
-            return await _send_to_target(bot, target, Message(fallback))
+        return True
+    if kind == "private":
+        await bot.send_private_forward_msg(
+            user_id=int(target_id),
+            messages=nodes,
+        )
+        return True
     return False
 
 
@@ -182,34 +184,6 @@ async def send_rating_forward(
 def _available_bots() -> Iterable[Bot]:
     """获取当前可用于推送的 OneBot V11 连接。"""
     return [bot for bot in get_bots().values() if isinstance(bot, Bot)]
-
-
-async def _broadcast(
-    targets: list[dict[str, str]],
-    message: Message,
-    *,
-    bot: Bot | None = None,
-) -> bool:
-    """广播普通消息，并返回是否全部目标发送成功。"""
-    bots = [bot] if bot is not None else list(_available_bots())
-    if not bots:
-        logger.warning("没有可用 OneBot 连接，暂不推送 HLTV 赛事更新。")
-        return False
-    if not targets:
-        logger.warning("HLTV 赛事订阅没有有效推送目标，暂不更新订阅状态。")
-        return False
-    delivered_all = True
-    for target in targets:
-        delivered = False
-        for current_bot in bots:
-            try:
-                if await _send_to_target(current_bot, target, message):
-                    delivered = True
-                    break
-            except Exception:
-                logger.exception("推送 HLTV 赛事更新失败：%s", target)
-        delivered_all = delivered_all and delivered
-    return delivered_all
 
 
 async def _broadcast_forward(
@@ -244,8 +218,36 @@ def _current_map_scores(match: MatchData) -> dict[str, str]:
     scores: dict[str, str] = {}
     for index, result in enumerate(match.map_results):
         if result.is_finished:
-            scores[f"{index}:{result.name}"] = result.score_display
+            # 地图名在 HLTV 的地图切换过程中可能从占位名变成正式名称；
+            # 去重状态以地图序号为准，避免同一张图被识别成两张图。
+            scores[str(index)] = result.score_display
     return scores
+
+
+def _map_state_seen(values: set[str], index: int) -> bool:
+    """判断地图是否已经记录过，并兼容旧版的 ``序号:地图名`` 键。"""
+    key = str(index)
+    legacy_prefix = f"{key}:"
+    return key in values or any(value.startswith(legacy_prefix) for value in values)
+
+
+def _previous_map_score(
+    previous_scores: dict[str, Any],
+    index: int,
+) -> Any:
+    """读取地图上一次比分，并兼容旧版包含地图名的状态键。"""
+    key = str(index)
+    if key in previous_scores:
+        return previous_scores[key]
+    legacy_prefix = f"{key}:"
+    return next(
+        (
+            value
+            for raw_key, value in previous_scores.items()
+            if str(raw_key).startswith(legacy_prefix)
+        ),
+        None,
+    )
 
 
 def _started_map_candidates(match: MatchData) -> list[tuple[int, str]]:
@@ -321,7 +323,6 @@ def _new_match_state(section: str, page_url: str = "") -> dict[str, Any]:
         "source": section,
         "url": page_url,
         "initialized": False,
-        "historical": False,
         "started_sent": False,
         "final_sent": False,
         "completed": False,
@@ -339,7 +340,6 @@ def _historical_match_state() -> dict[str, Any]:
     state.update(
         {
             "initialized": True,
-            "historical": True,
             "started_sent": True,
             "final_sent": True,
             "completed": True,
@@ -444,6 +444,8 @@ async def _process_event_match(
         rating_maps = []
         state["rating_maps"] = rating_maps
     rating_set = {str(value) for value in rating_maps}
+    match_id = str(match.match_id)
+    actual_started = _match_has_actual_start(match)
     if not initialized:
         previous_scores = _current_map_scores(match)
 
@@ -461,11 +463,11 @@ async def _process_event_match(
         for index, result in enumerate(match.map_results):
             if not result.is_finished:
                 continue
-            key = f"{index}:{result.name}"
-            if key not in notified_set:
+            key = str(index)
+            if not _map_state_seen(notified_set, index):
                 notified.append(key)
                 notified_set.add(key)
-            if key not in rating_set:
+            if not _map_state_seen(rating_set, index):
                 rating_maps.append(key)
                 rating_set.add(key)
 
@@ -479,47 +481,88 @@ async def _process_event_match(
             key = str(index)
             if key in started_set:
                 continue
+            notification = f"map_start:{index}"
+            if _notification_was_seen(match_id, notification):
+                started_maps.append(key)
+                started_set.add(key)
+                continue
             messages.append(_map_start_message(match, map_name, index, event_name))
             started_maps.append(key)
             started_set.add(key)
-        if match.has_started:
-            # 保留该字段供旧版状态迁移和人工查看；每图模式的去重以
-            # started_maps 为准。
+            _remember_notification(match_id, notification)
+        if actual_started:
+            # 同步系列赛开始状态；每图模式的去重以 started_maps 为准。
             state["started_sent"] = True
-    elif match.has_started and not state.get("started_sent", False):
-        messages.append(_start_message(match, event_name))
-        state["started_sent"] = True
+    elif actual_started and not state.get("started_sent", False):
+        notification = "match_start"
+        if _notification_was_seen(match_id, notification):
+            state["started_sent"] = True
+        else:
+            messages.append(_start_message(match, event_name))
+            state["started_sent"] = True
+            _remember_notification(match_id, notification)
 
     rating_cache: dict[str, MessageSegment] = {}
     current_scores = _current_map_scores(match)
     for index, result in enumerate(match.map_results):
         if not result.is_finished:
             continue
-        key = f"{index}:{result.name}"
+        key = str(index)
         score = result.score_display
-        if push_each_map and key not in notified_set and previous_scores.get(key) != score:
-            messages.append(_map_result_message(match, result, index))
+        previous_score = _previous_map_score(previous_scores, index)
+        if (
+            push_each_map
+            and not _map_state_seen(notified_set, index)
+            and previous_score != score
+        ):
+            notification = f"map_end:{index}"
+            if not _notification_was_seen(match_id, notification):
+                messages.append(_map_result_message(match, result, index))
+                _remember_notification(match_id, notification)
             notified.append(key)
             notified_set.add(key)
-        if push_each_map and key not in rating_set:
-            image = await _rating_message(match, rating_cache, result.name)
-            if image is not None:
-                messages.append(image)
+        # 最后一张图同时意味着系列赛结束时，不在地图结束节点再次发送
+        # 当前图 Rating；整场汇报会统一包含所有已完成地图和总 Rating。
+        if (
+            push_each_map
+            and not match.is_finished
+            and not _map_state_seen(rating_set, index)
+        ):
+            notification = f"map_rating:{index}"
+            if _notification_was_seen(match_id, notification):
                 rating_maps.append(key)
                 rating_set.add(key)
+            else:
+                image = await _rating_message(match, rating_cache, result.name)
+                if image is not None:
+                    messages.append(image)
+                    rating_maps.append(key)
+                    rating_set.add(key)
+                    _remember_notification(match_id, notification)
 
     if match.is_finished:
         if not state.get("final_sent", False):
-            messages.append(_final_message(match))
-            state["final_sent"] = True
+            notification = "series_end"
+            if _notification_was_seen(match_id, notification):
+                state["final_sent"] = True
+            else:
+                messages.append(_final_message(match))
+                state["final_sent"] = True
+                _remember_notification(match_id, notification)
         if not state.get("rating_summary_sent", False):
             # 比赛结束和 Rating 生成不是同一时刻；没有完整 Rating 时保留
             # 赛事状态，下一次轮询继续尝试，不提前完成订阅。
-            rating_messages = await render_check_rating_messages(match)
-            if rating_messages:
-                messages.extend(rating_messages)
+            notification = "series_rating_summary"
+            if _notification_was_seen(match_id, notification):
                 state["rating_summary_sent"] = True
                 state["completed"] = True
+            else:
+                rating_messages = await render_check_rating_messages(match)
+                if rating_messages:
+                    messages.extend(rating_messages)
+                    state["rating_summary_sent"] = True
+                    state["completed"] = True
+                    _remember_notification(match_id, notification)
 
     state["initialized"] = True
     state["map_scores"] = current_scores
@@ -655,6 +698,7 @@ async def _poll_event_subscription(
 
     loaded = await _load_event_matches(pending_refs)
     messages: list[Message] = []
+    generated_memory_keys: set[tuple[str, str]] = set()
     event_name = str(entry.get("event_name", ""))
     observed_first_start: datetime | None = None
     for ref, match in loaded:
@@ -670,7 +714,12 @@ async def _poll_event_subscription(
                 _parse_datetime(match.fetched_at)
                 or datetime.now(timezone.utc)
             )
+        _cleanup_notification_memory()
+        memory_before = set(_notification_memory)
         messages.extend(await _process_event_match(match, state, event_name))
+        generated_memory_keys.update(
+            set(_notification_memory).difference(memory_before)
+        )
 
     targets = [
         target
@@ -679,6 +728,10 @@ async def _poll_event_subscription(
     ]
     if messages:
         if not await _broadcast_forward(targets, messages):
+            # 没有确认发送成功时撤销本轮新键，下一次轮询仍可重试；
+            # 已存在的键不动，避免覆盖此前已经成功发送的通知记忆。
+            for key in generated_memory_keys:
+                _notification_memory.pop(key, None)
             return
 
     first_started_at = entry.get("first_match_started_at")
@@ -699,41 +752,14 @@ async def _poll_event_subscription(
         ),
         completed=event_finished,
     )
-
-
-async def _poll_legacy_matches() -> None:
-    """兼容旧版按比赛 ID 保存的订阅。"""
-    entries = await list_active()
-    for match_id, entry in entries.items():
-        try:
-            match = await fetch_match(match_id)
-            fingerprint = match.fingerprint()
-            previous = entry.get("fingerprint")
-            if previous == fingerprint:
-                continue
-
-            targets = [
-                target
-                for target in entry.get("targets", [])
-                if isinstance(target, dict)
-            ]
-            if match.is_finished and match.has_stats:
-                match = await enrich_match_assets(match)
-                image = await render_rating_card(match)
-                message = Message([MessageSegment.text(_summary(match) + "\n"), image])
-                if await _broadcast(targets, message):
-                    await update_state(match_id, fingerprint=fingerprint, completed=True)
-            elif await _broadcast(targets, Message(_summary(match))):
-                await update_state(match_id, fingerprint=fingerprint)
-        except HltvError as exc:
-            logger.warning("轮询 HLTV 赛事 %s 失败：%s", match_id, exc)
-        except Exception:
-            logger.exception("处理 HLTV 赛事订阅失败：%s", match_id)
+    for match_id, state in matches.items():
+        if isinstance(state, dict) and state.get("completed", False):
+            _clear_notification_memory(match_id)
 
 
 async def poll_subscriptions() -> None:
-    """轮询旧版单场订阅和新版赛事订阅。"""
-    await _poll_legacy_matches()
+    """轮询赛事订阅并推送状态变化。"""
+    _cleanup_notification_memory()
     entries = await list_active_events()
     for event_id, entry in entries.items():
         try:
@@ -746,11 +772,3 @@ async def poll_subscriptions() -> None:
             logger.warning("轮询 HLTV 赛事 %s 失败：%s", event_id, exc)
         except Exception:
             logger.exception("处理 HLTV 赛事订阅失败：%s", event_id)
-
-
-async def render_and_subscribe_match(match: MatchData) -> MessageSegment | None:
-    """为历史即时查询准备资源并渲染 Rating。"""
-    if not match.has_stats:
-        return None
-    match = await enrich_match_assets(match)
-    return await render_rating_card(match)

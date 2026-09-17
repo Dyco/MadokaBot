@@ -10,7 +10,7 @@ from typing import Any
 
 from ..madoka_bundle.plugins.common.group_set import group_set
 from ..madoka_bundle.plugins.common.json_data import JsonDataStore
-from .config import HLTV_SUB_PATH, SUBSCRIPTIONS_PATH
+from .config import HLTV_SUB_PATH
 from .models import (
     EVENT_STATUS_FINISHED,
     EVENT_STATUS_ONGOING,
@@ -23,27 +23,13 @@ _lock = asyncio.Lock()
 # group_set 中保存 HLTV 赛事 ID 列表的标签名。
 HLTV_SUB_GROUP_TAG = "hltv_sub"
 _hltv_sub_store = JsonDataStore(HLTV_SUB_PATH, {})
-_legacy_sub_store = JsonDataStore(SUBSCRIPTIONS_PATH, {})
 
 
 def _read() -> dict[str, dict[str, Any]]:
-    """读取赛事订阅；首次使用时迁移旧版订阅文件。"""
+    """读取赛事订阅。"""
     _hltv_sub_store.reload()
     value = _hltv_sub_store.content
-    if not isinstance(value, dict):
-        value = {}
-    if value:
-        return value
-    if not SUBSCRIPTIONS_PATH.is_file():
-        return value
-
-    _legacy_sub_store.reload()
-    legacy = _legacy_sub_store.content
-    if not isinstance(legacy, dict):
-        return value
-    if legacy:
-        _hltv_sub_store.write(legacy)
-    return legacy
+    return value if isinstance(value, dict) else {}
 
 
 def _write(value: dict[str, dict[str, Any]]) -> None:
@@ -97,39 +83,6 @@ def target_from_event(event: Any) -> dict[str, str] | None:
     if user_id is not None:
         return {"kind": "private", "id": str(user_id)}
     return None
-
-
-async def subscribe(
-    match_id: str,
-    target: dict[str, str],
-    *,
-    fingerprint: str | None = None,
-    completed: bool = False,
-) -> bool:
-    """添加订阅目标；返回本次是否新增目标。"""
-    async with _lock:
-        data = _read()
-        key = str(match_id)
-        entry = data.get(key)
-        if not isinstance(entry, dict):
-            entry = {
-                "targets": [],
-                "fingerprint": fingerprint,
-                "completed": completed,
-            }
-            data[key] = entry
-        targets = entry.get("targets")
-        if not isinstance(targets, list):
-            targets = []
-            entry["targets"] = targets
-        is_new = target not in targets
-        if is_new:
-            targets.append(target)
-        entry["completed"] = completed
-        if fingerprint is not None:
-            entry["fingerprint"] = fingerprint
-        _write(data)
-        return is_new
 
 
 async def subscribe_event(
@@ -214,7 +167,6 @@ async def subscribe_event(
                 "source": section,
                 "url": str(ref.get("url", "")),
                 "initialized": section == "result",
-                "historical": section == "result",
                 "started_sent": section == "result",
                 "final_sent": section == "result",
                 "completed": section == "result",
@@ -267,18 +219,6 @@ async def add_event_target_if_exists(
         return is_new, deepcopy(entry)
 
 
-async def list_active() -> dict[str, dict[str, Any]]:
-    async with _lock:
-        data = _read()
-        return {
-            match_id: entry
-            for match_id, entry in data.items()
-            if isinstance(entry, dict)
-            and entry.get("kind") != "event"
-            and not entry.get("completed", False)
-        }
-
-
 async def list_active_events() -> dict[str, dict[str, Any]]:
     """读取仍需轮询的赛事订阅。"""
     async with _lock:
@@ -314,24 +254,6 @@ async def list_active_events() -> dict[str, dict[str, Any]]:
         if changed:
             _write(data)
         return active
-
-
-async def update_state(
-    match_id: str,
-    *,
-    fingerprint: str | None = None,
-    completed: bool | None = None,
-) -> None:
-    async with _lock:
-        data = _read()
-        entry = data.get(str(match_id))
-        if entry is None:
-            return
-        if fingerprint is not None:
-            entry["fingerprint"] = fingerprint
-        if completed is not None:
-            entry["completed"] = completed
-        _write(data)
 
 
 async def update_event_state(

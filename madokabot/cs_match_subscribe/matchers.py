@@ -550,7 +550,7 @@ async def handle_cs_sub(event: MessageEvent, event_id: Match[str]) -> None:
 
     prefix = "已成功订阅赛事" if added else "已刷新赛事订阅"
     push_mode = (
-        "每张地图开始、结束时单独推送，并在整场结束时补发完整 Rating 汇总"
+        "每张地图开始、结束时推送；最后一张图结束时合并完整 Rating 汇总"
         if config.hltv_subscribe_push_each_map
         else "按系列赛级别推送开始和结束，整场结束时补发完整 Rating 汇总"
     )

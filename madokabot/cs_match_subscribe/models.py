@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import hashlib
-import json
 from dataclasses import asdict, dataclass, field
 from datetime import datetime
 from typing import Any
@@ -232,47 +230,6 @@ class MatchData:
             if name not in names:
                 names.append(name)
         return names
-
-    def fingerprint(self) -> str:
-        """生成订阅轮询用指纹，统计变化也会触发更新。"""
-        payload: dict[str, Any] = {
-            "status": self.status,
-            "status_text": self.status_text,
-            "format_text": self.format_text,
-            "format_code": self.format_code,
-            "round_text": self.round_text,
-            "teams": [
-                {
-                    "name": team.name,
-                    "score": team.score,
-                    "players": [
-                        {
-                            "nickname": player.nickname,
-                            "kd": player.kd,
-                            "swing": player.swing,
-                            "adr": player.adr,
-                            "kast": player.kast,
-                            "rating": player.rating,
-                        }
-                        for player in team.players
-                    ],
-                }
-                for team in self.teams
-            ],
-            "map_results": [
-                {
-                    "name": result.name,
-                    "team1_score": result.team1_score,
-                    "team2_score": result.team2_score,
-                    "started": result.is_started,
-                    "finished": result.is_finished,
-                    "live": result.is_live,
-                }
-                for result in self.map_results
-            ],
-        }
-        encoded = json.dumps(payload, ensure_ascii=False, sort_keys=True).encode()
-        return hashlib.sha256(encoded).hexdigest()
 
     def to_template_context(
         self,
