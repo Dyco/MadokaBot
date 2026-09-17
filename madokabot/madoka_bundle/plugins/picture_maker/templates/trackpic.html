@@ -4,9 +4,8 @@
     <meta charset="UTF-8">
     <style>
         @font-face {
-            font-family: "PictureMakerSans";
-            src: url("{{ font_path }}") format("woff2");
-            font-weight: 100 900;
+            font-family: "CustomFont";
+            src: url("{{ font_path }}");
         }
 
         html,
@@ -19,7 +18,7 @@
         }
 
         body {
-            font-family: "PictureMakerSans", "Noto Sans CJK SC", sans-serif;
+            font-family: "CustomFont", sans-serif;
         }
 
         canvas {
@@ -296,14 +295,14 @@
 
             const infoY = jacketY + jacketSize + 56 * scale;
             ctx.fillStyle = textColor;
-            ctx.font = `700 ${Math.round(56 * scale)}px PictureMakerSans, sans-serif`;
+            ctx.font = `700 ${Math.round(56 * scale)}px CustomFont, sans-serif`;
             ctx.textBaseline = "top";
             const title = fitText(titleText, contentWidth - 90 * scale, 3 * scale);
             drawSpacedText(title, marginX, infoY, 3 * scale);
             drawHeartIcon(marginX + contentWidth - 36 * scale, infoY + 12 * scale, textColor, scale);
 
             ctx.fillStyle = subTextColor;
-            ctx.font = `500 ${Math.round(34 * scale)}px PictureMakerSans, sans-serif`;
+            ctx.font = `500 ${Math.round(34 * scale)}px CustomFont, sans-serif`;
             ctx.fillText(artistText || "Unknown Artist", marginX, infoY + 76 * scale);
 
             const progressY = infoY + 140 * scale;
@@ -346,7 +345,7 @@
 
             const paletteY = controlsY + 160 * scale;
             ctx.fillStyle = subTextColor;
-            ctx.font = `500 ${Math.round(18 * scale)}px PictureMakerSans, sans-serif`;
+            ctx.font = `500 ${Math.round(18 * scale)}px CustomFont, sans-serif`;
             const paletteTitle = "COLOR PALETTE";
             const titleGap = 6 * scale;
             const titleWidth = spacedWidth(paletteTitle, titleGap);
@@ -360,7 +359,7 @@
                 ctx.fillStyle = hex;
                 ctx.fillRect(x, barY, barWidth, barHeight);
                 ctx.fillStyle = subTextColor;
-                ctx.font = `500 ${Math.round(18 * scale)}px PictureMakerSans, sans-serif`;
+                ctx.font = `500 ${Math.round(18 * scale)}px CustomFont, sans-serif`;
                 const label = String(hex || "").toUpperCase();
                 const hexGap = 2 * scale;
                 const labelWidth = spacedWidth(label, hexGap);
@@ -368,7 +367,7 @@
             });
 
             ctx.fillStyle = subTextColor;
-            ctx.font = `500 ${Math.round(24 * scale)}px PictureMakerSans, sans-serif`;
+            ctx.font = `500 ${Math.round(24 * scale)}px CustomFont, sans-serif`;
             ctx.textAlign = "center";
             ctx.fillText(signature, centerX, Math.max(paletteY + 140 * scale, height - 76 * scale));
             ctx.restore();

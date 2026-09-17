@@ -45,13 +45,15 @@ def normalize_template_id(value: str | None) -> str:
 
 
 def _font_uri() -> str:
-    """获取现有资源目录中的中文字体。"""
+    """获取签到模板使用的统一字体资源。"""
     font_path = get_file(
         ResType.FONT,
-        SubFolder.CS,
-        "SourceHanSansSC-VF.ttf.woff2",
+        SubFolder.SIGN,
+        "font.ttf",
     )
-    return font_path.resolve().as_uri() if font_path is not None else ""
+    if font_path is None:
+        raise FileNotFoundError("签到字体资源不存在：font/sign/font.ttf")
+    return font_path.resolve().as_uri()
 
 
 async def render_music_card(
