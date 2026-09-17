@@ -1,0 +1,327 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        @font-face {
+            font-family: "PictureMakerSans";
+            src: url("{{ font_path }}") format("woff2");
+            font-weight: 100 900;
+        }
+
+        html,
+        body {
+            width: 1320px;
+            height: 2868px;
+            margin: 0;
+            overflow: hidden;
+            background: #111820;
+        }
+
+        body {
+            font-family: "PictureMakerSans", "Noto Sans CJK SC", sans-serif;
+        }
+
+        canvas {
+            display: block;
+            width: 1320px;
+            height: 2868px;
+        }
+
+        #source-image {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <img id="source-image" src="{{ image_data_url }}" alt="">
+    <canvas id="trackpic-glass-canvas" width="1320" height="2868"></canvas>
+
+    <script>
+        const titleText = {{ title | tojson }};
+        const artistText = {{ subtitle | tojson }};
+        const palette = {{ palette | tojson }};
+        const signature = {{ signature | tojson }};
+
+        const canvas = document.getElementById("trackpic-glass-canvas");
+        const sourceImage = document.getElementById("source-image");
+        const ctx = canvas.getContext("2d");
+        const FALLBACK_PALETTE = ["#4A6370", "#73A0B1", "#98B6BE", "#BDCBCC", "#EBF1F2"];
+
+        function roundedRectPath(x, y, width, height, radius) {
+            const r = Math.min(radius, width / 2, height / 2);
+            ctx.beginPath();
+            ctx.moveTo(x + r, y);
+            ctx.lineTo(x + width - r, y);
+            ctx.arcTo(x + width, y, x + width, y + r, r);
+            ctx.lineTo(x + width, y + height - r);
+            ctx.arcTo(x + width, y + height, x + width - r, y + height, r);
+            ctx.lineTo(x + r, y + height);
+            ctx.arcTo(x, y + height, x, y + height - r, r);
+            ctx.lineTo(x, y + r);
+            ctx.arcTo(x, y, x + r, y, r);
+            ctx.closePath();
+        }
+
+        function fillRoundedRect(x, y, width, height, radius, fillStyle) {
+            roundedRectPath(x, y, width, height, radius);
+            ctx.fillStyle = fillStyle;
+            ctx.fill();
+        }
+
+        function strokeRoundedRect(x, y, width, height, radius, strokeStyle, lineWidth) {
+            roundedRectPath(x, y, width, height, radius);
+            ctx.strokeStyle = strokeStyle;
+            ctx.lineWidth = lineWidth;
+            ctx.stroke();
+        }
+
+        function drawCover(image, x, y, width, height, blur = 0) {
+            if (!image.naturalWidth || !image.naturalHeight) return;
+            const scale = Math.max(width / image.naturalWidth, height / image.naturalHeight);
+            const imageWidth = image.naturalWidth * scale;
+            const imageHeight = image.naturalHeight * scale;
+
+            ctx.save();
+            if (blur > 0) ctx.filter = `blur(${blur}px) saturate(1.16)`;
+            ctx.drawImage(
+                image,
+                x + (width - imageWidth) / 2,
+                y + (height - imageHeight) / 2,
+                imageWidth,
+                imageHeight,
+            );
+            ctx.restore();
+        }
+
+        function drawSpacedText(text, x, y, gap) {
+            let cursor = x;
+            for (const character of text) {
+                ctx.fillText(character, cursor, y);
+                cursor += ctx.measureText(character).width + gap;
+            }
+        }
+
+        function drawPlayIcon(centerX, centerY, color, scale) {
+            ctx.fillStyle = color;
+            ctx.beginPath();
+            ctx.moveTo(centerX - 12 * scale, centerY - 24 * scale);
+            ctx.lineTo(centerX + 25 * scale, centerY);
+            ctx.lineTo(centerX - 12 * scale, centerY + 24 * scale);
+            ctx.closePath();
+            ctx.fill();
+        }
+
+        function drawSkipIcon(centerX, centerY, color, scale, reverse = false) {
+            ctx.save();
+            ctx.translate(centerX, centerY);
+            ctx.scale(reverse ? -scale : scale, scale);
+            ctx.fillStyle = color;
+            ctx.fillRect(18, -20, 5, 40);
+            ctx.beginPath();
+            ctx.moveTo(10, 0);
+            ctx.lineTo(-20, -20);
+            ctx.lineTo(-20, 20);
+            ctx.closePath();
+            ctx.fill();
+            ctx.restore();
+        }
+
+        function drawHeart(centerX, centerY, color, scale) {
+            ctx.save();
+            ctx.translate(centerX, centerY);
+            ctx.scale(scale, scale);
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 3.5;
+            ctx.lineCap = "round";
+            ctx.beginPath();
+            ctx.moveTo(18, 9);
+            ctx.bezierCurveTo(18, 4, 13.5, 0, 8.5, 0);
+            ctx.bezierCurveTo(3.8, 0, 0, 3.8, 0, 8.5);
+            ctx.bezierCurveTo(0, 15, 7.5, 21.5, 18, 30);
+            ctx.bezierCurveTo(28.5, 21.5, 36, 15, 36, 8.5);
+            ctx.bezierCurveTo(36, 3.8, 32.2, 0, 27.5, 0);
+            ctx.bezierCurveTo(22.5, 0, 18, 4, 18, 9);
+            ctx.stroke();
+            ctx.restore();
+        }
+
+        function mixHexColors(first, second, ratio = 0.5) {
+            const parse = (hex) => {
+                const value = String(hex || "").replace("#", "");
+                if (value.length !== 6) return [17, 24, 32];
+                return [
+                    parseInt(value.slice(0, 2), 16),
+                    parseInt(value.slice(2, 4), 16),
+                    parseInt(value.slice(4, 6), 16),
+                ];
+            };
+            const left = parse(first);
+            const right = parse(second);
+            const amount = Math.max(0, Math.min(1, ratio));
+            return "#" + left.map((channel, index) =>
+                Math.round(channel + (right[index] - channel) * amount)
+                    .toString(16).padStart(2, "0")
+            ).join("").toUpperCase();
+        }
+
+        function render() {
+            const width = canvas.width;
+            const height = canvas.height;
+            const scale = width / 1080;
+            const margin = 76 * scale;
+            const contentWidth = width - margin * 2;
+            const textColor = "#F5FAFC";
+            const softText = "rgba(245, 250, 252, 0.72)";
+            const faintText = "rgba(245, 250, 252, 0.48)";
+            const activePalette = palette.length >= 5 ? palette.slice(0, 5) : FALLBACK_PALETTE;
+            const accent = activePalette[1] || "#73A0B1";
+            const backgroundColor = mixHexColors(activePalette[0], activePalette[1], 0.5);
+            const jacketSize = contentWidth;
+            const infoH = 140 * scale;
+            const progressH = 120 * scale;
+            const controlsH = 180 * scale;
+            const paletteH = 170 * scale;
+            const totalContentH = jacketSize + infoH + progressH + controlsH + paletteH;
+            const jacketY = Math.max(100 * scale, (height - totalContentH) / 2);
+
+            ctx.save();
+            ctx.clearRect(0, 0, width, height);
+            ctx.textAlign = "left";
+            ctx.textBaseline = "top";
+
+            // 全屏背景：放大并模糊原图，形成玻璃材质背后的环境色。
+            ctx.fillStyle = backgroundColor;
+            ctx.fillRect(0, 0, width, height);
+            ctx.save();
+            ctx.globalAlpha = 0.78;
+            drawCover(sourceImage, -70 * scale, -70 * scale, width + 140 * scale, height + 140 * scale, 34 * scale);
+            ctx.restore();
+            ctx.fillStyle = "rgba(9, 16, 23, 0.55)";
+            ctx.fillRect(0, 0, width, height);
+            const ambient = ctx.createRadialGradient(width * 0.5, height * 0.18, 40, width * 0.5, height * 0.4, height * 0.72);
+            ambient.addColorStop(0, `${accent}66`);
+            ambient.addColorStop(1, "rgba(10, 16, 23, 0)");
+            ctx.fillStyle = ambient;
+            ctx.fillRect(0, 0, width, height);
+
+            // 全画布玻璃层：不再叠加独立的中间背景面板。
+            ctx.fillStyle = "rgba(255, 255, 255, 0.095)";
+            ctx.fillRect(0, 0, width, height);
+            const glassLight = ctx.createLinearGradient(0, 0, width, height);
+            glassLight.addColorStop(0, "rgba(255, 255, 255, 0.18)");
+            glassLight.addColorStop(0.34, "rgba(255, 255, 255, 0.018)");
+            glassLight.addColorStop(0.72, "rgba(130, 205, 230, 0.035)");
+            glassLight.addColorStop(1, "rgba(255, 255, 255, 0.1)");
+            ctx.fillStyle = glassLight;
+            ctx.fillRect(0, 0, width, height);
+            ctx.strokeStyle = "rgba(255, 255, 255, 0.28)";
+            ctx.lineWidth = 3 * scale;
+            ctx.strokeRect(2 * scale, 2 * scale, width - 4 * scale, height - 4 * scale);
+
+            // 内容区沿用模板 1 的垂直尺寸和间距，只保留玻璃视觉层。
+            const coverX = margin;
+            const coverY = jacketY;
+            const coverSize = jacketSize;
+            const contentLeft = coverX;
+            const contentRight = coverX + coverSize;
+            ctx.save();
+            ctx.shadowColor = "rgba(0, 0, 0, 0.32)";
+            ctx.shadowBlur = 42 * scale;
+            ctx.shadowOffsetY = 18 * scale;
+            roundedRectPath(coverX, coverY, coverSize, coverSize, 48 * scale);
+            ctx.clip();
+            drawCover(sourceImage, coverX, coverY, coverSize, coverSize);
+            const coverShade = ctx.createLinearGradient(coverX, coverY, coverX, coverY + coverSize);
+            coverShade.addColorStop(0, "rgba(255, 255, 255, 0.04)");
+            coverShade.addColorStop(0.55, "rgba(12, 20, 28, 0.03)");
+            coverShade.addColorStop(1, "rgba(4, 10, 14, 0.28)");
+            ctx.fillStyle = coverShade;
+            ctx.fillRect(coverX, coverY, coverSize, coverSize);
+            const reflection = ctx.createLinearGradient(coverX, coverY, coverX + coverSize, coverY + coverSize * 0.7);
+            reflection.addColorStop(0, "rgba(255, 255, 255, 0.24)");
+            reflection.addColorStop(0.18, "rgba(255, 255, 255, 0.02)");
+            reflection.addColorStop(0.5, "rgba(255, 255, 255, 0)");
+            reflection.addColorStop(1, "rgba(180, 235, 250, 0.08)");
+            ctx.fillStyle = reflection;
+            ctx.fillRect(coverX, coverY, coverSize, coverSize);
+            ctx.restore();
+            strokeRoundedRect(coverX, coverY, coverSize, coverSize, 48 * scale, "rgba(255, 255, 255, 0.38)", 3 * scale);
+
+            const infoY = coverY + coverSize + 56 * scale;
+            ctx.fillStyle = textColor;
+            ctx.font = `700 ${Math.round(56 * scale)}px PictureMakerSans, sans-serif`;
+            ctx.textBaseline = "top";
+            ctx.fillText(titleText || "Untitled", contentLeft, infoY);
+            drawHeart(contentRight - 36 * scale, infoY + 12 * scale, textColor, scale);
+
+            ctx.fillStyle = softText;
+            ctx.font = `500 ${Math.round(34 * scale)}px PictureMakerSans, sans-serif`;
+            ctx.fillText(artistText || "Unknown Artist", contentLeft, infoY + 76 * scale);
+
+            const progressY = infoY + 140 * scale;
+            const playedWidth = coverSize * 0.22;
+            ctx.fillStyle = "rgba(245, 250, 252, 0.25)";
+            ctx.fillRect(contentLeft, progressY, coverSize, 5 * scale);
+            ctx.fillStyle = accent;
+            ctx.fillRect(contentLeft, progressY, playedWidth, 5 * scale);
+            ctx.beginPath();
+            ctx.arc(contentLeft + playedWidth, progressY + 2.5 * scale, 9 * scale, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.fillStyle = faintText;
+            ctx.font = `400 ${Math.round(24 * scale)}px Helvetica, Arial, sans-serif`;
+            ctx.fillText("0:42", contentLeft, progressY + 38 * scale);
+            ctx.textAlign = "right";
+            ctx.fillText("4:18", contentRight, progressY + 38 * scale);
+            ctx.textAlign = "left";
+
+            const controlsY = progressY + 140 * scale;
+            const centerX = contentLeft + coverSize / 2;
+            ctx.strokeStyle = "rgba(245, 250, 252, 0.84)";
+            ctx.lineWidth = 5 * scale;
+            ctx.beginPath();
+            ctx.arc(centerX, controlsY, 82 * scale, 0, Math.PI * 2);
+            ctx.stroke();
+            drawPlayIcon(centerX, controlsY, textColor, scale);
+            drawSkipIcon(centerX - 210 * scale, controlsY, textColor, scale, true);
+            drawSkipIcon(centerX + 210 * scale, controlsY, textColor, scale, false);
+
+            const paletteY = controlsY + 160 * scale;
+            ctx.fillStyle = softText;
+            ctx.font = `500 ${Math.round(18 * scale)}px PictureMakerSans, sans-serif`;
+            ctx.textAlign = "center";
+            drawSpacedText("GLASS PALETTE", centerX - 105 * scale, paletteY, 6 * scale);
+
+            const barY = paletteY + 40 * scale;
+            const barWidth = coverSize / activePalette.length;
+            activePalette.forEach((hex, index) => {
+                const x = contentLeft + index * barWidth;
+                ctx.fillStyle = hex;
+                ctx.fillRect(x, barY, barWidth, 14 * scale);
+            });
+
+            ctx.fillStyle = softText;
+            ctx.font = `500 ${Math.round(24 * scale)}px PictureMakerSans, sans-serif`;
+            ctx.textAlign = "center";
+            ctx.fillText(signature, centerX, Math.max(paletteY + 140 * scale, height - 76 * scale));
+            ctx.restore();
+        }
+
+        function renderWhenReady() {
+            render();
+            const fontReady = document.fonts && document.fonts.ready
+                ? document.fonts.ready
+                : Promise.resolve();
+            fontReady.then(render);
+        }
+
+        if (sourceImage.complete) {
+            renderWhenReady();
+        } else {
+            sourceImage.addEventListener("load", renderWhenReady, { once: true });
+            sourceImage.addEventListener("error", renderWhenReady, { once: true });
+        }
+    </script>
+</body>
+</html>

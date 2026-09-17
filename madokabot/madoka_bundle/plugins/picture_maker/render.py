@@ -14,13 +14,13 @@ from .service import PreparedImage
 TEMPLATE_DIR = Path(__file__).parent / "templates"
 TEMPLATE_FILES = {
     "1": "trackpic.html",
-    "2": "template_2.html",
+    "2": "trackpic_glass.html",
     "3": "template_3.html",
     "4": "template_4.html",
 }
 VIEWPORTS = {
     "1": {"width": 1320, "height": 2868},
-    "2": {"width": 1080, "height": 1920},
+    "2": {"width": 1320, "height": 2868},
     "3": {"width": 1080, "height": 1920},
     "4": {"width": 1080, "height": 1920},
 }
