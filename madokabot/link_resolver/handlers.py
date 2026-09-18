@@ -262,47 +262,68 @@ async def bilibili(bot: Bot, event: GroupMessageEvent) -> None:
         url = 'https://www.bilibili.com/video/' + url
     # 处理短号、小程序问题
     if "b23.tv" in url or "bili2233.cn" in url or "QQ小程序" in url:
-        short_match = re.search(b_short_rex, url.replace("\\", ""))
+        short_match = re.search(
+            b_short_rex,
+            url.replace("\\", "")
+        )
+    
         if not short_match:
             await bili23.finish("未识别到有效的 Bilibili 短链接。")
+    
         b_short_url = short_match.group(0)
-    try:
-        async with httpx.AsyncClient(
-            headers=BILIBILI_HEADER,
-            follow_redirects=False,
-            proxy=BILIBILI_PROXY,
-            trust_env=False,
-            timeout=10.0,
-        ) as client:
-            resp = await client.get(b_short_url)
     
-        # B23 短链接正常情况下就是返回 301/302
-        if resp.status_code in (301, 302, 303, 307, 308):
-            location = resp.headers.get("location")
+        try:
+            async with httpx.AsyncClient(
+                headers=BILIBILI_HEADER,
+                follow_redirects=False,
+                proxy=BILIBILI_PROXY,
+                trust_env=False,
+                timeout=10.0,
+            ) as client:
+                resp = await client.get(b_short_url)
     
-            if not location:
-                logger.warning(
-                    f"[Bilibili] 短链接跳转响应缺少 Location：{b_short_url}"
+            # B23 短链接正常情况下返回重定向
+            if resp.status_code in (301, 302, 303, 307, 308):
+                location = resp.headers.get("location")
+    
+                if not location:
+                    logger.warning(
+                        f"[Bilibili] 短链接跳转响应缺少 Location：{b_short_url}"
+                    )
+                    return
+    
+                # 此处先只获取跳转地址
+                url = location
+    
+                logger.debug(
+                    f"[Bilibili] 短链接解析：{b_short_url} -> {url}"
                 )
-                return
     
-            url = clean_bilibili_url(location)
+            else:
+                resp.raise_for_status()
+                url = str(resp.url)
     
-            logger.debug(
-                f"[Bilibili] 短链接解析：{b_short_url} -> {url}"
+        except httpx.HTTPError as exc:
+            logger.warning(
+                f"[Bilibili] 短链接响应失败：{exc}"
             )
-        else:
-            resp.raise_for_status()
-            url = str(resp.url)
+            return
     
-    except httpx.HTTPError as exc:
-        logger.warning(f"[Bilibili] 短链接响应失败：{exc}")
-        return
-    else:
-        url_match = re.search(url_reg, url)
-        if not url_match:
-            await bili23.finish("未识别到有效的 Bilibili 链接。")
-        url = url_match.group(0)
+    
+    # ==============================
+    # 所有链接统一走这里
+    # ==============================
+    
+    url = clean_bilibili_url(url)
+    
+    url_match = re.search(url_reg, url)
+    
+    if not url_match:
+        await bili23.finish(
+            "未识别到有效的 Bilibili 链接。"
+        )
+    
+    url = url_match.group(0)
     # ===============发现解析的是动态，转移一下===============
     if ('t.bilibili.com' in url or '/opus' in url) and BILI_SESSDATA != '':
         # 去除多余的参数
@@ -435,23 +456,27 @@ async def bilibili(bot: Bot, event: GroupMessageEvent) -> None:
     video_desc = video_info["desc"]
     video_duration = video_info["duration"]
     # 校准 分p 的情况
-    page_num = 0
-    if video_info.get('pages'):
-        # 解析URL
-        parsed_url = urlparse(url)
-        # 检查是否有查询字符串
+    page_num = 0    
+
+    if video_info.get("pages"):
+        pages = video_info["pages"]    
+
+        parsed_url = urlparse(url)    
+
         if parsed_url.query:
-            # 解析查询字符串中的参数
             query_params = parse_qs(parsed_url.query)
-            # 获取指定参数的值，如果参数不存在，则返回None
-            page_num = int(query_params.get('p', [1])[0]) - 1
-        else:
-            page_num = 0
-        pages = video_info['pages']
-        page_num = max(0, min(page_num, len(pages) - 1))
+            p_value = query_params.get("p", ["1"])[0]    
+
+            try:
+                page_num = int(p_value) - 1
+            except (TypeError, ValueError):
+                page_num = 0    
+
+        page_num = max(0, min(page_num, len(pages) - 1))    
+
         video_duration = pages[page_num].get(
-            'duration',
-            video_info.get('duration', 0),
+            "duration",
+            video_info.get("duration", 0),
         )
     video_duration = int(video_duration or 0)
     # 删除特殊字符
