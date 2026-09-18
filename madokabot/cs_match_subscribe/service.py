@@ -267,14 +267,11 @@ def _previous_map_score(
 
 
 def _started_map_candidates(match: MatchData) -> list[tuple[int, str]]:
-    """返回 Scoreboard 标记且已有非零比分的地图。"""
-    if not match.has_started:
-        return []
-
+    """返回已经出现非零比分且尚未结束的地图。"""
     return [
         (index, result.name.strip())
         for index, result in enumerate(match.map_results)
-        if result.is_live and result.is_started and not result.is_finished
+        if result.is_started and not result.is_finished
     ]
 
 
@@ -314,9 +311,9 @@ def _positive_score(value: str | None) -> bool:
 
 
 def _match_has_actual_start(match: MatchData) -> bool:
-    """按实时地图非零比分判断一场比赛是否实际开始。"""
+    """按地图非零比分判断一场比赛是否实际开始。"""
     if any(
-        result.is_live and result.is_started and not result.is_finished
+        result.is_started and not result.is_finished
         for result in match.map_results
     ):
         return True
@@ -572,12 +569,14 @@ async def _process_event_match(
             if _notification_was_seen(match_id, notification):
                 state["rating_summary_sent"] = True
                 state["completed"] = True
+                state["source"] = "finished"
             else:
                 rating_messages = await render_check_rating_messages(match)
                 if rating_messages:
                     messages.extend(rating_messages)
                     state["rating_summary_sent"] = True
                     state["completed"] = True
+                    state["source"] = "finished"
                     _remember_notification(match_id, notification)
 
     state["initialized"] = True
