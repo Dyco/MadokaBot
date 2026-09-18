@@ -156,7 +156,11 @@ CS event notif
 
 cs_command = Alconna(
     "cs",
-    Subcommand("help", alias=["帮助"], help_text="查看 CS 赛事指令帮助"),
+    Subcommand(
+        "help",
+        alias=["帮助"],
+        help_text="查看 CS 赛事指令帮助",
+    ),
     Subcommand(
         "list",
         Args["params?", StrMulti],
@@ -165,27 +169,13 @@ cs_command = Alconna(
     ),
     Subcommand(
         "event",
-        Subcommand(
-            "all",
-            alias=["ALL", "All", "全部"],
-            help_text="本群按整场系列赛推送赛事",
-        ),
-        Subcommand(
-            "single",
-            alias=["SINGLE", "Single", "单图"],
-            help_text="本群按单张地图推送赛事",
-        ),
-        Subcommand(
-            "notif",
-            alias=["Notif", "NOTIF", "Notification", "通知", "推送", "提醒"],
-            help_text="切换本群赛事开始通知",
-        ),
+        Args["params?", StrMulti],
         alias=["赛事", "比赛"],
         help_text="设置本群赛事推送方式",
     ),
     Subcommand(
         "sub",
-        Args["event_id", StrMulti],
+        Args["event_id?", StrMulti],
         alias=["订阅"],
         help_text="订阅 HLTV 赛事并推送其中的比赛结果",
     ),
@@ -215,38 +205,13 @@ cs_command = Alconna(
     ),
     Subcommand(
         "bind",
-        # 合法平台继续使用二级子命令；可选参数负责接住空参数和未知平台，
-        # 避免 Alconna 在解析阶段直接丢弃错误指令。
-        Subcommand(
-            "5e",
-            Args["nickname?", StrMulti],
-            alias=["5E", "5eplay", "5EPLAY"],
-            help_text="绑定 5E 玩家昵称",
-        ),
-        Subcommand(
-            "pw",
-            Args["nickname?", StrMulti],
-            alias=["PW", "wm", "WM", "完美"],
-            help_text="绑定完美平台玩家昵称",
-        ),
-        Args["platform?", str],
-        Args["nickname?", StrMulti],
+        Args["params?", StrMulti],
         alias=["绑定"],
         help_text="绑定 5E 或完美平台玩家昵称",
     ),
     Subcommand(
         "unbind",
-        Subcommand(
-            "5e",
-            alias=["5E", "5eplay", "5EPLAY"],
-            help_text="解除 5E 绑定",
-        ),
-        Subcommand(
-            "pw",
-            alias=["PW", "wm", "WM", "完美", "完美世界"],
-            help_text="解除完美平台绑定",
-        ),
-        Args["platform?", str],
+        Args["params?", StrMulti],
         alias=["解绑"],
         help_text="解除指定平台绑定",
     ),
@@ -266,9 +231,7 @@ cs_command = Alconna(
 
 cs_cmd = on_alconna(
     cs_command,
-    # 同时兼容项目默认的 / 前缀和直接输入 CS/cs。
-    aliases={"CS", "/cs", "/CS"},
-    use_cmd_start=False,
+    aliases={"CS"},
     priority=10,
     block=True,
 )
@@ -276,19 +239,16 @@ cs_cmd = on_alconna(
 
 @cs_cmd.handle()
 async def handle_cs_root(result: Arparma) -> None:
-    bind_result = result.subcommands.get("bind")
-    if bind_result is not None and not bind_result.subcommands:
-        await cs_cmd.finish(CS_BIND_USAGE)
     if not result.subcommands:
         await cs_cmd.finish(CS_USAGE)
 
 
-@cs_cmd.assign("help")
+@cs_cmd.assign("subcommands.help")
 async def handle_cs_help() -> None:
     await cs_cmd.finish(CS_USAGE)
 
 
-@cs_cmd.assign("list")
+@cs_cmd.assign("subcommands.list")
 async def handle_cs_list(params: Match[str]) -> None:
     """解析 list 的二级参数并执行对应查询。"""
     raw_params = params.result.strip() if params.available else ""
@@ -310,8 +270,28 @@ async def handle_cs_list(params: Match[str]) -> None:
     await cs_cmd.finish(Message([image]))
 
 
-@cs_cmd.assign("event")
-async def handle_cs_event() -> None:
+@cs_cmd.assign("subcommands.event")
+async def handle_cs_event(
+    bot: Bot,
+    event: MessageEvent,
+    params: Match[str],
+) -> None:
+    """解析赛事推送设置，避免使用嵌套子命令影响主命令解析。"""
+    raw_params = params.result.strip() if params.available else ""
+    event_args = raw_params.split()
+    if len(event_args) != 1:
+        await cs_cmd.finish(CS_EVENT_USAGE)
+
+    option = event_args[0].casefold()
+    if option in {"all", "全部"}:
+        await _set_cs_event_mode(bot, event, push_each_map=False)
+        return
+    if option in {"single", "单图"}:
+        await _set_cs_event_mode(bot, event, push_each_map=True)
+        return
+    if option in {"notif", "notification", "通知", "推送", "提醒"}:
+        await _toggle_cs_event_notification(bot, event)
+        return
     await cs_cmd.finish(CS_EVENT_USAGE)
 
 
@@ -330,18 +310,10 @@ async def _set_cs_event_mode(
     await cs_cmd.finish(f"已设置本群赛事推送方式为{mode_text}模式。")
 
 
-@cs_cmd.assign("event.all")
-async def handle_cs_event_all(bot: Bot, event: MessageEvent) -> None:
-    await _set_cs_event_mode(bot, event, push_each_map=False)
-
-
-@cs_cmd.assign("event.single")
-async def handle_cs_event_single(bot: Bot, event: MessageEvent) -> None:
-    await _set_cs_event_mode(bot, event, push_each_map=True)
-
-
-@cs_cmd.assign("event.notif")
-async def handle_cs_event_notif(bot: Bot, event: MessageEvent) -> None:
+async def _toggle_cs_event_notification(
+    bot: Bot,
+    event: MessageEvent,
+) -> None:
     """切换当前群是否接收赛事开始通知。"""
     target = await _group_subscription_target(bot, event)
     if target is None:
@@ -359,7 +331,7 @@ def _normalize_mobile(value: str) -> str:
     return mobile
 
 
-@cs_cmd.assign("login")
+@cs_cmd.assign("subcommands.login")
 async def handle_cs_login(
     bot: Bot,
     event: MessageEvent,
@@ -415,10 +387,10 @@ async def handle_cs_login(
 async def _handle_cs_bind(
     event: MessageEvent,
     platform: str,
-    nickname: Match[str],
+    nickname: str,
 ) -> None:
     """保存当前 QQ 指定平台的查询绑定。"""
-    raw_nickname = nickname.result.strip() if nickname.available else ""
+    raw_nickname = nickname.strip()
     if not raw_nickname:
         await cs_cmd.finish(CS_BIND_USAGE)
 
@@ -446,16 +418,20 @@ async def _handle_cs_bind(
     )
 
 
-@cs_cmd.assign("bind.5e")
-async def handle_cs_bind_5e(event: MessageEvent, nickname: Match[str]) -> None:
-    """处理 5E 昵称绑定。"""
-    await _handle_cs_bind(event, "5e", nickname)
+@cs_cmd.assign("subcommands.bind")
+async def handle_cs_bind(event: MessageEvent, params: Match[str]) -> None:
+    """解析平台和昵称后执行绑定。"""
+    raw_params = params.result.strip() if params.available else ""
+    bind_args = raw_params.split(maxsplit=1)
+    if len(bind_args) != 2:
+        await cs_cmd.finish(CS_BIND_USAGE)
+        return
 
-
-@cs_cmd.assign("bind.pw")
-async def handle_cs_bind_pw(event: MessageEvent, nickname: Match[str]) -> None:
-    """处理完美平台昵称绑定。"""
-    await _handle_cs_bind(event, "pw", nickname)
+    platform = normalize_platform(bind_args[0])
+    if platform is None:
+        await cs_cmd.finish(CS_BIND_USAGE)
+        return
+    await _handle_cs_bind(event, platform, bind_args[1])
 
 
 async def _handle_cs_unbind(event: MessageEvent, platform: str) -> None:
@@ -475,27 +451,18 @@ async def _handle_cs_unbind(event: MessageEvent, platform: str) -> None:
     )
 
 
-@cs_cmd.assign("unbind")
-async def handle_cs_unbind(event: MessageEvent, platform: Match[str]) -> None:
-    """处理解绑命令的显式平台参数。"""
-    raw_platform = platform.result.strip() if platform.available else ""
+@cs_cmd.assign("subcommands.unbind")
+async def handle_cs_unbind(event: MessageEvent, params: Match[str]) -> None:
+    """解析平台参数后执行解绑。"""
+    raw_platform = params.result.strip() if params.available else ""
+    if len(raw_platform.split()) != 1:
+        await cs_cmd.finish(CS_UNBIND_USAGE)
+        return
     normalized = normalize_platform(raw_platform)
     if not raw_platform or normalized is None:
         await cs_cmd.finish(CS_UNBIND_USAGE)
         return
     await _handle_cs_unbind(event, normalized)
-
-
-@cs_cmd.assign("unbind.5e")
-async def handle_cs_unbind_5e(event: MessageEvent) -> None:
-    """解除 5E 绑定。"""
-    await _handle_cs_unbind(event, "5e")
-
-
-@cs_cmd.assign("unbind.pw")
-async def handle_cs_unbind_pw(event: MessageEvent) -> None:
-    """解除完美平台绑定。"""
-    await _handle_cs_unbind(event, "pw")
 
 
 async def _handle_cs_player_stats(
@@ -520,7 +487,7 @@ async def _handle_cs_player_stats(
     await cs_cmd.finish(Message([image]))
 
 
-@cs_cmd.assign("战绩")
+@cs_cmd.assign("subcommands.战绩")
 async def handle_cs_stats(
     event: MessageEvent,
     platform: Match[str],
@@ -536,7 +503,7 @@ async def handle_cs_stats(
     await _handle_cs_player_stats(event, selected_platform, target)
 
 
-@cs_cmd.assign("check")
+@cs_cmd.assign("subcommands.check")
 async def handle_cs_check(
     bot: Bot,
     event: MessageEvent,
@@ -576,7 +543,7 @@ async def handle_cs_check(
     await cs_cmd.finish()
 
 
-@cs_cmd.assign("sub")
+@cs_cmd.assign("subcommands.sub")
 async def handle_cs_sub(event: MessageEvent, event_id: Match[str]) -> None:
     raw_id = event_id.result.strip() if event_id.available else ""
     if not raw_id.isdigit():
@@ -684,7 +651,7 @@ async def handle_cs_sub(event: MessageEvent, event_id: Match[str]) -> None:
     )
 
 
-@cs_cmd.assign("unsub")
+@cs_cmd.assign("subcommands.unsub")
 async def handle_cs_unsub(
     bot: Bot,
     event: MessageEvent,
@@ -715,7 +682,7 @@ async def handle_cs_unsub(
     )
 
 
-@cs_cmd.assign("nosub")
+@cs_cmd.assign("subcommands.nosub")
 async def handle_cs_nosub(bot: Bot, event: MessageEvent) -> None:
     """让当前群退订全部赛事推送。"""
     target = await _group_subscription_target(bot, event)
@@ -735,7 +702,7 @@ async def handle_cs_nosub(bot: Bot, event: MessageEvent) -> None:
     await cs_cmd.finish(f"本群已退订全部赛事推送，共移除 {removed} 项订阅。")
 
 
-@cs_cmd.assign("removesub")
+@cs_cmd.assign("subcommands.removesub")
 async def handle_cs_removesub(
     bot: Bot,
     event: MessageEvent,

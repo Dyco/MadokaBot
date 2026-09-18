@@ -196,19 +196,27 @@
                 "finalization_attempts": 1
             },
             "2398102": {
-                "source": "upcoming",
+                "source": "finished",
                 "url": "https://www.hltv.org/matches/2398102/vitality-vs-furia-starladder-starseries-fall-2026",
                 "initialized": true,
                 "started_sent": true,
-                "final_sent": false,
-                "completed": false,
-                "map_scores": {},
+                "final_sent": true,
+                "completed": true,
+                "map_scores": {
+                    "0": "13:8",
+                    "1": "13:5"
+                },
                 "started_maps": [
                     "0"
                 ],
-                "notified_maps": [],
+                "notified_maps": [
+                    "0",
+                    "1"
+                ],
                 "rating_maps": [],
-                "rating_summary_sent": false
+                "rating_summary_sent": true,
+                "finalization_requested": true,
+                "finalization_attempts": 1
             },
             "2398104": {
                 "source": "waiting",
@@ -225,7 +233,7 @@
             },
             "2398103": {
                 "source": "waiting",
-                "url": "https://www.hltv.org/matches/2398103/mouz-vs-vitality-furia-loser-starladder-starseries-fall-2026",
+                "url": "https://www.hltv.org/matches/2398103/mouz-vs-furia-starladder-starseries-fall-2026",
                 "initialized": true,
                 "started_sent": false,
                 "final_sent": false,
@@ -238,7 +246,7 @@
             },
             "2398105": {
                 "source": "waiting",
-                "url": "https://www.hltv.org/matches/2398105/aurora-vs-vitality-furia-winner-starladder-starseries-fall-2026",
+                "url": "https://www.hltv.org/matches/2398105/aurora-vs-vitality-starladder-starseries-fall-2026",
                 "initialized": true,
                 "started_sent": false,
                 "final_sent": false,
