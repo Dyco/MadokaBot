@@ -102,44 +102,68 @@
                 "rating_summary_sent": true
             },
             "2398091": {
-                "source": "upcoming",
+                "source": "finished",
                 "url": "https://www.hltv.org/matches/2398091/furia-vs-mibr-starladder-starseries-fall-2026",
+                "initialized": true,
+                "started_sent": true,
+                "final_sent": true,
+                "completed": true,
+                "map_scores": {
+                    "0": "11:13",
+                    "1": "13:6",
+                    "2": "13:6"
+                },
+                "started_maps": [
+                    "0"
+                ],
+                "notified_maps": [
+                    "0",
+                    "1",
+                    "2"
+                ],
+                "rating_maps": [],
+                "rating_summary_sent": true
+            },
+            "2398099": {
+                "source": "finished",
+                "url": "https://www.hltv.org/matches/2398099/mouz-vs-natus-vincere-starladder-starseries-fall-2026",
+                "initialized": true,
+                "started_sent": false,
+                "final_sent": true,
+                "completed": true,
+                "map_scores": {
+                    "0": "10:13",
+                    "1": "13:10",
+                    "2": "13:8"
+                },
+                "started_maps": [],
+                "notified_maps": [
+                    "0",
+                    "1",
+                    "2"
+                ],
+                "rating_maps": [],
+                "rating_summary_sent": true
+            },
+            "2398100": {
+                "source": "upcoming",
+                "url": "https://www.hltv.org/matches/2398100/magic-vs-mibr-starladder-starseries-fall-2026",
                 "initialized": true,
                 "started_sent": true,
                 "final_sent": false,
                 "completed": false,
-                "map_scores": {},
+                "map_scores": {
+                    "0": "8:13"
+                },
                 "started_maps": [
+                    "1"
+                ],
+                "notified_maps": [
                     "0"
                 ],
-                "notified_maps": [],
-                "rating_maps": [],
-                "rating_summary_sent": false
-            },
-            "2398099": {
-                "source": "upcoming",
-                "url": "https://www.hltv.org/matches/2398099/mouz-vs-natus-vincere-starladder-starseries-fall-2026",
-                "initialized": true,
-                "started_sent": false,
-                "final_sent": false,
-                "completed": false,
-                "map_scores": {},
-                "started_maps": [],
-                "notified_maps": [],
-                "rating_maps": [],
-                "rating_summary_sent": false
-            },
-            "2398100": {
-                "source": "upcoming",
-                "url": "https://www.hltv.org/matches/2398100/magic-vs-furia-mibr-loser-starladder-starseries-fall-2026",
-                "initialized": true,
-                "started_sent": false,
-                "final_sent": false,
-                "completed": false,
-                "map_scores": {},
-                "started_maps": [],
-                "notified_maps": [],
-                "rating_maps": [],
+                "rating_maps": [
+                    "0"
+                ],
                 "rating_summary_sent": false
             },
             "2398101": {
@@ -157,7 +181,7 @@
             },
             "2398102": {
                 "source": "upcoming",
-                "url": "https://www.hltv.org/matches/2398102/vitality-vs-furia-mibr-winner-starladder-starseries-fall-2026",
+                "url": "https://www.hltv.org/matches/2398102/vitality-vs-furia-starladder-starseries-fall-2026",
                 "initialized": true,
                 "started_sent": false,
                 "final_sent": false,
@@ -183,7 +207,7 @@
             },
             "2398103": {
                 "source": "upcoming",
-                "url": "https://www.hltv.org/matches/2398103/starladder-starseries-fall-2026-lower-bracket-semi-final-1-starladder-starseries-fall-2026",
+                "url": "https://www.hltv.org/matches/2398103/mouz-vs-vitality-furia-loser-starladder-starseries-fall-2026",
                 "initialized": true,
                 "started_sent": false,
                 "final_sent": false,

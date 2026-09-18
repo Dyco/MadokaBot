@@ -19,6 +19,23 @@ EVENT_STATUSES = {
     EVENT_STATUS_FINISHED,
 }
 
+# 赛事比赛在赛事列表中的来源。HLTV 的 matches 页面把正在进行的比赛
+# 放在 live-match-container 中，所以这里沿用 upcoming 作为“当前 live”状态；
+# waiting 只表示尚未开始，finished 表示已经进入 Results。
+MATCH_SECTION_UPCOMING = "upcoming"
+MATCH_SECTION_WAITING = "waiting"
+MATCH_SECTION_FINISHED = "finished"
+
+
+def normalize_match_section(value: object) -> str:
+    """规范化赛事比赛来源，并兼容旧版的 ``result`` 字段。"""
+    section = str(value or "").strip().casefold()
+    if section in {MATCH_SECTION_FINISHED, "result"}:
+        return MATCH_SECTION_FINISHED
+    if section == MATCH_SECTION_UPCOMING:
+        return MATCH_SECTION_UPCOMING
+    return MATCH_SECTION_WAITING
+
 
 @dataclass(slots=True)
 class PlayerStats:
@@ -110,7 +127,7 @@ class EventMatchRef:
 
     match_id: str
     url: str
-    section: str = "upcoming"
+    section: str = MATCH_SECTION_UPCOMING
 
 
 @dataclass(slots=True)

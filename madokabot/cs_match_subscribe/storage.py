@@ -17,6 +17,8 @@ from .models import (
     EVENT_STATUS_WAITING,
     EVENT_STATUSES,
     EventData,
+    MATCH_SECTION_FINISHED,
+    normalize_match_section,
 )
 
 _lock = asyncio.Lock()
@@ -214,7 +216,8 @@ async def subscribe_event(
             match_id = str(ref.get("match_id", "")).strip()
             if not match_id.isdigit():
                 continue
-            section = ref.get("section", "upcoming")
+            section = normalize_match_section(ref.get("section"))
+            is_finished = section == MATCH_SECTION_FINISHED
             if match_id not in baseline_ids:
                 baseline_ids.append(match_id)
             if match_id in matches:
@@ -224,15 +227,16 @@ async def subscribe_event(
             matches[match_id] = {
                 "source": section,
                 "url": str(ref.get("url", "")),
-                "initialized": section == "result",
-                "started_sent": section == "result",
-                "final_sent": section == "result",
-                "completed": section == "result",
+                "initialized": is_finished,
+                "started_sent": is_finished,
+                "final_sent": is_finished,
+                "completed": is_finished,
                 "map_scores": {},
                 "started_maps": [],
                 "notified_maps": [],
                 "rating_maps": [],
                 "rating_summary_sent": False,
+                "finalization_attempts": 0,
             }
 
         entry["completed"] = False

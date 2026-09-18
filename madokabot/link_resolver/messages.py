@@ -24,8 +24,8 @@ VIDEO_SUFFIXES = frozenset({".mp4", ".mov", ".webm"})
 
 
 def get_resolver_message(event: GroupMessageEvent) -> str:
-    """返回可供解析器检查的消息内容，不包含图片段及其 URL。"""
-    return str(event.get_message().exclude("image")).strip()
+    """返回可供解析器检查的文本，不包含图片和语音消息段。"""
+    return str(event.get_message().exclude("image", "record")).strip()
 
 
 def build_media_node(

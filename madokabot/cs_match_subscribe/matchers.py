@@ -38,7 +38,12 @@ from .client import (
     match_id_from_url,
 )
 from .config import config
-from .models import EVENT_STATUS_FINISHED, EventData, EventMatchRef
+from .models import (
+    EVENT_STATUS_FINISHED,
+    MATCH_SECTION_UPCOMING,
+    EventData,
+    EventMatchRef,
+)
 from .player_stats import (
     PlayerStatsError,
     bind_player,
@@ -92,8 +97,8 @@ def _event_is_finished(event: EventData, refs: list[EventMatchRef]) -> bool:
         return False
 
     # 页面没有状态标记时，如果所有已发现的比赛都来自 Results，且赛事
-    # 结束时间已过，也视为已结束；存在 Live/Upcoming 比赛则允许订阅。
-    if not refs or any(ref.section == "upcoming" for ref in refs):
+    # 结束时间已过，也视为已结束；存在 live 比赛则允许订阅。
+    if not refs or any(ref.section == MATCH_SECTION_UPCOMING for ref in refs):
         return False
     if event.end_at is None:
         return False

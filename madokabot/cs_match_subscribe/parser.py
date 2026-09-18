@@ -15,6 +15,9 @@ from bs4 import BeautifulSoup, Tag
 from .models import (
     EventData,
     EventMatchRef,
+    MATCH_SECTION_FINISHED,
+    MATCH_SECTION_UPCOMING,
+    MATCH_SECTION_WAITING,
     MapScore,
     MatchData,
     PlayerStats,
@@ -298,9 +301,14 @@ def _parse_scoreboard_result(
     )
     team1_name = str(scoreboard.get("data-team1-name") or "").strip()
     team2_name = str(scoreboard.get("data-team2-name") or "").strip()
+    # scoreText 是当前地图的实时系列比分容器；只从它的两个子节点
+    # 读取比分，不能回退到 mapholder 的半场/历史比分。
+    score_text = scoreboard.select_one(".scoreText")
+    if score_text is None:
+        return map_name, None, None
     scores = {
-        ct_name.casefold(): _score_text(scoreboard.select_one(".ctScore")),
-        t_name.casefold(): _score_text(scoreboard.select_one(".tScore")),
+        ct_name.casefold(): _score_text(score_text.select_one(".ctScore")),
+        t_name.casefold(): _score_text(score_text.select_one(".tScore")),
     }
     return (
         map_name,
@@ -748,29 +756,46 @@ def parse_event_match_refs_html(
     soup = BeautifulSoup(html, "html.parser")
     refs: dict[str, EventMatchRef] = {}
 
-    def add_href(href: str | None) -> None:
+    # 旧调用方仍可能传入 result；对外统一保存为 finished。
+    page_section = (
+        MATCH_SECTION_FINISHED if section.casefold() == "result" else section
+    )
+    section_priority = {
+        MATCH_SECTION_WAITING: 0,
+        MATCH_SECTION_FINISHED: 1,
+        MATCH_SECTION_UPCOMING: 2,
+    }
+
+    def add_href(
+        href: str | None,
+        match_section: str | None = None,
+    ) -> None:
         match = _MATCH_ID_RE.search(href or "")
         if match is None:
             return
         match_id = match.group(1)
-        refs.setdefault(
-            match_id,
-            EventMatchRef(
-                match_id=match_id,
-                url=_absolute_url(href, page_url) or "",
-                section=section,
-            ),
+        candidate = EventMatchRef(
+            match_id=match_id,
+            url=_absolute_url(href, page_url) or "",
+            section=match_section or page_section,
         )
+        previous = refs.get(match_id)
+        candidate_priority = section_priority.get(candidate.section, 0)
+        previous_priority = (
+            section_priority.get(previous.section, 0) if previous else -1
+        )
+        if candidate_priority > previous_priority:
+            refs[match_id] = candidate
 
-    def add_match_node(node: Tag) -> None:
+    def add_match_node(node: Tag, match_section: str) -> None:
         anchor = node.select_one('a[href*="/matches/"]')
         href = anchor.get("href") if anchor is not None else None
         if not href:
             match_id = str(node.get("data-match-id") or "").strip()
             href = f"/matches/{match_id}" if match_id.isdigit() else None
-        add_href(href)
+        add_href(href, match_section)
 
-    if section == "result":
+    if page_section == MATCH_SECTION_FINISHED:
         # 当前 HLTV 的 /results?event=<id> 页面把赛事结果放在
         # results-holder，侧栏中的推荐比赛不属于当前赛事。
         result_scope = soup.select_one(".results-holder")
@@ -794,15 +819,41 @@ def parse_event_match_refs_html(
             wrapper_selector += f'[data-event-id="{event_id}"]'
         wrappers = soup.select(wrapper_selector)
         for wrapper in wrappers:
-            add_match_node(wrapper)
+            classes = wrapper.get("class", [])
+            if isinstance(classes, str):
+                classes = classes.split()
+            normalized_classes = {
+                str(value).casefold() for value in classes
+            }
+            match_section = (
+                MATCH_SECTION_UPCOMING
+                if "live-match-container" in normalized_classes
+                else MATCH_SECTION_WAITING
+            )
+            add_match_node(wrapper, match_section)
 
         if not wrappers:
             # 某些 HLTV 页面会省略 data-event-id，但仍会保留赛事页的
-            # matches-event-wrapper；只在这个局部容器内做回退解析。
-            scope = soup.select_one(".matches-v4 .matches-event-wrapper")
-            if scope is not None:
+            # matches-event-wrapper；只在这些局部容器内做回退解析。
+            for scope in soup.select(".matches-v4 .matches-event-wrapper"):
+                classes = scope.get("class", [])
+                if isinstance(classes, str):
+                    classes = classes.split()
+                normalized_classes = {
+                    str(value).casefold() for value in classes
+                }
+                match_section = (
+                    MATCH_SECTION_UPCOMING
+                    if {
+                        "live-matches-wrapper",
+                        "livematchessection",
+                        "live-match-container",
+                    }
+                    & normalized_classes
+                    else MATCH_SECTION_WAITING
+                )
                 for anchor in scope.select('a[href*="/matches/"]'):
-                    add_href(anchor.get("href"))
+                    add_href(anchor.get("href"), match_section)
 
     return list(refs.values())
 

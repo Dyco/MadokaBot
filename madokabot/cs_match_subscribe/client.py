@@ -14,7 +14,14 @@ from nonebot.log import logger
 
 from ..madoka_bundle.config import config as madoka_config
 from .config import config
-from .models import EventData, EventMatchRef, MatchData
+from .models import (
+    MATCH_SECTION_FINISHED,
+    MATCH_SECTION_UPCOMING,
+    MATCH_SECTION_WAITING,
+    EventData,
+    EventMatchRef,
+    MatchData,
+)
 from .net import resolve_proxy
 from .parser import (
     parse_event_html,
@@ -446,7 +453,7 @@ async def fetch_event(event_id: str) -> EventData:
 
 
 async def fetch_event_match_refs(event_id: str) -> list[EventMatchRef]:
-    """获取赛事的待进行比赛和历史结果链接。"""
+    """获取赛事的 live、等待中比赛和历史结果链接。"""
     normalized_id = str(event_id).strip()
     if not normalized_id.isdigit():
         raise HltvError("赛事 ID 必须是纯数字。")
@@ -458,7 +465,10 @@ async def fetch_event_match_refs(event_id: str) -> list[EventMatchRef]:
     )
     refs: dict[str, EventMatchRef] = {}
     errors: list[BaseException] = []
-    for section, page in zip(("upcoming", "result"), pages):
+    for section, page in zip(
+        (MATCH_SECTION_UPCOMING, MATCH_SECTION_FINISHED),
+        pages,
+    ):
         if isinstance(page, BaseException):
             errors.append(page)
             continue
@@ -470,7 +480,18 @@ async def fetch_event_match_refs(event_id: str) -> list[EventMatchRef]:
             event_id=normalized_id,
         ):
             previous = refs.get(ref.match_id)
-            if previous is None or section == "upcoming":
+            # 同一场比赛短时间内可能同时出现在两个页面；live 优先于
+            # finished，finished 优先于 waiting，避免结果页被未来列表覆盖。
+            priority = {
+                MATCH_SECTION_WAITING: 0,
+                MATCH_SECTION_FINISHED: 1,
+                "result": 1,
+                MATCH_SECTION_UPCOMING: 2,
+            }
+            if previous is None or priority.get(ref.section, 0) > priority.get(
+                previous.section,
+                0,
+            ):
                 refs[ref.match_id] = ref
     if not refs and errors:
         error = errors[0]

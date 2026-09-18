@@ -20,8 +20,12 @@ from .models import (
     EVENT_STATUS_WAITING,
     EVENT_STATUSES,
     EventMatchRef,
+    MATCH_SECTION_FINISHED,
+    MATCH_SECTION_UPCOMING,
+    MATCH_SECTION_WAITING,
     MapScore,
     MatchData,
+    normalize_match_section,
 )
 from .render import render_rating_card
 from .storage import (
@@ -320,24 +324,27 @@ def _all_matches_completed(matches: dict[str, Any]) -> bool:
 
 def _new_match_state(section: str, page_url: str = "") -> dict[str, Any]:
     """创建一场新发现比赛的轮询状态。"""
+    normalized_section = normalize_match_section(section)
+    is_finished = normalized_section == MATCH_SECTION_FINISHED
     return {
-        "source": section,
+        "source": normalized_section,
         "url": page_url,
-        "initialized": False,
-        "started_sent": False,
-        "final_sent": False,
-        "completed": False,
+        "initialized": is_finished,
+        "started_sent": is_finished,
+        "final_sent": is_finished,
+        "completed": is_finished,
         "map_scores": {},
         "started_maps": [],
         "notified_maps": [],
         "rating_maps": [],
         "rating_summary_sent": False,
+        "finalization_attempts": 0,
     }
 
 
 def _historical_match_state() -> dict[str, Any]:
     """创建订阅前已经结束比赛的基线状态。"""
-    state = _new_match_state("result")
+    state = _new_match_state(MATCH_SECTION_FINISHED)
     state.update(
         {
             "initialized": True,
@@ -661,43 +668,65 @@ async def _poll_event_subscription(
     refs = await fetch_event_match_refs(event_id)
     stored_matches = entry.get("matches")
     matches = stored_matches if isinstance(stored_matches, dict) else {}
-    baseline_ids = {
-        str(value)
-        for value in entry.get("baseline_match_ids", [])
-        if str(value).isdigit()
-    }
-    ref_by_id = {ref.match_id: ref for ref in refs}
     pending_refs: list[EventMatchRef] = []
+    max_finalization_attempts = 3
 
     for ref in refs:
+        section = normalize_match_section(ref.section)
         state = matches.get(ref.match_id)
-        if isinstance(state, dict):
-            if ref.url:
-                state["url"] = ref.url
-            if not state.get("completed", False):
+        if not isinstance(state, dict):
+            state = _new_match_state(section, ref.url)
+            matches[ref.match_id] = state
+            if section == MATCH_SECTION_UPCOMING:
                 pending_refs.append(ref)
             continue
-        if ref.section == "result" and ref.match_id in baseline_ids:
-            matches[ref.match_id] = _historical_match_state()
-            continue
-        matches[ref.match_id] = _new_match_state(ref.section, ref.url)
-        pending_refs.append(ref)
 
-    # 页面列表可能暂时漏掉刚从 matches 移到 results 的比赛，继续跟踪已有状态。
-    for match_id, state in matches.items():
+        if ref.url:
+            # 赛事页上的链接可能在比赛开始后补全或修正 slug；每轮同步，
+            # 避免继续使用旧的比赛地址。
+            state["url"] = ref.url
+        if state.get("completed", False):
+            continue
+
+        if section == MATCH_SECTION_UPCOMING:
+            # 只有赛事页明确标记为 live 的比赛才抓取详情页。
+            state["source"] = MATCH_SECTION_UPCOMING
+            pending_refs.append(ref)
+            continue
+
+        if section == MATCH_SECTION_WAITING:
+            # 未开始的比赛只保留在赛事状态中，不请求比赛详情页。
+            state["source"] = MATCH_SECTION_WAITING
+            continue
+
+        # 已跟踪的比赛从 matches 列表（live 或 waiting）移动到 Results
+        # 时，允许少量一次性收尾请求，以便发送整场结束和最终 Rating；
+        # 之后不再持续轮询历史比赛。新发现的 finished 比赛不会回溯抓取。
+        previous_source = normalize_match_section(state.get("source"))
+        attempts_raw = state.get("finalization_attempts", 0)
+        try:
+            attempts = max(0, int(attempts_raw))
+        except (TypeError, ValueError):
+            attempts = 0
+        requested = bool(state.get("finalization_requested", False))
         if (
-            isinstance(state, dict)
-            and not state.get("completed", False)
-            and match_id not in ref_by_id
-            and str(match_id).isdigit()
-        ):
+            previous_source
+            in {MATCH_SECTION_UPCOMING, MATCH_SECTION_WAITING}
+            or requested
+        ) and attempts < max_finalization_attempts:
+            state["source"] = MATCH_SECTION_FINISHED
+            state["finalization_requested"] = True
+            state["finalization_attempts"] = attempts + 1
             pending_refs.append(
                 EventMatchRef(
-                    match_id=str(match_id),
-                    url=str(state.get("url", "")),
-                    section=str(state.get("source", "upcoming")),
+                    match_id=ref.match_id,
+                    url=ref.url or str(state.get("url", "")),
+                    section=MATCH_SECTION_FINISHED,
                 )
             )
+        else:
+            state["source"] = MATCH_SECTION_FINISHED
+            state["completed"] = True
 
     loaded = await _load_event_matches(pending_refs)
     messages: list[Message] = []
