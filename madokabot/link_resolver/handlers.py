@@ -188,6 +188,28 @@ def _skip_video_for_duration(
     )
     return True
 
+def clean_bilibili_url(url: str) -> str:
+    bv_match = re.search(r"/video/(BV[1-9A-Za-z]{10})", url)
+
+    if not bv_match:
+        return url
+
+    bvid = bv_match.group(1)
+
+    parsed = urlparse(url)
+    query = parse_qs(parsed.query)
+
+    # 只保留分P参数
+    p = query.get("p", [None])[0]
+
+    result = f"https://www.bilibili.com/video/{bvid}"
+
+    if p:
+        result += f"?p={p}"
+
+    return result
+
+
 
 if BILIBILI_AVAILABLE:
     request_settings.set_trust_env(False)
@@ -244,19 +266,38 @@ async def bilibili(bot: Bot, event: GroupMessageEvent) -> None:
         if not short_match:
             await bili23.finish("未识别到有效的 Bilibili 短链接。")
         b_short_url = short_match.group(0)
-        try:
-            resp = httpx.get(
-                b_short_url,
-                headers=BILIBILI_HEADER,
-                follow_redirects=True,
-                proxy=BILIBILI_PROXY,
-                trust_env=False,
+    try:
+        async with httpx.AsyncClient(
+            headers=BILIBILI_HEADER,
+            follow_redirects=False,
+            proxy=BILIBILI_PROXY,
+            trust_env=False,
+            timeout=10.0,
+        ) as client:
+            resp = await client.get(b_short_url)
+    
+        # B23 短链接正常情况下就是返回 301/302
+        if resp.status_code in (301, 302, 303, 307, 308):
+            location = resp.headers.get("location")
+    
+            if not location:
+                logger.warning(
+                    f"[Bilibili] 短链接跳转响应缺少 Location：{b_short_url}"
+                )
+                return
+    
+            url = clean_bilibili_url(location)
+    
+            logger.debug(
+                f"[Bilibili] 短链接解析：{b_short_url} -> {url}"
             )
+        else:
             resp.raise_for_status()
-        except httpx.HTTPError as exc:
-            logger.warning(f"[Bilibili] 短链接响应失败：{exc}")
-            return
-        url: str = str(resp.url)
+            url = str(resp.url)
+    
+    except httpx.HTTPError as exc:
+        logger.warning(f"[Bilibili] 短链接响应失败：{exc}")
+        return
     else:
         url_match = re.search(url_reg, url)
         if not url_match:

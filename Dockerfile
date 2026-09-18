@@ -24,7 +24,9 @@ ENV PYTHONPATH=/app
 COPY ./docker/gunicorn_conf.py ./docker/start.sh /
 RUN chmod +x /start.sh \
   && apt-get update \
-  && apt-get install -y --no-install-recommends ffmpeg \
+  && apt-get install -y --no-install-recommends \
+      ffmpeg \
+      nodejs \
   && rm -rf /var/lib/apt/lists/*
 
 ENV APP_MODULE _main:app
