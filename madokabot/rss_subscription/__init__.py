@@ -16,7 +16,7 @@ from .config import DATA_PATH, RSSConfig
 from .download import restore_upload_records
 from .subscription import Rss
 
-VERSION = "2.6.25"
+VERSION = "0.1.0"
 
 __plugin_meta__ = PluginMetadata(
     name="MadokaRSS",

@@ -8,7 +8,7 @@ from nonebot.adapters.onebot.v11 import MessageSegment
 from nonebot_plugin_htmlrender import html_to_pic
 
 from ...constants import ResType, SubFolder
-from ...utils import get_file
+from ...utils import get_file, get_bot_version
 from .service import PreparedImage
 
 TEMPLATE_DIR = Path(__file__).parent / "templates"
@@ -76,7 +76,7 @@ async def render_music_card(
         subtitle=subtitle,
         author=author,
         user_id=user_id,
-        signature=f"MadokaBot v{nonebot_version or 'unknown'}",
+        signature=f"MadokaBot v{get_bot_version()}",
         font_path=_font_uri(),
         theme_class=f"theme-{template_id}",
     )

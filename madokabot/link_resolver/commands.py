@@ -287,9 +287,8 @@ resolver_command = Alconna(
 )
 resolver = on_alconna(
     resolver_command,
-    aliases={"resolver", "/解析", "/resolver"},
+    aliases={"resolver", "解析",},
     rule=resolver_access_rule,
-    use_cmd_start=False,
     use_cmd_sep=False,
     priority=1,
     block=False,

@@ -7,6 +7,10 @@ from nonebot.adapters.onebot.v11 import MessageEvent, MessageSegment
 from .config import assets
 from .constants import ResType, SubFolder
 
+from importlib.metadata import version
+
+
+
 
 def get_latency_ms(event: MessageEvent) -> float:
     """计算从收到消息到当前时刻的延迟（毫秒）。"""
@@ -60,3 +64,6 @@ def get_indexed_files(
     """
     files = sorted(get_files(res_type, plugin))
     return {f"{prefix}{index:02d}": path for index, path in enumerate(files, start=1)}
+
+def get_bot_version() -> str:
+    return version("madokabot")
