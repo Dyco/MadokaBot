@@ -58,9 +58,12 @@ from .render import render_event_list_card, render_player_stats_card
 from .service import render_check_rating_messages, send_rating_forward
 from .storage import (
     add_event_target_if_exists,
+    get_hltv_event_settings,
     remove_event_subscription,
+    set_hltv_event_push_each_map,
     subscribe_event,
     target_from_event,
+    toggle_hltv_event_start_notification,
     unsubscribe_all_events,
     unsubscribe_event,
 )
@@ -73,6 +76,7 @@ CS_LOGIN_USAGE = "用法：CS login <手机号> <验证码>"
 CS_STATS_USAGE = f"用法：CS 战绩 <{SUPPORTED_PLATFORM_TEXT}> [玩家昵称]"
 CS_UNSUB_USAGE = "用法：CS unsub <赛事ID>"
 CS_REMOVESUB_USAGE = "用法：CS removesub <赛事ID>"
+CS_EVENT_USAGE = "用法：CS event all|single|notif"
 
 
 def _event_schedule_text(event: EventData) -> str:
@@ -130,6 +134,9 @@ CS_USAGE = """用法：
 CS help
 CS list event  列出当前及未来三个月的高奖金国际 LAN 和 Major 赛事
 CS sub <赛事ID>  订阅赛事并推送其中的比赛结果
+CS event all|全部  本群按整场系列赛推送
+CS event single|单图  本群按单张地图推送
+CS event notif|通知  切换本群赛事开始通知
 CS unsub <赛事ID>  本群退订指定赛事推送
 CS nosub  本群退订全部赛事推送
 CS removesub <赛事ID>  超级用户全局移除赛事订阅
@@ -141,8 +148,10 @@ CS 战绩 <5E|5e|5eplay|wm|pw|完美> [玩家昵称]  查询绑定账号或指�
 
 示例：
 CS sub 8057
+CS event single
+CS event notif
 
-订阅后，比赛开始、每张地图结束和系列赛结束会通过合并转发推送。"""
+订阅后的推送方式和赛事开始通知，按本群的 CS event 设置生效。"""
 
 
 cs_command = Alconna(
@@ -153,6 +162,26 @@ cs_command = Alconna(
         Args["params?", StrMulti],
         alias=["列表"],
         help_text="列出 CS 赛事信息",
+    ),
+    Subcommand(
+        "event",
+        Subcommand(
+            "all",
+            alias=["ALL", "All", "全部"],
+            help_text="本群按整场系列赛推送赛事",
+        ),
+        Subcommand(
+            "single",
+            alias=["SINGLE", "Single", "单图"],
+            help_text="本群按单张地图推送赛事",
+        ),
+        Subcommand(
+            "notif",
+            alias=["Notif", "NOTIF", "Notification", "通知", "推送", "提醒"],
+            help_text="切换本群赛事开始通知",
+        ),
+        alias=["赛事", "比赛"],
+        help_text="设置本群赛事推送方式",
     ),
     Subcommand(
         "sub",
@@ -279,6 +308,47 @@ async def handle_cs_list(params: Match[str]) -> None:
         await cs_cmd.finish("HLTV赛事列表处理失败，请稍后重试。")
         return
     await cs_cmd.finish(Message([image]))
+
+
+@cs_cmd.assign("event")
+async def handle_cs_event() -> None:
+    await cs_cmd.finish(CS_EVENT_USAGE)
+
+
+async def _set_cs_event_mode(
+    bot: Bot,
+    event: MessageEvent,
+    *,
+    push_each_map: bool,
+) -> None:
+    """设置当前群的赛事推送粒度。"""
+    target = await _group_subscription_target(bot, event)
+    if target is None:
+        return
+    set_hltv_event_push_each_map(target["id"], push_each_map)
+    mode_text = "单图" if push_each_map else "全图"
+    await cs_cmd.finish(f"已设置本群赛事推送方式为{mode_text}模式。")
+
+
+@cs_cmd.assign("event.all")
+async def handle_cs_event_all(bot: Bot, event: MessageEvent) -> None:
+    await _set_cs_event_mode(bot, event, push_each_map=False)
+
+
+@cs_cmd.assign("event.single")
+async def handle_cs_event_single(bot: Bot, event: MessageEvent) -> None:
+    await _set_cs_event_mode(bot, event, push_each_map=True)
+
+
+@cs_cmd.assign("event.notif")
+async def handle_cs_event_notif(bot: Bot, event: MessageEvent) -> None:
+    """切换当前群是否接收赛事开始通知。"""
+    target = await _group_subscription_target(bot, event)
+    if target is None:
+        return
+    enabled = toggle_hltv_event_start_notification(target["id"])
+    state_text = "已打开" if enabled else "已关闭"
+    await cs_cmd.finish(f"{state_text}本群赛事开始通知")
 
 
 def _normalize_mobile(value: str) -> str:
@@ -601,9 +671,10 @@ async def handle_cs_sub(event: MessageEvent, event_id: Match[str]) -> None:
         return
 
     prefix = "已成功订阅赛事" if added else "已刷新赛事订阅"
+    event_settings = get_hltv_event_settings(target["id"])
     push_mode = (
         "每张地图开始、结束时推送；最后一张图结束时合并完整 Rating 汇总"
-        if config.hltv_subscribe_push_each_map
+        if event_settings["push_each_map"]
         else "按系列赛级别推送开始和结束，整场结束时补发完整 Rating 汇总"
     )
     await cs_cmd.finish(

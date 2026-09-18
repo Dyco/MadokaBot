@@ -10,7 +10,7 @@ from typing import Any
 
 from ..madoka_bundle.plugins.common.group_set import group_set
 from ..madoka_bundle.plugins.common.json_data import JsonDataStore
-from .config import HLTV_SUB_PATH
+from .config import HLTV_SUB_PATH, config
 from .models import (
     EVENT_STATUS_FINISHED,
     EVENT_STATUS_ONGOING,
@@ -24,7 +24,57 @@ from .models import (
 _lock = asyncio.Lock()
 # group_set 中保存 HLTV 赛事 ID 列表的标签名。
 HLTV_SUB_GROUP_TAG = "hltv_sub"
+HLTV_EVENT_SETTINGS_NAME = "hltv_event_settings"
 _hltv_sub_store = JsonDataStore(HLTV_SUB_PATH, {})
+
+
+def _setting_bool(value: Any, default: bool) -> bool:
+    """读取群配置中的布尔值，并兼容旧配置中的字符串。"""
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, str):
+        normalized = value.strip().casefold()
+        if normalized in {"1", "true", "yes", "on"}:
+            return True
+        if normalized in {"0", "false", "no", "off"}:
+            return False
+    return default
+
+
+def get_hltv_event_settings(group_id: str | int) -> dict[str, bool]:
+    """读取群组赛事推送设置。"""
+    raw_settings = group_set.get(group_id, HLTV_EVENT_SETTINGS_NAME, {})
+    if not isinstance(raw_settings, dict):
+        raw_settings = {}
+    return {
+        "push_each_map": _setting_bool(
+            raw_settings.get("push_each_map"),
+            bool(config.hltv_subscribe_push_each_map),
+        ),
+        "notify_start": _setting_bool(
+            raw_settings.get("notify_start"),
+            True,
+        ),
+    }
+
+
+def set_hltv_event_push_each_map(
+    group_id: str | int,
+    push_each_map: bool,
+) -> dict[str, bool]:
+    """设置群组按单图或系列赛推送赛事。"""
+    settings = get_hltv_event_settings(group_id)
+    settings["push_each_map"] = bool(push_each_map)
+    group_set.set(group_id, HLTV_EVENT_SETTINGS_NAME, settings)
+    return settings
+
+
+def toggle_hltv_event_start_notification(group_id: str | int) -> bool:
+    """切换群组赛事开始通知，并返回切换后的状态。"""
+    settings = get_hltv_event_settings(group_id)
+    settings["notify_start"] = not settings["notify_start"]
+    group_set.set(group_id, HLTV_EVENT_SETTINGS_NAME, settings)
+    return settings["notify_start"]
 
 
 def _read() -> dict[str, dict[str, Any]]:

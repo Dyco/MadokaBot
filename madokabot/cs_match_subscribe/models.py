@@ -137,7 +137,7 @@ class MapScore:
     name: str
     team1_score: str | None = None
     team2_score: str | None = None
-    # 该字段只由实时 Scoreboard 的 scoreText 设置；mapholder 分数不设置它。
+    # 该字段由实时 Scoreboard 识别当前地图设置；mapholder 分数不设置它。
     started: bool = False
     finished: bool | None = None
     live: bool = False
@@ -151,7 +151,7 @@ class MapScore:
 
     @property
     def is_started(self) -> bool:
-        """判断地图是否已由实时 Scoreboard 确认开始。"""
+        """判断地图是否已由实时 Scoreboard 当前地图确认开始。"""
         return self.started
 
     @property
@@ -216,7 +216,7 @@ class MatchData:
 
     @property
     def has_started(self) -> bool:
-        """仅用实时 Scoreboard 判断比赛是否已开始。"""
+        """仅用实时 Scoreboard 当前地图判断比赛是否已开始。"""
         return any(
             result.is_started and not result.is_finished
             for result in self.map_results

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Iterable
+from dataclasses import dataclass
 from datetime import datetime, timezone
 from time import monotonic
 from typing import Any
@@ -29,6 +30,7 @@ from .models import (
 )
 from .render import render_rating_card
 from .storage import (
+    get_hltv_event_settings,
     list_active_events,
     update_event_state,
 )
@@ -36,6 +38,14 @@ from .storage import (
 _MAP_LABELS = "一二三四五六七八九十"
 _NOTIFICATION_MEMORY_TTL = 24 * 60 * 60
 _notification_memory: dict[tuple[str, str], float] = {}
+
+
+@dataclass(frozen=True, slots=True)
+class _MatchNotification:
+    """一次比赛状态变化及其可发送的消息。"""
+
+    kind: str
+    message: Message
 
 
 def _cleanup_notification_memory() -> None:
@@ -194,23 +204,37 @@ async def _broadcast_forward(
     targets: list[dict[str, str]],
     messages: list[Message],
 ) -> bool:
-    """将一个赛事更新批次作为合并转发广播。
+    """将同一赛事更新批次作为合并转发广播。"""
+    return await _broadcast_target_forwards(
+        [(target, messages) for target in targets]
+    )
+
+
+async def _broadcast_target_forwards(
+    target_messages: list[tuple[dict[str, str], list[Message]]],
+) -> bool:
+    """按目标分别发送赛事更新批次。
 
     返回值表示本批次是否至少送达一个目标。赛事状态是所有订阅目标共享的；
     如果部分目标已经成功、部分目标失败，仍必须提交状态，否则成功目标会在
     下一轮再次收到完全相同的比赛状态。
     """
+    target_messages = [
+        (target, messages)
+        for target, messages in target_messages
+        if messages
+    ]
     bots = list(_available_bots())
     if not bots:
         logger.warning("没有可用 OneBot 连接，暂不推送 HLTV 赛事更新。")
         return False
-    if not targets:
+    if not target_messages:
         logger.warning("HLTV 赛事订阅没有有效推送目标，暂不更新订阅状态。")
         return False
 
     delivered_any = False
     failed_targets: list[dict[str, str]] = []
-    for target in targets:
+    for target, messages in target_messages:
         delivered = False
         for bot in bots:
             try:
@@ -271,7 +295,7 @@ def _previous_map_score(
 
 
 def _started_map_candidates(match: MatchData) -> list[tuple[int, str]]:
-    """返回已由实时 Scoreboard 确认开始且尚未结束的地图。"""
+    """返回由实时 Scoreboard 当前地图确认开始且尚未结束的地图。"""
     return [
         (index, result.name.strip())
         for index, result in enumerate(match.map_results)
@@ -307,7 +331,7 @@ def _event_start_at(entry: dict[str, Any]) -> datetime | None:
 
 
 def _match_has_actual_start(match: MatchData) -> bool:
-    """仅按实时 Scoreboard 的地图比分判断比赛是否实际开始。"""
+    """仅按实时 Scoreboard 当前地图判断比赛是否实际开始。"""
     return any(
         result.is_started and not result.is_finished
         for result in match.map_results
@@ -430,15 +454,49 @@ async def render_check_rating_messages(match: MatchData) -> list[Message]:
     return messages
 
 
+def _event_target_settings(target: dict[str, str]) -> dict[str, bool]:
+    """读取赛事推送目标的设置。"""
+    if target.get("kind") == "group" and target.get("id"):
+        return get_hltv_event_settings(target["id"])
+    return {
+        "push_each_map": bool(config.hltv_subscribe_push_each_map),
+        "notify_start": True,
+    }
+
+
+def _messages_for_event_target(
+    notifications: list[_MatchNotification],
+    settings: dict[str, bool],
+) -> list[Message]:
+    """按群组设置筛选赛事更新消息。"""
+    push_each_map = bool(settings.get("push_each_map", True))
+    notify_start = bool(settings.get("notify_start", True))
+    messages: list[Message] = []
+    for notification in notifications:
+        kind = notification.kind
+        if kind == "map_start":
+            allowed = push_each_map and notify_start
+        elif kind == "match_start":
+            allowed = not push_each_map and notify_start
+        elif kind in {"map_end", "map_rating"}:
+            allowed = push_each_map
+        else:
+            allowed = kind in {"series_end", "series_rating"}
+        if allowed:
+            messages.append(notification.message)
+    return messages
+
+
 async def _process_event_match(
     match: MatchData,
     state: dict[str, Any],
     event_name: str,
-) -> list[Message]:
+    *,
+    has_single_target: bool,
+) -> list[_MatchNotification]:
     """根据一次比赛快照生成尚未推送的节点并更新内存状态。"""
-    messages: list[Message] = []
+    notifications: list[_MatchNotification] = []
     initialized = bool(state.get("initialized", False))
-    push_each_map = bool(config.hltv_subscribe_push_each_map)
     previous_scores = state.get("map_scores")
     if not isinstance(previous_scores, dict):
         previous_scores = {}
@@ -458,15 +516,18 @@ async def _process_event_match(
         previous_scores = _current_map_scores(match)
 
         # 订阅时已经结束的地图只建立基线，避免首次轮询补发历史开始通知。
-        if push_each_map:
-            started_maps = state.get("started_maps")
-            if not isinstance(started_maps, list):
-                started_maps = []
-                state["started_maps"] = started_maps
-            started_set = {str(value) for value in started_maps}
-            for index, result in enumerate(match.map_results):
-                if result.is_finished and result.is_started and str(index) not in started_set:
-                    started_maps.append(str(index))
+        started_maps = state.get("started_maps")
+        if not isinstance(started_maps, list):
+            started_maps = []
+            state["started_maps"] = started_maps
+        started_set = {str(value) for value in started_maps}
+        for index, result in enumerate(match.map_results):
+            if (
+                result.is_finished
+                and result.is_started
+                and str(index) not in started_set
+            ):
+                started_maps.append(str(index))
         # 订阅时已经结束的地图只建立消息和 Rating 基线，避免补发历史数据。
         for index, result in enumerate(match.map_results):
             if not result.is_finished:
@@ -479,36 +540,35 @@ async def _process_event_match(
                 rating_maps.append(key)
                 rating_set.add(key)
 
-    if push_each_map:
-        started_maps = state.get("started_maps")
-        if not isinstance(started_maps, list):
-            started_maps = []
-            state["started_maps"] = started_maps
-        started_set = {str(value) for value in started_maps}
-        for index, map_name in _started_map_candidates(match):
-            key = str(index)
-            if key in started_set:
-                continue
-            notification = f"map_start:{index}"
-            if _notification_was_seen(match_id, notification):
-                started_maps.append(key)
-                started_set.add(key)
-                continue
-            messages.append(_map_start_message(match, map_name, index, event_name))
-            started_maps.append(key)
-            started_set.add(key)
+    started_maps = state.get("started_maps")
+    if not isinstance(started_maps, list):
+        started_maps = []
+        state["started_maps"] = started_maps
+    started_set = {str(value) for value in started_maps}
+    for index, map_name in _started_map_candidates(match):
+        key = str(index)
+        if key in started_set:
+            continue
+        notification = f"map_start:{index}"
+        if not _notification_was_seen(match_id, notification):
+            notifications.append(
+                _MatchNotification(
+                    "map_start",
+                    _map_start_message(match, map_name, index, event_name),
+                )
+            )
             _remember_notification(match_id, notification)
-        if actual_started:
-            # 同步系列赛开始状态；每图模式的去重以 started_maps 为准。
-            state["started_sent"] = True
-    elif actual_started and not state.get("started_sent", False):
+        started_maps.append(key)
+        started_set.add(key)
+
+    if actual_started and not state.get("started_sent", False):
         notification = "match_start"
-        if _notification_was_seen(match_id, notification):
-            state["started_sent"] = True
-        else:
-            messages.append(_start_message(match, event_name))
-            state["started_sent"] = True
+        if not _notification_was_seen(match_id, notification):
+            notifications.append(
+                _MatchNotification("match_start", _start_message(match, event_name))
+            )
             _remember_notification(match_id, notification)
+        state["started_sent"] = True
 
     rating_cache: dict[str, MessageSegment] = {}
     current_scores = _current_map_scores(match)
@@ -519,20 +579,24 @@ async def _process_event_match(
         score = result.score_display
         previous_score = _previous_map_score(previous_scores, index)
         if (
-            push_each_map
-            and not _map_state_seen(notified_set, index)
+            not _map_state_seen(notified_set, index)
             and previous_score != score
         ):
             notification = f"map_end:{index}"
             if not _notification_was_seen(match_id, notification):
-                messages.append(_map_result_message(match, result, index))
+                notifications.append(
+                    _MatchNotification(
+                        "map_end",
+                        _map_result_message(match, result, index),
+                    )
+                )
                 _remember_notification(match_id, notification)
             notified.append(key)
             notified_set.add(key)
         # 最后一张图同时意味着系列赛结束时，不在地图结束节点再次发送
         # 当前图 Rating；整场汇报会统一包含所有已完成地图和总 Rating。
         if (
-            push_each_map
+            has_single_target
             and not match.is_finished
             and not _map_state_seen(rating_set, index)
         ):
@@ -543,7 +607,7 @@ async def _process_event_match(
             else:
                 image = await _rating_message(match, rating_cache, result.name)
                 if image is not None:
-                    messages.append(image)
+                    notifications.append(_MatchNotification("map_rating", image))
                     rating_maps.append(key)
                     rating_set.add(key)
                     _remember_notification(match_id, notification)
@@ -551,12 +615,12 @@ async def _process_event_match(
     if match.is_finished:
         if not state.get("final_sent", False):
             notification = "series_end"
-            if _notification_was_seen(match_id, notification):
-                state["final_sent"] = True
-            else:
-                messages.append(_final_message(match))
-                state["final_sent"] = True
+            if not _notification_was_seen(match_id, notification):
+                notifications.append(
+                    _MatchNotification("series_end", _final_message(match))
+                )
                 _remember_notification(match_id, notification)
+            state["final_sent"] = True
         if not state.get("rating_summary_sent", False):
             # 比赛结束和 Rating 生成不是同一时刻；没有完整 Rating 时保留
             # 赛事状态，下一次轮询继续尝试，不提前完成订阅。
@@ -568,7 +632,10 @@ async def _process_event_match(
             else:
                 rating_messages = await render_check_rating_messages(match)
                 if rating_messages:
-                    messages.extend(rating_messages)
+                    notifications.extend(
+                        _MatchNotification("series_rating", message)
+                        for message in rating_messages
+                    )
                     state["rating_summary_sent"] = True
                     state["completed"] = True
                     state["source"] = "finished"
@@ -576,7 +643,7 @@ async def _process_event_match(
 
     state["initialized"] = True
     state["map_scores"] = current_scores
-    return messages
+    return notifications
 
 
 async def _load_event_matches(
@@ -728,8 +795,22 @@ async def _poll_event_subscription(
             state["source"] = MATCH_SECTION_FINISHED
             state["completed"] = True
 
+    targets = [
+        target
+        for target in entry.get("targets", [])
+        if isinstance(target, dict)
+    ]
+    target_settings = [
+        (target, _event_target_settings(target))
+        for target in targets
+    ]
+    has_single_target = any(
+        settings["push_each_map"]
+        for _, settings in target_settings
+    )
+
     loaded = await _load_event_matches(pending_refs)
-    messages: list[Message] = []
+    notifications: list[_MatchNotification] = []
     generated_memory_keys: set[tuple[str, str]] = set()
     event_name = str(entry.get("event_name", ""))
     observed_first_start: datetime | None = None
@@ -748,18 +829,32 @@ async def _poll_event_subscription(
             )
         _cleanup_notification_memory()
         memory_before = set(_notification_memory)
-        messages.extend(await _process_event_match(match, state, event_name))
+        notifications.extend(
+            await _process_event_match(
+                match,
+                state,
+                event_name,
+                has_single_target=has_single_target,
+            )
+        )
         generated_memory_keys.update(
             set(_notification_memory).difference(memory_before)
         )
 
-    targets = [
-        target
-        for target in entry.get("targets", [])
-        if isinstance(target, dict)
+    target_messages = [
+        (
+            target,
+            _messages_for_event_target(notifications, settings),
+        )
+        for target, settings in target_settings
     ]
-    if messages:
-        if not await _broadcast_forward(targets, messages):
+    target_messages = [
+        (target, messages)
+        for target, messages in target_messages
+        if messages
+    ]
+    if target_messages:
+        if not await _broadcast_target_forwards(target_messages):
             # 所有目标都没有确认发送成功时撤销本轮新键，下一次轮询仍可重试；
             # 已存在的键不动，避免覆盖此前已经成功发送的通知记忆。
             for key in generated_memory_keys:

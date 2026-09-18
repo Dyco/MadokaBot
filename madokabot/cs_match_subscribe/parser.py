@@ -246,13 +246,6 @@ def _score_text(node: Tag | None) -> str | None:
     return value if re.fullmatch(r"\d+", value) else None
 
 
-def _scoreboard_score_started(*scores: str | None) -> bool:
-    """Scoreboard 双方比分均可读且不为 0:0 时，标记地图已经开始。"""
-    if len(scores) != 2 or not all(score is not None for score in scores):
-        return False
-    return any(int(score) > 0 for score in scores if score is not None)
-
-
 _SCOREBOARD_MAP_NAMES = {
     "dust2": "Dust2",
 }
@@ -280,7 +273,7 @@ def _scoreboard_team_name(scoreboard: Tag, side: str) -> str:
 def _parse_scoreboard_result(
     soup: BeautifulSoup,
 ) -> tuple[str, str | None, str | None] | None:
-    """读取实时 Scoreboard，并按比赛队伍顺序映射比分。"""
+    """读取实时 Scoreboard 当前地图，并尽量映射实时比分。"""
     scoreboard = soup.select_one("#scoreboardElement")
     if scoreboard is None:
         return None
@@ -302,7 +295,8 @@ def _parse_scoreboard_result(
     team1_name = str(scoreboard.get("data-team1-name") or "").strip()
     team2_name = str(scoreboard.get("data-team2-name") or "").strip()
     # scoreText 是当前地图的实时系列比分容器；只从它的两个子节点
-    # 读取比分，不能回退到 mapholder 的半场/历史比分。
+    # 读取比分，不能回退到 mapholder 的半场/历史比分。当前地图本身
+    # 仍然可以作为地图开始信号，所以 scoreText 缺失时保留地图名。
     score_text = scoreboard.select_one(".scoreText")
     if score_text is None:
         return map_name, None, None
@@ -318,7 +312,7 @@ def _parse_scoreboard_result(
 
 
 def _parse_map_results(soup: BeautifulSoup) -> list[MapScore]:
-    """解析地图卡片的最终比分，并叠加实时 Scoreboard 数据。"""
+    """解析地图卡片的最终比分，并叠加实时 Scoreboard 当前地图。"""
     results: list[MapScore] = []
     for holder in soup.select(".mapholder"):
         name = _text(holder.select_one(".mapname, .dynamic-map-name-full"))
@@ -338,6 +332,8 @@ def _parse_map_results(soup: BeautifulSoup) -> list[MapScore]:
         scores_are_final = (
             team1_score is not None
             and team2_score is not None
+            # 常规时间的 12:12 仍可能进入加时，平分不能作为地图结束。
+            and team1_score != team2_score
             and not has_live_half_placeholder
         )
         result = MapScore(
@@ -370,7 +366,9 @@ def _parse_map_results(soup: BeautifulSoup) -> list[MapScore]:
                 name=map_name,
                 team1_score=team1_score,
                 team2_score=team2_score,
-                started=_scoreboard_score_started(team1_score, team2_score),
+                # Scoreboard 能识别出当前地图时，即视为该地图已经开始；
+                # 实时比分只用于补充分数，不再作为开始信号的必要条件。
+                started=True,
                 finished=False,
                 live=True,
             )
@@ -384,9 +382,9 @@ def _parse_map_results(soup: BeautifulSoup) -> list[MapScore]:
         result.team1_score = team1_score
     if team2_score is not None:
         result.team2_score = team2_score
-    # 这里必须只使用 Scoreboard 的比分；不能使用已经写入 MapScore 的
-    # mapholder 分数，否则半场比分会提前触发比赛开始通知。
-    result.started = _scoreboard_score_started(team1_score, team2_score)
+    # 当前地图是开始信号；不能使用已经写入 MapScore 的 mapholder
+    # 分数，否则半场比分会提前触发比赛开始通知。
+    result.started = True
     result.finished = False
     result.live = True
     return results
