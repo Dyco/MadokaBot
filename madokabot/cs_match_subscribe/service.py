@@ -267,7 +267,7 @@ def _previous_map_score(
 
 
 def _started_map_candidates(match: MatchData) -> list[tuple[int, str]]:
-    """返回已经出现非零比分且尚未结束的地图。"""
+    """返回已由实时 Scoreboard 确认开始且尚未结束的地图。"""
     return [
         (index, result.name.strip())
         for index, result in enumerate(match.map_results)
@@ -302,23 +302,11 @@ def _event_start_at(entry: dict[str, Any]) -> datetime | None:
     return _parse_datetime(event_data.get("start_at"))
 
 
-def _positive_score(value: str | None) -> bool:
-    """判断比分是否已经出现非零回合或系列赛比分。"""
-    try:
-        return int(str(value).strip()) > 0
-    except (TypeError, ValueError):
-        return False
-
-
 def _match_has_actual_start(match: MatchData) -> bool:
-    """按地图非零比分判断一场比赛是否实际开始。"""
-    if any(
+    """仅按实时 Scoreboard 的地图比分判断比赛是否实际开始。"""
+    return any(
         result.is_started and not result.is_finished
         for result in match.map_results
-    ):
-        return True
-    return match.status == "live" and any(
-        _positive_score(team.score) for team in match.teams[:2]
     )
 
 

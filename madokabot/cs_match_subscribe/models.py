@@ -120,6 +120,7 @@ class MapScore:
     name: str
     team1_score: str | None = None
     team2_score: str | None = None
+    # 该字段只由实时 Scoreboard 的 scoreText 设置；mapholder 分数不设置它。
     started: bool = False
     finished: bool | None = None
     live: bool = False
@@ -133,7 +134,7 @@ class MapScore:
 
     @property
     def is_started(self) -> bool:
-        """判断地图是否有明确的非零比分开始标记。"""
+        """判断地图是否已由实时 Scoreboard 确认开始。"""
         return self.started
 
     @property
@@ -198,9 +199,10 @@ class MatchData:
 
     @property
     def has_started(self) -> bool:
-        """用 HLTV 的实时状态或系列赛比分判断比赛是否已开始。"""
-        return self.status == "live" or any(
-            team.score is not None for team in self.teams[:2]
+        """仅用实时 Scoreboard 判断比赛是否已开始。"""
+        return any(
+            result.is_started and not result.is_finished
+            for result in self.map_results
         )
 
     @property

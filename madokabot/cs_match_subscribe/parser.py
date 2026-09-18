@@ -243,9 +243,11 @@ def _score_text(node: Tag | None) -> str | None:
     return value if re.fullmatch(r"\d+", value) else None
 
 
-def _map_score_started(*scores: str | None) -> bool:
-    """地图比分至少一方大于 0 时，才标记为已经开始。"""
-    return any(score is not None and int(score) > 0 for score in scores)
+def _scoreboard_score_started(*scores: str | None) -> bool:
+    """Scoreboard 双方比分均可读且不为 0:0 时，标记地图已经开始。"""
+    if len(scores) != 2 or not all(score is not None for score in scores):
+        return False
+    return any(int(score) > 0 for score in scores if score is not None)
 
 
 _SCOREBOARD_MAP_NAMES = {
@@ -308,7 +310,7 @@ def _parse_scoreboard_result(
 
 
 def _parse_map_results(soup: BeautifulSoup) -> list[MapScore]:
-    """解析比赛页中的地图名称、回合比分和实时状态。"""
+    """解析地图卡片的最终比分，并叠加实时 Scoreboard 数据。"""
     results: list[MapScore] = []
     for holder in soup.select(".mapholder"):
         name = _text(holder.select_one(".mapname, .dynamic-map-name-full"))
@@ -334,7 +336,9 @@ def _parse_map_results(soup: BeautifulSoup) -> list[MapScore]:
             name=name,
             team1_score=team1_score,
             team2_score=team2_score,
-            started=_map_score_started(team1_score, team2_score),
+            # mapholder 只用于判断地图是否结束；其中的半场/延迟比分
+            # 不能作为比赛开始信号。
+            started=False,
             finished=scores_are_final,
         )
         results.append(result)
@@ -358,7 +362,7 @@ def _parse_map_results(soup: BeautifulSoup) -> list[MapScore]:
                 name=map_name,
                 team1_score=team1_score,
                 team2_score=team2_score,
-                started=_map_score_started(team1_score, team2_score),
+                started=_scoreboard_score_started(team1_score, team2_score),
                 finished=False,
                 live=True,
             )
@@ -372,7 +376,9 @@ def _parse_map_results(soup: BeautifulSoup) -> list[MapScore]:
         result.team1_score = team1_score
     if team2_score is not None:
         result.team2_score = team2_score
-    result.started = _map_score_started(result.team1_score, result.team2_score)
+    # 这里必须只使用 Scoreboard 的比分；不能使用已经写入 MapScore 的
+    # mapholder 分数，否则半场比分会提前触发比赛开始通知。
+    result.started = _scoreboard_score_started(team1_score, team2_score)
     result.finished = False
     result.live = True
     return results
