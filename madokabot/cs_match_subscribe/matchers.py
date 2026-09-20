@@ -76,8 +76,8 @@ CS_LOGIN_USAGE = "用法：CS login <手机号> <验证码>"
 CS_STATS_USAGE = f"用法：CS 战绩 <{SUPPORTED_PLATFORM_TEXT}> [玩家昵称]"
 CS_UNSUB_USAGE = "用法：CS unsub <赛事ID>"
 CS_REMOVESUB_USAGE = "用法：CS removesub <赛事ID>"
-CS_EVENT_USAGE = "用法：CS event all|single|notif"
-
+CS_EVENT_USAGE = "用法：CS event <all|single|notif>"
+CS_PREDICTION_USAGE = "用法：CS prediction <队伍名> <积分>"
 
 def _event_schedule_text(event: EventData) -> str:
     """生成订阅成功消息中的赛事日期。"""
@@ -134,9 +134,7 @@ CS_USAGE = """用法：
 CS help
 CS list event  列出当前及未来三个月的高奖金国际 LAN 和 Major 赛事
 CS sub <赛事ID>  订阅赛事并推送其中的比赛结果
-CS event all|全部  本群按整场系列赛推送
-CS event single|单图  本群按单张地图推送
-CS event notif|通知  切换本群赛事开始通知
+CS event <all|single|notif> 本群推送赛事采用全图/单图推送，是否打开开赛提醒
 CS unsub <赛事ID>  本群退订指定赛事推送
 CS nosub  本群退订全部赛事推送
 CS removesub <赛事ID>  超级用户全局移除赛事订阅
@@ -144,14 +142,10 @@ CS check <比赛链接>  查询一场比赛的 Rating
 CS login <手机号> <验证码>  登录完美平台并保存 Session（验证码请自行获取）
 CS bind <5E|5e|5eplay|wm|pw|完美> <用户昵称>  绑定平台战绩查询对象
 CS unbind <5E|5e|5eplay|wm|pw|完美>  解除指定平台绑定
-CS 战绩 <5E|5e|5eplay|wm|pw|完美> [玩家昵称]  查询绑定账号或指定玩家的战绩
+CS result <5E|5e|5eplay|wm|pw|完美> [玩家昵称]  查询绑定账号或指定玩家的战绩
 
-示例：
-CS sub 8057
-CS event single
-CS event notif
 
-订阅后的推送方式和赛事开始通知，按本群的 CS event 设置生效。"""
+订阅后的推送方式和赛事开始通知，按本群的CS event设置生效。"""
 
 
 cs_command = Alconna(
@@ -172,6 +166,12 @@ cs_command = Alconna(
         Args["params?", StrMulti],
         alias=["赛事", "比赛"],
         help_text="设置本群赛事推送方式",
+    ),
+    Subcommand(
+        "prediction",
+        Args["params?", StrMulti],
+        alias=["竞猜", "预测"],
+        help_text="参与赛事预测",
     ),
     Subcommand(
         "sub",
@@ -216,9 +216,10 @@ cs_command = Alconna(
         help_text="解除指定平台绑定",
     ),
     Subcommand(
-        "战绩",
+        "result",
         Args["platform", str],
         Args["nickname?", StrMulti],
+        alias=["战绩"],
         help_text="查询指定平台上已绑定的玩家或其他玩家战绩",
     ),
     Subcommand(
@@ -487,7 +488,7 @@ async def _handle_cs_player_stats(
     await cs_cmd.finish(Message([image]))
 
 
-@cs_cmd.assign("subcommands.战绩")
+@cs_cmd.assign("subcommands.result")
 async def handle_cs_stats(
     event: MessageEvent,
     platform: Match[str],
@@ -680,6 +681,28 @@ async def handle_cs_unsub(
     await cs_cmd.finish(
         f"本群已退订赛事{event_name}（{raw_id}），不再接收该赛事推送。"
     )
+
+
+@cs_cmd.assign("subcommands.prediction")
+async def handle_cs_prediction(params: Match[str]) -> None:
+    """解析队伍名和预测积分，暂不执行实际预测。"""
+    raw_params = params.result.strip() if params.available else ""
+    prediction_args = raw_params.split()
+    if len(prediction_args) != 2:
+        await cs_cmd.finish(CS_PREDICTION_USAGE)
+        return
+
+    first, second = prediction_args
+    if first.isdigit() and not second.isdigit():
+        points_text, team_name = first, second
+    elif second.isdigit() and not first.isdigit():
+        points_text, team_name = second, first
+    else:
+        await cs_cmd.finish(CS_PREDICTION_USAGE)
+        return
+
+    points = int(points_text)
+    await cs_cmd.finish(f"已使用{points}积分预测{team_name}获胜。")
 
 
 @cs_cmd.assign("subcommands.nosub")
