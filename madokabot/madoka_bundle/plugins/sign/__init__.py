@@ -45,7 +45,8 @@ async def _handle_sign(bot: Bot, event: MessageEvent):
             await respond(bot, event)
             reward_data = None
             async with create_session() as session:
-                user, sign, _ = await register_user(session, uid)
+                qq_nickname = event.sender.nickname or event.sender.card or ""
+                user, sign, _ = await register_user(session, uid, qq_nickname)
                 is_new_sign = can_sign_today(sign)
 
                 if is_new_sign:

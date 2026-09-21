@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Iterable
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from time import monotonic
 from typing import Any
 
@@ -29,6 +29,7 @@ from .models import (
     normalize_match_section,
 )
 from .render import render_rating_card
+from .prediction import get_prediction_summary, settle_match_predictions
 from .storage import (
     get_hltv_event_settings,
     list_active_events,
@@ -112,6 +113,41 @@ def _start_message(match: MatchData, event_name: str = "") -> Message:
     if match.format_text:
         lines.extend(("", match.format_text))
     return Message(MessageSegment.text("\n".join(lines)))
+
+
+def _prediction_open_message(match: MatchData) -> Message:
+    """生成开放竞猜的通知节点。"""
+    first, second = _team_names(match)
+    format_code = match.format_code or "未知"
+    return Message(
+        MessageSegment.text(
+            f"【比赛编号：{match.match_id}】\n"
+            f"【teamA：{first}】对阵【teamB：{second}】的{format_code}比赛现已接受竞猜。\n"
+            "使用指令/cs <竞猜|预测> <A/B|队伍名> <数字>参与。\n"
+            f"例如/cs 竞猜 {{{first}}} 100"
+        )
+    )
+
+
+def _prediction_close_message(
+    match: MatchData,
+    summary: dict[str, Any],
+) -> Message:
+    """生成停止竞猜的通知节点。"""
+    first, second = _team_names(match)
+    teams = summary.get("teams")
+    teams = teams if isinstance(teams, dict) else {}
+    first_summary = teams.get(first, {})
+    second_summary = teams.get(second, {})
+    return Message(
+        MessageSegment.text(
+            f"{first}对阵{second}的比赛已开始，已停止接受预测。\n"
+            f"{first}：{int(first_summary.get('count', 0))}人预测，共计"
+            f"{int(first_summary.get('points', 0))}积分。\n"
+            f"{second}：{int(second_summary.get('count', 0))}人预测，共计"
+            f"{int(second_summary.get('points', 0))}积分。"
+        )
+    )
 
 
 def _map_result_message(match: MatchData, result: MapScore, index: int) -> Message:
@@ -314,6 +350,42 @@ def _parse_datetime(value: Any) -> datetime | None:
     return parsed.replace(tzinfo=timezone.utc) if parsed.tzinfo is None else parsed
 
 
+def _prediction_due(state: dict[str, Any], now: datetime) -> bool:
+    """判断比赛是否已进入标准开赛时间前30分钟。"""
+    scheduled_at = _parse_datetime(state.get("scheduled_at"))
+    return scheduled_at is not None and now >= scheduled_at - timedelta(minutes=30)
+
+
+def _match_winner(match: MatchData) -> str:
+    """按系列赛比分读取获胜队伍。"""
+    if len(match.teams) < 2:
+        return ""
+    scores: list[int] = []
+    for team in match.teams[:2]:
+        try:
+            scores.append(int(str(team.score or "").strip()))
+        except ValueError:
+            scores = []
+            break
+    if len(scores) == 2 and scores[0] != scores[1]:
+        return match.teams[0].name if scores[0] > scores[1] else match.teams[1].name
+
+    map_wins = [0, 0]
+    for result in match.map_results:
+        try:
+            first_score = int(str(result.team1_score or "").strip())
+            second_score = int(str(result.team2_score or "").strip())
+        except ValueError:
+            continue
+        if first_score > second_score:
+            map_wins[0] += 1
+        elif second_score > first_score:
+            map_wins[1] += 1
+    if map_wins[0] != map_wins[1] and any(map_wins):
+        return match.teams[0].name if map_wins[0] > map_wins[1] else match.teams[1].name
+    return ""
+
+
 def _event_status(entry: dict[str, Any]) -> str:
     """读取赛事订阅状态，并兼容旧版没有状态字段的记录。"""
     if entry.get("completed", False):
@@ -346,13 +418,18 @@ def _all_matches_completed(matches: dict[str, Any]) -> bool:
     )
 
 
-def _new_match_state(section: str, page_url: str = "") -> dict[str, Any]:
+def _new_match_state(
+    section: str,
+    page_url: str = "",
+    scheduled_at: datetime | None = None,
+) -> dict[str, Any]:
     """创建一场新发现比赛的轮询状态。"""
     normalized_section = normalize_match_section(section)
     is_finished = normalized_section == MATCH_SECTION_FINISHED
     return {
         "source": normalized_section,
         "url": page_url,
+        "scheduled_at": scheduled_at.isoformat() if scheduled_at else "",
         "initialized": is_finished,
         "started_sent": is_finished,
         "final_sent": is_finished,
@@ -363,6 +440,15 @@ def _new_match_state(section: str, page_url: str = "") -> dict[str, Any]:
         "rating_maps": [],
         "rating_summary_sent": False,
         "finalization_attempts": 0,
+        "prediction_open_sent": False,
+        "prediction_closed_sent": is_finished,
+        "prediction_open": False,
+        "prediction_closed": is_finished,
+        "prediction_settled": is_finished,
+        "winner_name": "",
+        "prediction_payout": 0,
+        "team_names": [],
+        "format_code": "",
     }
 
 
@@ -461,6 +547,7 @@ def _event_target_settings(target: dict[str, str]) -> dict[str, bool]:
     return {
         "push_each_map": bool(config.hltv_subscribe_push_each_map),
         "notify_start": True,
+        "prediction_enabled": False,
     }
 
 
@@ -474,7 +561,9 @@ def _messages_for_event_target(
     messages: list[Message] = []
     for notification in notifications:
         kind = notification.kind
-        if kind == "map_start":
+        if kind in {"prediction_open", "prediction_close"}:
+            allowed = bool(settings.get("prediction_enabled", False))
+        elif kind == "map_start":
             allowed = push_each_map and notify_start
         elif kind == "match_start":
             allowed = not push_each_map and notify_start
@@ -492,7 +581,9 @@ async def _process_event_match(
     state: dict[str, Any],
     event_name: str,
     *,
+    event_id: str,
     has_single_target: bool,
+    has_prediction_target: bool,
 ) -> list[_MatchNotification]:
     """根据一次比赛快照生成尚未推送的节点并更新内存状态。"""
     notifications: list[_MatchNotification] = []
@@ -512,6 +603,10 @@ async def _process_event_match(
     rating_set = {str(value) for value in rating_maps}
     match_id = str(match.match_id)
     actual_started = _match_has_actual_start(match)
+    if match.scheduled_at is not None:
+        state["scheduled_at"] = match.scheduled_at.isoformat()
+    state["team_names"] = [team.name for team in match.teams[:2]]
+    state["format_code"] = match.format_code or "未知"
     if not initialized:
         previous_scores = _current_map_scores(match)
 
@@ -570,6 +665,40 @@ async def _process_event_match(
             _remember_notification(match_id, notification)
         state["started_sent"] = True
 
+    now = datetime.now(timezone.utc)
+    if (
+        has_prediction_target
+        and not actual_started
+        and not state.get("prediction_open_sent", False)
+        and _prediction_due(state, now)
+    ):
+        notification = "prediction_open"
+        if not _notification_was_seen(match_id, notification):
+            notifications.append(
+                _MatchNotification("prediction_open", _prediction_open_message(match))
+            )
+            _remember_notification(match_id, notification)
+        state["prediction_open_sent"] = True
+        state["prediction_open"] = True
+
+    if (
+        (actual_started or match.is_finished)
+        and not state.get("prediction_closed_sent", False)
+    ):
+        summary = await get_prediction_summary(event_id, match_id)
+        notification = "prediction_close"
+        if not _notification_was_seen(match_id, notification):
+            notifications.append(
+                _MatchNotification(
+                    "prediction_close",
+                    _prediction_close_message(match, summary),
+                )
+            )
+            _remember_notification(match_id, notification)
+        state["prediction_closed_sent"] = True
+        state["prediction_closed"] = True
+        state["prediction_open"] = False
+
     rating_cache: dict[str, MessageSegment] = {}
     current_scores = _current_map_scores(match)
     for index, result in enumerate(match.map_results):
@@ -613,6 +742,19 @@ async def _process_event_match(
                     _remember_notification(match_id, notification)
 
     if match.is_finished:
+        if not state.get("prediction_settled", False):
+            winner_name = _match_winner(match)
+            if winner_name:
+                settlement = await settle_match_predictions(
+                    event_id,
+                    match_id,
+                    winner_name,
+                )
+                state["winner_name"] = winner_name
+                state["prediction_payout"] = int(
+                    settlement.get("payout_per_winner", 0)
+                )
+            state["prediction_settled"] = True
         if not state.get("final_sent", False):
             notification = "series_end"
             if not _notification_was_seen(match_id, notification):
@@ -682,11 +824,39 @@ def _event_ended(entry: dict[str, Any]) -> bool:
     )
 
 
+def _event_prediction_due(entry: dict[str, Any]) -> bool:
+    """判断等待中的赛事是否已有比赛进入竞猜开放窗口。"""
+    targets = [
+        target
+        for target in entry.get("targets", [])
+        if isinstance(target, dict)
+    ]
+    if not any(
+        _event_target_settings(target).get("prediction_enabled", False)
+        for target in targets
+    ):
+        return False
+    matches = entry.get("matches")
+    if not isinstance(matches, dict):
+        return False
+    now = datetime.now(timezone.utc)
+    return any(
+        isinstance(state, dict)
+        and not state.get("completed", False)
+        and not state.get("prediction_closed", False)
+        and (
+            not state.get("scheduled_at")
+            or _prediction_due(state, now)
+        )
+        for state in matches.values()
+    )
+
+
 async def _activate_waiting_event(
     event_id: str,
     entry: dict[str, Any],
 ) -> bool:
-    """检查等待赛事是否进入进行状态；等待时不请求比赛详情页。"""
+    """检查等待赛事是否进入进行状态。"""
     if _event_status(entry) != EVENT_STATUS_WAITING:
         return True
 
@@ -736,34 +906,66 @@ async def _poll_event_subscription(
     stored_matches = entry.get("matches")
     matches = stored_matches if isinstance(stored_matches, dict) else {}
     pending_refs: list[EventMatchRef] = []
+    pending_match_ids: set[str] = set()
     max_finalization_attempts = 3
+
+    targets = [
+        target
+        for target in entry.get("targets", [])
+        if isinstance(target, dict)
+    ]
+    target_settings = [
+        (target, _event_target_settings(target))
+        for target in targets
+    ]
+    has_prediction_target = any(
+        settings["prediction_enabled"]
+        for _, settings in target_settings
+    )
+
+    def queue_match(ref: EventMatchRef) -> None:
+        """加入本轮抓取列表并去重。"""
+        if ref.match_id not in pending_match_ids:
+            pending_refs.append(ref)
+            pending_match_ids.add(ref.match_id)
 
     for ref in refs:
         section = normalize_match_section(ref.section)
         state = matches.get(ref.match_id)
         if not isinstance(state, dict):
-            state = _new_match_state(section, ref.url)
+            state = _new_match_state(section, ref.url, ref.scheduled_at)
             matches[ref.match_id] = state
-            if section == MATCH_SECTION_UPCOMING:
-                pending_refs.append(ref)
+            if section == MATCH_SECTION_UPCOMING or (
+                has_prediction_target
+                and _prediction_due(state, datetime.now(timezone.utc))
+            ):
+                queue_match(ref)
             continue
 
         if ref.url:
             # 赛事页上的链接可能在比赛开始后补全或修正 slug；每轮同步，
             # 避免继续使用旧的比赛地址。
             state["url"] = ref.url
+        if ref.scheduled_at is not None:
+            state["scheduled_at"] = ref.scheduled_at.isoformat()
         if state.get("completed", False):
             continue
 
         if section == MATCH_SECTION_UPCOMING:
             # 只有赛事页明确标记为 live 的比赛才抓取详情页。
             state["source"] = MATCH_SECTION_UPCOMING
-            pending_refs.append(ref)
+            queue_match(ref)
             continue
 
         if section == MATCH_SECTION_WAITING:
-            # 未开始的比赛只保留在赛事状态中，不请求比赛详情页。
+            # 未开始的比赛通常只保留时间；首次启用竞猜或进入窗口时，
+            # 才抓取详情页补全队伍、赛制和实时状态。
             state["source"] = MATCH_SECTION_WAITING
+            if has_prediction_target and (
+                not state.get("scheduled_at")
+                or _prediction_due(state, datetime.now(timezone.utc))
+            ):
+                queue_match(ref)
             continue
 
         # 已跟踪的比赛从 matches 列表（live 或 waiting）移动到 Results
@@ -784,26 +986,18 @@ async def _poll_event_subscription(
             state["source"] = MATCH_SECTION_FINISHED
             state["finalization_requested"] = True
             state["finalization_attempts"] = attempts + 1
-            pending_refs.append(
+            queue_match(
                 EventMatchRef(
                     match_id=ref.match_id,
                     url=ref.url or str(state.get("url", "")),
                     section=MATCH_SECTION_FINISHED,
+                    scheduled_at=_parse_datetime(state.get("scheduled_at")),
                 )
             )
         else:
             state["source"] = MATCH_SECTION_FINISHED
             state["completed"] = True
 
-    targets = [
-        target
-        for target in entry.get("targets", [])
-        if isinstance(target, dict)
-    ]
-    target_settings = [
-        (target, _event_target_settings(target))
-        for target in targets
-    ]
     has_single_target = any(
         settings["push_each_map"]
         for _, settings in target_settings
@@ -821,7 +1015,7 @@ async def _poll_event_subscription(
         state = matches[ref.match_id]
         if (
             observed_first_start is None
-            and _match_has_actual_start(match)
+            and (_match_has_actual_start(match) or match.is_finished)
         ):
             observed_first_start = (
                 _parse_datetime(match.fetched_at)
@@ -834,7 +1028,9 @@ async def _poll_event_subscription(
                 match,
                 state,
                 event_name,
+                event_id=event_id,
                 has_single_target=has_single_target,
+                has_prediction_target=has_prediction_target,
             )
         )
         generated_memory_keys.update(
@@ -891,8 +1087,9 @@ async def poll_subscriptions() -> None:
     for event_id, entry in entries.items():
         try:
             if _event_status(entry) == EVENT_STATUS_WAITING:
-                # 等待中的赛事只检查赛事状态，不抓取比赛详情页。
-                if not await _activate_waiting_event(event_id, entry):
+                # 没有进入竞猜窗口时，等待中的赛事不抓取比赛详情页。
+                activated = await _activate_waiting_event(event_id, entry)
+                if not activated and not _event_prediction_due(entry):
                     continue
             await _poll_event_subscription(event_id, entry)
         except HltvError as exc:

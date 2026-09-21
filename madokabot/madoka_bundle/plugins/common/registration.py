@@ -12,10 +12,15 @@ from .matchers import register_cmd
 async def register_user(
     session: AsyncSession,
     uid: str,
+    qq_nickname: str = "",
 ) -> tuple[UserStats, SignRecord, bool]:
     """集中创建用户数据，并返回本次是否为首次注册。"""
+    normalized_nickname = qq_nickname.strip()
     user = await session.get(UserStats, uid)
     if user is not None:
+        if normalized_nickname and user.qq_nickname != normalized_nickname:
+            user.qq_nickname = normalized_nickname
+            await session.commit()
         sign = await session.get(SignRecord, uid)
         if sign is None:
             sign = SignRecord(user_id=uid)
@@ -36,6 +41,7 @@ async def register_user(
 
     user = UserStats(
         user_id=uid,
+        qq_nickname=normalized_nickname,
         skin_asset=config.initial_chara,
     )
     sign = SignRecord(user_id=uid)
@@ -69,8 +75,13 @@ async def register_user(
 
 @register_cmd.handle()
 async def _register(event: MessageEvent):
+    nickname = event.sender.nickname or event.sender.card or ""
     async with create_session() as session:
-        _, _, created = await register_user(session, event.get_user_id())
+        _, _, created = await register_user(
+            session,
+            event.get_user_id(),
+            nickname,
+        )
 
     if created:
         await register_cmd.finish("事务所信息注册成功。")

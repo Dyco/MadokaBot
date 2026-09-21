@@ -6,15 +6,31 @@ from zoneinfo import ZoneInfo
 
 from jinja2 import Template
 from nonebot.adapters.onebot.v11 import MessageSegment
+from nonebot_plugin_datastore import create_session
 from nonebot_plugin_htmlrender import html_to_pic
 
 from ..constants import ResType, SubFolder
 from ..db.models import SignRecord, UserStats
+from ..db.services import UserService
 from ..registry import get_skin_path
 from ..utils import get_file
 from .config import HTML_FILE_PATH
 
 _SHANGHAI_TZ = ZoneInfo("Asia/Shanghai")
+
+
+def format_rank_points(points: int) -> str:
+    """缩写榜单积分，带单位时保留一位小数，超出 B 后使用科学计数法。"""
+    for divisor, unit in ((1, ""), (1_000, "K"), (1_000_000, "M"), (1_000_000_000, "B")):
+        value = points / divisor
+        if abs(round(value, 1)) < 1_000:
+            return f"{value:.1f}{unit}" if unit else str(points)
+    return f"{points:.1e}"
+
+
+def mask_user_id(user_id: str) -> str:
+    """QQ 号仅展示前后两位，中间统一替换为两个星号。"""
+    return f"{user_id[:2]}**{user_id[-2:]}"
 
 
 async def render_sign_card(
@@ -27,9 +43,17 @@ async def render_sign_card(
     if not HTML_FILE_PATH.is_file():
         raise FileNotFoundError(f"签到模板不存在：{HTML_FILE_PATH}")
 
-    font_file = get_file(ResType.FONT, SubFolder.SIGN, "font.ttf")
+    font_file = get_file(ResType.FONT, SubFolder.CS, "SourceHanSansSC.woff2")
     if font_file is None:
-        raise FileNotFoundError("签到字体资源不存在：font/sign/font.ttf")
+        raise FileNotFoundError("签到字体资源不存在：font/cs/SourceHanSansSC.woff2")
+
+    number_font_file = get_file(ResType.FONT, SubFolder.SIGN, "RobotoFlex.ttf")
+    if number_font_file is None:
+        raise FileNotFoundError("签到字体资源不存在：font/sign/RobotoFlex.ttf")
+
+    english_font_file = get_file(ResType.FONT, SubFolder.SIGN, "PlusJakartaSans.ttf")
+    if english_font_file is None:
+        raise FileNotFoundError("签到字体资源不存在：font/sign/PlusJakartaSans.ttf")
 
     chara_path = get_skin_path(user.skin_asset)
     chara_display_name = None
@@ -59,7 +83,13 @@ async def render_sign_card(
             ("累计签到", f"{sign.total_count} 次", None),
         ]
 
-    template = Template(HTML_FILE_PATH.read_text(encoding="utf-8"))
+    async with create_session() as session:
+        points_ranking = await UserService.get_points_ranking(session)
+    ranking = [
+        (nickname or "未命名", mask_user_id(uid), format_rank_points(points), total_count)
+        for uid, nickname, points, total_count in points_ranking
+    ]
+    template = Template(HTML_FILE_PATH.read_text(encoding="utf-8"), autoescape=True)
     html = template.render(
         title=title,
         items=items,
@@ -67,8 +97,11 @@ async def render_sign_card(
         chara_b64=chara_b64,
         chara_name=chara_display_name,
         font_path=font_file.resolve().as_uri(),
+        number_font_path=number_font_file.resolve().as_uri(),
+        english_font_path=english_font_file.resolve().as_uri(),
         user_name=user_name,
-        user_id=str(user.user_id),
+        user_id=mask_user_id(str(user.user_id)),
+        ranking=ranking,
         current_time=datetime.now(_SHANGHAI_TZ).strftime("%Y-%m-%d %H:%M:%S"),
     )
 

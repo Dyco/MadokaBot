@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <style>
+    {% if font_regular_path %}
+    @font-face {
+      font-family: "CS Source Han Sans SC";
+      src: url("{{ font_regular_path }}") format("woff2");
+      font-style: normal;
+      font-weight: 100 900;
+      font-display: block;
+    }
+    {% endif %}
+
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; overflow: hidden; }
+    body {
+      width: 100%;
+      background: #edf2f6;
+      color: #17232e;
+      font-family: "CS Source Han Sans SC", Arial, "Microsoft YaHei", sans-serif;
+    }
+    .page { padding: 22px 24px 26px; }
+    .card {
+      overflow: hidden;
+      border: 1px solid #cad5df;
+      border-radius: 6px;
+      background: #fff;
+      box-shadow: 0 4px 14px rgba(45, 67, 84, .12);
+    }
+    .heading {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      padding: 18px 22px 15px;
+      background: linear-gradient(135deg, #263b4d, #385b73);
+      color: #fff;
+    }
+    .title { font-size: 23px; font-weight: 800; letter-spacing: 1px; }
+    .scope { color: #d8e8f3; font-size: 13px; }
+    .empty { padding: 38px 20px; color: #768492; text-align: center; }
+    .row {
+      display: grid;
+      grid-template-columns: 54px 1.6fr 1.1fr .8fr .9fr;
+      min-height: 74px;
+      align-items: center;
+      border-bottom: 1px solid #e2e8ed;
+    }
+    .row:last-child { border-bottom: 0; }
+    .row > div { min-width: 0; padding: 10px 12px; }
+    .rank { color: #5d7180; font-size: 21px; font-weight: 800; text-align: center; }
+    .player { display: flex; align-items: center; gap: 10px; }
+    .avatar, .avatar-fallback {
+      width: 42px; height: 42px; flex: 0 0 42px; border-radius: 50%;
+    }
+    .avatar { object-fit: cover; }
+    .avatar-fallback {
+      display: flex; align-items: center; justify-content: center;
+      background: #d8e7f0; color: #34546a; font-weight: 800;
+    }
+    .nickname { overflow: hidden; font-size: 16px; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
+    .label { margin-bottom: 3px; color: #8a98a4; font-size: 11px; }
+    .value { color: #293b49; font-size: 15px; font-weight: 700; }
+    .positive { color: #198754; }
+    .negative { color: #c53d4b; }
+    .table-head {
+      display: grid;
+      grid-template-columns: 54px 1.6fr 1.1fr .8fr .9fr;
+      background: #f5f8fa;
+      color: #7b8b98;
+      font-size: 12px;
+      font-weight: 700;
+    }
+    .table-head div { padding: 9px 12px; }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <section class="card">
+      <header class="heading">
+        <div class="title">竞猜排行榜</div>
+        <div class="scope">{{ scope_label }}</div>
+      </header>
+      {% if entries %}
+        <div class="table-head">
+          <div>排名</div><div>玩家</div><div>胜率</div><div>总参与</div><div>积分</div>
+        </div>
+        {% for entry in entries %}
+          <div class="row">
+            <div class="rank">{{ entry.rank }}</div>
+            <div class="player">
+              {% if entry.avatar_src %}
+                <img class="avatar" src="{{ entry.avatar_src }}" alt="">
+              {% else %}
+                <div class="avatar-fallback">{{ entry.nickname[:1] }}</div>
+              {% endif %}
+              <div class="nickname">{{ entry.nickname }}</div>
+            </div>
+            <div>
+              <div class="label">胜率</div>
+              <div class="value">{{ entry.win_rate }}</div>
+            </div>
+            <div>
+              <div class="label">总参与</div>
+              <div class="value">{{ entry.total_count }}次</div>
+            </div>
+            <div>
+              <div class="label">积分</div>
+              <div class="value {{ 'positive' if entry.net_points >= 0 else 'negative' }}">{{ '+' if entry.net_points >= 0 else '' }}{{ entry.net_points }}</div>
+            </div>
+          </div>
+        {% endfor %}
+      {% else %}
+        <div class="empty">当前还没有已结算的竞猜记录。</div>
+      {% endif %}
+    </section>
+  </main>
+</body>
+</html>

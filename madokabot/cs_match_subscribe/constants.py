@@ -11,7 +11,7 @@ from ..madoka_bundle.utils import get_file
 # 资源统一放在 assets/font/cs，由通用资源管理器解析路径。
 # Source Han Sans SC 是可变字体，因此常规、细体、粗体和赛事页面
 # 都复用同一个字体文件，由 CSS 的 font-weight 选择具体字重。
-CS_FONT_FILENAME = "SourceHanSansSC-VF.ttf.woff2"
+CS_FONT_FILENAME = "SourceHanSansSC.woff2"
 cs_font_path = get_file(ResType.FONT, SubFolder.CS, CS_FONT_FILENAME)
 font_regular_path = cs_font_path
 font_light_path = cs_font_path

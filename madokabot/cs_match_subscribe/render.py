@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -18,6 +19,7 @@ from .models import EventData, MatchData
 TEMPLATE_DIR = Path(__file__).parent / "templates"
 HTML_FILE_PATH = TEMPLATE_DIR / "rating.html"
 EVENT_HTML_FILE_PATH = TEMPLATE_DIR / "event_list.html"
+PREDICTION_RANK_HTML_FILE_PATH = TEMPLATE_DIR / "prediction_rank.html"
 STATS_TEMPLATE_1_HTML_FILE_PATH = TEMPLATE_DIR / "stats_template_1.html"
 STATS_TEMPLATE_2_HTML_FILE_PATH = TEMPLATE_DIR / "stats_template_2.html"
 _template_env = Environment(
@@ -110,6 +112,49 @@ async def render_event_list_card(events: list[EventData]) -> MessageSegment:
         html=html,
         template_path=TEMPLATE_DIR.resolve().as_uri(),
         viewport={"width": config.cs_rating_width, "height": 10},
+        device_scale_factor=config.cs_rating_device_scale_factor,
+        full_page=True,
+    )
+    return MessageSegment.image(image_bytes)
+
+
+def render_prediction_rank_html(
+    entries: list[dict[str, object]],
+    *,
+    scope_label: str,
+) -> str:
+    """生成竞猜排行榜 HTML。"""
+    template = _template_env.get_template(PREDICTION_RANK_HTML_FILE_PATH.name)
+    context = font_context()
+    context.update({"entries": entries, "scope_label": scope_label})
+    return template.render(**context)
+
+
+async def render_prediction_rank_card(
+    entries: list[dict[str, object]],
+    *,
+    scope_label: str,
+) -> MessageSegment:
+    """将竞猜排行榜渲染为图片消息。"""
+    avatar_sources = await asyncio.gather(
+        *(
+            fetch_image_data_url(str(entry.get("avatar_url") or ""))
+            for entry in entries
+        )
+    )
+    prepared_entries: list[dict[str, object]] = []
+    for entry, avatar_src in zip(entries, avatar_sources):
+        prepared = dict(entry)
+        prepared["avatar_src"] = avatar_src
+        prepared_entries.append(prepared)
+
+    image_bytes = await html_to_pic(
+        html=render_prediction_rank_html(
+            prepared_entries,
+            scope_label=scope_label,
+        ),
+        template_path=TEMPLATE_DIR.resolve().as_uri(),
+        viewport={"width": config.cs_stats_width, "height": 10},
         device_scale_factor=config.cs_rating_device_scale_factor,
         full_page=True,
     )

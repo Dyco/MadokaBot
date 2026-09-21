@@ -128,6 +128,7 @@ class EventMatchRef:
     match_id: str
     url: str
     section: str = MATCH_SECTION_UPCOMING
+    scheduled_at: datetime | None = None
 
 
 @dataclass(slots=True)
@@ -177,6 +178,7 @@ class MatchData:
     status_text: str = ""
     match_time: str = ""
     match_date: str = ""
+    scheduled_at: datetime | None = None
     teams: list[TeamStats] = field(default_factory=list)
     maps: list[str] = field(default_factory=list)
     map_stats: dict[str, list[TeamStats]] = field(default_factory=dict)

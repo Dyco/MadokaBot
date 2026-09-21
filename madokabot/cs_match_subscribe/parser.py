@@ -543,16 +543,29 @@ def _parse_stats_tables(
 def _parse_header_teams(
     soup: BeautifulSoup,
     base_url: str,
-) -> tuple[list[TeamStats], str, str, str, str, str | None]:
+) -> tuple[
+    list[TeamStats],
+    str,
+    str,
+    str,
+    str,
+    datetime | None,
+    str | None,
+]:
     """解析赛事头部的队名、比分、时间、状态和赛事链接。"""
     match_page = soup.select_one(".match-page") or soup
     box = match_page.select_one(".teamsBox")
     if box is None:
-        return [], "", "", "", "", None
+        return [], "", "", "", "", None, None
 
     time_event = box.select_one(".timeAndEvent")
     match_time = _text(time_event.select_one(".time") if time_event else None)
     match_date = _text(time_event.select_one(".date") if time_event else None)
+    scheduled_at = _event_timestamp(
+        time_event.select_one(".date[data-unix], [data-unix]")
+        if time_event
+        else None
+    )
     countdown = _text(time_event.select_one(".countdown") if time_event else None)
     event_link = time_event.select_one(".event a") if time_event else None
     event_name = _text(event_link)
@@ -576,7 +589,15 @@ def _parse_header_teams(
                 score=_text(score_node) or None,
             )
         )
-    return teams, event_name, match_time, match_date, countdown, event_url
+    return (
+        teams,
+        event_name,
+        match_time,
+        match_date,
+        countdown,
+        scheduled_at,
+        event_url,
+    )
 
 
 def _status_code(
@@ -621,9 +642,15 @@ def parse_match_html(
 ) -> MatchData:
     """解析 HLTV match 页面并返回统一数据模型。"""
     soup = BeautifulSoup(html, "html.parser")
-    header_teams, event_name, match_time, match_date, status_text, event_url = (
-        _parse_header_teams(soup, page_url)
-    )
+    (
+        header_teams,
+        event_name,
+        match_time,
+        match_date,
+        status_text,
+        scheduled_at,
+        event_url,
+    ) = _parse_header_teams(soup, page_url)
     map_names = _parse_maps(soup)
     stats_teams, map_stats = _parse_stats_tables(soup, page_url)
 
@@ -657,6 +684,7 @@ def parse_match_html(
         status_text=status_text,
         match_time=match_time,
         match_date=match_date,
+        scheduled_at=scheduled_at,
         teams=teams,
         maps=map_names,
         map_stats=map_stats,
@@ -767,6 +795,7 @@ def parse_event_match_refs_html(
     def add_href(
         href: str | None,
         match_section: str | None = None,
+        scheduled_at: datetime | None = None,
     ) -> None:
         match = _MATCH_ID_RE.search(href or "")
         if match is None:
@@ -776,6 +805,7 @@ def parse_event_match_refs_html(
             match_id=match_id,
             url=_absolute_url(href, page_url) or "",
             section=match_section or page_section,
+            scheduled_at=scheduled_at,
         )
         previous = refs.get(match_id)
         candidate_priority = section_priority.get(candidate.section, 0)
@@ -784,6 +814,13 @@ def parse_event_match_refs_html(
         )
         if candidate_priority > previous_priority:
             refs[match_id] = candidate
+        elif previous is not None and previous.scheduled_at is None and scheduled_at:
+            refs[match_id] = EventMatchRef(
+                match_id=previous.match_id,
+                url=previous.url or candidate.url,
+                section=previous.section,
+                scheduled_at=scheduled_at,
+            )
 
     def add_match_node(node: Tag, match_section: str) -> None:
         anchor = node.select_one('a[href*="/matches/"]')
@@ -791,7 +828,10 @@ def parse_event_match_refs_html(
         if not href:
             match_id = str(node.get("data-match-id") or "").strip()
             href = f"/matches/{match_id}" if match_id.isdigit() else None
-        add_href(href, match_section)
+        scheduled_at = _event_timestamp(node)
+        if scheduled_at is None:
+            scheduled_at = _event_timestamp(node.select_one("[data-unix]"))
+        add_href(href, match_section, scheduled_at)
 
     if page_section == MATCH_SECTION_FINISHED:
         # 当前 HLTV 的 /results?event=<id> 页面把赛事结果放在
@@ -851,7 +891,12 @@ def parse_event_match_refs_html(
                     else MATCH_SECTION_WAITING
                 )
                 for anchor in scope.select('a[href*="/matches/"]'):
-                    add_href(anchor.get("href"), match_section)
+                    timestamp_node = anchor.find_parent(attrs={"data-unix": True})
+                    add_href(
+                        anchor.get("href"),
+                        match_section,
+                        _event_timestamp(timestamp_node),
+                    )
 
     return list(refs.values())
 

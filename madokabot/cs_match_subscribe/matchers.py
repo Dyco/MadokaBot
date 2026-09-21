@@ -54,7 +54,17 @@ from .player_stats import (
     SUPPORTED_PLATFORM_TEXT,
     unbind_player,
 )
-from .render import render_event_list_card, render_player_stats_card
+from .prediction import (
+    PredictionError,
+    get_prediction_detail,
+    get_prediction_ranking,
+    place_prediction,
+)
+from .render import (
+    render_event_list_card,
+    render_player_stats_card,
+    render_prediction_rank_card,
+)
 from .service import render_check_rating_messages, send_rating_forward
 from .storage import (
     add_event_target_if_exists,
@@ -63,6 +73,7 @@ from .storage import (
     set_hltv_event_push_each_map,
     subscribe_event,
     target_from_event,
+    toggle_hltv_event_prediction,
     toggle_hltv_event_start_notification,
     unsubscribe_all_events,
     unsubscribe_event,
@@ -76,8 +87,13 @@ CS_LOGIN_USAGE = "用法：CS login <手机号> <验证码>"
 CS_STATS_USAGE = f"用法：CS 战绩 <{SUPPORTED_PLATFORM_TEXT}> [玩家昵称]"
 CS_UNSUB_USAGE = "用法：CS unsub <赛事ID>"
 CS_REMOVESUB_USAGE = "用法：CS removesub <赛事ID>"
-CS_EVENT_USAGE = "用法：CS event <all|single|notif>"
-CS_PREDICTION_USAGE = "用法：CS prediction <队伍名> <积分>"
+CS_EVENT_USAGE = "用法：CS event <all|single|notif|prediction>"
+CS_PREDICTION_USAGE = (
+    "用法：\n"
+    "CS prediction <队伍名|A/B> <积分>\n"
+    "CS prediction list <比赛ID>\n"
+    "CS prediction rank <本群|全部>"
+)
 
 def _event_schedule_text(event: EventData) -> str:
     """生成订阅成功消息中的赛事日期。"""
@@ -134,11 +150,14 @@ CS_USAGE = """用法：
 CS help
 CS list event  列出当前及未来三个月的高奖金国际 LAN 和 Major 赛事
 CS sub <赛事ID>  订阅赛事并推送其中的比赛结果
-CS event <all|single|notif> 本群推送赛事采用全图/单图推送，是否打开开赛提醒
+CS event <all|single|notif|prediction> 设置本群推送方式、开赛提醒和竞猜
 CS unsub <赛事ID>  本群退订指定赛事推送
 CS nosub  本群退订全部赛事推送
 CS removesub <赛事ID>  超级用户全局移除赛事订阅
 CS check <比赛链接>  查询一场比赛的 Rating
+CS prediction <队伍名|A/B> <积分> 参与当前比赛竞猜
+CS prediction list <比赛ID> 查看竞猜情况
+CS prediction rank <本群|全部> 查看竞猜排行榜
 CS login <手机号> <验证码>  登录完美平台并保存 Session（验证码请自行获取）
 CS bind <5E|5e|5eplay|wm|pw|完美> <用户昵称>  绑定平台战绩查询对象
 CS unbind <5E|5e|5eplay|wm|pw|完美>  解除指定平台绑定
@@ -293,6 +312,9 @@ async def handle_cs_event(
     if option in {"notif", "notification", "通知", "推送", "提醒"}:
         await _toggle_cs_event_notification(bot, event)
         return
+    if option in {"prediction", "竞猜", "预测"}:
+        await _toggle_cs_event_prediction(bot, event)
+        return
     await cs_cmd.finish(CS_EVENT_USAGE)
 
 
@@ -322,6 +344,19 @@ async def _toggle_cs_event_notification(
     enabled = toggle_hltv_event_start_notification(target["id"])
     state_text = "已打开" if enabled else "已关闭"
     await cs_cmd.finish(f"{state_text}本群赛事开始通知")
+
+
+async def _toggle_cs_event_prediction(
+    bot: Bot,
+    event: MessageEvent,
+) -> None:
+    """切换当前群是否开放赛事竞猜。"""
+    target = await _group_subscription_target(bot, event)
+    if target is None:
+        return
+    enabled = toggle_hltv_event_prediction(target["id"])
+    state_text = "已打开" if enabled else "已关闭"
+    await cs_cmd.finish(f"{state_text}本群赛事竞猜功能")
 
 
 def _normalize_mobile(value: str) -> str:
@@ -629,6 +664,9 @@ async def handle_cs_sub(event: MessageEvent, event_id: Match[str]) -> None:
                     "match_id": ref.match_id,
                     "url": ref.url,
                     "section": ref.section,
+                    "scheduled_at": (
+                        ref.scheduled_at.isoformat() if ref.scheduled_at else ""
+                    ),
                 }
                 for ref in refs
             ],
@@ -645,10 +683,15 @@ async def handle_cs_sub(event: MessageEvent, event_id: Match[str]) -> None:
         if event_settings["push_each_map"]
         else "按系列赛级别推送开始和结束，整场结束时补发完整 Rating 汇总"
     )
+    prediction_text = (
+        "已打开本群赛事竞猜"
+        if event_settings["prediction_enabled"]
+        else "本群赛事竞猜未打开"
+    )
     await cs_cmd.finish(
         f"{prefix} {event_data.name}，赛程时间为{_event_schedule_text(event_data)}\n"
         f"已记录 {len(refs)} 场比赛，轮询间隔为{config.hltv_poll_interval}秒；"
-        f"{push_mode}。"
+        f"{push_mode}；{prediction_text}。"
     )
 
 
@@ -684,25 +727,133 @@ async def handle_cs_unsub(
 
 
 @cs_cmd.assign("subcommands.prediction")
-async def handle_cs_prediction(params: Match[str]) -> None:
-    """解析队伍名和预测积分，暂不执行实际预测。"""
-    raw_params = params.result.strip() if params.available else ""
-    prediction_args = raw_params.split()
-    if len(prediction_args) != 2:
-        await cs_cmd.finish(CS_PREDICTION_USAGE)
+async def handle_cs_prediction(
+    event: MessageEvent,
+    params: Match[str],
+) -> None:
+    """解析竞猜、详情和排行榜参数。"""
+    if not isinstance(event, GroupMessageEvent):
+        await cs_cmd.finish("竞猜功能仅支持群聊。")
         return
 
-    first, second = prediction_args
-    if first.isdigit() and not second.isdigit():
-        points_text, team_name = first, second
-    elif second.isdigit() and not first.isdigit():
-        points_text, team_name = second, first
+    raw_params = params.result.strip() if params.available else ""
+    prediction_args = raw_params.split()
+    if prediction_args and prediction_args[0].casefold() in {
+        "list",
+        "detail",
+        "details",
+        "详情",
+    }:
+        if len(prediction_args) != 2 or not prediction_args[1].isdigit():
+            await cs_cmd.finish("用法：CS prediction list <比赛ID>")
+            return
+        try:
+            detail = await get_prediction_detail(
+                str(event.group_id),
+                prediction_args[1],
+            )
+        except Exception:
+            logger.exception(
+                "CS 竞猜详情查询失败：group_id=%s match_id=%s",
+                event.group_id,
+                prediction_args[1],
+            )
+            await cs_cmd.finish("竞猜详情查询失败，请稍后重试。")
+            return
+        if detail is None:
+            await cs_cmd.finish("未找到本群可查看的竞猜比赛。")
+            return
+        team_names = detail["team_names"]
+        first = team_names[0] if len(team_names) > 0 else "队伍A"
+        second = team_names[1] if len(team_names) > 1 else "队伍B"
+        teams = detail["summary"]["teams"]
+        first_summary = teams.get(first, {})
+        second_summary = teams.get(second, {})
+        lines = [
+            f"【比赛编号：{detail['match_id']}】",
+            f"{first}对阵{second}，{detail['status']}。",
+            f"{first}：{first_summary.get('count', 0)}人预测，共计"
+            f"{first_summary.get('points', 0)}积分。",
+            f"{second}：{second_summary.get('count', 0)}人预测，共计"
+            f"{second_summary.get('points', 0)}积分。",
+        ]
+        if detail["winner_name"]:
+            lines.append(
+                f"获胜队伍：{detail['winner_name']}（每人获得"
+                f"{detail['payout_per_winner']}积分）"
+            )
+        await cs_cmd.finish("\n".join(lines))
+        return
+
+    if prediction_args and prediction_args[0].casefold() in {
+        "rank",
+        "排名",
+    }:
+        if len(prediction_args) != 2:
+            await cs_cmd.finish("用法：CS prediction rank <本群|全部>")
+            return
+        scope_value = prediction_args[1].casefold()
+        if scope_value in {"本群", "group"}:
+            scope = "group"
+            scope_label = "本群"
+        elif scope_value in {"全部", "all"}:
+            scope = "all"
+            scope_label = "全部赛事"
+        else:
+            await cs_cmd.finish("用法：CS prediction rank <本群|全部>")
+            return
+        try:
+            entries = await get_prediction_ranking(scope, str(event.group_id))
+            image = await render_prediction_rank_card(
+                entries,
+                scope_label=scope_label,
+            )
+        except Exception:
+            logger.exception("CS 竞猜排行榜渲染失败：scope=%s", scope)
+            await cs_cmd.finish("竞猜排行榜处理失败，请稍后重试。")
+            return
+        await cs_cmd.finish(Message([image]))
+        return
+
+    if len(prediction_args) < 2:
+        await cs_cmd.finish(CS_PREDICTION_USAGE)
+        return
+    if prediction_args[0].isdigit():
+        points_text = prediction_args[0]
+        team_name = " ".join(prediction_args[1:])
+    elif prediction_args[-1].isdigit():
+        points_text = prediction_args[-1]
+        team_name = " ".join(prediction_args[:-1])
     else:
         await cs_cmd.finish(CS_PREDICTION_USAGE)
         return
 
-    points = int(points_text)
-    await cs_cmd.finish(f"已使用{points}积分预测{team_name}获胜。")
+    settings = get_hltv_event_settings(str(event.group_id))
+    if not settings["prediction_enabled"]:
+        await cs_cmd.finish("本群尚未打开赛事竞猜功能，请先使用 CS event prediction。")
+        return
+    try:
+        result = await place_prediction(
+            str(event.group_id),
+            str(event.user_id),
+            team_name,
+            int(points_text),
+        )
+    except PredictionError as exc:
+        await cs_cmd.finish(str(exc))
+        return
+    except Exception:
+        logger.exception(
+            "CS 竞猜记录失败：group_id=%s user_id=%s",
+            event.group_id,
+            event.user_id,
+        )
+        await cs_cmd.finish("竞猜记录失败，请稍后重试。")
+        return
+    await cs_cmd.finish(
+        f"已使用{result['points']}积分预测{result['team_name']}获胜。"
+        f"（比赛编号：{result['match_id']}）"
+    )
 
 
 @cs_cmd.assign("subcommands.nosub")

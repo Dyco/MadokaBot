@@ -55,6 +55,10 @@ def get_hltv_event_settings(group_id: str | int) -> dict[str, bool]:
             raw_settings.get("notify_start"),
             True,
         ),
+        "prediction_enabled": _setting_bool(
+            raw_settings.get("prediction_enabled"),
+            False,
+        ),
     }
 
 
@@ -75,6 +79,14 @@ def toggle_hltv_event_start_notification(group_id: str | int) -> bool:
     settings["notify_start"] = not settings["notify_start"]
     group_set.set(group_id, HLTV_EVENT_SETTINGS_NAME, settings)
     return settings["notify_start"]
+
+
+def toggle_hltv_event_prediction(group_id: str | int) -> bool:
+    """切换群组赛事竞猜，并返回切换后的状态。"""
+    settings = get_hltv_event_settings(group_id)
+    settings["prediction_enabled"] = not settings["prediction_enabled"]
+    group_set.set(group_id, HLTV_EVENT_SETTINGS_NAME, settings)
+    return settings["prediction_enabled"]
 
 
 def _read() -> dict[str, dict[str, Any]]:
@@ -271,12 +283,26 @@ async def subscribe_event(
             if match_id not in baseline_ids:
                 baseline_ids.append(match_id)
             if match_id in matches:
-                if ref.get("url") and isinstance(matches[match_id], dict):
-                    matches[match_id]["url"] = str(ref["url"])
+                if isinstance(matches[match_id], dict):
+                    match_state = matches[match_id]
+                    if ref.get("url"):
+                        match_state["url"] = str(ref["url"])
+                    if ref.get("scheduled_at"):
+                        match_state["scheduled_at"] = str(ref["scheduled_at"])
+                    match_state.setdefault("prediction_open_sent", False)
+                    match_state.setdefault("prediction_closed_sent", is_finished)
+                    match_state.setdefault("prediction_open", False)
+                    match_state.setdefault("prediction_closed", is_finished)
+                    match_state.setdefault("prediction_settled", is_finished)
+                    match_state.setdefault("winner_name", "")
+                    match_state.setdefault("prediction_payout", 0)
+                    match_state.setdefault("team_names", [])
+                    match_state.setdefault("format_code", "")
                 continue
             matches[match_id] = {
                 "source": section,
                 "url": str(ref.get("url", "")),
+                "scheduled_at": str(ref.get("scheduled_at", "")),
                 "initialized": is_finished,
                 "started_sent": is_finished,
                 "final_sent": is_finished,
@@ -287,6 +313,14 @@ async def subscribe_event(
                 "rating_maps": [],
                 "rating_summary_sent": False,
                 "finalization_attempts": 0,
+                "prediction_open_sent": False,
+                "prediction_closed_sent": is_finished,
+                "prediction_open": False,
+                "prediction_closed": is_finished,
+                "prediction_settled": is_finished,
+                "winner_name": "",
+                "team_names": [],
+                "format_code": "",
             }
 
         entry["completed"] = False
@@ -431,6 +465,9 @@ async def list_active_events() -> dict[str, dict[str, Any]]:
             if "first_match_started_at" not in entry:
                 entry["first_match_started_at"] = None
                 changed = True
+            if "matches" not in entry or not isinstance(entry.get("matches"), dict):
+                entry["matches"] = {}
+                changed = True
 
             if (
                 entry.get("status") != EVENT_STATUS_FINISHED
@@ -468,3 +505,80 @@ async def update_event_state(
             if completed:
                 entry["status"] = EVENT_STATUS_FINISHED
         _write(data)
+
+
+def _target_in_entry(entry: dict[str, Any], target: dict[str, str]) -> bool:
+    """判断赛事订阅是否包含指定推送目标。"""
+    targets = entry.get("targets")
+    return isinstance(targets, list) and target in targets
+
+
+async def list_open_prediction_matches(group_id: str | int) -> list[dict[str, Any]]:
+    """读取当前群正在接受竞猜的比赛。"""
+    normalized_group_id = str(group_id).strip()
+    if not get_hltv_event_settings(normalized_group_id)["prediction_enabled"]:
+        return []
+
+    target = {"kind": "group", "id": normalized_group_id}
+    async with _lock:
+        data = _read()
+        matches: list[dict[str, Any]] = []
+        for key, entry in data.items():
+            if not (
+                key.startswith("event:")
+                and isinstance(entry, dict)
+                and entry.get("kind") == "event"
+                and _target_in_entry(entry, target)
+            ):
+                continue
+            event_id = key.removeprefix("event:")
+            raw_matches = entry.get("matches")
+            if not isinstance(raw_matches, dict):
+                continue
+            for match_id, state in raw_matches.items():
+                if not isinstance(state, dict):
+                    continue
+                if not state.get("prediction_open") or state.get("prediction_closed"):
+                    continue
+                matches.append(
+                    {
+                        "event_id": event_id,
+                        "match_id": str(match_id),
+                        "event_name": _event_name(entry, event_id),
+                        "team_names": list(state.get("team_names") or []),
+                        "format_code": str(state.get("format_code") or "未知"),
+                        "scheduled_at": str(state.get("scheduled_at") or ""),
+                    }
+                )
+        return matches
+
+
+async def get_prediction_match_context(
+    group_id: str | int,
+    match_id: str,
+) -> dict[str, Any] | None:
+    """读取指定群可查看的赛事竞猜状态。"""
+    target = {"kind": "group", "id": str(group_id).strip()}
+    normalized_match_id = str(match_id).strip()
+    async with _lock:
+        data = _read()
+        for key, entry in data.items():
+            if not (
+                key.startswith("event:")
+                and isinstance(entry, dict)
+                and entry.get("kind") == "event"
+                and _target_in_entry(entry, target)
+            ):
+                continue
+            matches = entry.get("matches")
+            if not isinstance(matches, dict):
+                continue
+            state = matches.get(normalized_match_id)
+            if not isinstance(state, dict):
+                continue
+            return {
+                "event_id": key.removeprefix("event:"),
+                "event_name": _event_name(entry, key.removeprefix("event:")),
+                "state": deepcopy(state),
+            }
+    return None

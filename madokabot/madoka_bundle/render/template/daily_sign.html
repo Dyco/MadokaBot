@@ -2,20 +2,46 @@
 <html>
 
 <head>
+    <meta charset="UTF-8">
     <style>
         @font-face {
             font-family: 'CustomFont';
-            src: url('{{ font_path }}');
+            src: url('{{ font_path }}') format('woff2');
+            font-weight: 200 900;
+        }
+
+        /* 新字体仅覆盖数字和西文字符，中文仍由原字体绘制。 */
+        @font-face {
+            font-family: 'RobotoFlex';
+            src: url('{{ number_font_path }}') format('truetype');
+            font-weight: 100 1000;
+            unicode-range: U+0020-007E;
+        }
+
+        @font-face {
+            font-family: 'PlusJakartaSans';
+            src: url('{{ english_font_path }}') format('truetype');
+            font-weight: 200 800;
+            unicode-range: U+0020-007E;
         }
 
         :root {
-            --bg-gradient: linear-gradient(145deg, #e8f0f7 0%, #f4f7f9 40%, #fceef0 100%);
-            --card-bg: rgba(255, 255, 255, 0.45);
-            --accent-color: #92a8d1;
-            --accent-pink: #d88a8a;
-            --text-main: #4a4e69;
-            --decoration-color: rgba(146, 168, 209, 0.15);
-            --grid-color: rgba(146, 168, 209, 0.1);
+            /* 统一蓝紫灰配色，避免渲染页出现纯黑文字。 */
+            --bg-gradient: linear-gradient(145deg, #e2ebf7 0%, #f8f9fc 48%, #e4e9f6 100%);
+            --card-bg: rgba(248, 249, 252, 0.78);
+            --main-color: #566187;
+            --user-color: #626D8E;
+            --secondary-color: #98A1B8;
+            --points-color: #677392;
+            --rank-color: #C9D1E1;
+            --line-color: #E4E9F2;
+            --accent-color: #8FAFE7;
+            --rank-first: #F1C775;
+            --rank-second: #C6CEDD;
+            --rank-third: #DFA986;
+            --decoration-color: rgba(143, 175, 231, 0.32);
+            --grid-color: rgba(143, 175, 231, 0.1);
+            --shadow-color: rgba(86, 97, 135, 0.12);
         }
 
         body {
@@ -46,7 +72,7 @@
             background:
                 radial-gradient(var(--grid-color) 1px, transparent 0),
                 linear-gradient(120deg, transparent 70%, var(--decoration-color) 70.1%),
-                linear-gradient(200deg, transparent 80%, rgba(216, 138, 138, 0.05) 80.1%);
+                linear-gradient(200deg, transparent 80%, rgba(143, 175, 231, 0.14) 80.1%);
             background-size: 30px 30px, 100% 100%, 100% 100%;
             z-index: 0;
         }
@@ -57,9 +83,8 @@
             left: 22px;
             width: 856px;
             height: 556px;
-            border: 1px solid rgba(255, 255, 255, 0.6);
+            border: 1px solid var(--line-color);
             border-radius: 6px;
-            z-index: 1;
             display: flex;
             align-items: center;
             background:
@@ -67,18 +92,31 @@
                 linear-gradient(145deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0));
         }
 
-        .data-card {
-            margin-left: 50px;
-            width: 330px;
-            padding: 30px 35px;
+        /* 主卡与积分榜共享顶部，榜单作为主卡右侧的延伸。 */
+        .card-group {
+            display: flex;
+            align-items: flex-start;
+            margin-left: 26px;
+            position: relative;
+            z-index: 10;
+            filter: drop-shadow(0 12px 24px var(--shadow-color));
+        }
+
+        .data-card,
+        .ranking-card {
             background: var(--card-bg);
             backdrop-filter: blur(15px) saturate(140%);
             -webkit-backdrop-filter: blur(15px) saturate(140%);
-            border-radius: 4px;
+        }
+
+        .data-card {
+            box-sizing: border-box;
+            flex-shrink: 0;
+            width: 300px;
+            min-height: 424px;
+            padding: 28px 22px;
+            border-radius: 4px 0 4px 4px;
             border-left: 5px solid var(--accent-color);
-            box-shadow:
-                0 10px 30px rgba(0, 0, 0, 0.06),
-                0 30px 60px rgba(146, 168, 209, 0.15);
             position: relative;
             z-index: 10;
         }
@@ -111,11 +149,14 @@
             right: 15px;
             bottom: 10px;
             font-size: 10px;
-            color: var(--text-main);
+            color: var(--secondary-color);
             opacity: 0.5;
             font-family: 'CustomFont', sans-serif;
             letter-spacing: 0.5px;
             white-space: nowrap;
+            max-width: calc(100% - 30px);
+            overflow: hidden;
+            text-overflow: ellipsis;
             z-index: 12;
         }
 
@@ -124,6 +165,8 @@
             left: -25px;
             bottom: 0px;
             writing-mode: vertical-rl;
+            white-space: nowrap;
+            font-family: 'PlusJakartaSans', sans-serif;
             font-size: 12px;
             font-style: italic;
             color: var(--accent-color);
@@ -139,14 +182,16 @@
             color: var(--accent-color);
             letter-spacing: 1px;
             margin-bottom: 12px;
-            font-family: monospace;
-            border-bottom: 1px solid rgba(146, 168, 209, 0.3);
+            font-family: 'RobotoFlex', sans-serif;
+            font-variant-numeric: tabular-nums;
+            line-height: 12px;
+            border-bottom: 1px solid var(--line-color);
             padding-bottom: 4px;
         }
 
         .user-info {
             font-size: 11px;
-            color: #889;
+            color: var(--secondary-color);
             margin-bottom: 4px;
             display: flex;
             align-items: center;
@@ -154,8 +199,19 @@
         }
 
         .user-name {
-            color: var(--text-main);
+            color: var(--user-color);
             font-weight: bold;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .user-id {
+            color: var(--secondary-color);
+        }
+
+        .user-info > span:last-child {
+            flex-shrink: 0;
         }
 
         .title-area {
@@ -164,7 +220,7 @@
 
         .title-main {
             font-size: 38px;
-            color: var(--text-main);
+            color: var(--main-color);
             margin: 0;
             font-weight: bold;
             letter-spacing: -1.5px;
@@ -175,7 +231,7 @@
             justify-content: space-between;
             align-items: flex-end;
             padding: 12px 0;
-            border-bottom: 1px solid rgba(146, 168, 209, 0.2);
+            border-bottom: 1px solid var(--line-color);
         }
 
         .item-left {
@@ -193,33 +249,174 @@
 
         .label {
             font-size: 14px;
-            color: #889;
+            color: var(--secondary-color);
             font-weight: bold;
         }
 
         .value-main {
-            font-size: 26px;
-            color: var(--text-main);
+            font-size: 22px;
+            color: var(--points-color);
             font-weight: 800;
-            font-family: 'Arial Black', sans-serif;
+            font-family: 'RobotoFlex', 'CustomFont', sans-serif;
+            font-variant-numeric: tabular-nums;
         }
 
         .value-delta {
-            font-size: 14px;
-            color: var(--accent-pink);
+            font-size: 12px;
+            color: var(--accent-color);
             margin-left: 4px;
             font-weight: bold;
+            font-family: 'RobotoFlex', 'CustomFont', sans-serif;
         }
 
         .barcode {
             height: 18px;
             width: 100px;
-            background: repeating-linear-gradient(90deg, var(--text-main), var(--text-main) 1px, transparent 1px, transparent 3px);
+            background: repeating-linear-gradient(90deg, var(--main-color), var(--main-color) 1px, transparent 1px, transparent 3px);
+        }
+
+        /* 榜单与对话气泡纵向排列，气泡跟随榜单高度自然下移。 */
+        .ranking-column {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 16px;
+            width: 140px;
+            margin-top: 12px;
+        }
+
+        /* 积分榜小于主卡片，每位用户分两行展示并用细线分隔。 */
+        .ranking-card {
+            box-sizing: border-box;
+            flex-shrink: 0;
+            width: 140px;
+            height: 218px;
+            padding: 10px 8px;
+            position: relative;
+            z-index: 10;
+            color: var(--user-color);
+            border-left: 1px solid var(--line-color);
+            border-radius: 0 4px 4px 0;
+        }
+
+        /* 在原有半透明底板内叠加白色圆角底板，保留外层边缘。 */
+        .ranking-card::before {
+            content: "";
+            position: absolute;
+            inset: 4px;
+            z-index: -1;
+            background: #fff;
+            border-radius: 8px;
+        }
+
+        .ranking-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--line-color);
+        }
+
+        .ranking-title {
+            margin: 0;
+            font-size: 12px;
+            line-height: 16px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            color: var(--main-color);
+        }
+
+        .ranking-row {
+            box-sizing: border-box;
+            height: 34px;
+            padding: 2px 0 3px;
+            border-bottom: 1px solid var(--line-color);
+            line-height: 14px;
+            font-size: 10px;
+            white-space: nowrap;
+        }
+
+        .ranking-row:last-child {
+            border-bottom: 0;
+        }
+
+        .ranking-line {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            gap: 3px;
+        }
+
+        .ranking-user {
+            display: flex;
+            align-items: baseline;
+        }
+
+        .ranking-name {
+            color: var(--user-color);
+            font-weight: 600;
+        }
+
+        .ranking-id {
+            color: var(--secondary-color);
+            font: 8px 'RobotoFlex', sans-serif;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .ranking-position {
+            color: var(--rank-color);
+            font: 8px 'RobotoFlex', sans-serif;
+            font-variant-numeric: tabular-nums;
+            position: relative;
+            top: -1px;
+        }
+
+        .ranking-row.rank-1 .ranking-position {
+            color: var(--rank-first);
+        }
+
+        .ranking-row.rank-2 .ranking-position {
+            color: var(--rank-second);
+        }
+
+        .ranking-row.rank-3 .ranking-position {
+            color: var(--rank-third);
+        }
+
+        .ranking-value {
+            display: flex;
+            justify-content: space-between;
+            gap: 4px;
+            font-size: 9px;
+            font-variant-numeric: tabular-nums;
+            color: var(--secondary-color);
+        }
+
+        .ranking-points {
+            color: var(--points-color);
+        }
+
+        .number {
+            font-family: 'RobotoFlex', sans-serif;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .ranking-points .number {
+            font-size: 10px;
+            font-weight: 650;
+        }
+
+        .ranking-empty {
+            padding-top: 65px;
+            text-align: center;
+            font-size: 12px;
+            color: var(--secondary-color);
         }
 
         .chara-container {
             position: absolute;
-            right: 0;
+            right: -40px;
             bottom: -15px;
             height: 600px;
             width: 500px;
@@ -233,28 +430,26 @@
         .chara-img {
             max-height: 95%;
             display: flex;
-            filter: drop-shadow(-20px 10px 40px rgba(146, 168, 209, 0.2));
+            filter: drop-shadow(-20px 10px 40px rgba(143, 175, 231, 0.2));
             object-fit: contain;
         }
 
         .bubble {
-            position: absolute;
-            left: 490px;
-            top: 42%;
-            transform: translateY(-50%);
+            position: relative;
             width: 220px;
+            margin-left: 48px;
             padding: 20px;
-            background: rgba(255, 255, 255, 0.75);
+            background: rgba(248, 249, 252, 0.86);
             border-radius: 18px;
             border: 1px solid rgba(255, 255, 255, 0.8);
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+            box-shadow: 0 10px 30px rgba(86, 97, 135, 0.08);
             z-index: 100;
         }
 
         .bubble-text {
             font-size: 15px;
             line-height: 1.6;
-            color: #667;
+            color: var(--user-color);
             font-style: italic;
             text-align: center;
         }
@@ -271,10 +466,11 @@
         }
 
         .watermark-main {
-            font-family: 'Arial Black', sans-serif;
-            font-size: 14px;
+            font-family: 'PlusJakartaSans', sans-serif;
+            font-weight: 800;
+            font-size: 10px;
             letter-spacing: 1px;
-            color: #3d405b;
+            color: var(--main-color);
             margin: 0;
             line-height: 1;
             text-shadow: 1px 1px 1px rgba(255, 255, 255, 0.8);
@@ -284,10 +480,10 @@
 
 
         .watermark-sub {
-            font-family: monospace;
-            font-size: 10px;
+            font-family: 'PlusJakartaSans', sans-serif;
+            font-size: 8px;
             letter-spacing: 0.5px;
-            color: #7a92b1;
+            color: var(--secondary-color);
             margin-top: 4px;
             text-transform: uppercase;
 
@@ -298,6 +494,7 @@
 <body>
     <div class="stage">
         <div class="outer-frame">
+            <div class="card-group">
             <div class="data-card">
                 <div class="status-bar">
                     <span>{{ current_time }}</span>
@@ -308,7 +505,7 @@
 
                 <div class="user-info">
                     <span class="user-name">{{ user_name }}</span>
-                    <span style="opacity: 0.6; font-family: monospace;">(QQ：{{ user_id }})</span>
+                    <span class="user-id">(<span class="number">QQ</span>：<span class="number">{{ user_id }}</span>)</span>
                 </div>
 
                 <div class="title-area">
@@ -356,6 +553,34 @@
                 {% endif %}
             </div>
 
+            <div class="ranking-column">
+            <div class="ranking-card">
+                <div class="ranking-header">
+                    <h2 class="ranking-title">积分排名</h2>
+                </div>
+                {% for nickname, uid, points, total_count in ranking %}
+                <div class="ranking-row rank-{{ loop.index if loop.index <= 3 else 'other' }}">
+                    <div class="ranking-line">
+                        <span class="ranking-position">({{ "%02d" | format(loop.index) }})</span>
+                        <div class="ranking-user">
+                            <span class="ranking-name">{{ nickname[:5] ~ '...' if nickname | length > 6 else nickname }}</span><span class="ranking-id">({{ uid }})</span>
+                        </div>
+                    </div>
+                    <div class="ranking-value">
+                        <span class="ranking-points"><span class="number">{{ points }}</span>积分</span>
+                        <span><span class="number">{{ total_count }}</span>次签到</span>
+                    </div>
+                </div>
+                {% else %}
+                <div class="ranking-empty">暂无排名</div>
+                {% endfor %}
+            </div>
+            <div class="bubble">
+                <div class="bubble-text">「{{ quote }}」</div>
+            </div>
+            </div>
+            </div>
+
         </div>
 
         {% if chara_b64 %}
@@ -363,10 +588,6 @@
             <img class="chara-img" src="{{ chara_b64 }}">
         </div>
         {% endif %}
-
-        <div class="bubble">
-            <div class="bubble-text">「{{ quote }}」</div>
-        </div>
 
         <div class="bot-watermark">
             <div class="watermark-main">283PRODUCTION ANALYTICS</div>
