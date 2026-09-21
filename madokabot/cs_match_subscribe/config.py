@@ -87,6 +87,11 @@ class Config(NoneBotConfig):
         ge=64 * 1024,
         description="单张赛事资源图片最大大小（字节）",
     )
+    hltv_max_response_size: int = Field(
+        default=16 * 1024 * 1024,
+        ge=64 * 1024,
+        description="FlareSolverr JSON 响应最大大小（字节）",
+    )
     cs_rating_width: int = Field(default=810, ge=400)
     cs_rating_device_scale_factor: float = Field(default=2.0, ge=0.5, le=3.0)
     cs_stats_width: int = Field(default=900, ge=600)

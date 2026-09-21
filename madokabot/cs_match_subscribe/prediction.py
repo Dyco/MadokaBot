@@ -33,9 +33,9 @@ def _select_team(value: str, team_names: list[str]) -> str | None:
     if len(team_names) < 2:
         return None
     normalized = _normalize_team(value)
-    if normalized in {"a", "team a", "队伍a", "队伍 a"}:
+    if normalized in {"a", "team a", "teama", "队伍a", "队伍 a"}:
         return team_names[0]
-    if normalized in {"b", "team b", "队伍b", "队伍 b"}:
+    if normalized in {"b", "team b", "teamb", "队伍b", "队伍 b"}:
         return team_names[1]
     for team_name in team_names[:2]:
         if _normalize_team(team_name) == normalized:
@@ -105,7 +105,9 @@ async def place_prediction(
             .values(points=UserStats.points - points)
         )
         if deduction.rowcount != 1:
-            raise PredictionError("积分不足，无法参与本场竞猜。")
+            raise PredictionError(
+                f"您的当前积分为：{user.points}，参与数值已超额，请重试。"
+            )
 
         session.add(
             CsPrediction(
@@ -167,6 +169,81 @@ async def get_prediction_summary(
     }
 
 
+async def refund_uncontested_predictions(
+    event_id: str,
+    match_id: str,
+    team_names: list[str],
+) -> dict[str, Any]:
+    """单方无人下注时退回本场所有未结算竞猜积分。"""
+    normalized_teams = [
+        _normalize_team(team_name)
+        for team_name in team_names[:2]
+        if _normalize_team(team_name)
+    ]
+    if len(normalized_teams) < 2:
+        return {
+            "refunded": False,
+            "total_count": 0,
+            "total_points": 0,
+            "refunded_points": 0,
+        }
+
+    async with create_session() as session:
+        rows = list(
+            (
+                await session.scalars(
+                    select(CsPrediction).where(
+                        CsPrediction.event_id == str(event_id),
+                        CsPrediction.match_id == str(match_id),
+                    )
+                )
+            ).all()
+        )
+        open_rows = [row for row in rows if row.result == "open"]
+        refunded_rows = [row for row in rows if row.result == "refund"]
+        if not open_rows:
+            return {
+                "refunded": bool(refunded_rows),
+                "total_count": len(rows),
+                "total_points": sum(row.points for row in rows),
+                "refunded_points": sum(row.points for row in refunded_rows),
+            }
+
+        points_by_team: dict[str, int] = {}
+        for row in open_rows:
+            normalized_name = _normalize_team(row.team_name)
+            points_by_team[normalized_name] = (
+                points_by_team.get(normalized_name, 0) + row.points
+            )
+        if all(points_by_team.get(team_name, 0) > 0 for team_name in normalized_teams):
+            return {
+                "refunded": False,
+                "total_count": len(open_rows),
+                "total_points": sum(row.points for row in open_rows),
+                "refunded_points": 0,
+            }
+
+        now = datetime.now(timezone.utc)
+        refunded_points = 0
+        for row in open_rows:
+            row.payout = row.points
+            row.net_points = 0
+            row.result = "refund"
+            row.settled_at = now
+            refunded_points += row.points
+            user = await session.get(UserStats, row.user_id)
+            if user is not None:
+                user.points += row.points
+        await session.commit()
+
+    return {
+        "refunded": True,
+        "total_count": len(open_rows),
+        "total_points": refunded_points,
+        "refunded_points": refunded_points,
+    }
+
+
 async def settle_match_predictions(
     event_id: str,
     match_id: str,
@@ -222,7 +299,7 @@ async def get_prediction_detail(
         return None
 
     state = context["state"]
-    if state.get("completed") or state.get("final_sent"):
+    if state.get("completed"):
         status_text = "已结束"
     elif state.get("started_sent"):
         status_text = "比赛中"
@@ -329,5 +406,6 @@ __all__ = [
     "get_prediction_ranking",
     "get_prediction_summary",
     "place_prediction",
+    "refund_uncontested_predictions",
     "settle_match_predictions",
 ]

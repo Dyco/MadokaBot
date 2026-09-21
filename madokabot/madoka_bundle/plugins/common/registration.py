@@ -21,6 +21,8 @@ async def register_user(
         if normalized_nickname and user.qq_nickname != normalized_nickname:
             user.qq_nickname = normalized_nickname
             await session.commit()
+            # 提交会使用户属性过期，后续签到及会话外渲染仍需读取这些属性。
+            await session.refresh(user)
         sign = await session.get(SignRecord, uid)
         if sign is None:
             sign = SignRecord(user_id=uid)

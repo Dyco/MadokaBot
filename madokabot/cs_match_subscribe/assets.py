@@ -21,7 +21,7 @@ from ..madoka_bundle.utils import get_file, get_files
 from .client import FlaresolverrSession, get_flaresolverr_session
 from .config import config, ensure_asset_dirs
 from .models import EventData, MatchData
-from .net import resolve_proxy
+from .net import ResponseTooLargeError, read_limited_response, resolve_proxy
 
 _EXTENSIONS = {
     "image/png": ".png",
@@ -42,6 +42,8 @@ _MIME_TYPES = {
 }
 _SAFE_NAME_RE = re.compile(r"[^a-zA-Z0-9._-]+")
 _CSTEAM_CATEGORIES = {"team", "flag"}
+_IMAGE_DOWNLOAD_SEMAPHORE = asyncio.Semaphore(4)
+_ASSET_BROWSER_SEMAPHORE = asyncio.Semaphore(1)
 
 
 def _asset_stem(url: str, category: str) -> str:
@@ -86,22 +88,23 @@ async def fetch_image_data_url(url: str) -> str:
         return ""
 
     try:
-        async with httpx.AsyncClient(
+        async with _IMAGE_DOWNLOAD_SEMAPHORE, httpx.AsyncClient(
             proxy=resolve_proxy(config.hltv_proxy, madoka_config.proxy),
             trust_env=False,
             follow_redirects=True,
             timeout=5.0,
         ) as client:
-            response = await client.get(value)
-            response.raise_for_status()
-            content_type = response.headers.get("content-type", "").split(";", 1)[0]
-            if not content_type.startswith("image/"):
-                return ""
-            if not response.content or len(response.content) > config.hltv_max_asset_size:
-                return ""
-            encoded = base64.b64encode(response.content).decode("ascii")
-            return f"data:{content_type};base64,{encoded}"
-    except (httpx.HTTPError, OSError):
+            async with client.stream("GET", value) as response:
+                response.raise_for_status()
+                content_type = response.headers.get("content-type", "").split(";", 1)[0].strip().lower()
+                if not content_type.startswith("image/"):
+                    return ""
+                content = await read_limited_response(response, config.hltv_max_asset_size)
+                if not content:
+                    return ""
+                encoded = base64.b64encode(content).decode("ascii")
+                return f"data:{content_type};base64,{encoded}"
+    except (httpx.HTTPError, OSError, ResponseTooLargeError):
         return ""
 
 
@@ -206,7 +209,8 @@ async def _download_one(
     page = None
     try:
         page = await context.new_page()
-        response = await page.goto(url, wait_until="load", timeout=timeout_ms)
+        # 收到响应头就检查类型和声明大小，避免先加载完整图片/错误页面。
+        response = await page.goto(url, wait_until="commit", timeout=timeout_ms)
         if response is not None and response.status >= 400:
             logger.warning("HLTV 资源浏览器请求失败：%s (HTTP %s)", url, response.status)
             return None
@@ -227,7 +231,12 @@ async def _download_one(
 
         # 直接保存 HTTP 响应，保留队标 PNG/SVG 原本的透明通道。
         # 不能对 img 元素截图，否则透明区域会被浏览器图片文档的背景色填充。
-        content = await response.body()
+        length = await response.header_value("content-length") or ""
+        if length.isdigit() and int(length) > config.hltv_max_asset_size:
+            logger.warning("HLTV 资源过大，已跳过：%s", url)
+            return None
+        # commit 只等待响应头，响应体仍需独立超时，避免慢速下载挂住页面。
+        content = await asyncio.wait_for(response.body(), timeout=timeout_ms / 1000)
         if not content:
             logger.warning("HLTV 资源响应为空：%s", url)
             return None
@@ -237,7 +246,7 @@ async def _download_one(
         path = target_dir / _asset_name(url, category, content_type)
         path.write_bytes(content)
         return path
-    except (PlaywrightError, OSError) as exc:
+    except (PlaywrightError, OSError, asyncio.TimeoutError) as exc:
         logger.warning("下载 HLTV %s 失败（%s）：%s", label, url, exc)
         return None
     finally:
@@ -250,7 +259,17 @@ async def _download_assets(
     *,
     referer: str,
 ) -> dict[str, Path | None]:
-    """复用 FlareSolverr 的浏览器会话，通过 Playwright 下载图片。"""
+    """全局限制浏览器数量，并在拿到名额后重新检查缓存。"""
+    async with _ASSET_BROWSER_SEMAPHORE:
+        return await _download_assets_in_browser(refs, referer=referer)
+
+
+async def _download_assets_in_browser(
+    refs: dict[str, tuple[str, str]],
+    *,
+    referer: str,
+) -> dict[str, Path | None]:
+    """复用 Cookie 和 UA；浏览器、上下文和页面只在本次下载中存在。"""
     if not refs:
         return {}
 
@@ -299,12 +318,12 @@ async def _download_assets(
                             "Referer": referer,
                         }
                     )
-                    semaphore = asyncio.Semaphore(4)
+                    urls = iter(missing_refs)
 
-                    async def download(url: str) -> tuple[str, Path | None]:
-                        async with semaphore:
+                    async def worker() -> None:
+                        for url in urls:
                             category, label = missing_refs[url]
-                            return url, await _download_one(
+                            results[url] = await _download_one(
                                 context,
                                 url,
                                 category=category,
@@ -312,13 +331,19 @@ async def _download_assets(
                                 timeout_ms=timeout_ms,
                             )
 
-                    results.update(
-                        dict(
-                            await asyncio.gather(
-                                *(download(url) for url in missing_refs)
-                            )
-                        )
-                    )
+                    tasks = [
+                        asyncio.create_task(worker())
+                        for _ in range(min(4, len(missing_refs)))
+                    ]
+                    try:
+                        await asyncio.gather(*tasks)
+                    finally:
+                        # gather 的某个子任务失败不会自动取消其他任务。
+                        # 必须先收束下载，再关闭它们依赖的 context/browser。
+                        for task in tasks:
+                            if not task.done():
+                                task.cancel()
+                        await asyncio.gather(*tasks, return_exceptions=True)
                     return results
                 finally:
                     await context.close()

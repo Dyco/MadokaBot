@@ -219,82 +219,210 @@
                 "finalization_attempts": 1
             },
             "2398104": {
-                "source": "waiting",
+                "source": "finished",
                 "url": "https://www.hltv.org/matches/2398104/mibr-vs-nrg-starladder-starseries-fall-2026",
                 "initialized": true,
                 "started_sent": false,
-                "final_sent": false,
-                "completed": false,
-                "map_scores": {},
+                "final_sent": true,
+                "completed": true,
+                "map_scores": {
+                    "0": "13:7",
+                    "1": "13:2"
+                },
                 "started_maps": [],
-                "notified_maps": [],
+                "notified_maps": [
+                    "0",
+                    "1"
+                ],
                 "rating_maps": [],
-                "rating_summary_sent": false
+                "rating_summary_sent": true,
+                "finalization_requested": true,
+                "finalization_attempts": 1,
+                "scheduled_at": "2026-09-19T10:00:00+00:00",
+                "team_names": [
+                    "MIBR",
+                    "NRG"
+                ],
+                "format_code": "BO3",
+                "prediction_closed_sent": true,
+                "prediction_closed": true,
+                "prediction_open": false,
+                "winner_name": "MIBR",
+                "prediction_payout": 0,
+                "prediction_settled": true
             },
             "2398103": {
-                "source": "waiting",
+                "source": "finished",
                 "url": "https://www.hltv.org/matches/2398103/mouz-vs-furia-starladder-starseries-fall-2026",
                 "initialized": true,
                 "started_sent": false,
-                "final_sent": false,
-                "completed": false,
-                "map_scores": {},
+                "final_sent": true,
+                "completed": true,
+                "map_scores": {
+                    "0": "8:13",
+                    "1": "19:16",
+                    "2": "6:13"
+                },
                 "started_maps": [],
-                "notified_maps": [],
+                "notified_maps": [
+                    "0",
+                    "1",
+                    "2"
+                ],
                 "rating_maps": [],
-                "rating_summary_sent": false
+                "rating_summary_sent": true,
+                "finalization_requested": true,
+                "finalization_attempts": 1,
+                "scheduled_at": "2026-09-19T12:00:00+00:00",
+                "team_names": [
+                    "MOUZ",
+                    "FURIA"
+                ],
+                "format_code": "BO3",
+                "prediction_closed_sent": true,
+                "prediction_closed": true,
+                "prediction_open": false,
+                "winner_name": "FURIA",
+                "prediction_payout": 0,
+                "prediction_settled": true
             },
             "2398105": {
-                "source": "waiting",
+                "source": "finished",
                 "url": "https://www.hltv.org/matches/2398105/aurora-vs-vitality-starladder-starseries-fall-2026",
                 "initialized": true,
                 "started_sent": false,
-                "final_sent": false,
-                "completed": false,
-                "map_scores": {},
+                "final_sent": true,
+                "completed": true,
+                "map_scores": {
+                    "0": "13:7",
+                    "1": "11:13",
+                    "2": "13:8"
+                },
                 "started_maps": [],
-                "notified_maps": [],
+                "notified_maps": [
+                    "0",
+                    "1",
+                    "2"
+                ],
                 "rating_maps": [],
-                "rating_summary_sent": false
+                "rating_summary_sent": true,
+                "finalization_requested": true,
+                "finalization_attempts": 1,
+                "scheduled_at": "2026-09-19T15:25:00+00:00",
+                "team_names": [
+                    "Aurora",
+                    "Vitality"
+                ],
+                "format_code": "BO3",
+                "prediction_closed_sent": true,
+                "prediction_closed": true,
+                "prediction_open": false,
+                "winner_name": "Aurora",
+                "prediction_payout": 0,
+                "prediction_settled": true
             },
             "2398106": {
-                "source": "waiting",
-                "url": "https://www.hltv.org/matches/2398106/starladder-starseries-fall-2026-lower-bracket-final-starladder-starseries-fall-2026",
+                "source": "finished",
+                "url": "https://www.hltv.org/matches/2398106/mibr-vs-furia-starladder-starseries-fall-2026",
                 "initialized": true,
                 "started_sent": false,
-                "final_sent": false,
-                "completed": false,
-                "map_scores": {},
+                "final_sent": true,
+                "completed": true,
+                "map_scores": {
+                    "0": "8:13",
+                    "1": "11:13"
+                },
                 "started_maps": [],
-                "notified_maps": [],
+                "notified_maps": [
+                    "0",
+                    "1"
+                ],
                 "rating_maps": [],
-                "rating_summary_sent": false
+                "rating_summary_sent": true,
+                "finalization_requested": true,
+                "finalization_attempts": 1,
+                "scheduled_at": "2026-09-19T18:30:00+00:00",
+                "team_names": [
+                    "MIBR",
+                    "FURIA"
+                ],
+                "format_code": "BO3",
+                "prediction_closed_sent": true,
+                "prediction_closed": true,
+                "prediction_open": false,
+                "winner_name": "FURIA",
+                "prediction_payout": 0,
+                "prediction_settled": true
             },
             "2398107": {
-                "source": "waiting",
-                "url": "https://www.hltv.org/matches/2398107/starladder-starseries-fall-2026-consolidation-final-starladder-starseries-fall-2026",
+                "source": "finished",
+                "url": "https://www.hltv.org/matches/2398107/vitality-vs-furia-starladder-starseries-fall-2026",
                 "initialized": true,
                 "started_sent": false,
-                "final_sent": false,
-                "completed": false,
-                "map_scores": {},
+                "final_sent": true,
+                "completed": true,
+                "map_scores": {
+                    "0": "13:5",
+                    "1": "13:8"
+                },
                 "started_maps": [],
-                "notified_maps": [],
+                "notified_maps": [
+                    "0",
+                    "1"
+                ],
                 "rating_maps": [],
-                "rating_summary_sent": false
+                "rating_summary_sent": true,
+                "finalization_requested": true,
+                "finalization_attempts": 1,
+                "scheduled_at": "2026-09-20T12:00:00+00:00",
+                "team_names": [
+                    "Vitality",
+                    "FURIA"
+                ],
+                "format_code": "BO3",
+                "prediction_closed_sent": true,
+                "prediction_closed": true,
+                "prediction_open": false,
+                "winner_name": "Vitality",
+                "prediction_payout": 0,
+                "prediction_settled": true
             },
             "2398108": {
-                "source": "waiting",
-                "url": "https://www.hltv.org/matches/2398108/starladder-starseries-fall-2026-grand-final-starladder-starseries-fall-2026",
+                "source": "finished",
+                "url": "https://www.hltv.org/matches/2398108/aurora-vs-vitality-starladder-starseries-fall-2026",
                 "initialized": true,
                 "started_sent": false,
-                "final_sent": false,
-                "completed": false,
-                "map_scores": {},
+                "final_sent": true,
+                "completed": true,
+                "map_scores": {
+                    "0": "4:13",
+                    "1": "13:11",
+                    "2": "4:13",
+                    "3": "7:13"
+                },
                 "started_maps": [],
-                "notified_maps": [],
+                "notified_maps": [
+                    "0",
+                    "1",
+                    "2",
+                    "3"
+                ],
                 "rating_maps": [],
-                "rating_summary_sent": false
+                "rating_summary_sent": true,
+                "finalization_requested": true,
+                "finalization_attempts": 1,
+                "scheduled_at": "2026-09-20T15:00:00+00:00",
+                "team_names": [
+                    "Aurora",
+                    "Vitality"
+                ],
+                "format_code": "BO5",
+                "prediction_closed_sent": true,
+                "prediction_closed": true,
+                "prediction_open": false,
+                "winner_name": "Vitality",
+                "prediction_payout": 0,
+                "prediction_settled": true
             },
             "2398088": {
                 "source": "result",
@@ -310,8 +438,8 @@
                 "rating_summary_sent": false
             }
         },
-        "status": "ongoing",
+        "status": "finished",
         "first_match_started_at": "2026-09-17T14:07:46.964745+00:00",
-        "completed": false
+        "completed": true
     }
 }

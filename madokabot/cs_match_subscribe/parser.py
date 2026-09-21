@@ -12,6 +12,8 @@ from urllib.parse import urljoin
 
 from bs4 import BeautifulSoup, Tag
 
+from .html import parsed_html
+
 from .models import (
     EventData,
     EventMatchRef,
@@ -641,62 +643,62 @@ def parse_match_html(
     fetched_at: datetime | None = None,
 ) -> MatchData:
     """解析 HLTV match 页面并返回统一数据模型。"""
-    soup = BeautifulSoup(html, "html.parser")
-    (
-        header_teams,
-        event_name,
-        match_time,
-        match_date,
-        status_text,
-        scheduled_at,
-        event_url,
-    ) = _parse_header_teams(soup, page_url)
-    map_names = _parse_maps(soup)
-    stats_teams, map_stats = _parse_stats_tables(soup, page_url)
+    with parsed_html(html) as soup:
+        (
+            header_teams,
+            event_name,
+            match_time,
+            match_date,
+            status_text,
+            scheduled_at,
+            event_url,
+        ) = _parse_header_teams(soup, page_url)
+        map_names = _parse_maps(soup)
+        stats_teams, map_stats = _parse_stats_tables(soup, page_url)
 
-    # Rating 表通常包含更可靠的队名和队标；用头部比分补回去。
-    if stats_teams:
-        for index, team in enumerate(stats_teams):
-            if index < len(header_teams):
-                team.score = header_teams[index].score
-                if not team.logo_url:
-                    team.logo_url = header_teams[index].logo_url
-        teams = stats_teams
-    else:
-        teams = header_teams
+        # Rating 表通常包含更可靠的队名和队标；用头部比分补回去。
+        if stats_teams:
+            for index, team in enumerate(stats_teams):
+                if index < len(header_teams):
+                    team.score = header_teams[index].score
+                    if not team.logo_url:
+                        team.logo_url = header_teams[index].logo_url
+            teams = stats_teams
+        else:
+            teams = header_teams
 
-    format_text, format_code, round_text = _normalize_preformatted_text(
-        soup.select_one(".padding.preformatted-text, .preformatted-text")
-    )
-    page_title = _text(soup.title)
-    status = _status_code(status_text, teams, page_title)
-    map_results = _parse_map_results(soup)
-    for result in map_results:
-        if result.name not in map_names:
-            map_names.append(result.name)
-    timestamp = fetched_at or datetime.now(timezone.utc)
-    return MatchData(
-        match_id=str(match_id),
-        url=page_url,
-        event_name=event_name,
-        event_url=event_url,
-        status=status,
-        status_text=status_text,
-        match_time=match_time,
-        match_date=match_date,
-        scheduled_at=scheduled_at,
-        teams=teams,
-        maps=map_names,
-        map_stats=map_stats,
-        map_results=map_results,
-        format_text=format_text,
-        format_code=format_code,
-        round_text=round_text,
-        has_stats=bool(
-            stats_teams and any(team.players for team in stats_teams)
-        ) or any(team.players for group in map_stats.values() for team in group),
-        fetched_at=timestamp.isoformat(),
-    )
+        format_text, format_code, round_text = _normalize_preformatted_text(
+            soup.select_one(".padding.preformatted-text, .preformatted-text")
+        )
+        page_title = _text(soup.title)
+        status = _status_code(status_text, teams, page_title)
+        map_results = _parse_map_results(soup)
+        for result in map_results:
+            if result.name not in map_names:
+                map_names.append(result.name)
+        timestamp = fetched_at or datetime.now(timezone.utc)
+        return MatchData(
+            match_id=str(match_id),
+            url=page_url,
+            event_name=event_name,
+            event_url=event_url,
+            status=status,
+            status_text=status_text,
+            match_time=match_time,
+            match_date=match_date,
+            scheduled_at=scheduled_at,
+            teams=teams,
+            maps=map_names,
+            map_stats=map_stats,
+            map_results=map_results,
+            format_text=format_text,
+            format_code=format_code,
+            round_text=round_text,
+            has_stats=bool(
+                stats_teams and any(team.players for team in stats_teams)
+            ) or any(team.players for group in map_stats.values() for team in group),
+            fetched_at=timestamp.isoformat(),
+        )
 
 
 def _event_detail_prize(node: Tag | None) -> tuple[str, int | None]:
@@ -726,49 +728,49 @@ def parse_event_html(
     page_url: str,
 ) -> EventData | None:
     """解析 HLTV 赛事详情页的基础信息。"""
-    soup = BeautifulSoup(html, "html.parser")
-    name = _text(soup.select_one(".event-hub-title, .event-header .event-name"))
-    if not name:
-        return None
+    with parsed_html(html) as soup:
+        name = _text(soup.select_one(".event-hub-title, .event-header .event-name"))
+        if not name:
+            return None
 
-    date_nodes = soup.select("td.eventdate span[data-unix]")
-    # /events/<id>/matches 和 /results?event=<id> 也会包含赛事标题，
-    # 但它们不是详情页，没有日期表格。让调用方继续寻找 canonical overview。
-    if not date_nodes and soup.select_one(
-        ".event-header-component table.info, table.info"
-    ) is None:
-        return None
-    start_at = _event_timestamp(date_nodes[0] if date_nodes else None)
-    end_at = _event_timestamp(date_nodes[1] if len(date_nodes) > 1 else None)
-    prize_display, prize_pool = _event_detail_prize(
-        soup.select_one("td.prizepool, .event-data td.prizepool")
-    )
-    location_node = soup.select_one(".location, td.location")
-    flag = soup.select_one(".location img.flag, td.location img.flag, img.flag")
-    banner = soup.select_one(
-        ".sidebar-first-level img.event-logo, .event-logo, img.event-header"
-    )
-    team_count = _text(soup.select_one("td.teamsNumber")) or "-"
-    lowered_name = name.casefold()
-    event_type = "Major" if "major" in lowered_name else ""
-    return EventData(
-        event_id=str(event_id),
-        name=name,
-        event_type=event_type,
-        prize_pool=prize_pool,
-        start_at=start_at,
-        end_at=end_at,
-        prize_display=prize_display,
-        team_count=team_count,
-        location=_text(location_node),
-        flag_url=_absolute_url(_image_source(flag), page_url),
-        banner_url=_absolute_url(_image_source(banner), page_url),
-        date_display=_event_date_display(date_nodes),
-        date_display_zh=_event_date_display_zh(start_at, end_at),
-        url=page_url,
-        format_text=_event_detail_formats(soup),
-        event_status=_event_status(soup),
-    )
+        date_nodes = soup.select("td.eventdate span[data-unix]")
+        # /events/<id>/matches 和 /results?event=<id> 也会包含赛事标题，
+        # 但它们不是详情页，没有日期表格。让调用方继续寻找 canonical overview。
+        if not date_nodes and soup.select_one(
+            ".event-header-component table.info, table.info"
+        ) is None:
+            return None
+        start_at = _event_timestamp(date_nodes[0] if date_nodes else None)
+        end_at = _event_timestamp(date_nodes[1] if len(date_nodes) > 1 else None)
+        prize_display, prize_pool = _event_detail_prize(
+            soup.select_one("td.prizepool, .event-data td.prizepool")
+        )
+        location_node = soup.select_one(".location, td.location")
+        flag = soup.select_one(".location img.flag, td.location img.flag, img.flag")
+        banner = soup.select_one(
+            ".sidebar-first-level img.event-logo, .event-logo, img.event-header"
+        )
+        team_count = _text(soup.select_one("td.teamsNumber")) or "-"
+        lowered_name = name.casefold()
+        event_type = "Major" if "major" in lowered_name else ""
+        return EventData(
+            event_id=str(event_id),
+            name=name,
+            event_type=event_type,
+            prize_pool=prize_pool,
+            start_at=start_at,
+            end_at=end_at,
+            prize_display=prize_display,
+            team_count=team_count,
+            location=_text(location_node),
+            flag_url=_absolute_url(_image_source(flag), page_url),
+            banner_url=_absolute_url(_image_source(banner), page_url),
+            date_display=_event_date_display(date_nodes),
+            date_display_zh=_event_date_display_zh(start_at, end_at),
+            url=page_url,
+            format_text=_event_detail_formats(soup),
+            event_status=_event_status(soup),
+        )
 
 
 def parse_event_match_refs_html(
@@ -779,102 +781,85 @@ def parse_event_match_refs_html(
     event_id: str | None = None,
 ) -> list[EventMatchRef]:
     """解析赛事 matches/results 页面中的比赛链接。"""
-    soup = BeautifulSoup(html, "html.parser")
-    refs: dict[str, EventMatchRef] = {}
+    with parsed_html(html) as soup:
+        refs: dict[str, EventMatchRef] = {}
 
-    # 旧调用方仍可能传入 result；对外统一保存为 finished。
-    page_section = (
-        MATCH_SECTION_FINISHED if section.casefold() == "result" else section
-    )
-    section_priority = {
-        MATCH_SECTION_WAITING: 0,
-        MATCH_SECTION_FINISHED: 1,
-        MATCH_SECTION_UPCOMING: 2,
-    }
+        # 旧调用方仍可能传入 result；对外统一保存为 finished。
+        page_section = (
+            MATCH_SECTION_FINISHED if section.casefold() == "result" else section
+        )
+        section_priority = {
+            MATCH_SECTION_WAITING: 0,
+            MATCH_SECTION_FINISHED: 1,
+            MATCH_SECTION_UPCOMING: 2,
+        }
 
-    def add_href(
-        href: str | None,
-        match_section: str | None = None,
-        scheduled_at: datetime | None = None,
-    ) -> None:
-        match = _MATCH_ID_RE.search(href or "")
-        if match is None:
-            return
-        match_id = match.group(1)
-        candidate = EventMatchRef(
-            match_id=match_id,
-            url=_absolute_url(href, page_url) or "",
-            section=match_section or page_section,
-            scheduled_at=scheduled_at,
-        )
-        previous = refs.get(match_id)
-        candidate_priority = section_priority.get(candidate.section, 0)
-        previous_priority = (
-            section_priority.get(previous.section, 0) if previous else -1
-        )
-        if candidate_priority > previous_priority:
-            refs[match_id] = candidate
-        elif previous is not None and previous.scheduled_at is None and scheduled_at:
-            refs[match_id] = EventMatchRef(
-                match_id=previous.match_id,
-                url=previous.url or candidate.url,
-                section=previous.section,
+        def add_href(
+            href: str | None,
+            match_section: str | None = None,
+            scheduled_at: datetime | None = None,
+        ) -> None:
+            match = _MATCH_ID_RE.search(href or "")
+            if match is None:
+                return
+            match_id = match.group(1)
+            candidate = EventMatchRef(
+                match_id=match_id,
+                url=_absolute_url(href, page_url) or "",
+                section=match_section or page_section,
                 scheduled_at=scheduled_at,
             )
-
-    def add_match_node(node: Tag, match_section: str) -> None:
-        anchor = node.select_one('a[href*="/matches/"]')
-        href = anchor.get("href") if anchor is not None else None
-        if not href:
-            match_id = str(node.get("data-match-id") or "").strip()
-            href = f"/matches/{match_id}" if match_id.isdigit() else None
-        scheduled_at = _event_timestamp(node)
-        if scheduled_at is None:
-            scheduled_at = _event_timestamp(node.select_one("[data-unix]"))
-        add_href(href, match_section, scheduled_at)
-
-    if page_section == MATCH_SECTION_FINISHED:
-        # 当前 HLTV 的 /results?event=<id> 页面把赛事结果放在
-        # results-holder，侧栏中的推荐比赛不属于当前赛事。
-        result_scope = soup.select_one(".results-holder")
-        if result_scope is not None:
-            for anchor in result_scope.select('a[href*="/matches/"]'):
-                add_href(anchor.get("href"))
-        else:
-            # 兼容旧的赛事概览页：淘汰赛信息会嵌在 bracket JSON 中。
-            for bracket in soup.select("[data-slotted-bracket-json]"):
-                raw = str(bracket.get("data-slotted-bracket-json") or "")
-                for match in re.finditer(
-                    r"[\"']matchPageURL[\"']\s*:\s*[\"']([^\"']+)[\"']",
-                    raw,
-                ):
-                    add_href(match.group(1))
-    else:
-        # /events/<id>/matches 的 Live/Upcoming 比赛带有赛事 ID，
-        # 不能再扫描整页，否则会把右侧全站比赛列表混入订阅。
-        wrapper_selector = ".matches-v4 [data-match-id][data-event-id]"
-        if event_id:
-            wrapper_selector += f'[data-event-id="{event_id}"]'
-        wrappers = soup.select(wrapper_selector)
-        for wrapper in wrappers:
-            classes = wrapper.get("class", [])
-            if isinstance(classes, str):
-                classes = classes.split()
-            normalized_classes = {
-                str(value).casefold() for value in classes
-            }
-            match_section = (
-                MATCH_SECTION_UPCOMING
-                if "live-match-container" in normalized_classes
-                else MATCH_SECTION_WAITING
+            previous = refs.get(match_id)
+            candidate_priority = section_priority.get(candidate.section, 0)
+            previous_priority = (
+                section_priority.get(previous.section, 0) if previous else -1
             )
-            add_match_node(wrapper, match_section)
+            if candidate_priority > previous_priority:
+                refs[match_id] = candidate
+            elif previous is not None and previous.scheduled_at is None and scheduled_at:
+                refs[match_id] = EventMatchRef(
+                    match_id=previous.match_id,
+                    url=previous.url or candidate.url,
+                    section=previous.section,
+                    scheduled_at=scheduled_at,
+                )
 
-        if not wrappers:
-            # 某些 HLTV 页面会省略 data-event-id，但仍会保留赛事页的
-            # matches-event-wrapper；只在这些局部容器内做回退解析。
-            for scope in soup.select(".matches-v4 .matches-event-wrapper"):
-                classes = scope.get("class", [])
+        def add_match_node(node: Tag, match_section: str) -> None:
+            anchor = node.select_one('a[href*="/matches/"]')
+            href = anchor.get("href") if anchor is not None else None
+            if not href:
+                match_id = str(node.get("data-match-id") or "").strip()
+                href = f"/matches/{match_id}" if match_id.isdigit() else None
+            scheduled_at = _event_timestamp(node)
+            if scheduled_at is None:
+                scheduled_at = _event_timestamp(node.select_one("[data-unix]"))
+            add_href(href, match_section, scheduled_at)
+
+        if page_section == MATCH_SECTION_FINISHED:
+            # 当前 HLTV 的 /results?event=<id> 页面把赛事结果放在
+            # results-holder，侧栏中的推荐比赛不属于当前赛事。
+            result_scope = soup.select_one(".results-holder")
+            if result_scope is not None:
+                for anchor in result_scope.select('a[href*="/matches/"]'):
+                    add_href(anchor.get("href"))
+            else:
+                # 兼容旧的赛事概览页：淘汰赛信息会嵌在 bracket JSON 中。
+                for bracket in soup.select("[data-slotted-bracket-json]"):
+                    raw = str(bracket.get("data-slotted-bracket-json") or "")
+                    for match in re.finditer(
+                        r"[\"']matchPageURL[\"']\s*:\s*[\"']([^\"']+)[\"']",
+                        raw,
+                    ):
+                        add_href(match.group(1))
+        else:
+            # /events/<id>/matches 的 Live/Upcoming 比赛带有赛事 ID，
+            # 不能再扫描整页，否则会把右侧全站比赛列表混入订阅。
+            wrapper_selector = ".matches-v4 [data-match-id][data-event-id]"
+            if event_id:
+                wrapper_selector += f'[data-event-id="{event_id}"]'
+            wrappers = soup.select(wrapper_selector)
+            for wrapper in wrappers:
+                classes = wrapper.get("class", [])
                 if isinstance(classes, str):
                     classes = classes.split()
                 normalized_classes = {
@@ -882,23 +867,40 @@ def parse_event_match_refs_html(
                 }
                 match_section = (
                     MATCH_SECTION_UPCOMING
-                    if {
-                        "live-matches-wrapper",
-                        "livematchessection",
-                        "live-match-container",
-                    }
-                    & normalized_classes
+                    if "live-match-container" in normalized_classes
                     else MATCH_SECTION_WAITING
                 )
-                for anchor in scope.select('a[href*="/matches/"]'):
-                    timestamp_node = anchor.find_parent(attrs={"data-unix": True})
-                    add_href(
-                        anchor.get("href"),
-                        match_section,
-                        _event_timestamp(timestamp_node),
-                    )
+                add_match_node(wrapper, match_section)
 
-    return list(refs.values())
+            if not wrappers:
+                # 某些 HLTV 页面会省略 data-event-id，但仍会保留赛事页的
+                # matches-event-wrapper；只在这些局部容器内做回退解析。
+                for scope in soup.select(".matches-v4 .matches-event-wrapper"):
+                    classes = scope.get("class", [])
+                    if isinstance(classes, str):
+                        classes = classes.split()
+                    normalized_classes = {
+                        str(value).casefold() for value in classes
+                    }
+                    match_section = (
+                        MATCH_SECTION_UPCOMING
+                        if {
+                            "live-matches-wrapper",
+                            "livematchessection",
+                            "live-match-container",
+                        }
+                        & normalized_classes
+                        else MATCH_SECTION_WAITING
+                    )
+                    for anchor in scope.select('a[href*="/matches/"]'):
+                        timestamp_node = anchor.find_parent(attrs={"data-unix": True})
+                        add_href(
+                            anchor.get("href"),
+                            match_section,
+                            _event_timestamp(timestamp_node),
+                        )
+
+        return list(refs.values())
 
 
 def parse_events_html(
@@ -907,16 +909,16 @@ def parse_events_html(
     page_url: str = "https://www.hltv.org/events",
 ) -> list[EventData]:
     """解析 HLTV 赛事列表页中的赛事卡片。"""
-    soup = BeautifulSoup(html, "html.parser")
-    events: dict[str, EventData] = {}
-    selector = 'a[href*="/events/"]'
-    for node in soup.select(selector):
-        event = _parse_event(node, page_url)
-        if event is None:
-            continue
-        previous = events.get(event.event_id)
-        if previous is None or (
-            previous.prize_pool is None and event.prize_pool is not None
-        ):
-            events[event.event_id] = event
-    return list(events.values())
+    with parsed_html(html) as soup:
+        events: dict[str, EventData] = {}
+        selector = 'a[href*="/events/"]'
+        for node in soup.select(selector):
+            event = _parse_event(node, page_url)
+            if event is None:
+                continue
+            previous = events.get(event.event_id)
+            if previous is None or (
+                previous.prize_pool is None and event.prize_pool is not None
+            ):
+                events[event.event_id] = event
+        return list(events.values())

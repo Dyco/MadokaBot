@@ -305,7 +305,6 @@ async def subscribe_event(
                 "scheduled_at": str(ref.get("scheduled_at", "")),
                 "initialized": is_finished,
                 "started_sent": is_finished,
-                "final_sent": is_finished,
                 "completed": is_finished,
                 "map_scores": {},
                 "started_maps": [],

@@ -6,6 +6,11 @@
         "group_set": {
             "copying_enabled": true,
             "threshold": 3
+        },
+        "hltv_event_settings": {
+            "push_each_map": true,
+            "notify_start": true,
+            "prediction_enabled": true
         }
     },
     "463835135": {

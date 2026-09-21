@@ -8,7 +8,7 @@ from pathlib import Path
 
 from jinja2 import Environment, FileSystemLoader, StrictUndefined, select_autoescape
 from nonebot.adapters.onebot.v11 import MessageSegment
-from nonebot_plugin_htmlrender import html_to_pic
+from nonebot_plugin_htmlrender import html_to_pic as _html_to_pic
 
 from .assets import fetch_image_data_url
 from .config import config
@@ -31,6 +31,13 @@ _stats_template_env = Environment(
     autoescape=select_autoescape(("html", "xml")),
     undefined=StrictUndefined,
 )
+_RENDER_SEMAPHORE = asyncio.Semaphore(1)
+
+
+async def html_to_pic(**kwargs) -> bytes:
+    """限制本插件的并发截图，避免多条指令同时创建高分辨率页面。"""
+    async with _RENDER_SEMAPHORE:
+        return await _html_to_pic(**kwargs)
 
 
 def render_rating_html(match: MatchData, *, map_name: str | None = None) -> str:

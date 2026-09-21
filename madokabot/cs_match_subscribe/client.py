@@ -4,12 +4,12 @@ from __future__ import annotations
 
 import asyncio
 import calendar
+import json
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from urllib.parse import urlencode, urljoin, urlparse
 
 import httpx
-from bs4 import BeautifulSoup
 from nonebot.log import logger
 
 from ..madoka_bundle.config import config as madoka_config
@@ -22,7 +22,8 @@ from .models import (
     EventMatchRef,
     MatchData,
 )
-from .net import resolve_proxy
+from .html import parsed_html
+from .net import ResponseTooLargeError, read_limited_response, resolve_proxy
 from .parser import (
     parse_event_html,
     parse_event_match_refs_html,
@@ -92,21 +93,21 @@ def _flaresolverr_proxy() -> dict[str, str] | None:
 
 def _is_challenge_html(html: str) -> bool:
     """识别 FlareSolverr 偶尔返回的未完成浏览器验证页。"""
-    soup = BeautifulSoup(html, "html.parser")
-    title = soup.title.get_text(" ", strip=True) if soup.title else ""
-    title_text = " ".join(title.casefold().split())
-    if any(marker in title_text for marker in _CHALLENGE_TITLE_MARKERS):
-        return True
-    if any(soup.select_one(selector) is not None for selector in _CHALLENGE_SELECTORS):
-        return True
+    with parsed_html(html) as soup:
+        title = soup.title.get_text(" ", strip=True) if soup.title else ""
+        title_text = " ".join(title.casefold().split())
+        if any(marker in title_text for marker in _CHALLENGE_TITLE_MARKERS):
+            return True
+        if any(soup.select_one(selector) is not None for selector in _CHALLENGE_SELECTORS):
+            return True
 
-    # 正常 HLTV 比赛页可能在新闻、回放描述等正文中出现诸如
-    # “just a moment”的普通短语，不能再对整篇正文做无条件匹配。
-    body = soup.body.get_text(" ", strip=True) if soup.body else ""
-    body_text = " ".join(body.casefold().split())
-    return len(body_text) <= 4_000 and any(
-        marker in body_text for marker in _CHALLENGE_MARKERS
-    )
+        # 正常 HLTV 比赛页可能在新闻、回放描述等正文中出现诸如
+        # “just a moment”的普通短语，不能再对整篇正文做无条件匹配。
+        body = soup.body.get_text(" ", strip=True) if soup.body else ""
+        body_text = " ".join(body.casefold().split())
+        return len(body_text) <= 4_000 and any(
+            marker in body_text for marker in _CHALLENGE_MARKERS
+        )
 
 
 def get_flaresolverr_session() -> FlaresolverrSession | None:
@@ -205,23 +206,23 @@ def _canonical_event_url(
     page_url: str,
 ) -> str | None:
     """从赛事子页面找到带 slug 的 canonical overview 地址。"""
-    soup = BeautifulSoup(html, "html.parser")
-    for anchor in soup.select(
-        ".event-hub-top[href], .event-hub a[href], a[href*='/events/']"
-    ):
-        href = anchor.get("href")
-        if not isinstance(href, str) or not href:
-            continue
-        absolute = urljoin(page_url, href)
-        parts = [part for part in urlparse(absolute).path.split("/") if part]
-        if len(parts) < 3 or parts[0].casefold() != "events":
-            continue
-        if parts[1] != str(event_id):
-            continue
-        if parts[2].casefold() in {"matches", "results", "stats"}:
-            continue
-        return absolute
-    return None
+    with parsed_html(html) as soup:
+        for anchor in soup.select(
+            ".event-hub-top[href], .event-hub a[href], a[href*='/events/']"
+        ):
+            href = anchor.get("href")
+            if not isinstance(href, str) or not href:
+                continue
+            absolute = urljoin(page_url, href)
+            parts = [part for part in urlparse(absolute).path.split("/") if part]
+            if len(parts) < 3 or parts[0].casefold() != "events":
+                continue
+            if parts[1] != str(event_id):
+                continue
+            if parts[2].casefold() in {"matches", "results", "stats"}:
+                continue
+            return absolute
+        return None
 
 
 def events_url() -> str:
@@ -247,26 +248,53 @@ async def _call_flaresolverr(
     *,
     timeout: httpx.Timeout,
 ) -> dict[str, object]:
-    """调用一次 FlareSolverr API。"""
+    """取消调用方时仍等待在途请求收尾，期间保持服务端并发名额。"""
     async with _FLARESOLVERR_SEMAPHORE:
+        task = asyncio.create_task(_request_flaresolverr(payload, timeout=timeout))
         try:
-            async with httpx.AsyncClient(
-                trust_env=False,
-                follow_redirects=True,
-                headers={"Content-Type": "application/json"},
-                timeout=timeout,
-            ) as client:
-                response = await client.post(_flaresolverr_url(), json=payload)
+            return await asyncio.shield(task)
+        except asyncio.CancelledError:
+            # 关闭 HTTP 连接不能取消远端 WebDriver。也不能只 shield 后
+            # 直接退出，否则下一次查询会与尚未结束的远端请求重叠。
+            while not task.done():
+                try:
+                    await asyncio.shield(task)
+                except asyncio.CancelledError:
+                    continue
+                except Exception:
+                    break
+            if not task.cancelled():
+                task.exception()  # 消费请求异常，保持原始取消语义。
+            raise
+
+
+async def _request_flaresolverr(
+    payload: dict[str, object],
+    *,
+    timeout: httpx.Timeout,
+) -> dict[str, object]:
+    """用流式响应限制 JSON/HTML 体积；退出时关闭连接和客户端。"""
+    try:
+        async with httpx.AsyncClient(
+            trust_env=False,
+            follow_redirects=True,
+            headers={"Content-Type": "application/json"},
+            timeout=timeout,
+        ) as client:
+            async with client.stream("POST", _flaresolverr_url(), json=payload) as response:
                 response.raise_for_status()
-                result = response.json()
-        except httpx.HTTPStatusError as exc:
-            raise HltvError(
-                f"FlareSolverr API 请求失败（HTTP {exc.response.status_code}）。"
-            ) from exc
-        except httpx.HTTPError as exc:
-            raise HltvError(f"无法连接 FlareSolverr：{exc}") from exc
-        except ValueError as exc:
-            raise HltvError("FlareSolverr 返回了无效的 JSON。") from exc
+                content = await read_limited_response(response, config.hltv_max_response_size)
+                result = json.loads(content)
+    except httpx.HTTPStatusError as exc:
+        raise HltvError(
+            f"FlareSolverr API 请求失败（HTTP {exc.response.status_code}）。"
+        ) from exc
+    except httpx.HTTPError as exc:
+        raise HltvError(f"无法连接 FlareSolverr：{exc}") from exc
+    except ResponseTooLargeError as exc:
+        raise HltvError(f"FlareSolverr 响应过大：{exc}") from exc
+    except ValueError as exc:
+        raise HltvError("FlareSolverr 返回了无效的 JSON。") from exc
 
     if not isinstance(result, dict):
         raise HltvError("FlareSolverr 返回格式无效。")
@@ -301,7 +329,7 @@ async def _fetch_html(page_url: str) -> tuple[str, str]:
         base_payload["proxy"] = proxy
 
     api_timeout = httpx.Timeout(
-        timeout_seconds + 15.0,
+        timeout_seconds + wait_seconds + 15.0,
         connect=min(10.0, timeout_seconds),
     )
     attempts = max(1, int(config.hltv_flaresolverr_retry_attempts))
