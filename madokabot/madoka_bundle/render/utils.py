@@ -43,9 +43,9 @@ async def render_sign_card(
     if not HTML_FILE_PATH.is_file():
         raise FileNotFoundError(f"签到模板不存在：{HTML_FILE_PATH}")
 
-    font_file = get_file(ResType.FONT, SubFolder.CS, "SourceHanSansSC.woff2")
+    font_file = get_file(ResType.FONT, SubFolder.SIGN, "font.ttf")
     if font_file is None:
-        raise FileNotFoundError("签到字体资源不存在：font/cs/SourceHanSansSC.woff2")
+        raise FileNotFoundError("签到字体资源不存在：font/sign/font.ttf")
 
     number_font_file = get_file(ResType.FONT, SubFolder.SIGN, "RobotoFlex.ttf")
     if number_font_file is None:

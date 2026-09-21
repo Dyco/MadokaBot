@@ -6,11 +6,11 @@
     <style>
         @font-face {
             font-family: 'CustomFont';
-            src: url('{{ font_path }}') format('woff2');
+            src: url('{{ font_path }}') format('truetype');
             font-weight: 200 900;
         }
 
-        /* 新字体仅覆盖数字和西文字符，中文仍由原字体绘制。 */
+        /* 数字和西文使用更适合数据展示的字体，中文使用 sign/font.ttf。 */
         @font-face {
             font-family: 'RobotoFlex';
             src: url('{{ number_font_path }}') format('truetype');

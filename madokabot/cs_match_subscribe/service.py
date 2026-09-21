@@ -42,6 +42,7 @@ from .storage import (
 
 _MAP_LABELS = "一二三四五六七八九十"
 _NOTIFICATION_MEMORY_TTL = 24 * 60 * 60
+_MAX_RATING_RETRIES = 3
 _notification_memory: dict[tuple[str, str], float] = {}
 
 
@@ -682,6 +683,34 @@ def _notifications_for_event_target(
     return selected
 
 
+def _complete_series_notifications(
+    match_id: str,
+    state: dict[str, Any],
+    rating_messages: list[Message],
+) -> list[_MatchNotification]:
+    """完整 Rating 到齐或重试耗尽时，完成一次系列赛结束通知。"""
+    notifications = [
+        _MatchNotification(
+            "series_end", Message(MessageSegment.text(state["rating_final_text"]))
+        )
+    ]
+    notifications.extend(
+        _MatchNotification("series_rating", message) for message in rating_messages
+    )
+    state["rating_summary_sent"] = True
+    state["rating_skipped"] = not bool(rating_messages)
+    state["completed"] = True
+    state["source"] = MATCH_SECTION_FINISHED
+    _remember_notification(match_id, "series_end")
+    _remember_notification(match_id, "series_rating_summary")
+    if not rating_messages:
+        logger.warning(
+            f"HLTV 比赛 {match_id} 完整 Rating 重试 {_MAX_RATING_RETRIES} 次仍不可用，"
+            "仅播报比分结束"
+        )
+    return notifications
+
+
 async def _process_event_match(
     match: MatchData,
     state: dict[str, Any],
@@ -875,30 +904,28 @@ async def _process_event_match(
                 state["prediction_payout"] = int(
                     settlement.get("payout_per_winner", 0)
                 )
-            state["prediction_settled"] = True
+                state["prediction_settled"] = True
         if not state.get("rating_summary_sent", False):
-            # 只有系列赛结果和完整 Rating 同时就绪，才发送结束汇总。
+            # 首次结束快照不计为重试，后续最多再尝试三轮。
+            # 保存纯文本比分，让后续网络失败时也能完成结束播报。
+            state.setdefault("rating_retry_attempts", 0)
+            state["rating_final_text"] = _final_message(match).extract_plain_text()
             has_map_result = any(
                 result.is_finished for result in match.map_results
             )
-            rating_messages = (
-                await render_check_rating_messages(match)
-                if has_map_result
-                else []
-            )
-            if rating_messages:
-                notifications.append(
-                    _MatchNotification("series_end", _final_message(match))
+            try:
+                rating_messages = (
+                    await render_check_rating_messages(match)
+                    if has_map_result
+                    else []
                 )
+            except Exception:
+                logger.exception(f"HLTV 比赛 {match_id} 结束 Rating 渲染失败")
+                rating_messages = []
+            if rating_messages or state["rating_retry_attempts"] >= _MAX_RATING_RETRIES:
                 notifications.extend(
-                    _MatchNotification("series_rating", message)
-                    for message in rating_messages
+                    _complete_series_notifications(match_id, state, rating_messages)
                 )
-                state["rating_summary_sent"] = True
-                state["completed"] = True
-                state["source"] = "finished"
-                _remember_notification(match_id, "series_end")
-                _remember_notification(match_id, "series_rating_summary")
 
     state["initialized"] = True
     state["map_scores"] = current_scores
@@ -1085,7 +1112,7 @@ async def _poll_event_subscription(
             continue
 
         # 已跟踪的比赛从 matches 列表（live 或 waiting）移动到 Results
-        # 时，持续请求详情，直到结果和完整 Rating 同时就绪；
+        # 时，继续请求详情；取得结束快照后最多再重试三轮完整 Rating。
         # 新发现的 finished 比赛不会回溯抓取。
         previous_source = normalize_match_section(state.get("source"))
         attempts_raw = state.get("finalization_attempts", 0)
@@ -1117,6 +1144,27 @@ async def _poll_event_subscription(
         else:
             state["source"] = MATCH_SECTION_FINISHED
             state["completed"] = True
+
+    # 已取得结束比分后，即使比赛从列表中消失，也要完成有限次数的重试。
+    for match_id, state in matches.items():
+        if (
+            isinstance(state, dict)
+            and state.get("rating_final_text")
+            and not state.get("completed", False)
+        ):
+            queue_match(EventMatchRef(
+                match_id=str(match_id),
+                url=str(state.get("url", "")),
+                section=MATCH_SECTION_FINISHED,
+            ))
+
+    for ref in pending_refs:
+        state = matches[ref.match_id]
+        if state.get("rating_final_text") and not state.get("rating_summary_sent", False):
+            state["rating_retry_attempts"] = min(
+                int(state.get("rating_retry_attempts", 0)) + 1,
+                _MAX_RATING_RETRIES,
+            )
 
     has_single_target = any(
         settings["push_each_map"]
@@ -1156,6 +1204,18 @@ async def _poll_event_subscription(
         generated_memory_keys.update(
             set(_notification_memory).difference(memory_before)
         )
+
+    # 最后一轮详情抓取失败或返回不完整状态时，用已保存的结束比分收尾。
+    for ref in pending_refs:
+        state = matches[ref.match_id]
+        if (
+            state.get("rating_final_text")
+            and not state.get("completed", False)
+            and state.get("rating_retry_attempts", 0) >= _MAX_RATING_RETRIES
+        ):
+            memory_before = set(_notification_memory)
+            notifications.extend(_complete_series_notifications(ref.match_id, state, []))
+            generated_memory_keys.update(set(_notification_memory).difference(memory_before))
 
     target_notifications = [
         (

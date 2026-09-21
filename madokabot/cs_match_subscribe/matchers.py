@@ -918,3 +918,21 @@ async def _poll_cs_match_subscriptions() -> None:
     from .service import poll_subscriptions
 
     await poll_subscriptions()
+
+
+@scheduler.scheduled_job(
+    "interval",
+    minutes=5,
+    id="madokabot_cs_prediction_refund_expired",
+    max_instances=1,
+    coalesce=True,
+    next_run_time=datetime.now(timezone.utc),
+)
+async def _refund_expired_cs_predictions() -> None:
+    """独立于网络抓取和订阅列表的竞猜退款兜底，只记录日志。"""
+    from .prediction import refund_expired_predictions
+
+    try:
+        await refund_expired_predictions()
+    except Exception:
+        logger.exception("CS 超时竞猜退款失败，将在下一轮重试")

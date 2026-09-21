@@ -2,6 +2,7 @@ import random
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 
+from sqlalchemy import update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ...db.models import SignRecord, UserStats
@@ -43,7 +44,12 @@ async def execute_sign_update(
         sign.continuous_days = 1
 
     base_points, bonus_points, reward_favor = calculate_reward(sign.continuous_days)
-    user.points += base_points + bonus_points
+    # 与竞猜派奖、退款和商城扣款使用同一原子增减方式，避免旧余额覆盖。
+    await session.execute(
+        update(UserStats)
+        .where(UserStats.user_id == user.user_id)
+        .values(points=UserStats.points + base_points + bonus_points)
+    )
     user.favorability += reward_favor
     sign.total_count += 1
     sign.last_sign_date = now

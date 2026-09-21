@@ -3,18 +3,63 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+import asyncio
+from datetime import datetime, timedelta, timezone
 from typing import Any
+from zoneinfo import ZoneInfo
 
+from nonebot import logger
 from nonebot_plugin_datastore import create_session
-from sqlalchemy import select, update
+from sqlalchemy import func, select, update
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..madoka_bundle.db.models import CsPrediction, UserStats
 from .storage import (
     get_prediction_match_context,
     list_open_prediction_matches,
 )
+
+_SETTLEMENT_LOCK = asyncio.Lock()
+_PREDICTION_TIMEOUT = timedelta(hours=12)
+_SHANGHAI_TZ = ZoneInfo("Asia/Shanghai")
+
+
+async def _finish_prediction(
+    session: AsyncSession,
+    row: CsPrediction,
+    *,
+    payout: int,
+    result: str,
+    now: datetime,
+) -> bool:
+    """条件更新投注状态并原子加分，两者在同一事务中提交。"""
+    claimed = await session.execute(
+        update(CsPrediction)
+        .where(
+            CsPrediction.event_id == row.event_id,
+            CsPrediction.match_id == row.match_id,
+            CsPrediction.group_id == row.group_id,
+            CsPrediction.user_id == row.user_id,
+            CsPrediction.result == "open",
+        )
+        .values(
+            payout=payout,
+            net_points=payout - row.points,
+            result=result,
+            settled_at=now,
+        )
+        .execution_options(synchronize_session=False)
+    )
+    if claimed.rowcount != 1:
+        return False
+    if payout:
+        await session.execute(
+            update(UserStats)
+            .where(UserStats.user_id == row.user_id)
+            .values(points=UserStats.points + payout)
+        )
+    return True
 
 
 class PredictionError(RuntimeError):
@@ -89,7 +134,6 @@ async def place_prediction(
             select(CsPrediction).where(
                 CsPrediction.event_id == event_id,
                 CsPrediction.match_id == match_id,
-                CsPrediction.group_id == normalized_group_id,
                 CsPrediction.user_id == normalized_user_id,
             )
         )
@@ -188,7 +232,7 @@ async def refund_uncontested_predictions(
             "refunded_points": 0,
         }
 
-    async with create_session() as session:
+    async with _SETTLEMENT_LOCK, create_session() as session:
         rows = list(
             (
                 await session.scalars(
@@ -226,14 +270,10 @@ async def refund_uncontested_predictions(
         now = datetime.now(timezone.utc)
         refunded_points = 0
         for row in open_rows:
-            row.payout = row.points
-            row.net_points = 0
-            row.result = "refund"
-            row.settled_at = now
-            refunded_points += row.points
-            user = await session.get(UserStats, row.user_id)
-            if user is not None:
-                user.points += row.points
+            if await _finish_prediction(
+                session, row, payout=row.points, result="refund", now=now
+            ):
+                refunded_points += row.points
         await session.commit()
 
     return {
@@ -251,7 +291,7 @@ async def settle_match_predictions(
 ) -> dict[str, Any]:
     """结算比赛竞猜，胜方均分本场总投注池。"""
     normalized_winner = _normalize_team(winner_name)
-    async with create_session() as session:
+    async with _SETTLEMENT_LOCK, create_session() as session:
         rows = list(
             (
                 await session.scalars(
@@ -271,14 +311,13 @@ async def settle_match_predictions(
         now = datetime.now(timezone.utc)
 
         for row in rows:
-            row.payout = payout if row in winner_rows else 0
-            row.net_points = row.payout - row.points
-            row.result = "win" if row in winner_rows else "lose"
-            row.settled_at = now
-            if row.payout:
-                user = await session.get(UserStats, row.user_id)
-                if user is not None:
-                    user.points += row.payout
+            await _finish_prediction(
+                session,
+                row,
+                payout=payout if row in winner_rows else 0,
+                result="win" if row in winner_rows else "lose",
+                now=now,
+            )
         await session.commit()
 
     return {
@@ -287,6 +326,50 @@ async def settle_match_predictions(
         "winner_count": len(winner_rows),
         "payout_per_winner": payout,
     }
+
+
+async def refund_expired_predictions(*, now: datetime | None = None) -> int:
+    """同场最早的未结算下注满 12 小时后，静默退回该场全部未结算本金。"""
+    current = now or datetime.now(timezone.utc)
+    if current.tzinfo is None:
+        current = current.replace(tzinfo=_SHANGHAI_TZ)
+    # created_at 的模型默认值是上海时间，SQLite 的 DateTime 列不保存时区。
+    cutoff = (current.astimezone(_SHANGHAI_TZ) - _PREDICTION_TIMEOUT).replace(tzinfo=None)
+    refunded_count = 0
+    async with _SETTLEMENT_LOCK:
+        async with create_session() as session:
+            expired_matches = list((await session.execute(
+                select(CsPrediction.event_id, CsPrediction.match_id)
+                .where(CsPrediction.result == "open")
+                .group_by(CsPrediction.event_id, CsPrediction.match_id)
+                .having(func.min(CsPrediction.created_at) <= cutoff)
+            )).all())
+
+        for event_id, match_id in expired_matches:
+            async with create_session() as session:
+                rows = list((await session.scalars(
+                    select(CsPrediction).where(
+                        CsPrediction.event_id == event_id,
+                        CsPrediction.match_id == match_id,
+                        CsPrediction.result == "open",
+                    )
+                )).all())
+                count = points = 0
+                for row in rows:
+                    if await _finish_prediction(
+                        session, row, payout=row.points, result="refund", now=current
+                    ):
+                        count += 1
+                        points += row.points
+                await session.commit()
+            if count:
+                refunded_count += count
+                logger.info(
+                    f"CS 竞猜超过 12 小时未结算，已自动退款："
+                    f"event_id={event_id} match_id={match_id} "
+                    f"下注笔数={count} 退回积分={points}"
+                )
+    return refunded_count
 
 
 async def get_prediction_detail(
@@ -407,5 +490,6 @@ __all__ = [
     "get_prediction_summary",
     "place_prediction",
     "refund_uncontested_predictions",
+    "refund_expired_predictions",
     "settle_match_predictions",
 ]
