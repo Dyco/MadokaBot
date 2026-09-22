@@ -2,6 +2,7 @@
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
+  <title>{{ platform_label }} · 玩家战绩</title>
   <style>
     {% if font_regular_path %}
     @font-face {
@@ -19,7 +20,7 @@
       --ink: #17202b;
       --muted: #7a8490;
       --line: #e4e8ed;
-      --accent: {{ accent }};
+      --accent: {{ '#2678c9' if core_class == 'five-e' else '#d47726' }};
       --green: #1b9a68;
       --red: #d25454;
       --gold: #b27a16;
@@ -35,7 +36,7 @@
       font-family: "CS Source Han Sans SC", "Microsoft YaHei", "PingFang SC", Arial, sans-serif;
     }
 
-    body { width: 900px; padding: 22px; }
+    body { width: {{ template3_width }}px; padding: 22px; }
 
     .card {
       overflow: hidden;
@@ -120,7 +121,10 @@
       gap: 10px;
     }
 
+    .summary-item:last-child:nth-child(odd) { grid-column: 1 / -1; }
+
     .summary-item, .metric {
+      min-width: 0;
       padding: 14px 15px;
       border: 1px solid var(--line);
       border-radius: 11px;
@@ -128,7 +132,11 @@
     }
 
     .label { color: var(--muted); font-size: 12px; }
-    .value { margin-top: 6px; font-size: 21px; font-weight: 750; }
+    .value { margin-top: 6px; font-size: 21px; font-weight: 750; overflow-wrap: anywhere; }
+    .unit { margin-left: 4px; color: var(--muted); font-size: 12px; font-weight: 400; }
+    .text-green { color: var(--green); }
+    .text-red { color: var(--red); }
+    .text-neutral { color: var(--ink); }
 
     .section-title {
       display: flex;
@@ -148,11 +156,11 @@
       background: var(--accent);
     }
 
-    .metrics { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+    .metrics { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
     .metric .value { color: var(--ink); }
     .note { margin-top: 4px; color: var(--muted); font-size: 11px; }
 
-    .matches { display: grid; grid-template-columns: repeat(5, 1fr); gap: 9px; }
+    .matches { display: grid; grid-template-columns: repeat(auto-fit, minmax(145px, 1fr)); gap: 9px; }
 
     .match {
       min-height: 122px;
@@ -174,7 +182,7 @@
     .match-map { margin-top: 7px; color: #3d4854; font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .match-score { margin-top: 4px; font-size: 20px; font-weight: 800; }
     .match-rating { margin-top: 5px; color: var(--accent); font-size: 12px; font-weight: 700; }
-    .match-kd { margin-top: 4px; color: #3d4854; font-size: 11px; font-weight: 700; }
+    .match-combat { margin-top: 4px; color: #3d4854; font-size: 11px; font-weight: 700; }
     .match-details { margin-top: 3px; color: var(--muted); font-size: 10px; }
     .empty { padding: 15px; color: var(--muted); border: 1px dashed var(--line); border-radius: 10px; text-align: center; }
 
@@ -202,32 +210,35 @@
     </div>
 
     <div class="main">
+      <div class="section-title">{{ season_title }} · {{ season_caption }}</div>
       <div class="hero">
-          <div class="rating">
-            <div class="rating-label">{{ hero_label }}</div>
-            <div class="rating-value">{{ hero_value }}</div>
-            <div class="rating-note">{{ hero_note }}</div>
-          </div>
+        <div class="rating">
+          <div class="rating-label">{{ score_label }}</div>
+          <div class="rating-value">{{ score }}</div>
+          {% if score_note %}<div class="rating-note">{{ score_note }}</div>{% endif %}
+        </div>
         <div class="summary">
-          {% for item in summary %}
+          {% for item in core_stats %}
           <div class="summary-item">
             <div class="label">{{ item.label }}</div>
-            <div class="value">{{ item.value }}</div>
+            <div class="value {{ item.value_class }}">{{ item.value }}{% if item.unit %}<span class="unit">{{ item.unit }}</span>{% endif %}</div>
           </div>
           {% endfor %}
         </div>
       </div>
 
-      <div class="section-title">核心数据 · PERFORMANCE</div>
+      {% if detail_metrics %}
+      <div class="section-title">赛季详细数据 · PERFORMANCE</div>
       <div class="metrics">
-        {% for metric in metrics %}
+        {% for metric in detail_metrics %}
         <div class="metric">
           <div class="label">{{ metric.label }}</div>
           <div class="value">{{ metric.value }}</div>
-          <div class="note">{{ metric.note }}</div>
+          {% if metric.note %}<div class="note">{{ metric.note }}</div>{% endif %}
         </div>
         {% endfor %}
       </div>
+      {% endif %}
 
       <div class="section-title">近期战绩 · RECENT MATCHES</div>
       {% if recent_matches %}
@@ -238,9 +249,10 @@
           <div class="match-time">{{ match.time }}</div>
           <div class="match-map">{{ match.map_name }}</div>
           <div class="match-score">比分 {{ match.score }}</div>
-          <div class="match-rating">Rating {{ match.rating }}</div>
-          <div class="match-kd">KD {{ match.kd }}</div>
-          {% if match.adr %}<div class="match-details">ADR {{ match.adr }}</div>{% endif %}
+          <div class="match-rating">{{ recent_rating_label }} <span class="{{ match.rating_class }}">{{ match.rating }}</span></div>
+          <div class="match-combat">{{ recent_combat_label }} {{ match.combat }}</div>
+          <div class="match-details">{{ recent_secondary_label }} <span class="{{ match.secondary_class }}">{{ match.secondary }}</span></div>
+          <div class="match-details">ELO <span class="{{ match.score_change_class }}">{{ match.score_change }}</span></div>
         </div>
         {% endfor %}
       </div>

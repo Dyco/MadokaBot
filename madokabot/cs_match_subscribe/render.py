@@ -22,6 +22,7 @@ EVENT_HTML_FILE_PATH = TEMPLATE_DIR / "event_list.html"
 PREDICTION_RANK_HTML_FILE_PATH = TEMPLATE_DIR / "prediction_rank.html"
 STATS_TEMPLATE_1_HTML_FILE_PATH = TEMPLATE_DIR / "stats_template_1.html"
 STATS_TEMPLATE_2_HTML_FILE_PATH = TEMPLATE_DIR / "stats_template_2.html"
+STATS_TEMPLATE_3_HTML_FILE_PATH = TEMPLATE_DIR / "stats_template_3.html"
 _template_env = Environment(
     loader=FileSystemLoader(str(TEMPLATE_DIR)),
     autoescape=select_autoescape(("html", "xml")),
@@ -173,12 +174,13 @@ def render_player_stats_html(data: dict[str, object]) -> str:
     context = dict(data)
     context.setdefault("avatar_src", "")
     context["template2_width"] = config.cs_stats_template_2_width
+    context["template3_width"] = config.cs_stats_width
     context.update(font_context())
-    template_file = (
-        STATS_TEMPLATE_2_HTML_FILE_PATH
-        if config.cs_stats_template == 2
-        else STATS_TEMPLATE_1_HTML_FILE_PATH
-    )
+    template_file = {
+        1: STATS_TEMPLATE_1_HTML_FILE_PATH,
+        2: STATS_TEMPLATE_2_HTML_FILE_PATH,
+        3: STATS_TEMPLATE_3_HTML_FILE_PATH,
+    }[config.cs_stats_template]
     template = _stats_template_env.get_template(template_file.name)
     return template.render(**context)
 

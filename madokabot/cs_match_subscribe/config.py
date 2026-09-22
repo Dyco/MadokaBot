@@ -107,8 +107,8 @@ class Config(NoneBotConfig):
     cs_stats_template: int = Field(
         default=1,
         ge=1,
-        le=2,
-        description="玩家战绩卡片模板版本：1 为默认模板，2 为暖色横版模板",
+        le=3,
+        description="玩家战绩卡片模板版本：1 为默认模板，2 为暖色横版模板，3 为浅色卡片模板",
     )
     cs_pw_api_token: str | None = Field(
         default=None,
