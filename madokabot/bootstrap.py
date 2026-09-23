@@ -19,7 +19,7 @@ from .core.db import init_database  # noqa: E402
 from .core.user.schema import migrate_user_schema  # noqa: E402
 
 __plugin_meta__ = PluginMetadata(
-    name="圆香聊天机器人",
+    name="樋口円香聊天机器人",
     description="MadokaBot 默认功能与扩展插件的统一加载入口",
     usage=(
         "基础功能：注册、设置、查询、每日签到、商店、复读、戳一戳、Ping\n"
