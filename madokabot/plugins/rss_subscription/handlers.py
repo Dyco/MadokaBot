@@ -179,13 +179,17 @@ async def handle_title(rss: Rss, item: Dict[str, Any]) -> str:
 
 # 处理正文 判断是否是仅推送标题 、是否仅推送图片
 @HandlerRegistry.append_handler(parsing_type="summary", priority=1)
-async def handle_summary(rss: Rss, tmp_state: Dict[str, Any]) -> str:
+async def skip_summary_if_only_title_or_picture(
+    rss: Rss, tmp_state: Dict[str, Any]
+) -> str:
+    """仅推送标题或图片时跳过正文处理。"""
     if rss.only_title or rss.only_pic:
         tmp_state["continue"] = False
     return ""
 
 
 # 处理正文 处理网页 tag
+# 路由处理器依靠同名、同优先级覆盖此默认步骤，保留 handle_summary 名称。
 @HandlerRegistry.append_handler(parsing_type="summary")  # type: ignore
 async def handle_summary(rss: Rss, item: Dict[str, Any], tmp: str) -> str:
     try:
@@ -197,7 +201,8 @@ async def handle_summary(rss: Rss, item: Dict[str, Any], tmp: str) -> str:
 
 # 处理正文 移除指定内容
 @HandlerRegistry.append_handler(parsing_type="summary", priority=11)  # type: ignore
-async def handle_summary(rss: Rss, tmp: str) -> str:
+async def remove_summary_content(rss: Rss, tmp: str) -> str:
+    """移除订阅配置指定的正文内容并整理空行。"""
     # 移除指定内容
     if rss.content_to_remove:
         for pattern in rss.content_to_remove:
