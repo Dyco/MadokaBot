@@ -16,15 +16,16 @@ import time
 import threading
 import asyncio
 
+from madokabot.core.steam_id import STEAM_ID_OFFSET, normalize_steam_id
+
 from .models import PlayerData
+from .config import config
 from .constants import (
     default_achievement_image_path,
     default_avatar_path,
     default_background_path,
     default_header_image_path,
 )
-
-STEAM_ID_OFFSET = 76561197960265728
 
 # ----------------------------
 # HTTP CLIENT（修复并发关闭）
@@ -123,23 +124,16 @@ async def get_steam_users_info_cached(
 # SteamID 解析（修复返回类型）
 # ----------------------------
 def get_steam_id(steam_id_or_steam_friends_code: str) -> Optional[str]:
-    if not steam_id_or_steam_friends_code.isdigit():
+    """转换并校验 Steam64 ID 或好友码。"""
+    try:
+        return normalize_steam_id(steam_id_or_steam_friends_code)
+    except ValueError:
         return None
-
-    id_ = int(steam_id_or_steam_friends_code)
-
-    if id_ < STEAM_ID_OFFSET:
-        return str(id_ + STEAM_ID_OFFSET)
-
-    return steam_id_or_steam_friends_code
 
 
 # ----------------------------
 # Steam API
 # ----------------------------
-STEAM_BATCH_SIZE = 25
-
-
 async def get_steam_users_info(
     steam_ids: List[str],
     api_key: str,
@@ -162,8 +156,8 @@ async def get_steam_users_info(
         limits=httpx.Limits(max_connections=5),
     ) as client:
 
-        for i in range(0, len(steam_ids), STEAM_BATCH_SIZE):
-            batch = steam_ids[i : i + STEAM_BATCH_SIZE]
+        for i in range(0, len(steam_ids), config.steam_batch_size):
+            batch = steam_ids[i : i + config.steam_batch_size]
             params = {
                 "key": api_key,
                 "steamids": ",".join(batch),
@@ -208,7 +202,7 @@ async def get_steam_users_info(
                 logger.warning("Steam API 重试一次")
                 await _fetch_once()
 
-            if i + STEAM_BATCH_SIZE < len(steam_ids):
+            if i + config.steam_batch_size < len(steam_ids):
                 await asyncio.sleep(0.1)
 
     return {"response": {"players": all_players}}
@@ -303,9 +297,6 @@ def _cache_file(cache_path: Path, category: str, url: str) -> Path:
 
 
 def _extract_background_url(html: str, soup: BeautifulSoup) -> Optional[str]:
-    # The reference page stores the equipped static background on the main
-    # profile-page container. Read that exact element first so decoration,
-    # preview, and avatar-frame assets cannot be mistaken for the background.
     profile_page = soup.select_one(
         ".no_header.profile_page.has_profile_background"
         "[style*='background-image']"
@@ -315,8 +306,7 @@ def _extract_background_url(html: str, soup: BeautifulSoup) -> Optional[str]:
         if url:
             return url
 
-    # Match Sample.py's `background-image: url( '...' )` structure when the
-    # profile classes differ, allowing harmless whitespace/quote variations.
+    # Match Sample.py's `background-image: url( '...' )` structure
     match = re.search(
         r"background-image\s*:\s*url\(\s*(['\"])(.*?)\1\s*\)",
         html,

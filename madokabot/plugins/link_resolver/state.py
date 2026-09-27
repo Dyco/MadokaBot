@@ -156,11 +156,6 @@ def save_comment_mode_map(mode_map: dict[str, str]) -> None:
     _save_group_state(normalized_map, control_map)
 
 
-def load_resolver_control_map() -> dict[str, dict[str, Any]]:
-    """加载群组 Resolver 控制状态。"""
-    return _load_group_state()[1]
-
-
 def save_resolver_control_map() -> None:
     """保存群组 Resolver 控制状态到群组配置 JSON。"""
     normalized_map = _normalize_resolver_control_map(resolver_control_map)

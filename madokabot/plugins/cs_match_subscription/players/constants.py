@@ -33,9 +33,6 @@ CHINA_TIMEZONE = timezone(timedelta(hours=8))
 # 完美平台旧版接口仍负责返回完整的个人统计，但必须使用当前客户端的
 # 公开请求头，并将 mySteamId 设为 0；使用手机号登录得到的旧 token 已无法
 # 稳定调用这两个接口。
-PW_CURRENT_SEARCH_URL = "https://gwapi.pwesports.cn/acty/api/v1/search"
-
-
 PW_STATS_URL = "https://api.wmpvp.com/api/csgo/home/pvp/detailStats"
 
 

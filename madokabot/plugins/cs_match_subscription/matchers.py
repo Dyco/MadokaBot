@@ -13,7 +13,11 @@ BOT_NAME = "圆香"
 UNSUPPORTED_LINK_MESSAGE = f"{BOT_NAME}暂不支持此链接"
 
 
-CS_BIND_USAGE = f"用法：CS bind <{SUPPORTED_PLATFORM_TEXT}> <用户昵称>"
+CS_BIND_USAGE = (
+    "用法：\n"
+    "CS bind <5E|5e|5eplay> <玩家昵称>\n"
+    "CS bind <wm|pw|完美> [Steam 32 位或 64 位 ID]"
+)
 
 
 CS_UNBIND_USAGE = f"用法：CS unbind <{SUPPORTED_PLATFORM_TEXT}>"
@@ -25,7 +29,7 @@ CS_LOGIN_USAGE = "用法：CS login <手机号> <验证码>"
 CS_STATS_USAGE = (
     "【查询指令】\n"
     "CS 战绩 <5E | 5e | 5eplay> [玩家昵称]\n"
-    "CS 战绩 <wm | pw | 完美> [Steam ID]"
+    "CS 战绩 <wm | pw | 完美> [Steam 32 位或 64 位 ID]"
 )
 
 
@@ -56,10 +60,11 @@ CS check <比赛链接>  查询一场比赛的 Rating
 CS prediction <队伍名|A/B> <积分> 参与当前比赛竞猜
 CS prediction rank <本群|全部> 查看竞猜排行榜
 CS login <手机号> <验证码>  登录完美平台并保存 Session（验证码请自行获取）
-CS bind <5E|5e|5eplay|wm|pw|完美> <用户昵称>  绑定平台战绩查询对象
-CS unbind <5E|5e|5eplay|wm|pw|完美>  解除指定平台绑定
+CS bind <5E|5e|5eplay> <玩家昵称>  绑定 5E 玩家
+CS bind <wm|pw|完美> [Steam 32 位或 64 位 ID]  使用 Steam/CS 共用绑定
+CS unbind <5E|5e|5eplay|wm|pw|完美>  解绑 5E 或 Steam/CS 共用账号
 CS result <5E|5e|5eplay> [玩家昵称]  查询 5E 绑定账号或指定玩家的战绩
-CS result <wm|pw|完美> [Steam ID]  查询完美平台绑定账号或指定 Steam ID 的战绩
+CS result <wm|pw|完美> [Steam 32 位或 64 位 ID]  查询完美平台绑定账号或指定 Steam ID 的战绩
 
 
 订阅后的推送方式和赛事开始通知，按本群的CS event设置生效。"""
@@ -124,7 +129,7 @@ cs_command = Alconna(
         "bind",
         Args["params?", StrMulti],
         alias=["绑定"],
-        help_text="绑定 5E 或完美平台玩家昵称",
+        help_text="绑定 5E 玩家，或使用 Steam/CS 共用账号查询完美平台",
     ),
     Subcommand(
         "unbind",
@@ -137,7 +142,7 @@ cs_command = Alconna(
         Args["platform", str],
         Args["nickname?", StrMulti],
         alias=["战绩"],
-        help_text="查询 5E 昵称或完美平台 Steam ID 的玩家战绩",
+        help_text="查询 5E 昵称或完美平台 Steam 32 位、64 位 ID 的玩家战绩",
     ),
     Subcommand(
         "check",

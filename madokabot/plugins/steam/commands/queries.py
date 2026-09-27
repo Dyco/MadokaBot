@@ -4,11 +4,15 @@ import asyncio
 import re
 from typing import Optional
 
+from PIL import Image as PILImage
 from nonebot.adapters import Bot
 from nonebot.adapters.onebot.v11 import GroupMessageEvent
 from nonebot.log import logger
 from nonebot_plugin_alconna import Arparma, At, Image, Match, MsgTarget, UniMessage
 
+from madokabot.core.group.profile import get_group_avatar_path, get_group_name
+
+from ..bindings import get_global_binding, get_group_binding, list_group_bindings
 from ..client import (
     STEAM_ID_OFFSET,
     get_default_user_data,
@@ -16,9 +20,10 @@ from ..client import (
     get_user_data,
 )
 from ..config import get_query_proxy, get_steam_api_key
+from ..constants import unknown_avatar_path
 from ..matchers import STEAM_USAGE, steam_cmd
 from ..render import draw_friends_status, draw_player_status
-from ..state import avatar_path, steam_groups, claim_query_slot
+from ..state import avatar_path, claim_query_slot
 from ..utils import (
     convert_player_name_to_nickname,
     image_to_bytes,
@@ -45,7 +50,8 @@ async def handle_help():
 async def handle_check(target: MsgTarget):
     """查询并绘制当前群已绑定玩家的在线状态。"""
     parent_id = target.parent_id or target.id
-    steam_ids = steam_groups.get_steam_ids(parent_id)
+    bindings = await list_group_bindings(parent_id)
+    steam_ids = [binding["steam_id"] for binding in bindings]
     if not steam_ids:
         await steam_cmd.finish("当前群聊未绑定任何 Steam 账号")
 
@@ -71,9 +77,14 @@ async def handle_check(target: MsgTarget):
         logger.exception(f"处理玩家数据时崩溃: {e}")
         await steam_cmd.finish("处理头像数据时出错")
 
-    parent_avatar, parent_name = steam_groups.get_group_profile(parent_id)
+    group_avatar = get_group_avatar_path(parent_id)
+    image_path = group_avatar if group_avatar.is_file() else unknown_avatar_path
+    with PILImage.open(image_path) as avatar:
+        parent_avatar = avatar.copy()
+    parent_name = get_group_name(parent_id)
+    nicknames = {binding["steam_id"]: binding["nickname"] for binding in bindings}
     data = [
-        convert_player_name_to_nickname(res, parent_id, steam_groups)
+        convert_player_name_to_nickname(res, nicknames)
         for res in player_results
     ]
     image = draw_friends_status(parent_avatar, parent_name, data)
@@ -99,15 +110,14 @@ async def handle_info(
             target_qq = "".join(re.findall(r"\d+", res.strip()))
         if not target_qq:
             await steam_cmd.finish("无法识别参数，请输入 QQ 号或 At 某人")
-        user_data = steam_groups.get_binding(parent_id, target_qq)
+        user_data = await get_group_binding(parent_id, target_qq)
         if not user_data:
             await steam_cmd.finish(f"该用户 ({target_qq}) 尚未在群内绑定 Steam")
         steam_id = user_data["steam_id"]
     else:
-        user_data = steam_groups.get_binding(parent_id, sender_id)
-        if not user_data:
-            await steam_cmd.finish("你尚未绑定 Steam，请使用 `steam bind ID`")
-        steam_id = user_data["steam_id"]
+        steam_id = await get_global_binding(sender_id)
+        if not steam_id:
+            await steam_cmd.finish("你尚未绑定 Steam/CS 共用账号，请使用 steam bind ID")
 
     remaining_minutes = claim_query_slot(sender_id)
     if remaining_minutes is not None:

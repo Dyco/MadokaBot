@@ -73,15 +73,6 @@ async def get_video_info(
         }
 
 
-async def get_video_title(
-    url: str,
-    proxy: str | None = None,
-    video_type: str = "youtube",
-) -> str:
-    """兼容旧调用方，仅返回视频标题。"""
-    return (await get_video_info(url, proxy, video_type))["title"]
-
-
 async def download_ytb_video(
     url: str,
     path: str | Path,

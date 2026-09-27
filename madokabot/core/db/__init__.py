@@ -1,5 +1,6 @@
 """数据库基础设施，不导入具体业务模型。"""
 
+from nonebot_plugin_datastore import create_session
 from nonebot_plugin_datastore.db import get_engine
 
 from .base import data

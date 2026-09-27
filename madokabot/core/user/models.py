@@ -9,7 +9,7 @@ from madokabot.core.db.base import data, shanghai_now
 
 
 class UserStats(data.Model):
-    """跨功能共享的账号资料、积分与当前立绘。"""
+    """已注册的积分账号资料与当前立绘。"""
 
     __tablename__ = "madoka_user_stats"
 
@@ -25,6 +25,18 @@ class UserStats(data.Model):
     points: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     favorability: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     skin_asset: Mapped[str] = mapped_column(String, default="", nullable=False)
+
+
+class UserProfile(data.Model):
+    """按需创建的基础用户资料，不代表积分账号已注册。"""
+
+    __tablename__ = "madoka_user_profile"
+
+    user_id: Mapped[str] = mapped_column(String, primary_key=True)
+    qq_nickname: Mapped[str] = mapped_column(String(64), default="", nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime, default=shanghai_now, nullable=False
+    )
 
 
 class SignRecord(data.Model):

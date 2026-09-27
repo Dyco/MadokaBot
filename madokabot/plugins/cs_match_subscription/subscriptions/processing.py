@@ -8,6 +8,7 @@ from typing import Any
 from nonebot import logger
 from nonebot.adapters.onebot.v11 import Message, MessageSegment
 
+from ..config import config
 from ..models import MATCH_SECTION_FINISHED, MatchData
 from ..prediction import (
     get_prediction_summary,
@@ -97,6 +98,19 @@ async def process_event_match(
         state["scheduled_at"] = match.scheduled_at.isoformat()
     state["team_names"] = [team.name for team in match.teams[:2]]
     state["format_code"] = match.format_code or "未知"
+    try:
+        public_pool = max(
+            0,
+            int(
+                state.setdefault(
+                    "prediction_public_pool",
+                    int(config.cs_prediction_public_pool),
+                )
+            ),
+        )
+    except (TypeError, ValueError):
+        public_pool = int(config.cs_prediction_public_pool)
+    state["prediction_public_pool"] = public_pool
     if not initialized:
         previous_scores = current_map_scores(match)
 
@@ -165,7 +179,10 @@ async def process_event_match(
         notification = "prediction_open"
         if not notification_was_seen(match_id, notification):
             notifications.append(
-                MatchNotification("prediction_open", prediction_open_message(match))
+                MatchNotification(
+                    "prediction_open",
+                    prediction_open_message(match, public_pool=public_pool),
+                )
             )
             remember_notification(match_id, notification)
         state["prediction_open_sent"] = True
@@ -198,6 +215,7 @@ async def process_event_match(
                             match,
                             summary,
                             refunded=refunded,
+                            public_pool=public_pool,
                         ),
                     )
                 )
@@ -251,6 +269,7 @@ async def process_event_match(
                     event_id,
                     match_id,
                     winner_name,
+                    public_pool=public_pool,
                 )
                 state["winner_name"] = winner_name
                 state["prediction_payout"] = int(settlement.get("payout_per_winner", 0))

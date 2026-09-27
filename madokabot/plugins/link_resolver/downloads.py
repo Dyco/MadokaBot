@@ -1,7 +1,6 @@
-"""Resolver 的临时资源下载与文件清理工具。"""
+"""Resolver 的临时资源下载工具。"""
 
 import asyncio
-import os
 import re
 import time
 from pathlib import Path
@@ -199,19 +198,3 @@ def clean_title(value: str) -> str:
         "",
         value,
     )
-
-
-def remove_files(file_paths: Iterable[str | os.PathLike[str]]) -> dict[str, str]:
-    """删除一组临时文件，并返回各路径的处理结果。"""
-    results: dict[str, str] = {}
-    for file_path in file_paths:
-        path = Path(file_path)
-        if not path.exists():
-            results[str(path)] = "not_found"
-            continue
-        try:
-            path.unlink()
-            results[str(path)] = "removed"
-        except OSError as exc:
-            results[str(path)] = f"error: {exc}"
-    return results

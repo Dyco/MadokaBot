@@ -85,37 +85,40 @@ async def handle_cs_login(
     ).strip()
     await cs_cmd.finish(
         f"登录成功，欢迎回来，{nickname}。\n"
-        "完美平台 Session 已保存，现可使用 CS 战绩 pw 或 CS bind pw <昵称>。"
+        "完美平台 Session 已保存，现可使用 CS 战绩 pw 或 CS bind pw [Steam 32 位或 64 位 ID]。"
     )
 
 
 async def _handle_cs_bind(
     event: MessageEvent,
     platform: str,
-    nickname: str,
+    player: str,
 ) -> None:
     """保存当前 QQ 指定平台的查询绑定。"""
-    raw_nickname = nickname.strip()
-    if not raw_nickname:
+    identifier = player.strip()
+    if not identifier and platform != "pw":
         await cs_cmd.finish(CS_BIND_USAGE)
 
-    await cs_cmd.send(f"正在解析{platform_label(platform)}玩家 {raw_nickname}…")
+    target = "玩家昵称" if platform == "5e" else "Steam ID"
+    target_value = identifier or "已有全局绑定"
+    await cs_cmd.send(f"正在绑定{platform_label(platform)}{target} {target_value}…")
     try:
-        binding = await bind_player(str(event.user_id), platform, raw_nickname)
+        binding = await bind_player(
+            str(event.user_id), platform, identifier, event.sender.nickname or ""
+        )
     except PlayerStatsError as exc:
         await cs_cmd.finish(f"绑定失败：{exc}")
         return
     except Exception:
-        logger.exception(
-            "CS 玩家绑定失败：platform=%s, nickname=%s", platform, nickname
-        )
+        logger.exception("CS 玩家绑定失败：platform=%s, player=%s", platform, player)
         await cs_cmd.finish("绑定失败，请稍后重试。")
         return
 
-    if platform == "pw" and not binding.uuid:
+    if platform == "pw":
         await cs_cmd.finish(
-            f"已记录完美平台昵称：{binding.player_name}\n"
-            "当前未获取到完美平台 SteamID，请稍后重试或使用 CS login <手机号> <验证码>。"
+            f"绑定成功：{platform_label(platform)}\n"
+            f"Steam 64 位 ID：{binding.uuid}\n"
+            "此绑定与 Steam 共用；如需群播报，请在目标群使用 steam bind。"
         )
         return
     await cs_cmd.finish(
@@ -127,30 +130,40 @@ async def _handle_cs_bind(
 
 @cs_cmd.assign("subcommands.bind")
 async def handle_cs_bind(event: MessageEvent, params: Match[str]) -> None:
-    """解析平台和昵称后执行绑定。"""
+    """解析平台和玩家昵称或 Steam ID 后执行绑定。"""
     raw_params = params.result.strip() if params.available else ""
     bind_args = raw_params.split(maxsplit=1)
-    if len(bind_args) != 2:
+    if not 1 <= len(bind_args) <= 2:
         await cs_cmd.finish(CS_BIND_USAGE)
         return
 
     platform = normalize_platform(bind_args[0])
-    if platform is None:
+    if platform is None or (platform == "5e" and len(bind_args) != 2):
         await cs_cmd.finish(CS_BIND_USAGE)
         return
-    await _handle_cs_bind(event, platform, bind_args[1])
+    await _handle_cs_bind(event, platform, bind_args[1] if len(bind_args) == 2 else "")
 
 
 async def _handle_cs_unbind(event: MessageEvent, platform: str) -> None:
     """解除当前 QQ 用户指定平台的绑定。"""
     try:
-        binding = unbind_player(str(event.user_id), platform)
+        binding = await unbind_player(str(event.user_id), platform)
     except PlayerStatsError as exc:
         await cs_cmd.finish(f"解绑失败：{exc}")
+        return
+    except Exception:
+        logger.exception("CS 玩家解绑失败：platform=%s", platform)
+        await cs_cmd.finish("解绑失败，请稍后重试。")
         return
 
     if binding is None:
         await cs_cmd.finish(f"未找到{platform_label(platform)}绑定，无需解绑。")
+        return
+    if platform == "pw":
+        await cs_cmd.finish(
+            f"已解除 Steam/CS 共用绑定：{binding.uuid}。"
+            "Steam 各群订阅已一并删除；完美平台 Session 未受影响。"
+        )
         return
     await cs_cmd.finish(
         f"已解除{platform_label(platform)}绑定：{binding.player_name}\n"

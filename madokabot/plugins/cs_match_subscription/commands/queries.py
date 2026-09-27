@@ -72,6 +72,7 @@ async def handle_cs_list(
             f"{first_summary.get('points', 0)}积分。",
             f"{second}：{second_summary.get('count', 0)}人预测，共计"
             f"{second_summary.get('points', 0)}积分。",
+            f"本场系统公池：{detail['public_pool']}积分。",
         ]
         if detail["winner_name"]:
             lines.append(

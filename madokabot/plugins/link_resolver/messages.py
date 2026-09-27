@@ -19,37 +19,11 @@ from .state import (
 )
 
 NICKNAME = get_plugin_config(Config).global_prefix_nickname.strip()
-IMAGE_SUFFIXES = frozenset({".jpg", ".jpeg", ".png", ".gif"})
-VIDEO_SUFFIXES = frozenset({".mp4", ".mov", ".webm"})
 
 
 def get_resolver_message(event: GroupMessageEvent) -> str:
     """返回可供解析器检查的文本，不包含图片和语音消息段。"""
     return str(event.get_message().exclude("image", "record")).strip()
-
-
-def build_media_node(
-    user_id: int | str,
-    task: str | Path | None,
-) -> MessageSegment | None:
-    """按本地文件后缀构造合并转发节点。"""
-    if not task:
-        return None
-
-    path = Path(task)
-    suffix = path.suffix.lower()
-    if suffix in IMAGE_SUFFIXES:
-        content = MessageSegment.image(file=path.resolve().as_uri())
-    elif suffix in VIDEO_SUFFIXES:
-        content = MessageSegment.video(file=path.resolve().as_uri())
-    else:
-        return None
-
-    return MessageSegment.node_custom(
-        user_id=user_id,
-        nickname=NICKNAME,
-        content=Message(content),
-    )
 
 
 def make_forward_nodes(

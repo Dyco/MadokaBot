@@ -296,6 +296,10 @@ async def subscribe_event(
                     match_state.setdefault("prediction_settled", is_finished)
                     match_state.setdefault("winner_name", "")
                     match_state.setdefault("prediction_payout", 0)
+                    match_state.setdefault(
+                        "prediction_public_pool",
+                        int(config.cs_prediction_public_pool),
+                    )
                     match_state.setdefault("team_names", [])
                     match_state.setdefault("format_code", "")
                 continue
@@ -318,6 +322,8 @@ async def subscribe_event(
                 "prediction_closed": is_finished,
                 "prediction_settled": is_finished,
                 "winner_name": "",
+                "prediction_payout": 0,
+                "prediction_public_pool": int(config.cs_prediction_public_pool),
                 "team_names": [],
                 "format_code": "",
             }
@@ -467,6 +473,15 @@ async def list_active_events() -> dict[str, dict[str, Any]]:
             if "matches" not in entry or not isinstance(entry.get("matches"), dict):
                 entry["matches"] = {}
                 changed = True
+            for match_state in entry["matches"].values():
+                if (
+                    isinstance(match_state, dict)
+                    and "prediction_public_pool" not in match_state
+                ):
+                    match_state["prediction_public_pool"] = int(
+                        config.cs_prediction_public_pool
+                    )
+                    changed = True
 
             if (
                 entry.get("status") != EVENT_STATUS_FINISHED

@@ -13,7 +13,7 @@ from .storage import PlayerStatusStore, SteamGroupStore
 
 cache_dir = store.get_cache_dir("madokabot_steam")
 avatar_path = cache_dir / "player_avatars"
-steam_groups = SteamGroupStore(group_settings, cache_dir / "group_avatars")
+steam_groups = SteamGroupStore(group_settings)
 player_status = PlayerStatusStore(
     assets.get_dir(ResourceType.JSON, ResourceFolder.STEAM) / "player_status.json"
 )

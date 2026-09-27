@@ -52,7 +52,7 @@ def start_message(match: MatchData, event_name: str = "") -> Message:
     return Message(MessageSegment.text("\n".join(lines)))
 
 
-def prediction_open_message(match: MatchData) -> Message:
+def prediction_open_message(match: MatchData, *, public_pool: int = 0) -> Message:
     """生成开放竞猜的通知节点。"""
     first, second = team_names(match)
     format_code = match.format_code or "未知"
@@ -62,6 +62,7 @@ def prediction_open_message(match: MatchData) -> Message:
             f"【teamA：{first}】对阵【teamB：{second}】的{format_code}比赛现已接受竞猜。\n"
             "使用指令/cs <竞猜|预测> <A/B|队伍名> <数字>参与。\n"
             f"例如/cs 竞猜 {first} 100\n"
+            f"【本场系统公池：{public_pool}积分】\n"
             "【每场比赛仅可参与一次，无法修改】"
         )
     )
@@ -72,6 +73,7 @@ def prediction_close_message(
     summary: dict[str, Any],
     *,
     refunded: bool = False,
+    public_pool: int = 0,
 ) -> Message:
     """生成停止竞猜的通知节点。"""
     first, second = team_names(match)
@@ -85,6 +87,7 @@ def prediction_close_message(
         f"{int(first_summary.get('points', 0))}积分。",
         f"{second}：{int(second_summary.get('count', 0))}人预测，共计"
         f"{int(second_summary.get('points', 0))}积分。",
+        f"本场系统公池：{public_pool}积分。",
     ]
     if refunded:
         lines.append("本场竞猜因一方没有积分参与，竞猜对局失败，已退回所有下注积分。")

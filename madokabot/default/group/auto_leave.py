@@ -6,6 +6,7 @@ from nonebot import logger, on_notice
 from nonebot.adapters.onebot.v11 import Bot, GroupIncreaseNoticeEvent
 
 from .config import config
+from .profile import ensure_group_profile
 from madokabot.core.group.access import is_group_whitelisted
 
 
@@ -121,6 +122,10 @@ auto_leave_group_notice = on_notice()
 
 @auto_leave_group_notice.handle()
 async def _handle_group_increase(bot: Bot, event: GroupIncreaseNoticeEvent):
-    """仅在机器人自身入群时安排提示和群规模检查。"""
+    """机器人自身入群时补齐群资料，并安排提示和群规模检查。"""
     if event.user_id == event.self_id:
         schedule_auto_leave_group(bot, event.group_id)
+        try:
+            await ensure_group_profile(bot, event.group_id)
+        except Exception:
+            logger.exception(f"初始化新群 {event.group_id} 资料失败")

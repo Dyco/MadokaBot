@@ -13,12 +13,10 @@ from madokabot.core.resources import ResourceType, ResourceFolder, assets
 
 
 PLUGIN_NAME = "madokabot_cs_match_subscribe"
-DATA_DIR = store.get_data_dir(PLUGIN_NAME)
 CACHE_DIR = store.get_cache_dir(PLUGIN_NAME)
 # HLTV 赛事订阅统一保存于公共 JSON 资源目录。
 HLTV_SUB_PATH = assets.get_dir(ResourceType.JSON, ResourceFolder.CS) / "hltv_sub.json"
 ASSET_DIR = CACHE_DIR / "assets"
-PLAYER_BINDINGS_PATH = DATA_DIR / "player_bindings.sqlite3"
 PW_SESSION_PATH = store.get_data_file(PLUGIN_NAME, "pw_session.json")
 
 
@@ -80,6 +78,11 @@ class Config(NoneBotConfig):
         description=(
             "赛事订阅是否按地图单独推送开始和结束消息；关闭时按系列赛级别推送"
         ),
+    )
+    cs_prediction_public_pool: int = Field(
+        default=100,
+        ge=0,
+        description="每场 CS 竞猜由系统追加的默认公池积分",
     )
     hltv_max_asset_size: int = Field(
         default=5 * 1024 * 1024,

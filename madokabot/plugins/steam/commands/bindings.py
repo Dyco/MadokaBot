@@ -1,104 +1,102 @@
-"""Steam 账号绑定、解绑与绑定列表。"""
-
-import re
+"""Steam 全局绑定和按群订阅指令。"""
 
 from nonebot.adapters import Bot
 from nonebot.adapters.onebot.v11 import GroupMessageEvent
-from nonebot.log import logger
-from nonebot_plugin_alconna import At, Match, MsgTarget
+from nonebot.permission import SUPERUSER
+from nonebot_plugin_alconna import At, Match
 
+from ..bindings import (
+    bind_user,
+    hide_user,
+    list_group_bindings,
+    unbind_user,
+)
 from ..client import get_steam_id, get_steam_users_info
 from ..config import get_query_proxy, get_steam_api_key
 from ..matchers import BIND_PERMISSION, steam_cmd
-from ..state import steam_groups
 
 
-async def get_bind_list_message(bot: Bot, parent_id: str) -> str:
-    """读取群成员称呼并生成当前群绑定列表。"""
-    all_binds = steam_groups.list_bindings(parent_id)
-    if not all_binds:
+def _target_qq(value: At | str) -> str:
+    """从 At 或纯数字参数取得 QQ 号。"""
+    if isinstance(value, At):
+        return str(value.target)
+    return value.strip() if value.strip().isdigit() else ""
+
+
+def _steam_id(value: str) -> str | None:
+    """把 Steam64 ID 或好友码转换为统一的 Steam ID。"""
+    return get_steam_id(value.strip()) if value.strip().isdigit() else None
+
+
+async def _steam_name(steam_id: str) -> str:
+    """仅在新增全局绑定时尝试查询玩家昵称。"""
+    api_key = get_steam_api_key()
+    if not api_key:
+        return steam_id
+    try:
+        info = await get_steam_users_info([steam_id], api_key, get_query_proxy())
+        players = info.get("response", {}).get("players", [])
+        return (players[0].get("personaname") or steam_id) if players else steam_id
+    except Exception:
+        return steam_id
+
+
+async def get_bind_list_message(bot: Bot, group_id: str) -> str:
+    """列出当前群订阅，包含已隐藏用户。"""
+    bindings = await list_group_bindings(group_id)
+    if not bindings:
         return "本群暂无任何绑定记录。"
 
-    msg = "当前群内绑定列表：\n"
-    for data in all_binds:
-        u_id = data["user_id"]
-        s_id = data["steam_id"]
+    lines = ["当前群内绑定列表："]
+    for binding in bindings:
+        user_id = binding["user_id"]
         try:
-            member_info = await bot.get_group_member_info(
-                group_id=int(parent_id), user_id=int(u_id)
+            member = await bot.get_group_member_info(
+                group_id=int(group_id), user_id=int(user_id)
             )
-            name = member_info.get("card") or member_info.get("nickname") or u_id
+            name = member.get("card") or member.get("nickname") or user_id
         except Exception:
-            name = u_id
-        msg += f"- {name} ({u_id}) -> {s_id}\n"
-    return msg.strip()
+            name = user_id
+        suffix = "（本群已隐藏）" if not binding["enabled"] else ""
+        lines.append(f"- {name} ({user_id}) -> {binding['steam_id']}{suffix}")
+    return "\n".join(lines)
 
 
 @steam_cmd.assign("bind")
-async def handle_bind(
-    bot: Bot,
-    event: GroupMessageEvent,
-    target: MsgTarget,
-    id: Match[str],
-):
-    """为发送者绑定 Steam 账号并检查群内重复绑定。"""
-    await steam_cmd.send("收到指令，正在绑定…")
-
-    if not id.available or not id.result.isdigit():
-        await steam_cmd.finish("参数无效，请检查 Steam64 ID 或好友码是否正确")
-
-    steam_id = get_steam_id(id.result)
-    if steam_id is None:
+async def handle_bind(event: GroupMessageEvent, id: Match[str]):
+    """首次绑定全局账号，并加入或恢复当前群订阅。"""
+    requested = _steam_id(id.result) if id.available else None
+    if id.available and requested is None:
         await steam_cmd.finish("Steam ID 格式错误。")
 
-    parent_id = target.parent_id or target.id
+    group_id = str(event.group_id)
     user_id = str(event.user_id)
-
-    if existing_bind := steam_groups.get_binding_by_steam_id(parent_id, steam_id):
-        if str(existing_bind.get("user_id")) != user_id:
-            await steam_cmd.finish(
-                f"绑定失败：该 Steam ID 已被群成员 {existing_bind['user_id']} 占用"
-            )
-
+    qq_name = event.sender.nickname or user_id
     try:
-        member_info = await bot.get_group_member_info(
-            group_id=int(parent_id), user_id=int(user_id)
-        )
-        qq_name = member_info.get("card") or member_info.get("nickname") or user_id
-    except Exception as e:
-        logger.warning(f"无法获取群成员信息: {e}")
-        qq_name = user_id
-
-    steam_name = "未知玩家"
-    try:
-        api_key = get_steam_api_key()
-        if api_key:
-            info = await get_steam_users_info([steam_id], api_key, get_query_proxy())
-            players = info.get("response", {}).get("players", [])
-            if players:
-                steam_name = players[0].get("personaname", steam_id)
-        else:
-            logger.error("未配置 Steam API Key，无法获取昵称")
-    except Exception as e:
-        logger.error(f"获取 Steam 昵称失败: {e}")
-
-    try:
-        steam_groups.bind(parent_id, user_id, steam_id)
+        steam_id, created = await bind_user(group_id, user_id, requested, qq_name)
     except ValueError as exc:
         await steam_cmd.finish(f"绑定失败：{exc}")
-    await steam_cmd.finish(
-        f"已为 {qq_name} 绑定 Steam：{steam_name}\nSteam ID：{steam_id}"
-    )
+
+    if created:
+        name = await _steam_name(steam_id)
+        await steam_cmd.finish(f"已绑定 Steam：{name}\nSteam ID：{steam_id}；本群推送已开启。")
+    await steam_cmd.finish(f"已使用全局绑定 {steam_id}，本群推送已开启。")
 
 
 @steam_cmd.assign("unbind")
-async def handle_unbind(bot: Bot, event: GroupMessageEvent):
-    """解除发送者在当前群的 Steam 绑定。"""
-    user_id = str(event.user_id)
-    parent_id = str(event.group_id)
-    if steam_groups.unbind(parent_id, user_id):
-        await steam_cmd.finish("解绑成功")
-    await steam_cmd.finish("你当前尚未绑定 Steam ID。")
+async def handle_unbind(event: GroupMessageEvent):
+    """全局解绑，并删除所有群的 Steam 订阅。"""
+    if await unbind_user(str(event.user_id)):
+        await steam_cmd.finish("已解绑 Steam/CS 共用账号，所有群订阅均已删除。")
+    await steam_cmd.finish("你尚未绑定 Steam ID。")
+
+
+@steam_cmd.assign("hide")
+async def handle_hide(event: GroupMessageEvent):
+    """只隐藏发送者在当前群的自动播报。"""
+    if await hide_user(str(event.group_id), str(event.user_id)):
+        await steam_cmd.finish("已关闭本群的 Steam 自动播报；绑定、备注和主动查询仍保留。")
+    await steam_cmd.finish("你尚未订阅本群 Steam 播报。")
 
 
 @steam_cmd.assign("add")
@@ -108,70 +106,37 @@ async def handle_add_other(
     target: Match[At | str],
     steam_id: Match[str],
 ):
-    """由管理员为指定群成员绑定 Steam 账号。"""
+    """管理员为用户首次绑定，或把相同的全局绑定加入本群。"""
     if not await BIND_PERMISSION(bot, event):
         await steam_cmd.finish("只有群管理员可以使用此功能。")
+    if not target.available or not steam_id.available:
+        await steam_cmd.finish("请指定目标用户和 Steam ID。")
+    user_id = _target_qq(target.result)
+    requested = _steam_id(steam_id.result)
+    if not user_id or requested is None:
+        await steam_cmd.finish("QQ 号或 Steam ID 格式错误。")
 
-    if not target.available:
-        await steam_cmd.finish("请指定目标用户（At 或 QQ 号）。")
-
-    res = target.result
-    target_qq = res.target if isinstance(res, At) else "".join(re.findall(r"\d+", res))
-    await steam_cmd.send("收到指令，正在尝试添加…")
-
-    if not target_qq:
-        await steam_cmd.finish("参数无效，请检查 QQ 号是否正确。")
-
-    if not steam_id.available or not steam_id.result.strip():
-        await steam_cmd.finish("参数无效，请检查 Steam64 ID 或好友码是否正确")
-
-    s_id = get_steam_id(steam_id.result.strip())
-    if s_id is None or not s_id.isdigit():
-        await steam_cmd.finish("Steam ID 格式错误。")
-
-    parent_id = str(event.group_id)
-    if existing_bind := steam_groups.get_binding_by_steam_id(parent_id, s_id):
-        if str(existing_bind.get("user_id")) != target_qq:
-            await steam_cmd.finish(
-                f"绑定失败：该 Steam ID 已被群成员 {existing_bind['user_id']} 占用"
-            )
-
+    group_id = str(event.group_id)
     try:
-        member_info = await bot.get_group_member_info(
-            group_id=int(parent_id), user_id=int(target_qq)
+        member = await bot.get_group_member_info(
+            group_id=event.group_id, user_id=int(user_id)
         )
-        qq_name = member_info.get("card") or member_info.get("nickname") or target_qq
+        qq_name = member.get("nickname") or user_id
     except Exception:
-        qq_name = target_qq
-
-    steam_name = "未知玩家"
-    try:
-        api_key = get_steam_api_key()
-        if api_key:
-            info = await get_steam_users_info([s_id], api_key, get_query_proxy())
-            players = info.get("response", {}).get("players", [])
-            if players:
-                steam_name = players[0].get("personaname", s_id)
-        else:
-            logger.error("未配置 Steam API Key，无法获取昵称")
-    except Exception as e:
-        logger.error(f"获取 Steam 昵称失败: {e}")
+        qq_name = user_id
 
     try:
-        steam_groups.bind(parent_id, target_qq, s_id)
+        resolved, created = await bind_user(group_id, user_id, requested, qq_name)
     except ValueError as exc:
-        await steam_cmd.finish(f"绑定失败：{exc}")
-    await steam_cmd.finish(
-        f"为用户 {qq_name} ({target_qq}) 绑定 Steam 成功\n{steam_name} ({s_id})"
-    )
+        await steam_cmd.finish(f"添加失败：{exc}")
+    action = "创建了全局绑定并加入" if created else "加入或恢复"
+    await steam_cmd.finish(f"已为 {qq_name} ({user_id}) {action}本群 Steam 推送：{resolved}")
 
 
 @steam_cmd.assign("list")
 async def handle_list(bot: Bot, event: GroupMessageEvent):
-    """发送当前群的 Steam 绑定列表。"""
-    parent_id = str(event.group_id)
-    msg = await get_bind_list_message(bot, parent_id)
-    await steam_cmd.finish(msg)
+    """发送当前群的 Steam 订阅列表。"""
+    await steam_cmd.finish(await get_bind_list_message(bot, str(event.group_id)))
 
 
 @steam_cmd.assign("remove")
@@ -180,21 +145,25 @@ async def handle_remove(
     event: GroupMessageEvent,
     target: Match[At | str],
 ):
-    """由管理员移除指定群成员的 Steam 绑定。"""
-    parent_id = str(event.group_id)
-
+    """群管理员隐藏本群订阅，超级用户全局解绑。"""
     if not await BIND_PERMISSION(bot, event):
         await steam_cmd.finish("权限不足，只有管理员可以使用删除功能。")
-
+    group_id = str(event.group_id)
     if not target.available:
-        msg = await get_bind_list_message(bot, parent_id)
-        await steam_cmd.finish(f"请指定要删除的用户。\n{msg}")
-
-    res = target.result
-    target_qq = res.target if isinstance(res, At) else "".join(re.findall(r"\d+", res))
-    if not target_qq:
+        await steam_cmd.finish(
+            "请指定要删除的用户。\n" + await get_bind_list_message(bot, group_id)
+        )
+    user_id = _target_qq(target.result)
+    if not user_id:
         await steam_cmd.finish("无法识别该用户。")
 
-    if steam_groups.unbind(parent_id, target_qq):
-        await steam_cmd.finish(f"已成功移除用户 {target_qq} 的绑定数据。")
-    await steam_cmd.finish(f"用户 {target_qq} 在本群没有绑定数据。")
+    if await SUPERUSER(bot, event):
+        if await unbind_user(user_id):
+            await steam_cmd.finish(
+                f"已全局解绑用户 {user_id} 的 Steam/CS 共用账号，并删除所有群订阅。"
+            )
+        await steam_cmd.finish(f"用户 {user_id} 没有全局 Steam 绑定。")
+
+    if await hide_user(group_id, user_id):
+        await steam_cmd.finish(f"已隐藏用户 {user_id} 在本群的 Steam 自动播报。")
+    await steam_cmd.finish(f"用户 {user_id} 在本群没有 Steam 订阅。")

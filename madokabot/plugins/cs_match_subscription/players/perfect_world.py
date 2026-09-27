@@ -1,4 +1,4 @@
-"""完美平台登录、玩家搜索和战绩查询。"""
+"""完美平台登录与 SteamID 战绩查询。"""
 
 from __future__ import annotations
 
@@ -8,7 +8,6 @@ from nonebot.log import logger
 
 from ..config import config
 from .constants import (
-    PW_CURRENT_SEARCH_URL,
     PW_LOGIN_URL,
     PW_MATCHES_URL,
     PW_PUBLIC_APPVERSION,
@@ -83,87 +82,6 @@ async def login_pw(mobile: str, code: str) -> dict[str, Any]:
 
     save_pw_session(token, steam_id)
     return account_info | {"token": token, "steamId": steam_id}
-
-
-def _pw_identity_candidates(payload: dict[str, Any]) -> list[PlayerBinding]:
-    """解析当前完美平台搜索接口返回的玩家列表。"""
-    result = payload.get("result")
-    if not isinstance(result, list):
-        raise PlayerStatsError("完美平台搜索返回了未识别的数据结构")
-    users: list[Any] = []
-    for item in result:
-        group = as_dict(item)
-        nested = group.get("data")
-        if not isinstance(nested, list):
-            raise PlayerStatsError("完美平台搜索结果缺少 data 列表")
-        users.extend(nested)
-
-    candidates: list[PlayerBinding] = []
-    for item in users:
-        user = as_dict(item)
-        name = str(user.get("name") or "").strip()
-        steam_id = str(user.get("steamId64Str") or "").strip()
-        if not name or not steam_id:
-            continue
-        candidates.append(
-            PlayerBinding(
-                user_id="",
-                platform="pw",
-                player_name=name,
-                domain=str(user.get("wanmeiId") or "").strip(),
-                uuid=steam_id,
-                avatar_url=image_url(user.get("avatar")),
-            )
-        )
-    return candidates
-
-
-def _pick_pw_identity(candidates: list[PlayerBinding], nickname: str) -> PlayerBinding:
-    """只选择昵称唯一且与搜索词完全相同的完美平台玩家。"""
-    nickname_key = nickname.casefold()
-    exact_matches = [
-        item for item in candidates if item.player_name.casefold() == nickname_key
-    ]
-    if len(exact_matches) == 1:
-        return exact_matches[0]
-    if len(exact_matches) > 1:
-        raise PlayerStatsError(f"完美平台存在多个同名玩家：{nickname}，请提供更准确的昵称")
-    raise PlayerStatsError(
-        f"完美平台搜索结果中没有与“{nickname}”完全一致的昵称，请核对平台昵称后重试"
-    )
-
-
-async def resolve_pw_identity(nickname: str) -> PlayerBinding:
-    """根据完美平台昵称解析 SteamID；公开搜索不再依赖手机号登录态。"""
-    async with create_client() as client:
-        payload = await request_json(
-            client,
-            "POST",
-            PW_CURRENT_SEARCH_URL,
-            headers=_pw_public_headers(),
-            json={
-                "text": nickname,
-                "searchType": "USER",
-                "circleId": "0",
-                "page": 1,
-                "pageSize": 20,
-                "gameTypeStr": "1,2",
-                "platform": "android",
-                "sortType": 1,
-            },
-        )
-        if payload.get("code") not in (0, "0"):
-            raise PlayerStatsError(
-                str(
-                    payload.get("description")
-                    or payload.get("message")
-                    or "完美平台搜索失败"
-                )
-            )
-        candidates = _pw_identity_candidates(payload)
-        if candidates:
-            return _pick_pw_identity(candidates, nickname)
-    raise PlayerStatsError(f"未找到完美玩家：{nickname}")
 
 
 async def _fetch_pw_public_stats(

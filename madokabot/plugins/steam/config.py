@@ -1,7 +1,7 @@
 from typing import Optional
 
 from nonebot import get_plugin_config
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from madokabot.core.config import config as madoka_config
 
@@ -11,6 +11,7 @@ class SteamConfig(BaseModel):
 
     steam_api_key: str
     steam_request_interval: int = 60  # seconds
+    steam_batch_size: int = Field(default=25, ge=1, le=100)  # 玩家摘要每批人数
     steam_broadcast_type: str = "part"  # all, part, none
     steam_disable_broadcast_on_startup: bool = False
     steam_command_priority: int = 10

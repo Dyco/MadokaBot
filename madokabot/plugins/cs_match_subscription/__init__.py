@@ -23,10 +23,11 @@ __plugin_meta__ = PluginMetadata(
         "CS prediction <队伍名|A/B> <积分>\n"
         "CS prediction rank <本群|全部>\n"
         "CS login <手机号> <验证码>\n"
-        "CS bind <5E|5e|5eplay|wm|pw|完美> <用户昵称>\n"
+        "CS bind <5E|5e|5eplay> <玩家昵称>\n"
+        "CS bind <wm|pw|完美> [Steam 32 位或 64 位 ID]\n"
         "CS unbind <5E|5e|5eplay|wm|pw|完美>\n"
         "CS 战绩 <5E | 5e | 5eplay> [玩家昵称]\n"
-        "CS 战绩 <wm | pw | 完美> [Steam ID]\n"
+        "CS 战绩 <wm | pw | 完美> [Steam 32 位或 64 位 ID]\n"
     ),
     type="application",
     homepage="https://github.com/Dyco/MadokaBot",

@@ -75,7 +75,8 @@
                     "0:Mirage",
                     "1:Dust2"
                 ],
-                "rating_summary_sent": true
+                "rating_summary_sent": true,
+                "prediction_public_pool": 100
             },
             "2398090": {
                 "source": "upcoming",
@@ -99,7 +100,8 @@
                 "rating_maps": [
                     "0"
                 ],
-                "rating_summary_sent": true
+                "rating_summary_sent": true,
+                "prediction_public_pool": 100
             },
             "2398091": {
                 "source": "finished",
@@ -122,7 +124,8 @@
                     "2"
                 ],
                 "rating_maps": [],
-                "rating_summary_sent": true
+                "rating_summary_sent": true,
+                "prediction_public_pool": 100
             },
             "2398099": {
                 "source": "finished",
@@ -143,7 +146,8 @@
                     "2"
                 ],
                 "rating_maps": [],
-                "rating_summary_sent": true
+                "rating_summary_sent": true,
+                "prediction_public_pool": 100
             },
             "2398100": {
                 "source": "finished",
@@ -172,7 +176,8 @@
                 ],
                 "rating_summary_sent": true,
                 "finalization_requested": true,
-                "finalization_attempts": 1
+                "finalization_attempts": 1,
+                "prediction_public_pool": 100
             },
             "2398101": {
                 "source": "finished",
@@ -193,7 +198,8 @@
                 "rating_maps": [],
                 "rating_summary_sent": true,
                 "finalization_requested": true,
-                "finalization_attempts": 1
+                "finalization_attempts": 1,
+                "prediction_public_pool": 100
             },
             "2398102": {
                 "source": "finished",
@@ -216,7 +222,8 @@
                 "rating_maps": [],
                 "rating_summary_sent": true,
                 "finalization_requested": true,
-                "finalization_attempts": 1
+                "finalization_attempts": 1,
+                "prediction_public_pool": 100
             },
             "2398104": {
                 "source": "finished",
@@ -249,7 +256,8 @@
                 "prediction_open": false,
                 "winner_name": "MIBR",
                 "prediction_payout": 0,
-                "prediction_settled": true
+                "prediction_settled": true,
+                "prediction_public_pool": 100
             },
             "2398103": {
                 "source": "finished",
@@ -284,7 +292,8 @@
                 "prediction_open": false,
                 "winner_name": "FURIA",
                 "prediction_payout": 0,
-                "prediction_settled": true
+                "prediction_settled": true,
+                "prediction_public_pool": 100
             },
             "2398105": {
                 "source": "finished",
@@ -319,7 +328,8 @@
                 "prediction_open": false,
                 "winner_name": "Aurora",
                 "prediction_payout": 0,
-                "prediction_settled": true
+                "prediction_settled": true,
+                "prediction_public_pool": 100
             },
             "2398106": {
                 "source": "finished",
@@ -352,7 +362,8 @@
                 "prediction_open": false,
                 "winner_name": "FURIA",
                 "prediction_payout": 0,
-                "prediction_settled": true
+                "prediction_settled": true,
+                "prediction_public_pool": 100
             },
             "2398107": {
                 "source": "finished",
@@ -385,7 +396,8 @@
                 "prediction_open": false,
                 "winner_name": "Vitality",
                 "prediction_payout": 0,
-                "prediction_settled": true
+                "prediction_settled": true,
+                "prediction_public_pool": 100
             },
             "2398108": {
                 "source": "finished",
@@ -422,7 +434,8 @@
                 "prediction_open": false,
                 "winner_name": "Vitality",
                 "prediction_payout": 0,
-                "prediction_settled": true
+                "prediction_settled": true,
+                "prediction_public_pool": 100
             },
             "2398088": {
                 "source": "result",
@@ -435,7 +448,8 @@
                 "started_maps": [],
                 "notified_maps": [],
                 "rating_maps": [],
-                "rating_summary_sent": false
+                "rating_summary_sent": false,
+                "prediction_public_pool": 100
             }
         },
         "status": "finished",

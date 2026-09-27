@@ -20,19 +20,14 @@ from .constants import (
     parent_status_path,
     zzz_gaming_path,
     zzz_online_path,
+    font_bold_path,
+    font_light_path,
+    font_regular_path,
 )
 
 WIDTH = 400
 PARENT_AVATAR_SIZE = 72
 MEMBER_AVATAR_SIZE = 50
-
-
-def set_font_paths(regular_path, light_path, bold_path):
-    global font_regular_path, font_light_path, font_bold_path
-    base_dir = Path().cwd()
-    font_regular_path = str((base_dir / regular_path).resolve())
-    font_light_path = str((base_dir / light_path).resolve())
-    font_bold_path = str((base_dir / bold_path).resolve())
 
 
 def open_image_or_default(

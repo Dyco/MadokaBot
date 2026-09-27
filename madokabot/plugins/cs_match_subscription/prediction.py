@@ -15,6 +15,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from madokabot.core.user.models import UserStats
+from .config import config
 from .prediction_models import CsPrediction
 from .storage import (
     get_prediction_match_context,
@@ -24,6 +25,7 @@ from .storage import (
 _SETTLEMENT_LOCK = asyncio.Lock()
 _PREDICTION_TIMEOUT = timedelta(hours=12)
 _SHANGHAI_TZ = ZoneInfo("Asia/Shanghai")
+DEFAULT_PREDICTION_PUBLIC_POOL = int(config.cs_prediction_public_pool)
 
 
 async def _finish_prediction(
@@ -289,9 +291,12 @@ async def settle_match_predictions(
     event_id: str,
     match_id: str,
     winner_name: str,
+    *,
+    public_pool: int = DEFAULT_PREDICTION_PUBLIC_POOL,
 ) -> dict[str, Any]:
-    """结算比赛竞猜，胜方均分本场总投注池。"""
+    """结算比赛竞猜，胜方均分本场总投注池和系统公池。"""
     normalized_winner = _normalize_team(winner_name)
+    normalized_public_pool = max(0, int(public_pool))
     async with _SETTLEMENT_LOCK, create_session() as session:
         rows = list(
             (
@@ -308,7 +313,8 @@ async def settle_match_predictions(
         winner_rows = [
             row for row in rows if _normalize_team(row.team_name) == normalized_winner
         ]
-        payout = total_points // len(winner_rows) if winner_rows else 0
+        settlement_points = total_points + normalized_public_pool
+        payout = settlement_points // len(winner_rows) if winner_rows else 0
         now = datetime.now(timezone.utc)
 
         for row in rows:
@@ -324,6 +330,8 @@ async def settle_match_predictions(
     return {
         "total_count": len(rows),
         "total_points": total_points,
+        "public_pool": normalized_public_pool,
+        "settlement_points": settlement_points,
         "winner_count": len(winner_rows),
         "payout_per_winner": payout,
     }
@@ -405,6 +413,9 @@ async def get_prediction_detail(
         "summary": summary,
         "winner_name": str(state.get("winner_name") or ""),
         "payout_per_winner": int(state.get("prediction_payout") or 0),
+        "public_pool": int(
+            state.get("prediction_public_pool", DEFAULT_PREDICTION_PUBLIC_POOL)
+        ),
     }
 
 
@@ -486,6 +497,7 @@ async def get_prediction_ranking(
 
 __all__ = [
     "PredictionError",
+    "DEFAULT_PREDICTION_PUBLIC_POOL",
     "get_prediction_detail",
     "get_prediction_ranking",
     "get_prediction_summary",

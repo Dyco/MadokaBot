@@ -1,4 +1,3 @@
-import random
 import urllib.parse
 from pathlib import Path
 
@@ -33,20 +32,6 @@ def generate_x_bogus_url(url, headers):
     )
     # logger.info('生成的A-Bogus签名为: {}'.format(abogus))
     return url + "&a_bogus=" + abogus
-
-
-def generate_random_str(self, randomlength=16):
-    """
-    根据传入长度产生随机字符串
-    param :randomlength
-    return:random_str
-    """
-    random_str = ''
-    base_str = 'ABCDEFGHIGKLMNOPQRSTUVWXYZabcdefghigklmnopqrstuvwxyz0123456789='
-    length = len(base_str) - 1
-    for _ in range(randomlength):
-        random_str += base_str[random.randint(0, length)]
-    return random_str
 
 
 async def dou_transfer_other(dou_url, proxy: str | None = None):

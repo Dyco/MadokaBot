@@ -5,12 +5,22 @@
         ],
         "group_set": {
             "copying_enabled": true,
-            "threshold": 3
+            "threshold": 4
         },
         "hltv_event_settings": {
             "push_each_map": true,
             "notify_start": true,
             "prediction_enabled": true
+        },
+        "steam": {
+            "bindings": [
+                {
+                    "user_id": "1683550817",
+                    "steam_id": "76561198109101697",
+                    "nickname": null
+                }
+            ],
+            "group_name": "测试群"
         }
     },
     "463835135": {

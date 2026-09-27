@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from typing import Any
 
+from madokabot.core.steam_id import normalize_steam_id
+
 from .models import PlayerStatsError
 
 
@@ -64,18 +66,11 @@ def parse_steam_id(value: Any) -> int | None:
 
 
 def parse_pw_steam_id(value: str) -> int:
-    """解析完美查询用的 32 位 AccountID 或 64 位 SteamID。"""
-    raw = value.strip()
-    if not raw.isascii() or not raw.isdigit():
-        raise PlayerStatsError("完美平台 Steam ID 必须是纯数字")
-    if len(raw) == 10:
-        account_id = int(raw)
-        if not 0 < account_id <= 0xFFFFFFFF:
-            raise PlayerStatsError("完美平台 32 位 Steam ID 超出有效范围")
-        return account_id + 76561197960265728
-    if len(raw) == 17:
-        return int(raw)
-    raise PlayerStatsError("完美平台 Steam ID 必须是 10 位或 17 位数字")
+    """解析完美查询和绑定用的 32 位 AccountID 或 64 位 SteamID。"""
+    try:
+        return int(normalize_steam_id(value))
+    except ValueError as exc:
+        raise PlayerStatsError(str(exc)) from exc
 
 
 def as_flag(value: Any) -> bool:

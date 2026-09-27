@@ -1,6 +1,4 @@
 import time
-import pytz
-import datetime
 import calendar
 from PIL import Image
 from io import BytesIO
@@ -11,7 +9,6 @@ from nonebot import logger
 
 from .models import Player
 from .constants import unknown_avatar_path
-from .storage import SteamGroupStore
 from .client import get_http_client
 
 
@@ -78,11 +75,10 @@ async def _fetch_avatar(avatar_url: str, proxy: str = None) -> Image.Image:
 
 
 def convert_player_name_to_nickname(
-    data: Dict[str, str], parent_id: str, steam_groups: SteamGroupStore
+    data: Dict[str, str], nicknames: Dict[str, Optional[str]]
 ) -> Dict[str, str]:
-    """附加当前群设置的昵称，查询期间解绑时保留原玩家名。"""
-    binding = steam_groups.get_binding_by_steam_id(parent_id, data["steamid"])
-    data["nickname"] = binding.get("nickname") if binding else None
+    """附加当前群设置的昵称。"""
+    data["nickname"] = nicknames.get(data["steamid"])
     return data
 
 
@@ -142,11 +138,3 @@ def image_to_bytes(image: Image.Image) -> bytes:
 
 def hex_to_rgb(hex_color: str):
     return tuple(int(hex_color[i : i + 2], 16) for i in (0, 2, 4))
-
-
-def convert_timestamp_to_beijing_time(timestamp: int) -> str:
-    beijing_timezone = pytz.timezone("Asia/Shanghai")
-    date_utc = datetime.datetime.fromtimestamp(timestamp, pytz.utc)
-    date_beijing = date_utc.astimezone(beijing_timezone)
-    return date_beijing.strftime("%Y-%m-%d %H:%M:%S")
-    # example: 2021-09-06 21:00:00
