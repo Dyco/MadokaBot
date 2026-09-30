@@ -67,6 +67,7 @@ madokabot/
 ## 扩展插件
 
 cs_match_subscription
+
 支持5E与完美平台对战战绩查询，以及HLTV赛事相关解析
 此插件需要使用FlareSolverr访问HLTV数据页
 
@@ -76,13 +77,16 @@ picture_maker
 ## 引用插件
 
 zhaomaoniu/nonebot-plugin-steam-info
+
 steam插件，查询好友在线状态，推送好友游戏上线/离线消息
 此插件针对MadokaBot进行特殊适配
 
 zhiyu1998/nonebot-plugin-resolver
+
 解析插件，支持Bilibili、抖音、TikTok、ACFun、X、小红书、YouTube、网易云、酷狗和微博链接。
 此插件针对MadokaBot进行特殊适配
 
 Quan666/ELF_RSS
+
 RSS/RSSHub动态订阅、更新推送、图片处理、去重及可选aria2种子下载上传
 此插件针对MadokaBot进行特殊适配

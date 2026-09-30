@@ -9,6 +9,7 @@ from ..bindings import (
     bind_user,
     hide_user,
     list_group_bindings,
+    online_user,
     unbind_user,
 )
 from ..client import get_steam_id, get_steam_users_info
@@ -97,6 +98,14 @@ async def handle_hide(event: GroupMessageEvent):
     if await hide_user(str(event.group_id), str(event.user_id)):
         await steam_cmd.finish("已关闭本群的 Steam 自动播报；绑定、备注和主动查询仍保留。")
     await steam_cmd.finish("你尚未订阅本群 Steam 播报。")
+
+
+@steam_cmd.assign("online")
+async def handle_online(event: GroupMessageEvent):
+    """只开启发送者在当前群的自动播报。"""
+    if await online_user(str(event.group_id), str(event.user_id)):
+        await steam_cmd.finish("已开启本群的 Steam 自动播报。")
+    await steam_cmd.finish("你尚未订阅本群 Steam 播报，请先使用 steam bind 绑定。")
 
 
 @steam_cmd.assign("add")

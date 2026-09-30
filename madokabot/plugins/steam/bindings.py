@@ -141,6 +141,20 @@ async def hide_user(group_id: str, user_id: str) -> bool:
         return True
 
 
+async def online_user(group_id: str, user_id: str) -> bool:
+    """只开启指定群订阅的自动播报，保留群备注。"""
+    async with create_session() as session:
+        subscription = await session.get(
+            SteamGroupSubscription, (str(group_id), str(user_id))
+        )
+        if subscription is None:
+            return False
+        subscription.enabled = True
+        await session.commit()
+        mark_subscription_changed(group_id, user_id)
+        return True
+
+
 async def set_group_nickname(
     group_id: str, user_id: str, nickname: str | None
 ) -> bool:
