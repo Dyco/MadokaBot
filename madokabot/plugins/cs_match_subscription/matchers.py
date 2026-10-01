@@ -67,7 +67,8 @@ CS result <5E|5e|5eplay> [玩家昵称]  查询 5E 绑定账号或指定玩家�
 CS result <wm|pw|完美> [Steam 32 位或 64 位 ID]  查询完美平台绑定账号或指定 Steam ID 的战绩
 
 
-订阅后的推送方式和赛事开始通知，按本群的CS event设置生效。"""
+订阅后的推送方式和赛事开始通知，按本群的CS event设置生效。
+本群竞猜默认开启，可使用CS event predict切换；竞猜通知通过合并转发推送。"""
 
 
 cs_command = Alconna(

@@ -220,8 +220,11 @@ async def refund_uncontested_predictions(
     event_id: str,
     match_id: str,
     team_names: list[str],
+    *,
+    public_pool: int = DEFAULT_PREDICTION_PUBLIC_POOL,
 ) -> dict[str, Any]:
-    """单方无人下注时退回本场所有未结算竞猜积分。"""
+    """仅在没有公池且单方无人下注时，退回本场未结算竞猜本金。"""
+    normalized_public_pool = max(0, int(public_pool))
     normalized_teams = [
         _normalize_team(team_name)
         for team_name in team_names[:2]
@@ -262,7 +265,9 @@ async def refund_uncontested_predictions(
             points_by_team[normalized_name] = (
                 points_by_team.get(normalized_name, 0) + row.points
             )
-        if all(points_by_team.get(team_name, 0) > 0 for team_name in normalized_teams):
+        if normalized_public_pool > 0 or all(
+            points_by_team.get(team_name, 0) > 0 for team_name in normalized_teams
+        ):
             return {
                 "refunded": False,
                 "total_count": len(open_rows),

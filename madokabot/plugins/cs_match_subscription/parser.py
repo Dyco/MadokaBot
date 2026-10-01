@@ -253,6 +253,14 @@ _SCOREBOARD_MAP_NAMES = {
 }
 
 
+def _normalize_map_name(value: str) -> str:
+    """统一地图名前缀、大小写、空白和 Dust II 别名；占位名不参与匹配。"""
+    name = re.sub(r"\s+", "", value.casefold().strip()).removeprefix("de_")
+    if name in {"", "tba", "tbd", "default", "-"}:
+        return ""
+    return "dust2" if name == "dustii" else name
+
+
 def _scoreboard_map_name(scoreboard: Tag) -> str:
     """读取 Scoreboard 当前地图名称。"""
     round_text = _text(scoreboard.select_one(".currentRoundText"))
@@ -314,12 +322,11 @@ def _parse_scoreboard_result(
 
 
 def _parse_map_results(soup: BeautifulSoup) -> list[MapScore]:
-    """解析地图卡片的最终比分，并叠加实时 Scoreboard 当前地图。"""
+    """保留赛程地图位置，仅将实时 Scoreboard 叠加到唯一匹配的地图。"""
     results: list[MapScore] = []
     for holder in soup.select(".mapholder"):
-        name = _text(holder.select_one(".mapname, .dynamic-map-name-full"))
-        if not name:
-            continue
+        # 未加载名称的卡片仍占据赛程位置，避免后续地图被误编号为图一。
+        name = _text(holder.select_one(".mapname, .dynamic-map-name-full")) or "TBA"
         team1_score = _score_text(
             holder.select_one(".results-left .results-team-score")
         )
@@ -354,28 +361,16 @@ def _parse_map_results(soup: BeautifulSoup) -> list[MapScore]:
         return results
 
     map_name, team1_score, team2_score = scoreboard_result
-    result = next(
-        (
-            item
-            for item in results
-            if item.name.casefold() == map_name.casefold()
-        ),
-        None,
-    )
-    if result is None:
-        results.append(
-            MapScore(
-                name=map_name,
-                team1_score=team1_score,
-                team2_score=team2_score,
-                # Scoreboard 能识别出当前地图时，即视为该地图已经开始；
-                # 实时比分只用于补充分数，不再作为开始信号的必要条件。
-                started=True,
-                finished=False,
-                live=True,
-            )
-        )
+    normalized_name = _normalize_map_name(map_name)
+    matching_results = [
+        item
+        for item in results
+        if normalized_name and _normalize_map_name(item.name) == normalized_name
+    ]
+    # 地图名未同步或出现重复名称时等待后续快照；不能追加虚构的图四/图六。
+    if len(matching_results) != 1:
         return results
+    result = matching_results[0]
 
     # 已有最终比分时保留地图卡片结果，避免 Scoreboard 收尾画面覆盖它。
     if result.is_finished:

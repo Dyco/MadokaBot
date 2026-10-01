@@ -55,6 +55,8 @@ def previous_map_score(
 
 def started_map_candidates(match: MatchData) -> list[tuple[int, str]]:
     """返回由实时 Scoreboard 当前地图确认开始且尚未结束的地图。"""
+    if match.is_finished:
+        return []
     return [
         (index, result.name.strip())
         for index, result in enumerate(match.map_results)

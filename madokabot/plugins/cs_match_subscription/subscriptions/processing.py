@@ -114,19 +114,6 @@ async def process_event_match(
     if not initialized:
         previous_scores = current_map_scores(match)
 
-        # 订阅时已经结束的地图只建立基线，避免首次轮询补发历史开始通知。
-        started_maps = state.get("started_maps")
-        if not isinstance(started_maps, list):
-            started_maps = []
-            state["started_maps"] = started_maps
-        started_set = {str(value) for value in started_maps}
-        for index, result in enumerate(match.map_results):
-            if (
-                result.is_finished
-                and result.is_started
-                and str(index) not in started_set
-            ):
-                started_maps.append(str(index))
         # 订阅时已经结束的地图只建立消息和 Rating 基线，避免补发历史数据。
         for index, result in enumerate(match.map_results):
             if not result.is_finished:
@@ -144,9 +131,20 @@ async def process_event_match(
         started_maps = []
         state["started_maps"] = started_maps
     started_set = {str(value) for value in started_maps}
+    # 已观察到结束的地图永久关闭开始通知，避免页面比分回退后重新播报。
+    for index, result in enumerate(match.map_results):
+        if (
+            result.is_finished
+            or previous_map_score(previous_scores, index) is not None
+            or map_state_seen(notified_set, index)
+            or map_state_seen(rating_set, index)
+        ) and not map_state_seen(started_set, index):
+            key = str(index)
+            started_maps.append(key)
+            started_set.add(key)
     for index, map_name in started_map_candidates(match):
         key = str(index)
-        if key in started_set:
+        if map_state_seen(started_set, index):
             continue
         notification = f"map_start:{index}"
         if not notification_was_seen(match_id, notification):
@@ -197,6 +195,7 @@ async def process_event_match(
                 event_id,
                 match_id,
                 [team.name for team in match.teams[:2]],
+                public_pool=public_pool,
             )
             refunded = bool(refund_result.get("refunded", False))
             if refunded:

@@ -42,7 +42,7 @@ def _setting_bool(value: Any, default: bool) -> bool:
 
 
 def get_hltv_event_settings(group_id: str | int) -> dict[str, bool]:
-    """读取群组赛事推送设置。"""
+    """读取群组赛事推送设置，竞猜默认开启并保留群组显式设置。"""
     raw_settings = group_settings.get(group_id, HLTV_EVENT_SETTINGS_NAME, {})
     if not isinstance(raw_settings, dict):
         raw_settings = {}
@@ -57,7 +57,7 @@ def get_hltv_event_settings(group_id: str | int) -> dict[str, bool]:
         ),
         "prediction_enabled": _setting_bool(
             raw_settings.get("prediction_enabled"),
-            False,
+            True,
         ),
     }
 

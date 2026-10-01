@@ -1,4 +1,4 @@
-"""赛事普通消息、合并转发与多目标发送。"""
+"""赛事与竞猜通知的合并转发和多目标发送。"""
 
 from __future__ import annotations
 
@@ -41,31 +41,6 @@ async def send_forward_to_target(
     return False
 
 
-async def send_message_to_target(
-    bot: Bot,
-    target: dict[str, str],
-    message: Message,
-) -> bool:
-    """向赛事订阅目标发送一条普通消息。"""
-    kind = target.get("kind")
-    target_id = target.get("id")
-    if not target_id or not message:
-        return False
-    if kind == "group":
-        await bot.send_group_msg(
-            group_id=int(target_id),
-            message=message,
-        )
-        return True
-    if kind == "private":
-        await bot.send_private_msg(
-            user_id=int(target_id),
-            message=message,
-        )
-        return True
-    return False
-
-
 async def send_rating_forward(
     bot: Bot,
     target: dict[str, str],
@@ -85,34 +60,18 @@ async def send_event_notifications_to_target(
     target: dict[str, str],
     notifications: list[MatchNotification],
 ) -> bool:
-    """按通知类型发送赛事更新，竞猜通知使用普通消息。"""
-    prediction_kinds = {"prediction_open", "prediction_close"}
-    forward_messages = [
-        notification.message
-        for notification in notifications
-        if notification.kind not in prediction_kinds
-    ]
-    prediction_messages = [
-        notification.message
-        for notification in notifications
-        if notification.kind in prediction_kinds
-    ]
-    if forward_messages and not await send_forward_to_target(
+    """将同轮赛事与竞猜通知按原顺序合并发送给目标。"""
+    return await send_forward_to_target(
         bot,
         target,
-        forward_messages,
-    ):
-        return False
-    for message in prediction_messages:
-        if not await send_message_to_target(bot, target, message):
-            return False
-    return bool(forward_messages or prediction_messages)
+        [notification.message for notification in notifications],
+    )
 
 
 async def broadcast_target_notifications(
     target_notifications: list[tuple[dict[str, str], list[MatchNotification]]],
 ) -> bool:
-    """按目标发送赛事通知，竞猜节点不包装为合并消息。"""
+    """按各目标的群设置筛选结果，合并发送赛事与竞猜通知。"""
     valid_target_notifications = [
         (target, notifications)
         for target, notifications in target_notifications
