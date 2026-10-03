@@ -20,7 +20,7 @@ from ..models import (
     MatchData,
     normalize_match_section,
 )
-from ..storage import list_active_events, update_event_state
+from ..storage import list_active_events, reserve_prediction_team_labels, update_event_state
 from ..subscriptions.delivery import broadcast_target_notifications
 from ..subscriptions.memory import (
     cleanup_notification_memory,
@@ -31,6 +31,7 @@ from ..subscriptions.notifications import (
     MatchNotification,
     event_target_settings,
     notifications_for_event_target,
+    prediction_notifications_with_labels,
 )
 from ..subscriptions.processing import (
     MAX_RATING_RETRIES,
@@ -314,13 +315,29 @@ async def poll_event_subscription(
                 set(notification_memory).difference(memory_before)
             )
 
-    target_notifications = [
-        (
-            target,
-            notifications_for_event_target(notifications, settings),
+    try:
+        prediction_candidates = (
+            await reserve_prediction_team_labels(event_id, matches)
+            if any(item.kind == "prediction_open" for item in notifications)
+            else {}
         )
-        for target, settings in target_settings
-    ]
+        loaded_matches = {str(match.match_id): match for _, match in loaded}
+        target_notifications = []
+        for target, settings in target_settings:
+            selected = notifications_for_event_target(notifications, settings)
+            if target.get("kind") == "group":
+                selected = prediction_notifications_with_labels(
+                    selected,
+                    prediction_candidates.get(str(target.get("id")), []),
+                    loaded_matches,
+                    matches,
+                )
+            target_notifications.append((target, selected))
+    except Exception:
+        # 编号预留或通知生成失败时撤销新记忆，让下一轮仍能重试。
+        for key in generated_memory_keys:
+            notification_memory.pop(key, None)
+        raise
     target_notifications = [
         (target, notifications_for_target)
         for target, notifications_for_target in target_notifications

@@ -36,7 +36,7 @@ async def handle_cs_list(
     event: MessageEvent,
     params: Match[str],
 ) -> None:
-    """解析 list 的二级参数并执行对应查询。"""
+    """按比赛 ID 查询当前群的竞猜情况。"""
     raw_params = params.result.strip() if params.available else ""
     list_args = raw_params.split()
     if len(list_args) == 1 and list_args[0].isdigit():
@@ -75,17 +75,18 @@ async def handle_cs_list(
             f"本场系统公池：{detail['public_pool']}积分。",
         ]
         if detail["winner_name"]:
-            lines.append(
-                f"获胜队伍：{detail['winner_name']}（每人获得"
-                f"{detail['payout_per_winner']}积分）"
-            )
+            lines.append(f"获胜队伍：{detail['winner_name']}（积分已按各自结算记录入账）")
+        labels = detail.get("team_labels") or []
+        if len(labels) == 2:
+            lines.append(f"当前竞猜编号：team{labels[0]}：{first}；team{labels[1]}：{second}。")
         await cs_cmd.finish("\n".join(lines))
         return
 
-    if len(list_args) != 1 or list_args[0].casefold() != "event":
-        await cs_cmd.finish("用法：CS list event | <比赛ID>")
-        return
+    await cs_cmd.finish("用法：CS list <比赛ID>")
 
+
+async def show_cs_events() -> None:
+    """查询并发送当前及未来三个月的赛事列表卡片。"""
     try:
         events = await fetch_events()
         await enrich_event_assets(events)

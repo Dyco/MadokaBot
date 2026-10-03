@@ -11,6 +11,7 @@ class Config(BaseModel):
 
     xhs_ck: str = "" # 小红书 Cookie
     douyin_ck: str = "" # 抖音 Cookie
+    ytb_ck: str = "" # YouTube 登录 Cookie，使用 name=value; name2=value2 格式
     bili_sessdata: str = "" # Bilibili 登录凭据
     global_prefix_nickname: str = "" # 全局昵称
     resolver_proxy: str | None = None # 解析器代理地址，为空时直连

@@ -21,9 +21,13 @@ async def handle_nickname(target: MsgTarget, event: Event, name: Match[str]):
         await steam_cmd.finish("未绑定 Steam ID")
 
     if nickname is None:
-        await steam_cmd.finish("昵称备注已成功移除")
+        await steam_cmd.finish(
+            "昵称备注已移除，使用 steam nickname <昵称> 可重新设置。"
+        )
 
-    await steam_cmd.finish(f"昵称已设置为：{name.result}")
+    await steam_cmd.finish(
+        f"昵称已设置为：{name.result}，使用 steam nickname 删除 可移除备注。"
+    )
 
 
 @steam_cmd.assign("enable")
@@ -32,7 +36,9 @@ async def handle_enable(bot: Bot, event: GroupMessageEvent, target: MsgTarget):
     if not await BIND_PERMISSION(bot, event):
         await steam_cmd.finish("只有群管理员可以使用此功能。")
     steam_groups.set_broadcast_enabled(target.parent_id or target.id, True)
-    await steam_cmd.finish("已启用 Steam 播报")
+    await steam_cmd.finish(
+        "已启用本群 Steam 播报，使用 steam disable 可关闭本群播报。"
+    )
 
 
 @steam_cmd.assign("disable")
@@ -41,4 +47,6 @@ async def handle_disable(bot: Bot, event: GroupMessageEvent, target: MsgTarget):
     if not await BIND_PERMISSION(bot, event):
         await steam_cmd.finish("只有群管理员可以使用此功能。")
     steam_groups.set_broadcast_enabled(target.parent_id or target.id, False)
-    await steam_cmd.finish("已禁用 Steam 播报")
+    await steam_cmd.finish(
+        "已关闭本群 Steam 播报，使用 steam enable 可启用本群播报。"
+    )

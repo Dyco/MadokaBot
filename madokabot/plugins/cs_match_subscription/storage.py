@@ -11,6 +11,11 @@ from typing import Any
 from madokabot.core.group.settings import group_settings
 from madokabot.core.storage.json_store import JsonDataStore
 from .config import HLTV_SUB_PATH, config
+from .prediction_labels import (
+    allocate_prediction_team_labels,
+    prediction_team_labels,
+    prediction_team_slots,
+)
 from .models import (
     EVENT_STATUS_FINISHED,
     EVENT_STATUS_ONGOING,
@@ -509,6 +514,9 @@ async def update_event_state(
         if not isinstance(entry, dict) or entry.get("kind") != "event":
             return
         if matches is not None:
+            stored_matches = entry.get("matches")
+            if isinstance(stored_matches, dict):
+                _merge_prediction_team_labels(matches, stored_matches)
             entry["matches"] = matches
         if status in EVENT_STATUSES:
             entry["status"] = status
@@ -528,43 +536,149 @@ def _target_in_entry(entry: dict[str, Any], target: dict[str, str]) -> bool:
 
 
 async def list_open_prediction_matches(group_id: str | int) -> list[dict[str, Any]]:
-    """读取当前群正在接受竞猜的比赛。"""
+    """读取当前群开放竞猜及其稳定编号，并补齐缺失的编号。"""
     normalized_group_id = str(group_id).strip()
     if not get_hltv_event_settings(normalized_group_id)["prediction_enabled"]:
         return []
 
-    target = {"kind": "group", "id": normalized_group_id}
     async with _lock:
         data = _read()
-        matches: list[dict[str, Any]] = []
-        for key, entry in data.items():
-            if not (
-                key.startswith("event:")
-                and isinstance(entry, dict)
-                and entry.get("kind") == "event"
-                and _target_in_entry(entry, target)
+        if _allocate_prediction_team_labels(data):
+            _write(data)
+        return _open_prediction_matches(data, normalized_group_id)
+
+
+def _allocate_prediction_team_labels(data: dict[str, Any]) -> bool:
+    """读取各赛事目标的竞猜开关，只为已开启的群分配编号。"""
+    groups = {
+        str(target["id"])
+        for entry in data.values()
+        if isinstance(entry, dict) and isinstance(entry.get("targets"), list)
+        for target in entry.get("targets", [])
+        if isinstance(target, dict) and target.get("kind") == "group" and target.get("id")
+    }
+    enabled = {
+        group for group in groups
+        if get_hltv_event_settings(group)["prediction_enabled"]
+    }
+    return allocate_prediction_team_labels(data, enabled)
+
+
+def _merge_prediction_team_labels(
+    matches: dict[str, Any],
+    stored_matches: dict[str, Any],
+) -> None:
+    """保留已预留的槽位和数字模式，避免较早取得的轮询快照覆盖编号。"""
+    for match_id, state in matches.items():
+        stored = stored_matches.get(match_id)
+        if not isinstance(state, dict) or not isinstance(stored, dict):
+            continue
+        stored_labels = stored.get("prediction_team_labels")
+        if not isinstance(stored_labels, dict):
+            continue
+        labels = state.setdefault("prediction_team_labels", {})
+        if not isinstance(labels, dict):
+            labels = {}
+            state["prediction_team_labels"] = labels
+        for group_id, entry in stored_labels.items():
+            if not isinstance(entry, dict):
+                continue
+            if group_id not in labels:
+                labels[group_id] = deepcopy(entry)
+            elif (
+                isinstance(labels[group_id], dict)
+                and labels[group_id].get("slots") == entry.get("slots")
+                and entry.get("numeric")
+            ):
+                labels[group_id]["numeric"] = True
+            if isinstance(labels.get(group_id), dict) and entry.get("released"):
+                labels[group_id]["released"] = True
+
+
+def _open_prediction_matches(data: dict[str, Any], group_id: str) -> list[dict[str, Any]]:
+    """从指定快照提取当前群可下注比赛及两队编号。"""
+    target = {"kind": "group", "id": group_id}
+    matches = []
+    for key, entry in data.items():
+        if not (
+            key.startswith("event:") and isinstance(entry, dict)
+            and entry.get("kind") == "event" and not entry.get("completed")
+            and _target_in_entry(entry, target)
+        ):
+            continue
+        raw_matches = entry.get("matches")
+        if not isinstance(raw_matches, dict):
+            continue
+        event_id = key.removeprefix("event:")
+        for match_id, state in raw_matches.items():
+            if (
+                not isinstance(state, dict)
+                or not state.get("prediction_open")
+                or state.get("prediction_closed")
+                or state.get("completed")
             ):
                 continue
-            event_id = key.removeprefix("event:")
-            raw_matches = entry.get("matches")
-            if not isinstance(raw_matches, dict):
+            if not prediction_team_slots(state, group_id):
                 continue
-            for match_id, state in raw_matches.items():
-                if not isinstance(state, dict):
-                    continue
-                if not state.get("prediction_open") or state.get("prediction_closed"):
-                    continue
-                matches.append(
-                    {
-                        "event_id": event_id,
-                        "match_id": str(match_id),
-                        "event_name": _event_name(entry, event_id),
-                        "team_names": list(state.get("team_names") or []),
-                        "format_code": str(state.get("format_code") or "未知"),
-                        "scheduled_at": str(state.get("scheduled_at") or ""),
-                    }
-                )
-        return matches
+            matches.append({
+                "event_id": event_id,
+                "match_id": str(match_id),
+                "event_name": _event_name(entry, event_id),
+                "team_names": list(state.get("team_names") or []),
+                "team_labels": prediction_team_labels(state, group_id),
+                "team_slots": prediction_team_slots(state, group_id),
+                "format_code": str(state.get("format_code") or "未知"),
+                "scheduled_at": str(state.get("scheduled_at") or ""),
+            })
+    return matches
+
+
+async def reserve_prediction_team_labels(
+    event_id: str,
+    matches: dict[str, Any],
+) -> dict[str, list[dict[str, Any]]]:
+    """为本轮开放竞猜预留各群编号，但不提前提交通知和竞猜开关状态。"""
+    async with _lock:
+        data = _read()
+        entry = data.get(f"event:{event_id}")
+        if not isinstance(entry, dict):
+            return {}
+        stored_matches = entry.get("matches")
+        if isinstance(stored_matches, dict):
+            _merge_prediction_team_labels(matches, stored_matches)
+        snapshot = deepcopy(data)
+        snapshot[f"event:{event_id}"]["matches"] = matches
+        _allocate_prediction_team_labels(snapshot)
+        # 只持久化编号，发送失败时仍可重试开放通知；预留编号不会被其他赛事抢占。
+        for key, snapshot_entry in snapshot.items():
+            if (
+                not isinstance(snapshot_entry, dict)
+                or not isinstance(snapshot_entry.get("matches"), dict)
+            ):
+                continue
+            stored_entry = data.get(key)
+            if not isinstance(stored_entry, dict):
+                continue
+            stored = stored_entry.setdefault("matches", {})
+            if not isinstance(stored, dict):
+                continue
+            for match_id, state in snapshot_entry["matches"].items():
+                if (
+                    isinstance(state, dict)
+                    and isinstance(state.get("prediction_team_labels"), dict)
+                ):
+                    stored_state = stored.setdefault(match_id, {})
+                    if isinstance(stored_state, dict):
+                        stored_state["prediction_team_labels"] = deepcopy(
+                            state["prediction_team_labels"]
+                        )
+        _write(data)
+        groups = {
+            str(target["id"])
+            for target in entry.get("targets", [])
+            if isinstance(target, dict) and target.get("kind") == "group" and target.get("id")
+        }
+        return {group: _open_prediction_matches(snapshot, group) for group in groups}
 
 
 async def get_prediction_match_context(
@@ -576,6 +690,8 @@ async def get_prediction_match_context(
     normalized_match_id = str(match_id).strip()
     async with _lock:
         data = _read()
+        if _allocate_prediction_team_labels(data):
+            _write(data)
         for key, entry in data.items():
             if not (
                 key.startswith("event:")

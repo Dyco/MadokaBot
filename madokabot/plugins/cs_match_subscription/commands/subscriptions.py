@@ -9,6 +9,8 @@ from nonebot.adapters.onebot.v11 import Bot, MessageEvent
 from nonebot.permission import SUPERUSER
 from nonebot_plugin_alconna import Match
 
+from madokabot.core.messaging.response import respond
+
 from ..client import HltvError, fetch_event, fetch_event_match_refs
 from ..commands.permissions import group_subscription_target
 from ..config import config
@@ -65,8 +67,12 @@ def _event_is_finished(event: EventData, refs: list[EventMatchRef]) -> bool:
 
 
 @cs_cmd.assign("subcommands.sub")
-async def handle_cs_sub(event: MessageEvent, event_id: Match[str]) -> None:
-    """校验赛事状态，保存订阅目标并建立已有比赛的基线。"""
+async def handle_cs_sub(
+    bot: Bot,
+    event: MessageEvent,
+    event_id: Match[str],
+) -> None:
+    """复用本地订阅；无快照时先表情回应，再获取赛事并建立比赛基线。"""
     raw_id = event_id.result.strip() if event_id.available else ""
     if not raw_id.isdigit():
         await cs_cmd.finish("赛事 ID 无效，请使用数字，例如：CS sub 8057")
@@ -74,6 +80,12 @@ async def handle_cs_sub(event: MessageEvent, event_id: Match[str]) -> None:
     target = target_from_event(event)
     if target is None:
         await cs_cmd.finish("无法识别当前会话，暂时不能建立赛事订阅。")
+
+    unsubscribe_hint = (
+        f"使用 CS unsub {raw_id} 可退订本群赛事推送。"
+        if target["kind"] == "group"
+        else ""
+    )
 
     # 赛事订阅以 ID 为唯一键；当前会话重复订阅时只需追加推送目标，
     # 直接复用本地快照，避免再次访问 HLTV/FlareSolverr。
@@ -100,12 +112,16 @@ async def handle_cs_sub(event: MessageEvent, event_id: Match[str]) -> None:
             return
 
         if added:
-            await cs_cmd.finish(f"已订阅此赛事：{stored_name}，已为当前会话加入推送。")
+            await cs_cmd.finish(
+                f"已订阅此赛事：{stored_name}，已为当前会话加入推送。{unsubscribe_hint}"
+            )
             return
-        await cs_cmd.finish(f"赛事{stored_name}已订阅此赛事，当前会话已在推送列表中。")
+        await cs_cmd.finish(
+            f"当前会话已订阅赛事{stored_name}，已在推送列表中。{unsubscribe_hint}"
+        )
         return
 
-    await cs_cmd.send("正在获取 HLTV 赛事信息并记录比赛列表…")
+    await respond(bot, event)
     try:
         event_data = await fetch_event(raw_id)
     except HltvError as exc:
@@ -175,6 +191,7 @@ async def handle_cs_sub(event: MessageEvent, event_id: Match[str]) -> None:
         f"{prefix} {event_data.name}，赛程时间为{_event_schedule_text(event_data)}\n"
         f"已记录 {len(refs)} 场比赛，轮询间隔为{config.hltv_poll_interval}秒；"
         f"{push_mode}；{prediction_text}。"
+        f"{unsubscribe_hint}"
     )
 
 
@@ -204,7 +221,10 @@ async def handle_cs_unsub(
     if not removed:
         await cs_cmd.finish(f"本群未订阅赛事{event_name}。")
         return
-    await cs_cmd.finish(f"本群已退订赛事{event_name}（{raw_id}），不再接收该赛事推送。")
+    await cs_cmd.finish(
+        f"本群已退订赛事{event_name}（{raw_id}），不再接收该赛事推送。"
+        f"使用 CS sub {raw_id} 可重新订阅。"
+    )
 
 
 @cs_cmd.assign("subcommands.nosub")
@@ -224,7 +244,10 @@ async def handle_cs_nosub(bot: Bot, event: MessageEvent) -> None:
     if not removed:
         await cs_cmd.finish("本群当前没有赛事订阅。")
         return
-    await cs_cmd.finish(f"本群已退订全部赛事推送，共移除 {removed} 项订阅。")
+    await cs_cmd.finish(
+        f"本群已退订全部赛事推送，共移除 {removed} 项订阅。"
+        "使用 CS sub <赛事ID> 可重新订阅指定赛事。"
+    )
 
 
 @cs_cmd.assign("subcommands.removesub")
@@ -255,4 +278,5 @@ async def handle_cs_removesub(
         return
     await cs_cmd.finish(
         f"已全局移除赛事{event_name}（{raw_id}），所有推送目标均已删除。"
+        f"使用 CS sub {raw_id} 可为当前会话重新订阅。"
     )

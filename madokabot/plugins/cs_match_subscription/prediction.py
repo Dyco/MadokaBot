@@ -17,6 +17,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from madokabot.core.user.models import UserStats
 from .config import config
 from .prediction_models import CsPrediction
+from .prediction_labels import TEAM_LETTERS, prediction_team_labels
 from .storage import (
     get_prediction_match_context,
     list_open_prediction_matches,
@@ -76,15 +77,34 @@ def _normalize_team(value: str) -> str:
     )
 
 
-def _select_team(value: str, team_names: list[str]) -> str | None:
-    """从 A/B 或队伍名中选出比赛队伍。"""
+def _select_team(
+    value: str,
+    team_names: list[str],
+    team_slots: list[int],
+) -> str | None:
+    """按当前群的稳定槽位或完整队伍名选队，不再为每场固定使用 A/B。"""
     if len(team_names) < 2:
         return None
     normalized = _normalize_team(value)
-    if normalized in {"a", "team a", "teama", "队伍a", "队伍 a"}:
-        return team_names[0]
-    if normalized in {"b", "team b", "teamb", "队伍b", "队伍 b"}:
-        return team_names[1]
+    selector = normalized
+    for prefix in ("team", "队伍"):
+        if selector.startswith(prefix):
+            selector = selector[len(prefix):].strip()
+            break
+    slot = None
+    if len(selector) == 1 and selector.upper() in TEAM_LETTERS:
+        slot = TEAM_LETTERS.index(selector.upper()) + 1
+    elif selector.isascii() and selector.isdigit():
+        slot = int(selector)
+    if slot is not None:
+        return next(
+            (
+                team_names[index]
+                for index, candidate_slot in enumerate(team_slots[:2])
+                if candidate_slot == slot
+            ),
+            None,
+        )
     for team_name in team_names[:2]:
         if _normalize_team(team_name) == normalized:
             return team_name
@@ -114,15 +134,15 @@ async def place_prediction(
     selected_team = ""
     for candidate in candidates:
         team_names = [str(value) for value in candidate["team_names"][:2]]
-        team_name = _select_team(team_input, team_names)
+        team_name = _select_team(team_input, team_names, candidate.get("team_slots") or [])
         if team_name is None:
             continue
         if selected is not None:
-            raise PredictionError("当前有多场比赛同时接受竞猜，请稍后再试。")
+            raise PredictionError("该队伍对应多场开放竞猜，请使用通知中的竞猜编号选择比赛。")
         selected = candidate
         selected_team = team_name
     if selected is None:
-        raise PredictionError("未找到对应队伍，请使用 A、B 或完整队伍名。")
+        raise PredictionError("未找到对应队伍，请使用当前竞猜编号（如 teamA、team1）或完整队伍名。")
 
     event_id = str(selected["event_id"])
     match_id = str(selected["match_id"])
@@ -299,7 +319,7 @@ async def settle_match_predictions(
     *,
     public_pool: int = DEFAULT_PREDICTION_PUBLIC_POOL,
 ) -> dict[str, Any]:
-    """结算比赛竞猜，胜方均分本场总投注池和系统公池。"""
+    """胜方返还本金，并按下注占比分配对手投注池与系统公池。"""
     normalized_winner = _normalize_team(winner_name)
     normalized_public_pool = max(0, int(public_pool))
     async with _SETTLEMENT_LOCK, create_session() as session:
@@ -318,18 +338,28 @@ async def settle_match_predictions(
         winner_rows = [
             row for row in rows if _normalize_team(row.team_name) == normalized_winner
         ]
+        winner_points = sum(row.points for row in winner_rows)
+        reward_points = total_points - winner_points + normalized_public_pool
         settlement_points = total_points + normalized_public_pool
-        payout = settlement_points // len(winner_rows) if winner_rows else 0
+        total_payout = 0
         now = datetime.now(timezone.utc)
 
         for row in rows:
-            await _finish_prediction(
+            is_winner = row in winner_rows
+            # 本金完整返还，收益按下注权重以整数运算向下取整。
+            payout = (
+                row.points + reward_points * row.points // winner_points
+                if is_winner and winner_points > 0
+                else 0
+            )
+            if await _finish_prediction(
                 session,
                 row,
-                payout=payout if row in winner_rows else 0,
-                result="win" if row in winner_rows else "lose",
+                payout=payout,
+                result="win" if is_winner else "lose",
                 now=now,
-            )
+            ):
+                total_payout += payout
         await session.commit()
 
     return {
@@ -338,7 +368,9 @@ async def settle_match_predictions(
         "public_pool": normalized_public_pool,
         "settlement_points": settlement_points,
         "winner_count": len(winner_rows),
-        "payout_per_winner": payout,
+        "winner_points": winner_points,
+        "reward_points": reward_points,
+        "total_payout": total_payout,
     }
 
 
@@ -415,9 +447,13 @@ async def get_prediction_detail(
         "match_id": str(match_id),
         "status": status_text,
         "team_names": [str(value) for value in state.get("team_names") or []],
+        "team_labels": (
+            prediction_team_labels(state, str(group_id))
+            if state.get("prediction_open") and not state.get("prediction_closed")
+            else []
+        ),
         "summary": summary,
         "winner_name": str(state.get("winner_name") or ""),
-        "payout_per_winner": int(state.get("prediction_payout") or 0),
         "public_pool": int(
             state.get("prediction_public_pool", DEFAULT_PREDICTION_PUBLIC_POOL)
         ),

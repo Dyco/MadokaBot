@@ -13,14 +13,15 @@ __plugin_meta__ = PluginMetadata(
     description="查询 HLTV CS 赛事数据，渲染 Rating 3.0 统计卡片并订阅赛事比赛更新。",
     usage=(
         "CS help\n"
-        "CS list event\n"
+        "CS event\n"
+        "CS event <all|single|notif|predict>\n"
         "CS sub <赛事ID>\n"
         "CS unsub <赛事ID>\n"
         "CS nosub\n"
         "CS removesub <赛事ID>\n"
         "CS check <比赛链接>\n"
         "CS list <比赛ID>\n"
-        "CS prediction <队伍名|A/B> <积分>\n"
+        "CS prediction <队伍名|竞猜编号> <积分>\n"
         "CS prediction rank <本群|全部>\n"
         "CS login <手机号> <验证码>\n"
         "CS bind <5E|5e|5eplay> <玩家昵称>\n"

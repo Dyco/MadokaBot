@@ -171,6 +171,8 @@ async def process_event_match(
     if (
         has_prediction_target
         and not actual_started
+        and not match.is_finished
+        and not state.get("prediction_closed", False)
         and not state.get("prediction_open_sent", False)
         and prediction_due(state, now)
     ):
@@ -180,6 +182,7 @@ async def process_event_match(
                 MatchNotification(
                     "prediction_open",
                     prediction_open_message(match, public_pool=public_pool),
+                    match_id,
                 )
             )
             remember_notification(match_id, notification)
@@ -264,14 +267,13 @@ async def process_event_match(
         if not state.get("prediction_settled", False):
             winner_name = match_winner(match)
             if winner_name:
-                settlement = await settle_match_predictions(
+                await settle_match_predictions(
                     event_id,
                     match_id,
                     winner_name,
                     public_pool=public_pool,
                 )
                 state["winner_name"] = winner_name
-                state["prediction_payout"] = int(settlement.get("payout_per_winner", 0))
                 state["prediction_settled"] = True
         if not state.get("rating_summary_sent", False):
             # 首次结束快照不计为重试，后续最多再尝试三轮。

@@ -1,13 +1,15 @@
-"""机器人连接后补齐群资料，并缓存新群头像。"""
+"""收到群事件时按需补齐群资料，并缓存群头像。"""
 
+import asyncio
 from io import BytesIO
 from uuid import uuid4
 
 import httpx
 from PIL import Image
-from nonebot import get_driver, logger
-from nonebot.adapters import Bot as BaseBot
+from nonebot import logger
+from nonebot.adapters import Bot as BaseBot, Event as BaseEvent
 from nonebot.adapters.onebot.v11 import Bot
+from nonebot.message import event_preprocessor
 
 from madokabot.core.group.settings import group_settings
 from madokabot.core.resources import ResourceFolder, ResourceType, assets
@@ -15,6 +17,7 @@ from madokabot.core.resources import ResourceFolder, ResourceType, assets
 
 GROUP_INFO_NAME = "group_info"
 GROUP_AVATAR_DIR = assets.get_dir(ResourceType.IMAGE, ResourceFolder.GROUP)
+_profile_tasks: dict[int, asyncio.Task[None]] = {}
 
 
 async def ensure_group_profile(
@@ -25,7 +28,8 @@ async def ensure_group_profile(
     profile = dict(saved) if isinstance(saved, dict) else {}
 
     name = group_name.strip() if isinstance(group_name, str) else ""
-    if not name and not profile.get("group_name"):
+    saved_name = profile.get("group_name")
+    if not name and not (isinstance(saved_name, str) and saved_name.strip()):
         try:
             info = await bot.get_group_info(group_id=group_id, no_cache=True)
             name = str(info.get("group_name") or "").strip()
@@ -58,24 +62,37 @@ async def ensure_group_profile(
         temporary_path.unlink(missing_ok=True)
 
 
-async def sync_joined_groups(bot: Bot) -> None:
-    """机器人连接后扫描已加入的群，补齐缺失资料。"""
+async def _fill_group_profile(bot: Bot, group_id: int) -> None:
+    """在后台补齐资料，结束后释放任务，让缺失字段可在下次事件重试。"""
     try:
-        groups = await bot.get_group_list()
+        await ensure_group_profile(bot, group_id)
     except Exception:
-        logger.exception(f"获取机器人 {bot.self_id} 的群列表失败")
+        logger.exception(f"补齐群 {group_id} 资料失败")
+    finally:
+        _profile_tasks.pop(group_id, None)
+
+
+def schedule_group_profile(bot: Bot, group_id: int) -> None:
+    """资料缺失时安排后台补齐，同一个群同时只运行一个任务。"""
+    if group_id in _profile_tasks:
         return
 
-    for group in groups:
-        try:
-            group_id = int(group["group_id"])
-            await ensure_group_profile(bot, group_id, group.get("group_name"))
-        except Exception:
-            logger.exception(f"初始化群资料失败：{group!r}")
+    saved = group_settings.get(group_id, GROUP_INFO_NAME)
+    name = saved.get("group_name") if isinstance(saved, dict) else None
+    avatar_path = GROUP_AVATAR_DIR / f"{group_id}.png"
+    if isinstance(name, str) and name.strip() and avatar_path.is_file():
+        return
+
+    _profile_tasks[group_id] = asyncio.create_task(
+        _fill_group_profile(bot, group_id), name=f"group-profile-{group_id}"
+    )
 
 
-@get_driver().on_bot_connect
-async def sync_groups_on_connect(bot: BaseBot) -> None:
-    """仅在 OneBot 机器人连接时扫描群列表。"""
-    if isinstance(bot, Bot):
-        await sync_joined_groups(bot)
+@event_preprocessor
+async def _collect_event_group_profile(bot: BaseBot, event: BaseEvent) -> None:
+    """在群消息和群通知到达时补齐资料，不阻塞正常事件响应。"""
+    if not isinstance(bot, Bot) or event.get_type() not in {"message", "notice"}:
+        return
+    group_id = getattr(event, "group_id", None)
+    if isinstance(group_id, int) and group_id > 0:
+        schedule_group_profile(bot, group_id)

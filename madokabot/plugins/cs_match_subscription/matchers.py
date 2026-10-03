@@ -39,17 +39,19 @@ CS_UNSUB_USAGE = "用法：CS unsub <赛事ID>"
 CS_REMOVESUB_USAGE = "用法：CS removesub <赛事ID>"
 
 
-CS_EVENT_USAGE = "用法：CS event <all|single|notif|predict>"
+CS_EVENT_USAGE = "用法：CS event [all|single|notif|predict]（不带参数时查看赛事列表）"
 
 
 CS_PREDICTION_USAGE = (
-    "用法：\nCS prediction <队伍名|A/B> <积分>\nCS prediction rank <本群|全部>"
+    "用法：\nCS prediction <队伍名|竞猜编号> <积分>\n"
+    "例如：CS prediction teamA 100（以当前通知编号为准）\n"
+    "CS prediction rank <本群|全部>"
 )
 
 
 CS_USAGE = """用法：
 CS help
-CS list event  列出当前及未来三个月的高奖金国际 LAN 和 Major 赛事
+CS event  列出当前及未来三个月的高奖金国际 LAN 和 Major 赛事
 CS list <比赛ID> 查看竞猜情况
 CS sub <赛事ID>  订阅赛事并推送其中的比赛结果
 CS event <all|single|notif|predict> 设置本群推送方式、开赛提醒和竞猜
@@ -57,7 +59,7 @@ CS unsub <赛事ID>  本群退订指定赛事推送
 CS nosub  本群退订全部赛事推送
 CS removesub <赛事ID>  超级用户全局移除赛事订阅
 CS check <比赛链接>  查询一场比赛的 Rating
-CS prediction <队伍名|A/B> <积分> 参与当前比赛竞猜
+CS prediction <队伍名|竞猜编号> <积分> 参与当前比赛竞猜（如 teamA、team1）
 CS prediction rank <本群|全部> 查看竞猜排行榜
 CS login <手机号> <验证码>  登录完美平台并保存 Session（验证码请自行获取）
 CS bind <5E|5e|5eplay> <玩家昵称>  绑定 5E 玩家
@@ -82,13 +84,13 @@ cs_command = Alconna(
         "list",
         Args["params?", StrMulti],
         alias=["列表"],
-        help_text="列出 CS 赛事信息或查看竞猜情况",
+        help_text="查看指定比赛的竞猜情况",
     ),
     Subcommand(
         "event",
         Args["params?", StrMulti],
         alias=["赛事", "比赛"],
-        help_text="设置本群赛事推送方式",
+        help_text="查看赛事列表或设置本群赛事推送方式",
     ),
     Subcommand(
         "prediction",

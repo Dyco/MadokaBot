@@ -57,12 +57,13 @@ async def handle_cs_prediction(
     if len(prediction_args) < 2:
         await cs_cmd.finish(CS_PREDICTION_USAGE)
         return
-    if prediction_args[0].isdigit():
-        points_text = prediction_args[0]
-        team_name = " ".join(prediction_args[1:])
-    elif prediction_args[-1].isdigit():
+    # 两项均为数字时，按文档中的“编号 积分”顺序解析。
+    if prediction_args[-1].isdigit():
         points_text = prediction_args[-1]
         team_name = " ".join(prediction_args[:-1])
+    elif prediction_args[0].isdigit():
+        points_text = prediction_args[0]
+        team_name = " ".join(prediction_args[1:])
     else:
         await cs_cmd.finish(CS_PREDICTION_USAGE)
         return

@@ -27,6 +27,7 @@ madokabot/
 │   ├── help/                    # 帮助入口
 │   ├── ping/
 │   ├── poke/
+│   ├── point/                   # 积分转账、排名命令与事务服务
 │   ├── shop/                    # 库存模型、立绘目录、购买服务、指令与卡片
 │   └── sign/                    # 签到命令、会话处理与奖励服务
 └── plugins/                     # 扩展业务插件
@@ -51,6 +52,14 @@ madokabot/
 
 卡片绘图
 用于签到、用户资料和商店展示，由对应业务模块调用
+
+积分转账
+使用全局命令起始符，例如 `/积分 转账 @用户 100`、`/积分 转账 1683550817 100`，
+也可使用 `/point transfer 1683550817 100`。双方须已注册，转账数量为正整数，不能向自己转账。
+
+积分排名
+使用 `/积分 排名`、`/point List`（也支持 `list`）发送三条节点的合并消息：查询提示、本群积分排名、全部用户积分排名。
+两份榜单各展示前 20 名，按积分降序排列，格式为 `昵称（16**17）  100 积分`，QQ 号只保留前后各两位，中间固定两个星号。
 
 回应
 输入Ping快速测试机器人状态
@@ -85,6 +94,23 @@ zhiyu1998/nonebot-plugin-resolver
 
 解析插件，支持Bilibili、抖音、TikTok、ACFun、X、小红书、YouTube、网易云、酷狗和微博链接。
 此插件针对MadokaBot进行特殊适配
+
+### YouTube 下载环境
+
+YouTube 信息获取和视频下载统一启用 Deno / Node 运行时，并允许从官方 GitHub 下载 EJS 求解脚本作为备用。
+依赖使用 `yt-dlp[default]` 安装匹配的 EJS，避免首次下载依赖 GitHub；现有环境更新依赖后重启机器人。
+非 Docker 部署需将 Node 22 及以上（推荐 Node 24），或 Deno 2.3 及以上加入机器人进程的 `PATH`。
+Docker 镜像已包含 Node 24，更新后需重新构建镜像。
+
+登录凭据优先读取当前环境配置中的字符串：
+
+```dotenv
+YTB_CK="name=value; name2=value2"
+```
+
+`YTB_CK` 为空时，依次读取工作目录的 `ytb_cookies.txt`、`assets/ytb_cookies.txt`，文件须为 Mozilla/Netscape 格式。
+Cookie 文件仅在内存中使用，不回写原文件；Docker 可通过现有 `./assets:/app/assets` 挂载提供。
+登录凭据不可提交到 Git，字符串配置与 Cookie 文件均需定期更新；能否访问年龄限制内容仍取决于有效会话和账号权限。
 
 Quan666/ELF_RSS
 

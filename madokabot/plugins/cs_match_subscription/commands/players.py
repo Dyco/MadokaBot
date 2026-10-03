@@ -118,13 +118,15 @@ async def _handle_cs_bind(
         await cs_cmd.finish(
             f"绑定成功：{platform_label(platform)}\n"
             f"Steam 64 位 ID：{binding.uuid}\n"
-            "此绑定与 Steam 共用；如需群播报，请在目标群使用 steam bind。"
+            "此绑定与 Steam 共用；如需群播报，请在目标群使用 steam bind。\n"
+            "使用 CS unbind pw 可解除共用绑定，并删除 Steam 各群订阅。"
         )
         return
     await cs_cmd.finish(
         f"绑定成功：{platform_label(platform)} {binding.player_name}\n"
         f"平台 ID：{binding.domain or '-'}\n"
-        f"账号 ID：{binding.uuid or '-'}"
+        f"账号 ID：{binding.uuid or '-'}\n"
+        "使用 CS unbind 5e 可解除绑定。"
     )
 
 
@@ -162,12 +164,15 @@ async def _handle_cs_unbind(event: MessageEvent, platform: str) -> None:
     if platform == "pw":
         await cs_cmd.finish(
             f"已解除 Steam/CS 共用绑定：{binding.uuid}。"
-            "Steam 各群订阅已一并删除；完美平台 Session 未受影响。"
+            "Steam 各群订阅已一并删除；完美平台 Session 未受影响。\n"
+            f"使用 CS bind pw {binding.uuid} 可重新绑定；"
+            "如需恢复群播报，请在目标群使用 steam bind。"
         )
         return
     await cs_cmd.finish(
         f"已解除{platform_label(platform)}绑定：{binding.player_name}\n"
-        "平台 Session（如有）未受影响。"
+        "平台 Session（如有）未受影响。\n"
+        "使用 CS bind 5e <玩家昵称> 可重新绑定。"
     )
 
 

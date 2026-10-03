@@ -1,11 +1,15 @@
 import asyncio
 import uuid
+from http.cookies import CookieError, SimpleCookie
+from io import StringIO
 from pathlib import Path
 from typing import TypedDict
 
-from nonebot import logger
+from nonebot import get_plugin_config, logger
 
 from madokabot.core.messaging.media import MediaSizeLimitExceeded
+
+from ..config import Config
 
 try:
     import yt_dlp
@@ -27,6 +31,52 @@ class VideoInfo(TypedDict):
     duration: float | None
 
 
+def _youtube_cookie_options(video_type: str) -> dict[str, object]:
+    """优先将配置字符串转为内存 Cookie 文件，且仅用于 YouTube。"""
+    if video_type != "youtube":
+        return {}
+    cookie_text = get_plugin_config(Config).ytb_ck.strip()
+    if cookie_text:
+        if cookie_text.lower().startswith("cookie:"):
+            cookie_text = cookie_text[7:].strip()
+        cookies = SimpleCookie()
+        try:
+            cookies.load(cookie_text)
+        except CookieError:
+            raise ValueError("YTB_CK 格式错误，请使用 name=value; name2=value2") from None
+        if not cookies or any(
+            character in cookie_text for character in "\r\n\t"
+        ) or any(
+            character in cookie.value
+            for cookie in cookies.values()
+            for character in "\r\n\t"
+        ):
+            raise ValueError("YTB_CK 格式错误，请使用 name=value; name2=value2")
+        content = "# Netscape HTTP Cookie File\n" + "".join(
+            f".youtube.com\tTRUE\t/\tTRUE\t0\t{cookie.key}\t{cookie.value}\n"
+            for cookie in cookies.values()
+        )
+        return {"cookiefile": StringIO(content)}
+    for cookie_file in (
+        Path.cwd() / "ytb_cookies.txt",
+        Path.cwd() / "assets" / "ytb_cookies.txt",
+    ):
+        if cookie_file.is_file():
+            return {"cookiefile": StringIO(cookie_file.read_text(encoding="utf-8"))}
+    return {}
+
+
+def _youtube_options(video_type: str) -> dict[str, object]:
+    """统一启用 YouTube 的登录凭据、JS 运行时及官方 EJS 下载备用源。"""
+    if video_type != "youtube":
+        return {}
+    return {
+        "js_runtimes": {"deno": {}, "node": {}},
+        "remote_components": ["ejs:github"],
+        **_youtube_cookie_options(video_type),
+    }
+
+
 async def get_video_info(
     url: str,
     proxy: str | None = None,
@@ -41,11 +91,8 @@ async def get_video_info(
         "proxy": proxy or "",
     }
 
-    cookie_file = Path.cwd() / "ytb_cookies.txt"
-    if video_type == "youtube" and cookie_file.is_file():
-        ydl_opts["cookiefile"] = str(cookie_file)
-
     try:
+        ydl_opts.update(_youtube_options(video_type))
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info_dict = await asyncio.to_thread(ydl.extract_info, url, download=False)
             duration_value = info_dict.get("duration")
@@ -110,10 +157,7 @@ async def download_ytb_video(
     }
     if max_size is not None:
         ydl_opts["max_filesize"] = max_size
-    cookie_file = Path.cwd() / "ytb_cookies.txt"
     if video_type == "youtube":
-        if cookie_file.is_file():
-            ydl_opts["cookiefile"] = str(cookie_file)
         if "shorts" not in url:
             ydl_opts["format"] = (
                 "bv*[vcodec^=avc1][height<=720]+"
@@ -122,6 +166,7 @@ async def download_ytb_video(
                 "bv*[height<=720]+ba/b[height<=720]"
             )
     try:
+        ydl_opts.update(_youtube_options(video_type))
         def run_download() -> None:
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
                 info = ydl.extract_info(url, download=False)

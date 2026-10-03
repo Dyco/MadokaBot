@@ -12,3 +12,7 @@ __pycache__/
 .vs/VSWorkspaceState.json
 /docs
 /tests
+
+# YouTube 登录凭据仅保留在部署环境。
+/ytb_cookies.txt
+/assets/ytb_cookies.txt

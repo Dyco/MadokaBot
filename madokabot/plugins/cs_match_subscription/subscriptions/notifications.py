@@ -20,6 +20,7 @@ class MatchNotification:
 
     kind: str
     message: Message
+    match_id: str = ""
 
 
 def team_names(match: MatchData) -> tuple[str, str]:
@@ -52,20 +53,71 @@ def start_message(match: MatchData, event_name: str = "") -> Message:
     return Message(MessageSegment.text("\n".join(lines)))
 
 
-def prediction_open_message(match: MatchData, *, public_pool: int = 0) -> Message:
-    """生成开放竞猜的通知节点。"""
+def prediction_open_message(
+    match: MatchData,
+    *,
+    public_pool: int = 0,
+    team_labels: list[str] | None = None,
+) -> Message:
+    """生成开放竞猜节点，发送前使用当前群分配的两队编号。"""
     first, second = team_names(match)
+    labels = team_labels or ["A", "B"]
     format_code = match.format_code or "未知"
     return Message(
         MessageSegment.text(
             f"【比赛编号：{match.match_id}】\n"
-            f"【teamA：{first}】对阵【teamB：{second}】的{format_code}比赛现已接受竞猜。\n"
-            "使用指令/cs <竞猜|预测> <A/B|队伍名> <数字>参与。\n"
-            f"例如/cs 竞猜 {first} 100\n"
+            f"【team{labels[0]}：{first}】对阵【team{labels[1]}：{second}】的{format_code}比赛现已接受竞猜。\n"
+            "使用指令/cs <竞猜|预测> <竞猜编号|队伍名> <积分>参与。\n"
+            f"例如/cs 竞猜 team{labels[0]} 100\n"
             f"【本场系统公池：{public_pool}积分】\n"
+            "获胜返还本金，并按下注积分占比分配对手池与公池。\n"
             "【每场比赛仅可参与一次，无法修改】"
         )
     )
+
+
+def prediction_notifications_with_labels(
+    notifications: list[MatchNotification],
+    candidates: list[dict[str, Any]],
+    matches: dict[str, MatchData],
+    states: dict[str, Any],
+) -> list[MatchNotification]:
+    """为群开放通知填入编号；多场并行时附上该群全部可用编号。"""
+    if not any(item.kind == "prediction_open" for item in notifications):
+        return notifications
+    by_match = {candidate["match_id"]: candidate for candidate in candidates}
+    selected = []
+    for item in notifications:
+        if item.kind != "prediction_open":
+            selected.append(item)
+            continue
+        labels = by_match.get(item.match_id, {}).get("team_labels") or []
+        if len(labels) != 2:
+            raise ValueError(f"开放竞猜缺少群编号：{item.match_id}")
+        selected.append(MatchNotification(
+            "prediction_open",
+            prediction_open_message(
+                matches[item.match_id],
+                public_pool=int(states[item.match_id]["prediction_public_pool"]),
+                team_labels=labels,
+            ),
+            item.match_id,
+        ))
+    if len(candidates) > 1:
+        lines = ["当前可下注竞猜编号（截止后释放，新竞猜优先复用空位）："]
+        for candidate in candidates:
+            for label, name in zip(candidate["team_labels"], candidate["team_names"][:2]):
+                lines.append(f"team{label}：{name}（比赛编号：{candidate['match_id']}）")
+        if any(
+            label.isdigit()
+            for candidate in candidates
+            for label in candidate["team_labels"]
+        ):
+            lines.append("字母用尽，统一使用数字编号；旧字母仍按 A=1、B=2…对应。")
+        selected.append(MatchNotification(
+            "prediction_open", Message(MessageSegment.text("\n".join(lines)))
+        ))
+    return selected
 
 
 def prediction_close_message(
@@ -82,6 +134,7 @@ def prediction_close_message(
     first_summary = teams.get(first, {})
     second_summary = teams.get(second, {})
     lines = [
+        f"【比赛编号：{match.match_id}】",
         f"{first}对阵{second}的比赛已开始，已停止接受预测。",
         f"{first}：{int(first_summary.get('count', 0))}人预测，共计"
         f"{int(first_summary.get('points', 0))}积分。",

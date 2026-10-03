@@ -6,6 +6,10 @@ Dockerfile
 docker-compose.yml
 README.md
 
+# 登录凭据通过环境变量或 assets 挂载提供，不打包进镜像。
+ytb_cookies.txt
+assets/ytb_cookies.txt
+
 # Created by https://www.toptal.com/developers/gitignore/api/python,node,visualstudiocode,jetbrains,macos,windows,linux
 # Edit at https://www.toptal.com/developers/gitignore?templates=python,node,visualstudiocode,jetbrains,macos,windows,linux
 

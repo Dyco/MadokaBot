@@ -80,15 +80,24 @@ async def handle_bind(event: GroupMessageEvent, id: Match[str]):
 
     if created:
         name = await _steam_name(steam_id)
-        await steam_cmd.finish(f"已绑定 Steam：{name}\nSteam ID：{steam_id}；本群推送已开启。")
-    await steam_cmd.finish(f"已使用全局绑定 {steam_id}，本群推送已开启。")
+        await steam_cmd.finish(
+            f"已绑定 Steam：{name}\nSteam ID：{steam_id}；本群推送已开启，"
+            "使用 steam hide 可关闭本群推送。"
+        )
+    await steam_cmd.finish(
+        f"已使用全局绑定 {steam_id}，本群推送已开启，"
+        "使用 steam hide 可关闭本群推送。"
+    )
 
 
 @steam_cmd.assign("unbind")
 async def handle_unbind(event: GroupMessageEvent):
     """全局解绑，并删除所有群的 Steam 订阅。"""
     if await unbind_user(str(event.user_id)):
-        await steam_cmd.finish("已解绑 Steam/CS 共用账号，所有群订阅均已删除。")
+        await steam_cmd.finish(
+            "已解绑 Steam/CS 共用账号，所有群订阅均已删除，"
+            "使用 steam bind <SteamID|好友码> 可重新绑定。"
+        )
     await steam_cmd.finish("你尚未绑定 Steam ID。")
 
 
@@ -96,7 +105,9 @@ async def handle_unbind(event: GroupMessageEvent):
 async def handle_hide(event: GroupMessageEvent):
     """只隐藏发送者在当前群的自动播报。"""
     if await hide_user(str(event.group_id), str(event.user_id)):
-        await steam_cmd.finish("已关闭本群的 Steam 自动播报；绑定、备注和主动查询仍保留。")
+        await steam_cmd.finish(
+            "已关闭本群推送，使用 steam online 可开启本群推送。"
+        )
     await steam_cmd.finish("你尚未订阅本群 Steam 播报。")
 
 
@@ -104,7 +115,9 @@ async def handle_hide(event: GroupMessageEvent):
 async def handle_online(event: GroupMessageEvent):
     """只开启发送者在当前群的自动播报。"""
     if await online_user(str(event.group_id), str(event.user_id)):
-        await steam_cmd.finish("已开启本群的 Steam 自动播报。")
+        await steam_cmd.finish(
+            "已开启本群推送，使用 steam hide 可关闭本群推送。"
+        )
     await steam_cmd.finish("你尚未订阅本群 Steam 播报，请先使用 steam bind 绑定。")
 
 
@@ -139,7 +152,10 @@ async def handle_add_other(
     except ValueError as exc:
         await steam_cmd.finish(f"添加失败：{exc}")
     action = "创建了全局绑定并加入" if created else "加入或恢复"
-    await steam_cmd.finish(f"已为 {qq_name} ({user_id}) {action}本群 Steam 推送：{resolved}")
+    await steam_cmd.finish(
+        f"已为 {qq_name} ({user_id}) {action}本群 Steam 推送：{resolved}。"
+        "该用户可使用 steam hide 关闭本群推送。"
+    )
 
 
 @steam_cmd.assign("list")
@@ -170,9 +186,13 @@ async def handle_remove(
         if await unbind_user(user_id):
             await steam_cmd.finish(
                 f"已全局解绑用户 {user_id} 的 Steam/CS 共用账号，并删除所有群订阅。"
+                "该用户可使用 steam bind <SteamID|好友码> 重新绑定。"
             )
         await steam_cmd.finish(f"用户 {user_id} 没有全局 Steam 绑定。")
 
     if await hide_user(group_id, user_id):
-        await steam_cmd.finish(f"已隐藏用户 {user_id} 在本群的 Steam 自动播报。")
+        await steam_cmd.finish(
+            f"已关闭用户 {user_id} 在本群的 Steam 推送。"
+            "该用户可使用 steam online 重新开启本群推送。"
+        )
     await steam_cmd.finish(f"用户 {user_id} 在本群没有 Steam 订阅。")

@@ -12,6 +12,7 @@ from ..storage import (
     toggle_hltv_event_prediction,
     toggle_hltv_event_start_notification,
 )
+from .queries import show_cs_events
 
 
 @cs_cmd.assign("subcommands.event")
@@ -20,9 +21,12 @@ async def handle_cs_event(
     event: MessageEvent,
     params: Match[str],
 ) -> None:
-    """解析赛事推送设置，避免使用嵌套子命令影响主命令解析。"""
+    """无参数时展示赛事列表，有参数时处理当前群的赛事设置。"""
     raw_params = params.result.strip() if params.available else ""
     event_args = raw_params.split()
+    if not event_args:
+        await show_cs_events()
+        return
     if len(event_args) != 1:
         await cs_cmd.finish(CS_EVENT_USAGE)
 
@@ -54,7 +58,12 @@ async def _set_cs_event_mode(
         return
     set_hltv_event_push_each_map(target["id"], push_each_map)
     mode_text = "单图" if push_each_map else "全图"
-    await cs_cmd.finish(f"已设置本群赛事推送方式为{mode_text}模式。")
+    reverse_mode = "all" if push_each_map else "single"
+    reverse_text = "全图" if push_each_map else "单图"
+    await cs_cmd.finish(
+        f"已设置本群赛事推送方式为{mode_text}模式，"
+        f"使用 CS event {reverse_mode} 可切换为{reverse_text}模式。"
+    )
 
 
 async def _toggle_cs_event_notification(
@@ -67,7 +76,10 @@ async def _toggle_cs_event_notification(
         return
     enabled = toggle_hltv_event_start_notification(target["id"])
     state_text = "已打开" if enabled else "已关闭"
-    await cs_cmd.finish(f"{state_text}本群赛事开始通知")
+    reverse_text = "关闭" if enabled else "打开"
+    await cs_cmd.finish(
+        f"{state_text}本群赛事开始通知，再次使用 CS event notif 可{reverse_text}通知。"
+    )
 
 
 async def _toggle_cs_event_prediction(
@@ -80,4 +92,7 @@ async def _toggle_cs_event_prediction(
         return
     enabled = toggle_hltv_event_prediction(target["id"])
     state_text = "已打开" if enabled else "已关闭"
-    await cs_cmd.finish(f"{state_text}本群赛事竞猜功能")
+    reverse_text = "关闭" if enabled else "打开"
+    await cs_cmd.finish(
+        f"{state_text}本群赛事竞猜功能，再次使用 CS event predict 可{reverse_text}竞猜。"
+    )

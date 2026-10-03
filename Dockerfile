@@ -14,6 +14,8 @@ RUN python -m pip wheel --wheel-dir=/wheel --no-cache-dir --requirement ./requir
 RUN python -m pipx run --no-cache nb-cli generate -f /tmp/bot.py
 
 
+FROM node:24-bookworm-slim AS node_runtime
+
 FROM python:3.12-slim
 
 WORKDIR /app
@@ -22,12 +24,15 @@ ENV TZ Asia/Shanghai
 ENV PYTHONPATH=/app
 
 COPY ./docker/gunicorn_conf.py ./docker/start.sh /
+COPY --from=node_runtime /usr/local/bin/node /usr/local/bin/node
 RUN chmod +x /start.sh \
   && apt-get update \
   && apt-get install -y --no-install-recommends \
       ffmpeg \
-      nodejs \
-  && rm -rf /var/lib/apt/lists/*
+      libatomic1 \
+      libstdc++6 \
+  && rm -rf /var/lib/apt/lists/* \
+  && node --version
 
 ENV APP_MODULE _main:app
 ENV MAX_WORKERS 1
