@@ -45,7 +45,7 @@ CS_EVENT_USAGE = "用法：CS event [all|single|notif|predict]（不带参数时
 CS_PREDICTION_USAGE = (
     "用法：\nCS prediction <队伍名|竞猜编号> <积分>\n"
     "例如：CS prediction teamA 100（以当前通知编号为准）\n"
-    "CS prediction rank <本群|全部>"
+    "CS prediction rank <本群|全部|个人|本人>"
 )
 
 
@@ -60,7 +60,7 @@ CS nosub  本群退订全部赛事推送
 CS removesub <赛事ID>  超级用户全局移除赛事订阅
 CS check <比赛链接>  查询一场比赛的 Rating
 CS prediction <队伍名|竞猜编号> <积分> 参与当前比赛竞猜（如 teamA、team1）
-CS prediction rank <本群|全部> 查看竞猜排行榜
+CS prediction rank <本群|全部|个人|本人> 查看竞猜排行榜或个人记录
 CS login <手机号> <验证码>  登录完美平台并保存 Session（验证码请自行获取）
 CS bind <5E|5e|5eplay> <玩家昵称>  绑定 5E 玩家
 CS bind <wm|pw|完美> [Steam 32 位或 64 位 ID]  使用 Steam/CS 共用绑定

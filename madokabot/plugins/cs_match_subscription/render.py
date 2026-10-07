@@ -20,6 +20,7 @@ TEMPLATE_DIR = Path(__file__).parent / "templates"
 HTML_FILE_PATH = TEMPLATE_DIR / "rating.html"
 EVENT_HTML_FILE_PATH = TEMPLATE_DIR / "event_list.html"
 PREDICTION_RANK_HTML_FILE_PATH = TEMPLATE_DIR / "prediction_rank.html"
+PREDICTION_PERSONAL_HTML_FILE_PATH = TEMPLATE_DIR / "prediction_personal.html"
 STATS_TEMPLATE_1_HTML_FILE_PATH = TEMPLATE_DIR / "stats_template_1.html"
 STATS_TEMPLATE_2_HTML_FILE_PATH = TEMPLATE_DIR / "stats_template_2.html"
 STATS_TEMPLATE_3_HTML_FILE_PATH = TEMPLATE_DIR / "stats_template_3.html"
@@ -161,6 +162,29 @@ async def render_prediction_rank_card(
             prepared_entries,
             scope_label=scope_label,
         ),
+        template_path=TEMPLATE_DIR.resolve().as_uri(),
+        viewport={"width": config.cs_stats_width, "height": 10},
+        device_scale_factor=config.cs_rating_device_scale_factor,
+        full_page=True,
+    )
+    return MessageSegment.image(image_bytes)
+
+
+def render_prediction_personal_html(data: dict[str, object]) -> str:
+    """生成个人竞猜汇总与最近参与记录的页面。"""
+    template = _template_env.get_template(PREDICTION_PERSONAL_HTML_FILE_PATH.name)
+    context = dict(data)
+    context.setdefault("avatar_src", "")
+    context.update(font_context())
+    return template.render(**context)
+
+
+async def render_prediction_personal_card(data: dict[str, object]) -> MessageSegment:
+    """将个人竞猜记录渲染为图片，沿用排行榜的字体与尺寸。"""
+    context = dict(data)
+    context["avatar_src"] = await fetch_image_data_url(str(data.get("avatar_url") or ""))
+    image_bytes = await html_to_pic(
+        html=render_prediction_personal_html(context),
         template_path=TEMPLATE_DIR.resolve().as_uri(),
         viewport={"width": config.cs_stats_width, "height": 10},
         device_scale_factor=config.cs_rating_device_scale_factor,

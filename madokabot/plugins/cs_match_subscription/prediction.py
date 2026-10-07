@@ -10,7 +10,7 @@ from zoneinfo import ZoneInfo
 
 from nonebot import logger
 from nonebot_plugin_datastore import create_session
-from sqlalchemy import func, select, update
+from sqlalchemy import case, func, select, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -604,6 +604,69 @@ def _masked_user_id(user_id: str) -> str:
     return f"{value[:2]}***{value[-2:]}"
 
 
+async def get_prediction_personal_records(user_id: str) -> dict[str, Any]:
+    """跨群汇总个人全部竞猜成绩，并按下注时间列出最近三十条记录。"""
+    settled = CsPrediction.settled_at.is_not(None)
+    won = settled & (CsPrediction.result == "win")
+    lost = settled & (CsPrediction.result == "lose")
+    completed = won | lost
+    refunded = settled & (CsPrediction.result == "refund")
+    async with create_session() as session:
+        totals = (
+            await session.execute(select(
+                func.count().label("total_count"),
+                func.coalesce(func.sum(case((won, 1), else_=0)), 0).label("wins"),
+                func.coalesce(func.sum(case((lost, 1), else_=0)), 0).label("losses"),
+                func.coalesce(func.sum(case((refunded, 1), else_=0)), 0)
+                .label("refund_count"),
+                func.coalesce(
+                    func.sum(case((completed, CsPrediction.net_points), else_=0)), 0,
+                ).label("net_points"),
+            ).where(CsPrediction.user_id == str(user_id)))
+        ).one()
+        rows = (await session.scalars(
+            select(CsPrediction)
+            .where(CsPrediction.user_id == str(user_id))
+            .order_by(
+                CsPrediction.created_at.desc(), CsPrediction.event_id.desc(),
+                CsPrediction.match_id.desc(), CsPrediction.group_id.desc(),
+            )
+            .limit(30)
+        )).all()
+        user = await session.get(UserStats, str(user_id))
+        nickname = str(user.display_name or user.qq_nickname or "").strip() if user else ""
+        entries = []
+        for row in rows:
+            result = row.result if row.settled_at is not None else "open"
+            entries.append({
+                "match_id": row.match_id,
+                "team_name": row.team_name,
+                "points": row.points,
+                "created_at": row.created_at.strftime("%Y-%m-%d %H:%M"),
+                "result": result,
+                "result_label": {
+                    "win": "获胜", "lose": "未获胜", "refund": "已退款",
+                }.get(result, "未结算"),
+                "net_points": row.net_points if result in {"win", "lose"} else 0,
+            })
+
+    settled_count = totals.wins + totals.losses
+    return {
+        "nickname": nickname or f"用户({_masked_user_id(user_id)})",
+        "masked_user_id": _masked_user_id(user_id),
+        "avatar_url": f"https://q1.qlogo.cn/g?b=qq&nk={user_id}&s=640",
+        "total_count": totals.total_count,
+        "settled_count": settled_count,
+        "wins": totals.wins,
+        "losses": totals.losses,
+        "refund_count": totals.refund_count,
+        "pending_count": totals.total_count - settled_count - totals.refund_count,
+        "win_rate": f"{totals.wins / settled_count * 100:.0f}%" if settled_count else "0%",
+        "net_points": totals.net_points,
+        "entries": entries,
+    }
+
+
 async def get_prediction_ranking(
     scope: str,
     group_id: str,
@@ -680,6 +743,7 @@ __all__ = [
     "DEFAULT_PREDICTION_PUBLIC_POOL",
     "get_prediction_detail",
     "get_prediction_ranking",
+    "get_prediction_personal_records",
     "get_prediction_summary",
     "get_prediction_settlement_reports",
     "save_prediction_notification_text",

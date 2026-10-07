@@ -9,8 +9,13 @@ from nonebot_plugin_alconna import Match
 from madokabot.core.messaging.response import respond
 
 from ..matchers import CS_PREDICTION_USAGE, cs_cmd
-from ..prediction import PredictionError, get_prediction_ranking, place_prediction
-from ..render import render_prediction_rank_card
+from ..prediction import (
+    PredictionError,
+    get_prediction_personal_records,
+    get_prediction_ranking,
+    place_prediction,
+)
+from ..render import render_prediction_personal_card, render_prediction_rank_card
 from ..storage import get_hltv_event_settings
 
 
@@ -39,9 +44,19 @@ async def handle_cs_prediction(
 
     if is_ranking:
         if len(prediction_args) != 2:
-            await cs_cmd.finish("用法：CS prediction rank <本群|全部>")
+            await cs_cmd.finish("用法：CS prediction rank <本群|全部|个人|本人>")
             return
         scope_value = prediction_args[1].casefold()
+        if scope_value in {"个人", "本人"}:
+            try:
+                data = await get_prediction_personal_records(str(event.user_id))
+                image = await render_prediction_personal_card(data)
+            except Exception:
+                logger.exception("CS 竞猜个人记录处理失败：user_id=%s", event.user_id)
+                await cs_cmd.finish("竞猜个人记录处理失败，请稍后重试。")
+                return
+            await cs_cmd.finish(Message([image]))
+            return
         if scope_value in {"本群", "group"}:
             scope = "group"
             scope_label = "本群"
@@ -49,7 +64,7 @@ async def handle_cs_prediction(
             scope = "all"
             scope_label = "全部赛事"
         else:
-            await cs_cmd.finish("用法：CS prediction rank <本群|全部>")
+            await cs_cmd.finish("用法：CS prediction rank <本群|全部|个人|本人>")
             return
         try:
             entries = await get_prediction_ranking(scope, str(event.group_id))
