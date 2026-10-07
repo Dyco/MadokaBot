@@ -1,4 +1,4 @@
-"""统一媒体交付入口；文件检查、转码和 OneBot 发送各由独立模块负责。"""
+"""媒体交付入口。"""
 
 from pathlib import Path
 from typing import Any
@@ -54,7 +54,7 @@ class MediaDelivery:
         ffprobe_path: str,
         ffmpeg_timeout: int,
     ) -> None:
-        """初始化文件检查、视频处理和 OneBot 发送组件。"""
+        """媒体组件初始化方法。"""
         self.video_message_limit = int(video_message_max_mb * MIB)
         self.video_compress_limit = int(video_compress_max_mb * MIB)
         self.video_compress_target = int(video_compress_target_mb * MIB)
@@ -98,7 +98,7 @@ class MediaDelivery:
         return self.inspector.inspect(path, name)
 
     async def compress_video(self, media: LocalMedia) -> LocalMedia:
-        """压缩超过视频消息大小限制的文件。"""
+        """视频压缩方法。"""
         return await self.processor.compress_video(media)
 
     async def prepare(self, media: LocalMedia) -> LocalMedia:
@@ -119,7 +119,7 @@ class MediaDelivery:
         path: str | Path,
         name: str | None = None,
     ) -> MessageSegment:
-        """准备可嵌入普通消息或合并转发的视频消息段。"""
+        """视频消息段生成方法。"""
         media = self.inspect(path, name)
         if media.mode is MediaDeliveryMode.GROUP_FILE:
             raise ValueError(f"文件不是可发送的视频：{media.path}")
@@ -172,7 +172,7 @@ class MediaDelivery:
         name: str | None = None,
         timeout: int | None = None,
     ) -> MediaDeliveryResult:
-        """检查、准备并发送媒体，结束后清理转码文件。"""
+        """检查、准备并发送媒体。"""
         media = self.inspect(path, name)
         prepared = await self.prepare(media)
         try:

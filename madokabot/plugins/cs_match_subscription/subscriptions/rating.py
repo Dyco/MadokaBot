@@ -29,7 +29,7 @@ async def rating_message(
 
 
 async def render_check_rating_messages(match: MatchData) -> list[Message]:
-    """按比赛地图数量生成即时查询所需的 Rating 消息。"""
+    """Rating查询消息生成方法。"""
     if not match.has_stats or not match.rating_is_ready:
         return []
 

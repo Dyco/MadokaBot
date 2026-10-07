@@ -1,10 +1,8 @@
-"""以下为抖音/TikTok类型代码/Type code for Douyin/TikTok"""
+"""抖音与TikTok类型代码。"""
 URL_TYPE_CODE_DICT = {
-    # 抖音/Douyin
     2: 'image',
     4: 'video',
     68: 'image',
-    # TikTok
     0: 'video',
     51: 'video',
     55: 'video',

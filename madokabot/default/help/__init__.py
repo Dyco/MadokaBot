@@ -24,7 +24,7 @@ help_command = on_alconna(
 
 
 def build_help_text() -> str:
-    """按当前配置的起始符展示基础功能和扩展插件指令。"""
+    """帮助文本生成方法。"""
     prefix = next(iter(sorted(get_driver().config.command_start)), "")
     commands = (
         "设置 立绘 <立绘ID>",
@@ -47,5 +47,5 @@ def build_help_text() -> str:
 @help_message.handle()
 @help_command.handle()
 async def handle_help(matcher: Matcher) -> None:
-    """为完整匹配消息和带起始符的帮助命令返回统一说明。"""
+    """帮助命令处理方法。"""
     await matcher.finish(build_help_text())

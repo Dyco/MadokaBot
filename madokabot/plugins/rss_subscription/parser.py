@@ -12,7 +12,7 @@ from .utils import partition_list
 
 @dataclass(frozen=True)
 class HandlerSpec:
-    """One handler registered for matching subscription URLs."""
+    """订阅处理器定义。"""
 
     func: Callable[..., Any]
     rex: str = "(.*)"
@@ -25,7 +25,7 @@ def _sort(handlers: List[HandlerSpec]) -> List[HandlerSpec]:
 
 
 class HandlerRegistry:
-    """Registry for the default pipeline and route-specific overrides."""
+    """订阅处理器注册表。"""
 
     before_handler: List[HandlerSpec] = []
     handler: Dict[str, List[HandlerSpec]] = {
@@ -58,7 +58,7 @@ class HandlerRegistry:
     def append_before_handler(
         cls, rex: str = "(.*)", priority: int = 10, block: bool = False
     ) -> Callable[..., Any]:
-        """Register a handler that runs before individual entries."""
+        """订阅前置处理器注册方法。"""
 
         def _decorator(func: Callable[..., Any]) -> Callable[..., Any]:
             cls.before_handler.append(HandlerSpec(func, rex, priority, block))
@@ -71,7 +71,7 @@ class HandlerRegistry:
     def append_after_handler(
         cls, rex: str = "(.*)", priority: int = 10, block: bool = False
     ) -> Callable[..., Any]:
-        """Register a handler that runs after an entry batch."""
+        """订阅后置处理器注册方法。"""
 
         def _decorator(func: Callable[..., Any]) -> Callable[..., Any]:
             cls.after_handler.append(HandlerSpec(func, rex, priority, block))
@@ -129,7 +129,7 @@ async def _run_handlers(
 
 
 class FeedProcessor:
-    """Run the registered processing pipeline for one subscription feed."""
+    """订阅处理流水线。"""
 
     def __init__(self, rss: Rss):
         self.state: Dict[str, Any] = {}

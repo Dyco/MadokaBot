@@ -21,14 +21,12 @@ def current_map_scores(match: MatchData) -> dict[str, str]:
     scores: dict[str, str] = {}
     for index, result in enumerate(match.map_results):
         if result.is_finished:
-            # 地图名在 HLTV 的地图切换过程中可能从占位名变成正式名称；
-            # 去重状态以地图序号为准，避免同一张图被识别成两张图。
             scores[str(index)] = result.score_display
     return scores
 
 
 def map_state_seen(values: set[str], index: int) -> bool:
-    """判断地图是否已经记录过，并兼容旧版的 ``序号:地图名`` 键。"""
+    """地图状态去重检查方法。"""
     key = str(index)
     legacy_prefix = f"{key}:"
     return key in values or any(value.startswith(legacy_prefix) for value in values)
@@ -38,7 +36,7 @@ def previous_map_score(
     previous_scores: dict[str, Any],
     index: int,
 ) -> Any:
-    """读取地图上一次比分，并兼容旧版包含地图名的状态键。"""
+    """上次地图比分读取方法。"""
     key = str(index)
     if key in previous_scores:
         return previous_scores[key]
@@ -54,7 +52,7 @@ def previous_map_score(
 
 
 def started_map_candidates(match: MatchData) -> list[tuple[int, str]]:
-    """返回由实时 Scoreboard 当前地图确认开始且尚未结束的地图。"""
+    """进行中地图查询方法。"""
     if match.is_finished:
         return []
     return [
@@ -65,7 +63,7 @@ def started_map_candidates(match: MatchData) -> list[tuple[int, str]]:
 
 
 def parse_datetime(value: Any) -> datetime | None:
-    """解析 JSON 中保存的 ISO 时间并统一为 UTC。"""
+    """UTC时间解析方法。"""
     if not isinstance(value, str) or not value:
         return None
     try:
@@ -112,7 +110,7 @@ def match_winner(match: MatchData) -> str:
 
 
 def event_status(entry: dict[str, Any]) -> str:
-    """读取赛事订阅状态，并兼容旧版没有状态字段的记录。"""
+    """读取赛事订阅状态。"""
     if entry.get("completed", False):
         return EVENT_STATUS_FINISHED
     status = str(entry.get("status", "")).strip()
@@ -120,7 +118,7 @@ def event_status(entry: dict[str, Any]) -> str:
 
 
 def event_start_at(entry: dict[str, Any]) -> datetime | None:
-    """读取赛事官方开始时间，用于避免过早检查等待中的赛事。"""
+    """赛事开始时间读取方法。"""
     event_data = entry.get("event_data")
     if not isinstance(event_data, dict):
         return None
@@ -128,7 +126,7 @@ def event_start_at(entry: dict[str, Any]) -> datetime | None:
 
 
 def match_has_actual_start(match: MatchData) -> bool:
-    """仅按实时 Scoreboard 当前地图判断比赛是否实际开始。"""
+    """比赛实际开始检查方法。"""
     return any(
         result.is_started and not result.is_finished for result in match.map_results
     )

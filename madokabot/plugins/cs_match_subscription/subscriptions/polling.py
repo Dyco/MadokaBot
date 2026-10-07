@@ -38,6 +38,10 @@ from ..subscriptions.processing import (
     complete_series_notifications,
     process_event_match,
 )
+from ..subscriptions.settlement import (
+    reconcile_unsettled_predictions,
+    with_prediction_settlement_notifications,
+)
 from ..subscriptions.state import (
     event_ended,
     event_start_at,
@@ -58,7 +62,7 @@ async def load_event_matches(
     semaphore = asyncio.Semaphore(4)
 
     async def load(ref: EventMatchRef) -> tuple[EventMatchRef, MatchData] | None:
-        """在并发限制内读取单场比赛，失败时记录日志。"""
+        """在并发限制内读取单场比赛。"""
         async with semaphore:
             try:
                 return ref, await fetch_match(
@@ -183,8 +187,7 @@ async def poll_event_subscription(
             continue
 
         if ref.url:
-            # 赛事页上的链接可能在比赛开始后补全或修正 slug；每轮同步，
-            # 避免继续使用旧的比赛地址。
+            # 赛事页可能补全slug，每轮需同步比赛地址。
             state["url"] = ref.url
         if ref.scheduled_at is not None:
             state["scheduled_at"] = ref.scheduled_at.isoformat()
@@ -192,14 +195,12 @@ async def poll_event_subscription(
             continue
 
         if section == MATCH_SECTION_UPCOMING:
-            # 只有赛事页明确标记为 live 的比赛才抓取详情页。
             state["source"] = MATCH_SECTION_UPCOMING
             queue_match(ref)
             continue
 
         if section == MATCH_SECTION_WAITING:
-            # 未开始的比赛通常只保留时间；首次启用竞猜或进入窗口时，
-            # 才抓取详情页补全队伍、赛制和实时状态。
+            # 等待中的比赛仅在竞猜需要详情时抓取。
             state["source"] = MATCH_SECTION_WAITING
             if has_prediction_target and (
                 not state.get("scheduled_at")
@@ -208,9 +209,7 @@ async def poll_event_subscription(
                 queue_match(ref)
             continue
 
-        # 已跟踪的比赛从 matches 列表（live 或 waiting）移动到 Results
-        # 时，继续请求详情；取得结束快照后最多再重试三轮完整 Rating。
-        # 新发现的 finished 比赛不会回溯抓取。
+        # 跟踪比赛移入Results后有限重试，不回溯新发现的已结束比赛。
         previous_source = normalize_match_section(state.get("source"))
         attempts_raw = state.get("finalization_attempts", 0)
         try:
@@ -242,7 +241,7 @@ async def poll_event_subscription(
             state["source"] = MATCH_SECTION_FINISHED
             state["completed"] = True
 
-    # 已取得结束比分后，即使比赛从列表中消失，也要完成有限次数的重试。
+    # 比赛从列表消失后仍需完成结束通知的有限重试。
     for match_id, state in matches.items():
         if (
             isinstance(state, dict)
@@ -301,7 +300,7 @@ async def poll_event_subscription(
         )
         generated_memory_keys.update(set(notification_memory).difference(memory_before))
 
-    # 最后一轮详情抓取失败或返回不完整状态时，用已保存的结束比分收尾。
+    # 最终抓取失败时用已保存的结束比分收尾。
     for ref in pending_refs:
         state = matches[ref.match_id]
         if (
@@ -314,6 +313,14 @@ async def poll_event_subscription(
             generated_memory_keys.update(
                 set(notification_memory).difference(memory_before)
             )
+
+    if any(item.kind == "series_end" for item in notifications):
+        try:
+            await reconcile_unsettled_predictions(
+                exclude_matches={(event_id, str(match_id)) for match_id in matches},
+            )
+        except Exception:
+            logger.exception("CS 比赛结束补结算失败，保留下注等待后续结束事件或启动")
 
     try:
         prediction_candidates = (
@@ -332,9 +339,12 @@ async def poll_event_subscription(
                     loaded_matches,
                     matches,
                 )
+                selected = await with_prediction_settlement_notifications(
+                    event_id, str(target["id"]), selected,
+                )
             target_notifications.append((target, selected))
     except Exception:
-        # 编号预留或通知生成失败时撤销新记忆，让下一轮仍能重试。
+        # 生成通知失败需撤销新记忆，留待下一轮重试。
         for key in generated_memory_keys:
             notification_memory.pop(key, None)
         raise
@@ -345,8 +355,7 @@ async def poll_event_subscription(
     ]
     if target_notifications:
         if not await broadcast_target_notifications(target_notifications):
-            # 所有目标都没有确认发送成功时撤销本轮新键，下一次轮询仍可重试；
-            # 已存在的键不动，避免覆盖此前已经成功发送的通知记忆。
+            # 全部发送失败仅撤销本轮新键，保留已成功通知的记忆。
             for key in generated_memory_keys:
                 notification_memory.pop(key, None)
             return
@@ -381,7 +390,6 @@ async def poll_subscriptions() -> None:
     for event_id, entry in entries.items():
         try:
             if event_status(entry) == EVENT_STATUS_WAITING:
-                # 没有进入竞猜窗口时，等待中的赛事不抓取比赛详情页。
                 activated = await activate_waiting_event(event_id, entry)
                 if not activated and not event_prediction_due(entry):
                     continue

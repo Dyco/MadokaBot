@@ -13,7 +13,7 @@ DISPLAY_NAME_MAX_LENGTH = 10
 
 
 async def rename_user(uid: str, name: str) -> tuple[bool, str]:
-    """校验显示名，并在余额足够时原子扣费、保存新名字。"""
+    """账号改名方法。"""
     name = name.strip()
     if not name or len(name) > DISPLAY_NAME_MAX_LENGTH:
         return False, f"名字长度须为 1～{DISPLAY_NAME_MAX_LENGTH} 个字符或汉字"
@@ -46,14 +46,14 @@ async def register_user(
     uid: str,
     qq_nickname: str = "",
 ) -> tuple[UserStats, SignRecord, bool]:
-    """集中创建用户数据，并返回本次是否为首次注册。"""
+    """用户注册方法。"""
     normalized_nickname = qq_nickname.strip()
     user = await session.get(UserStats, uid)
     if user is not None:
         if normalized_nickname and user.qq_nickname != normalized_nickname:
             user.qq_nickname = normalized_nickname
             await session.commit()
-            # 提交会使用户属性过期，后续签到及会话外渲染仍需读取这些属性。
+            # 提交后属性过期，需刷新后再用于会话外渲染。
             await session.refresh(user)
         sign = await session.get(SignRecord, uid)
         if sign is None:
@@ -62,7 +62,7 @@ async def register_user(
             try:
                 await session.commit()
             except IntegrityError:
-                # 并发请求可能已补全同一份不完整账号。
+                # 并发请求可能已补齐账号。
                 await session.rollback()
                 sign = await session.get(SignRecord, uid)
                 user = await session.get(UserStats, uid)
@@ -94,7 +94,7 @@ async def register_user(
     try:
         await session.commit()
     except IntegrityError:
-        # 注册与签到可能同时创建同一账号。
+        # 注册和签到可能并发创建同一账号。
         await session.rollback()
         existing_user = await session.get(UserStats, uid)
         existing_sign = await session.get(SignRecord, uid)

@@ -1,4 +1,4 @@
-"""按群分配竞猜队伍编号，保留活跃编号并优先复用空位。"""
+"""竞猜队伍编号分配。"""
 
 from __future__ import annotations
 
@@ -9,7 +9,7 @@ TEAM_LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
 
 def prediction_team_slots(state: dict[str, Any], group_id: str) -> list[int]:
-    """读取该群的两个有效编号槽位，避免坏数据参与分配。"""
+    """读取该群的两个有效编号槽位。"""
     groups = state.get("prediction_team_labels")
     entry = groups.get(group_id) if isinstance(groups, dict) else None
     if isinstance(entry, dict) and entry.get("released"):
@@ -41,7 +41,7 @@ def allocate_prediction_team_labels(
     data: dict[str, Any],
     enabled_groups: set[str],
 ) -> bool:
-    """各群独立分配槽位；字母用尽后保持数字模式，直到活跃竞猜清空。"""
+    """竞猜队伍编号分配方法。"""
     by_group: dict[str, list[dict[str, Any]]] = {}
     changed = False
     for key, entry in data.items():
@@ -66,7 +66,7 @@ def allocate_prediction_team_labels(
                 continue
             labels = state.get("prediction_team_labels")
             if state.get("prediction_closed") or state.get("completed"):
-                # 截止标记可先于消息提交释放编号，旧快照不能再把它当作开放编号。
+                # 截止标记已释放编号，旧快照不能重新占用。
                 if isinstance(labels, dict):
                     for label_entry in labels.values():
                         if isinstance(label_entry, dict) and not label_entry.get("released"):
@@ -80,7 +80,7 @@ def allocate_prediction_team_labels(
                     and labels[group_id].get("released")
                 ):
                     continue
-                # 尚未送达开放通知的预留槽位也占位，重试时不更换编号。
+                # 未发送的预留槽位仍占位，重试不能换号。
                 if state.get("prediction_open") or prediction_team_slots(state, group_id):
                     by_group.setdefault(group_id, []).append(state)
 

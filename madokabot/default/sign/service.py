@@ -11,11 +11,7 @@ _SHANGHAI_TZ = ZoneInfo("Asia/Shanghai")
 
 
 def calculate_reward(continuous_days: int) -> tuple[int, int, int]:
-    """
-    计算签到奖励。
-
-    :return: (基础积分, 连签奖励积分, 好感度)
-    """
+    """签到奖励计算方法。"""
     bonus_points = min(max(continuous_days - 1, 0), 10)
     base_points = random.randint(3, 6)
     reward_favor = random.randint(0, 1)
@@ -34,7 +30,7 @@ async def execute_sign_update(
     sign: SignRecord,
     session: AsyncSession,
 ) -> dict[str, int]:
-    """计算奖励，更新用户数据并提交事务。"""
+    """签到数据更新方法。"""
     now = datetime.now(_SHANGHAI_TZ)
     today = now.date()
     last_date = sign.last_sign_date.date() if sign.last_sign_date else None
@@ -45,7 +41,7 @@ async def execute_sign_update(
         sign.continuous_days = 1
 
     base_points, bonus_points, reward_favor = calculate_reward(sign.continuous_days)
-    # 与竞猜派奖、退款和商城扣款使用同一原子增减方式，避免旧余额覆盖。
+    # 原子增减积分，避免并发更新覆盖余额。
     await session.execute(
         update(UserStats)
         .where(UserStats.user_id == user.user_id)

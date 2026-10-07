@@ -119,7 +119,6 @@ async def _fetch_post_tags(
     return _tag_fields(payload)
 
 
-# 检查更新
 @HandlerRegistry.append_before_handler(rex=r"https\:\/\/yande\.re\/post\/piclens\?tags\=")
 async def load_updates(rss: Rss, state: Dict[str, Any]) -> Dict[str, Any]:
     db = state["tinydb"]

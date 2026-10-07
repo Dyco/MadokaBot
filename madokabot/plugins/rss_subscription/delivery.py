@@ -20,7 +20,6 @@ sending_lock: DefaultDict[Tuple[Union[int, str], str], asyncio.Lock] = defaultdi
 )
 
 
-# 发送消息
 async def send_msg(
     rss: Rss, messages: List[str], items: List[Dict[str, Any]], header_message: str
 ) -> bool:
@@ -92,7 +91,6 @@ async def send_msg(
     return flag
 
 
-# 发送私聊消息
 async def send_private_msg(
     bot: Bot,
     message: List[str],
@@ -115,7 +113,6 @@ async def send_private_msg(
     )
 
 
-# 发送群聊消息
 async def send_group_msg(
     bot: Bot,
     message: List[str],
@@ -138,7 +135,6 @@ async def send_group_msg(
     )
 
 
-# 发送频道消息
 async def send_guild_channel_msg(
     bot: Bot,
     message: List[str],
@@ -278,7 +274,6 @@ async def try_sending_forward_msg(
             )
         flag = True
     except NetworkError:
-        # 如果图片体积过大或数量过多，很可能触发这个错误，但实际上发送成功，不过高概率吞图，只警告不处理
         logger.warning("图片过大或数量过多，可能发送失败！")
         flag = True
     except Exception as e:
@@ -389,7 +384,7 @@ def _imageboard_entries(
 def _forward_message_contents(
     header_message: str, messages: List[str], items: List[Dict[str, Any]]
 ) -> List[str]:
-    """图片站每条帖子合成一个详情节点，普通更新仍拆分链接和正文。"""
+    """订阅合并消息内容生成方法。"""
     if _is_imageboard_batch(items):
         imageboard_entries = _imageboard_entries(messages, items)
         if not imageboard_entries:
@@ -408,7 +403,6 @@ def _forward_message_contents(
     return contents
 
 
-# 发送消息并写入文件
 async def handle_send_msgs(
     rss: Rss, messages: List[str], items: List[Dict[str, Any]], state: Dict[str, Any]
 ) -> None:

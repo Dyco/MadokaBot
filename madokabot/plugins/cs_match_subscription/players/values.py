@@ -50,7 +50,7 @@ def as_int(value: Any) -> int | None:
 
 
 def parse_steam_id(value: Any) -> int | None:
-    """无损解析 64 位 SteamID，避免经过 float 导致低位数字被舍入。"""
+    """SteamID解析方法。"""
     if isinstance(value, bool) or value in (None, ""):
         return None
     if isinstance(value, int):
@@ -66,7 +66,7 @@ def parse_steam_id(value: Any) -> int | None:
 
 
 def parse_pw_steam_id(value: str) -> int:
-    """解析完美查询和绑定用的 32 位 AccountID 或 64 位 SteamID。"""
+    """完美玩家SteamID解析方法。"""
     try:
         return int(normalize_steam_id(value))
     except ValueError as exc:
@@ -79,7 +79,7 @@ def as_flag(value: Any) -> bool:
 
 
 def image_url(value: Any, *, base_url: str = "") -> str:
-    """规范化图片地址；仅在平台明确提供基础地址时补全相对路径。"""
+    """图片地址规范化方法。"""
     url = str(value or "").strip()
     if url.startswith("//"):
         return f"https:{url}"

@@ -9,7 +9,7 @@ def parse_page_command(
     current_page: int,
     total_pages: int,
 ) -> tuple[int | None, bool]:
-    """解析翻页回复，返回目标页码及是否超出范围。"""
+    """翻页回复解析方法。"""
     normalized = text.strip().lower()
     if not normalized:
         return None, False
@@ -29,7 +29,7 @@ def parse_page_command(
 
 
 def extract_message_id(send_result: Any) -> int | None:
-    """从消息发送结果中提取回复分页所需的消息编号。"""
+    """消息编号提取方法。"""
     if hasattr(send_result, "msg_ids"):
         msg_ids = getattr(send_result, "msg_ids", None) or []
         if msg_ids:

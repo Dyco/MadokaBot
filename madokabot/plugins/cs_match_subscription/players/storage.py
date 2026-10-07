@@ -47,7 +47,7 @@ async def get_5e_binding(user_id: str) -> PlayerBinding | None:
 
 
 async def remove_5e_binding(user_id: str) -> PlayerBinding | None:
-    """仅删除用户的 5E 绑定，保留基础资料和 Steam 绑定。"""
+    """5E绑定删除方法。"""
     async with create_session() as session:
         row = await session.get(FiveEBinding, str(user_id))
         if row is None:

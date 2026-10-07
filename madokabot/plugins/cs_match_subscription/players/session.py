@@ -44,7 +44,7 @@ def load_pw_session() -> dict[str, Any]:
 
 
 def save_pw_session(token: str, steam_id: int) -> None:
-    """以原子方式保存完美平台会话，避免写入过程中留下半截 JSON。"""
+    """完美登录会话保存方法。"""
     path = _pw_session_path()
     path.parent.mkdir(parents=True, exist_ok=True)
     fd, temp_name = tempfile.mkstemp(

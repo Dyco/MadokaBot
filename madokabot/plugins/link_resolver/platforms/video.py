@@ -50,7 +50,7 @@ def _skip_video_for_duration(
     platform: str,
     duration_seconds: float | None,
 ) -> bool:
-    """判断视频是否超时，并在超时时跳过视频下载。"""
+    """判断视频是否超时。"""
     if duration_seconds is None or duration_seconds <= VIDEO_DURATION_MAXIMUM:
         return False
     logger.warning(
@@ -62,7 +62,7 @@ def _skip_video_for_duration(
 
 
 async def _gather_downloads(*coroutines):
-    """任一并发下载失败时，先取消并回收其余下载任务。"""
+    """并发下载方法。"""
     tasks = [asyncio.create_task(coroutine) for coroutine in coroutines]
     try:
         return await asyncio.gather(*tasks)

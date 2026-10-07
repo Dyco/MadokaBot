@@ -61,7 +61,6 @@ async def youtube(bot: Bot, event: GroupMessageEvent):
 
     cover_path: str | None = None
     thumbnail_url = video_info["thumbnail"]
-    # 图片关闭时不下载封面，避免产生无意义的代理请求。
     if thumbnail_url and is_content_enabled(get_target_id(event), "youtube", "image"):
         try:
             cover_path = await download_image(

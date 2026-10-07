@@ -34,7 +34,7 @@ async def _set_skin(event: MessageEvent, skin_id: Match[str]):
 
 @set_cmd.assign("rename")
 async def _rename(event: MessageEvent, name: Match[str]):
-    """处理账号改名，缺少参数时提示名字限制及积分费用。"""
+    """改名命令处理方法。"""
     if not name.available:
         await set_cmd.finish(f"用法：{RENAME_USAGE}")
 

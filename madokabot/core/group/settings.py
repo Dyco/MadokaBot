@@ -12,7 +12,6 @@ from madokabot.core.storage.json_store import JsonData, JsonDataStore
 GROUP_SETTINGS_PATH = (
     assets.get_dir(ResourceType.JSON, ResourceFolder.GROUP) / "group_set.json"
 )
-# 群组插件配置唯一使用的 JSON 文件路径。
 
 
 class GroupSettingsStore:
@@ -25,7 +24,7 @@ class GroupSettingsStore:
 
     @staticmethod
     def _normalize_group_id(group_id: str | int) -> str:
-        """统一群 ID 格式，并拒绝空值。"""
+        """群号规范化方法。"""
         value = str(group_id).strip()
         if not value:
             raise ValueError("群 ID 不能为空")
@@ -33,7 +32,7 @@ class GroupSettingsStore:
 
     @staticmethod
     def _normalize_plugin_name(plugin_name: str) -> str:
-        """统一插件名格式，并拒绝空值。"""
+        """插件名规范化方法。"""
         value = plugin_name.strip()
         if not value:
             raise ValueError("插件名不能为空")
@@ -41,7 +40,7 @@ class GroupSettingsStore:
 
     @staticmethod
     def _normalize_groups(data: Any) -> dict[str, dict[str, JsonData]]:
-        """清洗群组配置，只保留 JSON 对象或数组。"""
+        """群配置整理方法。"""
         if not isinstance(data, dict):
             return {}
         return {
@@ -92,7 +91,7 @@ class GroupSettingsStore:
         plugin_name: str,
         data: JsonData,
     ) -> None:
-        """写入指定群组的插件配置，并立即持久化。"""
+        """写入指定群组的插件配置。"""
         if not isinstance(data, (dict, list)):
             raise TypeError("插件配置必须是 JSON 对象或数组")
 
@@ -102,7 +101,7 @@ class GroupSettingsStore:
         self.save()
 
     def remove(self, group_id: str | int, plugin_name: str) -> bool:
-        """删除指定群组的插件配置，并返回是否实际删除。"""
+        """删除指定群组的插件配置。"""
         normalized_group_id = self._normalize_group_id(group_id)
         normalized_plugin_name = self._normalize_plugin_name(plugin_name)
         group_config = self.content.get(normalized_group_id)
@@ -117,7 +116,6 @@ class GroupSettingsStore:
 
 
 group_settings = GroupSettingsStore()
-# 通用群组配置存储实例，插件只需传入群 ID 和插件名即可使用。
 
 
 __all__ = ["GROUP_SETTINGS_PATH", "GroupSettingsStore", "group_settings"]

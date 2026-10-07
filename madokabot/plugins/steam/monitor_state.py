@@ -1,17 +1,17 @@
-"""记录运行期间群与订阅的启用版本，供轮询建立基线。"""
+"""记录运行期间群与订阅的启用版本。"""
 
 _group_versions: dict[str, int] = {}
 _subscription_versions: dict[tuple[str, str], int] = {}
 
 
 def mark_group_changed(group_id: str) -> None:
-    """群总开关变化后，让该群下一次状态查询重新建立基线。"""
+    """群Steam状态基线重置方法。"""
     key = str(group_id)
     _group_versions[key] = _group_versions.get(key, 0) + 1
 
 
 def mark_subscription_changed(group_id: str, user_id: str) -> None:
-    """订阅启停后，让该用户在本群重新建立基线。"""
+    """Steam订阅状态基线重置方法。"""
     key = (str(group_id), str(user_id))
     _subscription_versions[key] = _subscription_versions.get(key, 0) + 1
 

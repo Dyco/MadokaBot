@@ -17,8 +17,6 @@ class Player(TypedDict):
     primaryclanid: str
     timecreated: int
     personastateflags: int
-    # gameextrainfo: str
-    # gameid: str
 
 
 class PlayerSummariesResponse(TypedDict):

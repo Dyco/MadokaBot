@@ -8,16 +8,13 @@ from yarl import URL
 from .config import config
 
 
-# 处理 bbcode
 def handle_bbcode(html: Pq) -> str:
     rss_str = html_unescape(str(html))
 
-    # issue 36 处理 bbcode
     rss_str = re.sub(
         r"(\[url=[^]]+])?\[img[^]]*].+\[/img](\[/url])?", "", rss_str, flags=re.I
     )
 
-    # 处理一些 bbcode 标签
     bbcode_tags = [
         "align",
         "b",
@@ -37,12 +34,10 @@ def handle_bbcode(html: Pq) -> str:
         rss_str = re.sub(rf"\[{i}=[^]]+]", "", rss_str, flags=re.I)
         rss_str = re.sub(rf"\[/?{i}]", "", rss_str, flags=re.I)
 
-    # 去掉结尾被截断的信息
     rss_str = re.sub(
         r"(\[[^]]+|\[img][^\[\]]+) \.\.\n?</p>", "</p>", rss_str, flags=re.I
     )
 
-    # 检查正文是否为 bbcode ，没有成对的标签也当作不是，从而不进行处理
     bbcode_search = re.search(r"\[/(\w+)]", rss_str)
     if bbcode_search and re.search(f"\\[{bbcode_search[1]}", rss_str):
         parser = bbcode.Parser()
@@ -53,7 +48,6 @@ def handle_bbcode(html: Pq) -> str:
 
 
 def handle_lists(html: Pq, rss_str: str) -> str:
-    # 有序/无序列表 标签处理
     for ul in html("ul").items():
         for li in ul("li").items():
             li_str_search = re.search("<li>(.+)</li>", repr(str(li)))
@@ -67,12 +61,10 @@ def handle_lists(html: Pq, rss_str: str) -> str:
                 str(li), f"\n{index + 1}. {li_str_search[1]}"  # type: ignore
             ).replace("\\n", "\n")
     rss_str = re.sub("</(ul|ol)>", "\n", rss_str)
-    # 处理没有被 ul / ol 标签包围的 li 标签
     rss_str = rss_str.replace("<li>", "- ").replace("</li>", "")
     return rss_str
 
 
-# <a> 标签处理
 def handle_links(html: Pq, rss_str: str) -> str:
     for a in html("a").items():
         a_match = re.search(
@@ -83,13 +75,11 @@ def handle_links(html: Pq, rss_str: str) -> str:
         a_str = a_match.group()
         href = a.attr("href") or ""
         if a.text() and str(a.text()) != href:
-            # 去除微博超话
             if re.search(
                 r"https://m\.weibo\.cn/p/index\?extparam=\S+&containerid=\w+",
                 href,
             ):
                 rss_str = rss_str.replace(a_str, "")
-            # 去除微博话题对应链接 及 微博用户主页链接，只保留文本
             elif (
                 href.startswith("https://m.weibo.cn/search?containerid=")
                 and re.search("#.+#", a.text())
@@ -107,14 +97,12 @@ def handle_links(html: Pq, rss_str: str) -> str:
     return rss_str
 
 
-# HTML标签等处理
 def handle_html_tag(html: Pq) -> str:
     rss_str = html_unescape(str(html))
 
     rss_str = handle_lists(html, rss_str)
     rss_str = handle_links(html, rss_str)
 
-    # 处理一些 HTML 标签
     html_tags = [
         "b",
         "blockquote",
@@ -147,11 +135,9 @@ def handle_html_tag(html: Pq) -> str:
         "ul",
     ]
 
-    # <p> <pre> 标签后增加俩个换行
     for i in ["p", "pre"]:
         rss_str = re.sub(f"</{i}>", f"</{i}>\n\n", rss_str)
 
-    # 直接去掉标签，留下内部文本信息
     for i in html_tags:
         rss_str = re.sub(f"<{i} [^>]+>", "", rss_str)
         rss_str = re.sub(f"</?{i}>", "", rss_str)
@@ -160,12 +146,10 @@ def handle_html_tag(html: Pq) -> str:
     rss_str = re.sub(r"<h\d [^>]+>", "\n", rss_str)
     rss_str = re.sub(r"</?h\d>", "\n", rss_str)
 
-    # 删除图片、视频标签
     rss_str = re.sub(
         r"<video[^>]*>(.*?</video>)?|<img[^>]+>", "", rss_str, flags=re.DOTALL
     )
 
-    # 去掉多余换行
     while "\n\n\n" in rss_str:
         rss_str = rss_str.replace("\n\n\n", "\n\n")
     rss_str = rss_str.strip()

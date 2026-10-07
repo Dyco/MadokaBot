@@ -25,7 +25,7 @@ def _target_qq(value: At | str) -> str:
 
 
 def _steam_id(value: str) -> str | None:
-    """把 Steam64 ID 或好友码转换为统一的 Steam ID。"""
+    """SteamID转换方法。"""
     return get_steam_id(value.strip()) if value.strip().isdigit() else None
 
 
@@ -43,7 +43,7 @@ async def _steam_name(steam_id: str) -> str:
 
 
 async def get_bind_list_message(bot: Bot, group_id: str) -> str:
-    """列出当前群订阅，包含已隐藏用户。"""
+    """列出当前群订阅。"""
     bindings = await list_group_bindings(group_id)
     if not bindings:
         return "本群暂无任何绑定记录。"
@@ -65,7 +65,7 @@ async def get_bind_list_message(bot: Bot, group_id: str) -> str:
 
 @steam_cmd.assign("bind")
 async def handle_bind(event: GroupMessageEvent, id: Match[str]):
-    """首次绑定全局账号，并加入或恢复当前群订阅。"""
+    """Steam绑定命令处理方法。"""
     requested = _steam_id(id.result) if id.available else None
     if id.available and requested is None:
         await steam_cmd.finish("Steam ID 格式错误。")
@@ -92,7 +92,7 @@ async def handle_bind(event: GroupMessageEvent, id: Match[str]):
 
 @steam_cmd.assign("unbind")
 async def handle_unbind(event: GroupMessageEvent):
-    """全局解绑，并删除所有群的 Steam 订阅。"""
+    """Steam解绑命令处理方法。"""
     if await unbind_user(str(event.user_id)):
         await steam_cmd.finish(
             "已解绑 Steam/CS 共用账号，所有群订阅均已删除，"
@@ -128,7 +128,7 @@ async def handle_add_other(
     target: Match[At | str],
     steam_id: Match[str],
 ):
-    """管理员为用户首次绑定，或把相同的全局绑定加入本群。"""
+    """管理员Steam绑定方法。"""
     if not await BIND_PERMISSION(bot, event):
         await steam_cmd.finish("只有群管理员可以使用此功能。")
     if not target.available or not steam_id.available:
@@ -170,7 +170,7 @@ async def handle_remove(
     event: GroupMessageEvent,
     target: Match[At | str],
 ):
-    """群管理员隐藏本群订阅，超级用户全局解绑。"""
+    """Steam移除命令处理方法。"""
     if not await BIND_PERMISSION(bot, event):
         await steam_cmd.finish("权限不足，只有管理员可以使用删除功能。")
     group_id = str(event.group_id)

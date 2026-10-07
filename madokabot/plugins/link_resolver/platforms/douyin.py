@@ -42,16 +42,9 @@ from .video import (
 @resolve_handler
 @resolve_controller
 async def dy(bot: Bot, event: GroupMessageEvent) -> None:
-    """
-        抖音解析
-    :param bot:
-    :param event:
-    :return:
-    """
-    # 消息
+    """抖音解析方法。"""
     msg = get_resolver_message(event)
     logger.info(msg)
-    # 短链先跟随跳转，长链直接提取视频/图集 ID。
     reg = (
         r"https?://(?:v\.douyin\.com|iesdouyin\.com|www\.douyin\.com|"
         r"douyin\.com)/[A-Za-z\d._?%&+\-=/#]*"
@@ -74,13 +67,11 @@ async def dy(bot: Bot, event: GroupMessageEvent) -> None:
         logger.error(f"抖音短链展开失败: {exc}")
         return
 
-    # 实况图集临时解决方案，eg.  https://v.douyin.com/iDsVgJKL/
     if "share/slides" in dou_url_2:
         cover, author, title, images = await dou_transfer_other(
             dou_url,
             DOUYIN_PROXY,
         )
-        # 如果第一个不为None 大概率是成功
         if author is not None:
             slide_segments = [
                 Message(
@@ -98,17 +89,12 @@ async def dy(bot: Bot, event: GroupMessageEvent) -> None:
                 event,
                 make_forward_nodes(bot.self_id, slide_segments),
             )
-        # 截断后续操作
         return
-    # logger.error(dou_url_2)
     reg2 = r"(?:video|note)/(\d+)"
-    # 获取到ID
     id_match = re.search(reg2, dou_url_2, re.I)
     if not id_match:
         await douyin.finish("无法从抖音链接中提取作品 ID。")
     dou_id = id_match.group(1)
-    # logger.info(dou_id)
-    # 如果没有设置dy的ck就结束，因为获取不到
     douyin_ck = getattr(global_config, "douyin_ck", "")
     if douyin_ck == "":
         logger.error(global_config)
@@ -123,7 +109,6 @@ async def dy(bot: Bot, event: GroupMessageEvent) -> None:
             ),
         )
         return
-    # API、一些后续要用到的参数
     headers = {
         "Accept-Language": "zh-CN,zh;q=0.8,zh-TW;q=0.7,zh-HK;q=0.5,en-US;q=0.3,en;q=0.2",
         "referer": f"https://www.douyin.com/video/{dou_id}",
@@ -150,7 +135,6 @@ async def dy(bot: Bot, event: GroupMessageEvent) -> None:
             if not isinstance(response_data, dict):
                 logger.warning("[抖音] 作品接口返回了非对象响应")
                 return
-            # 获取信息
             detail = response_data.get("aweme_detail")
             if not isinstance(detail, dict):
                 logger.warning(
@@ -158,11 +142,9 @@ async def dy(bot: Bot, event: GroupMessageEvent) -> None:
                 )
                 return
             desc = detail.get("desc", "")
-            # 判断是图片还是视频
             url_type_code = detail.get("aweme_type")
             url_type = URL_TYPE_CODE_DICT.get(url_type_code, "video")
 
-            # 抖音的说明、图片和评论统一放进同一条合并转发。
             info_segment = MessageSegment.text(
                 f"{GLOBAL_NICKNAME}识别：抖音\n{detail.get('desc')}"
             )
@@ -223,7 +205,6 @@ async def dy(bot: Bot, event: GroupMessageEvent) -> None:
                 except Exception as c_err:
                     logger.error(f"[Comment] 获取抖音评论失败，跳过评论节点: {c_err}")
 
-            # 根据类型进行发送
             if url_type == "video":
                 forward_nodes = list(make_forward_nodes(bot.self_id, [info_segment]))
                 if comment_segment is not None:
@@ -242,28 +223,20 @@ async def dy(bot: Bot, event: GroupMessageEvent) -> None:
                     _duration_seconds(video_data.get("duration"), milliseconds=True),
                 ):
                     return
-                # 识别播放地址
                 play_addr = video_data.get("play_addr")
                 if not isinstance(play_addr, dict) or not play_addr.get("uri"):
                     logger.warning("[抖音] 作品响应缺少 play_addr.uri")
                     return
                 player_uri = str(play_addr["uri"])
                 player_real_addr = DY_TOUTIAO_INFO.replace("{}", player_uri)
-                # 发送视频
-                # logger.info(player_addr)
-                # await douyin.send(Message(MessageSegment.video(player_addr)))
                 await send_resolved_video(
                     event,
                     player_real_addr,
                     DOUYIN_PROXY,
                 )
             elif url_type == "image":
-                # 无水印图片列表/No watermark image list
                 no_watermark_image_list = []
-                # 遍历图片列表/Traverse image list
                 for i in detail["images"]:
-                    # 无水印图片列表
-                    # no_watermark_image_list.append(i['url_list'][0])
                     no_watermark_image_list.append(
                         MessageSegment.image(i["url_list"][0])
                     )

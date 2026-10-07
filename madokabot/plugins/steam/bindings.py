@@ -35,7 +35,7 @@ async def get_global_binding(user_id: str) -> str | None:
 async def _ensure_global_binding(
     session: AsyncSession, user_id: str, steam_id: str | None, qq_nickname: str
 ) -> tuple[SteamBinding, bool]:
-    """在调用者的事务中创建或核对全局 Steam 绑定。"""
+    """Steam全局绑定检查方法。"""
     binding = await session.get(SteamBinding, user_id)
     created = binding is None
     if binding is None:
@@ -59,7 +59,7 @@ async def _ensure_global_binding(
 async def bind_global_user(
     user_id: str, steam_id: str | None, qq_nickname: str = ""
 ) -> tuple[str, bool]:
-    """仅创建或复用全局 Steam 绑定，不开启任何群的播报。"""
+    """Steam全局绑定方法。"""
     async with create_session() as session:
         binding, created = await _ensure_global_binding(
             session, str(user_id), steam_id, qq_nickname
@@ -128,7 +128,7 @@ async def unbind_user(user_id: str) -> bool:
 
 
 async def hide_user(group_id: str, user_id: str) -> bool:
-    """只关闭指定群订阅的自动播报，保留群备注。"""
+    """只关闭指定群订阅的自动播报。"""
     async with create_session() as session:
         subscription = await session.get(
             SteamGroupSubscription, (str(group_id), str(user_id))
@@ -142,7 +142,7 @@ async def hide_user(group_id: str, user_id: str) -> bool:
 
 
 async def online_user(group_id: str, user_id: str) -> bool:
-    """只开启指定群订阅的自动播报，保留群备注。"""
+    """只开启指定群订阅的自动播报。"""
     async with create_session() as session:
         subscription = await session.get(
             SteamGroupSubscription, (str(group_id), str(user_id))
@@ -173,7 +173,7 @@ async def set_group_nickname(
 async def get_group_binding(
     group_id: str, user_id: str
 ) -> dict[str, Any] | None:
-    """读取指定用户在当前群的订阅及其全局 Steam ID。"""
+    """群Steam绑定查询方法。"""
     async with create_session() as session:
         row = (
             await session.execute(
@@ -192,7 +192,7 @@ async def get_group_binding(
 
 
 async def list_group_bindings(group_id: str) -> list[dict[str, Any]]:
-    """读取当前群全部订阅，包括已隐藏的用户。"""
+    """读取当前群全部订阅。"""
     async with create_session() as session:
         rows = (
             await session.execute(

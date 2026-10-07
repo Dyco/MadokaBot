@@ -16,7 +16,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from madokabot.core.user.models import UserStats
 from .config import config
-from .prediction_models import CsPrediction
+from .prediction_models import CsPrediction, CsPredictionNotification
 from .prediction_labels import TEAM_LETTERS, prediction_team_labels
 from .storage import (
     get_prediction_match_context,
@@ -37,7 +37,7 @@ async def _finish_prediction(
     result: str,
     now: datetime,
 ) -> bool:
-    """条件更新投注状态并原子加分，两者在同一事务中提交。"""
+    """竞猜结算方法。"""
     claimed = await session.execute(
         update(CsPrediction)
         .where(
@@ -70,6 +70,24 @@ class PredictionError(RuntimeError):
     """竞猜参数或状态不符合要求。"""
 
 
+async def _record_prediction_notifications(
+    session: AsyncSession,
+    rows: list[CsPrediction],
+    winner_name: str,
+    public_pool: int,
+    final_text: str = "",
+) -> None:
+    """竞猜通知凭据保存方法。"""
+    keys = {(row.event_id, row.match_id, row.group_id) for row in rows}
+    for event_id, match_id, group_id in keys:
+        if await session.get(CsPredictionNotification, (event_id, match_id, group_id)):
+            continue
+        session.add(CsPredictionNotification(
+            event_id=event_id, match_id=match_id, group_id=group_id,
+            winner_name=winner_name, public_pool=public_pool, final_text=final_text,
+        ))
+
+
 def _normalize_team(value: str) -> str:
     """规范化队伍名称用于比较。"""
     return " ".join(
@@ -82,7 +100,7 @@ def _select_team(
     team_names: list[str],
     team_slots: list[int],
 ) -> str | None:
-    """按当前群的稳定槽位或完整队伍名选队，不再为每场固定使用 A/B。"""
+    """竞猜队伍选择方法。"""
     if len(team_names) < 2:
         return None
     normalized = _normalize_team(value)
@@ -242,8 +260,9 @@ async def refund_uncontested_predictions(
     team_names: list[str],
     *,
     public_pool: int = DEFAULT_PREDICTION_PUBLIC_POOL,
+    final_text: str = "",
 ) -> dict[str, Any]:
-    """仅在没有公池且单方无人下注时，退回本场未结算竞猜本金。"""
+    """单方竞猜退款方法。"""
     normalized_public_pool = max(0, int(public_pool))
     normalized_teams = [
         _normalize_team(team_name)
@@ -297,11 +316,14 @@ async def refund_uncontested_predictions(
 
         now = datetime.now(timezone.utc)
         refunded_points = 0
+        claimed_rows = []
         for row in open_rows:
             if await _finish_prediction(
                 session, row, payout=row.points, result="refund", now=now
             ):
                 refunded_points += row.points
+                claimed_rows.append(row)
+        await _record_prediction_notifications(session, claimed_rows, "", 0, final_text)
         await session.commit()
 
     return {
@@ -318,8 +340,9 @@ async def settle_match_predictions(
     winner_name: str,
     *,
     public_pool: int = DEFAULT_PREDICTION_PUBLIC_POOL,
+    final_text: str = "",
 ) -> dict[str, Any]:
-    """胜方返还本金，并按下注占比分配对手投注池与系统公池。"""
+    """比赛竞猜结算方法。"""
     normalized_winner = _normalize_team(winner_name)
     normalized_public_pool = max(0, int(public_pool))
     async with _SETTLEMENT_LOCK, create_session() as session:
@@ -342,11 +365,12 @@ async def settle_match_predictions(
         reward_points = total_points - winner_points + normalized_public_pool
         settlement_points = total_points + normalized_public_pool
         total_payout = 0
+        settled_count = 0
+        claimed_rows = []
         now = datetime.now(timezone.utc)
 
         for row in rows:
             is_winner = row in winner_rows
-            # 本金完整返还，收益按下注权重以整数运算向下取整。
             payout = (
                 row.points + reward_points * row.points // winner_points
                 if is_winner and winner_points > 0
@@ -360,6 +384,11 @@ async def settle_match_predictions(
                 now=now,
             ):
                 total_payout += payout
+                settled_count += 1
+                claimed_rows.append(row)
+        await _record_prediction_notifications(
+            session, claimed_rows, winner_name, normalized_public_pool, final_text,
+        )
         await session.commit()
 
     return {
@@ -371,15 +400,122 @@ async def settle_match_predictions(
         "winner_points": winner_points,
         "reward_points": reward_points,
         "total_payout": total_payout,
+        "settled_count": settled_count,
     }
 
 
+async def list_unsettled_prediction_matches() -> list[tuple[str, str]]:
+    """未结算竞猜查询方法。"""
+    async with create_session() as session:
+        rows = (await session.execute(
+            select(CsPrediction.event_id, CsPrediction.match_id)
+            .where(CsPrediction.result == "open")
+            .distinct()
+            .order_by(CsPrediction.event_id, CsPrediction.match_id)
+        )).all()
+    return [(str(event_id), str(match_id)) for event_id, match_id in rows]
+
+
+async def get_prediction_settlement_reports(
+    *,
+    event_id: str | None = None,
+    match_id: str | None = None,
+    group_id: str | None = None,
+    pending_only: bool = False,
+) -> list[dict[str, Any]]:
+    """竞猜结算报告查询方法。"""
+    statement = select(CsPredictionNotification)
+    for column, value in (
+        (CsPredictionNotification.event_id, event_id),
+        (CsPredictionNotification.match_id, match_id),
+        (CsPredictionNotification.group_id, group_id),
+    ):
+        if value is not None:
+            statement = statement.where(column == str(value))
+    if pending_only:
+        statement = statement.where(CsPredictionNotification.sent.is_(False))
+    reports = []
+    opponent_totals = {}
+    async with create_session() as session:
+        receipts = list((await session.scalars(statement)).all())
+        for receipt in receipts:
+            match_key = (receipt.event_id, receipt.match_id)
+            if match_key not in opponent_totals:
+                # 对手池按同场跨群下注统计。
+                opponent_totals[match_key] = (await session.execute(
+                    select(func.coalesce(func.sum(CsPrediction.points), 0), func.count())
+                    .where(
+                        CsPrediction.event_id == receipt.event_id,
+                        CsPrediction.match_id == receipt.match_id,
+                        CsPrediction.result == "lose",
+                    )
+                )).one()
+            opponent_points, opponent_count = opponent_totals[match_key]
+            rows = (await session.execute(
+                select(CsPrediction, UserStats)
+                .outerjoin(UserStats, CsPrediction.user_id == UserStats.user_id)
+                .where(
+                    CsPrediction.event_id == receipt.event_id,
+                    CsPrediction.match_id == receipt.match_id,
+                    CsPrediction.group_id == receipt.group_id,
+                    CsPrediction.result != "open",
+                )
+                .order_by(CsPrediction.user_id)
+            )).all()
+            reports.append({
+                "event_id": receipt.event_id, "match_id": receipt.match_id,
+                "group_id": receipt.group_id, "winner_name": receipt.winner_name,
+                "public_pool": receipt.public_pool, "final_text": receipt.final_text,
+                "opponent_points": opponent_points, "opponent_count": opponent_count,
+                "sent": receipt.sent,
+                "players": [{
+                    "name": (
+                        str(user.display_name or user.qq_nickname or "").strip() if user else ""
+                    ) + f"({_masked_user_id(row.user_id)})",
+                    "team_name": row.team_name, "points": row.points,
+                    "payout": row.payout, "net_points": row.net_points,
+                    "result": row.result,
+                } for row, user in rows],
+            })
+    return reports
+
+
+async def save_prediction_notification_text(event_id: str, match_id: str, text: str) -> None:
+    """保存原结束消息。"""
+    async with create_session() as session:
+        await session.execute(update(CsPredictionNotification).where(
+            CsPredictionNotification.event_id == str(event_id),
+            CsPredictionNotification.match_id == str(match_id),
+        ).values(final_text=text))
+        await session.commit()
+
+
+async def prediction_notification_was_sent(event_id: str, match_id: str, group_id: str) -> bool:
+    """竞猜通知发送状态查询方法。"""
+    async with create_session() as session:
+        receipt = await session.get(
+            CsPredictionNotification, (str(event_id), str(match_id), str(group_id)),
+        )
+        return bool(receipt and receipt.sent)
+
+
+async def mark_prediction_notification_sent(event_id: str, match_id: str, group_id: str) -> None:
+    """群合并消息发送成功后标记通知已送达。"""
+    async with create_session() as session:
+        await session.execute(update(CsPredictionNotification).where(
+            CsPredictionNotification.event_id == str(event_id),
+            CsPredictionNotification.match_id == str(match_id),
+            CsPredictionNotification.group_id == str(group_id),
+        ).values(sent=True))
+        await session.commit()
+
+
 async def refund_expired_predictions(*, now: datetime | None = None) -> int:
-    """同场最早的未结算下注满 12 小时后，静默退回该场全部未结算本金。"""
+    """过期竞猜退款方法。"""
     current = now or datetime.now(timezone.utc)
     if current.tzinfo is None:
         current = current.replace(tzinfo=_SHANGHAI_TZ)
-    # created_at 的模型默认值是上海时间，SQLite 的 DateTime 列不保存时区。
+    # SQLite不保存时区，created_at按上海时间解释。
     cutoff = (current.astimezone(_SHANGHAI_TZ) - _PREDICTION_TIMEOUT).replace(tzinfo=None)
     refunded_count = 0
     async with _SETTLEMENT_LOCK:
@@ -472,9 +608,12 @@ async def get_prediction_ranking(
     scope: str,
     group_id: str,
 ) -> list[dict[str, Any]]:
-    """按胜场、净积分、胜率和参与次数生成前十名。"""
+    """竞猜排名查询方法。"""
     async with create_session() as session:
-        statement = select(CsPrediction).where(CsPrediction.result != "open")
+        statement = select(CsPrediction).where(
+            CsPrediction.result.in_(("win", "lose")),
+            CsPrediction.settled_at.is_not(None),
+        )
         if scope == "group":
             statement = statement.where(CsPrediction.group_id == str(group_id))
         rows = list((await session.scalars(statement)).all())
@@ -542,6 +681,11 @@ __all__ = [
     "get_prediction_detail",
     "get_prediction_ranking",
     "get_prediction_summary",
+    "get_prediction_settlement_reports",
+    "save_prediction_notification_text",
+    "prediction_notification_was_sent",
+    "mark_prediction_notification_sent",
+    "list_unsettled_prediction_matches",
     "place_prediction",
     "refund_uncontested_predictions",
     "refund_expired_predictions",

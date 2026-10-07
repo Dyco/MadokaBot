@@ -45,7 +45,7 @@ pic = on_alconna(
 
 
 def _match_text(value: Match[str], default: str) -> str:
-    """读取可选文本参数，空文本时使用默认值。"""
+    """读取可选文本参数。"""
     if not value.available:
         return default
     return value.result.strip() or default

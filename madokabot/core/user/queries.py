@@ -5,13 +5,13 @@ from .models import SignRecord, UserStats
 
 
 class UserQueries:
-    """用户数据服务：只读取已注册用户，不再隐式创建账号。"""
+    """用户数据查询。"""
 
     @staticmethod
     async def get_points_ranking(
         session: AsyncSession,
     ) -> list[tuple[str, str, int, int]]:
-        """读取积分前五名及累计签到次数，同分时按用户编号稳定排序。"""
+        """积分排名查询方法。"""
         points = await session.execute(
             select(
                 UserStats.user_id,
@@ -32,7 +32,7 @@ class UserQueries:
         session: AsyncSession,
         uid: str,
     ) -> tuple[UserStats, SignRecord]:
-        """获取已注册用户的核心数据。"""
+        """用户数据查询方法。"""
         user = await session.get(UserStats, uid)
         sign = await session.get(SignRecord, uid)
         if user is None or sign is None:

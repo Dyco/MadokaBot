@@ -13,7 +13,7 @@ from ..config import Config
 
 try:
     import yt_dlp
-except ImportError:  # yt-dlp 仅在用户启用对应平台时需要。
+except ImportError:
     yt_dlp = None
 
 
@@ -23,7 +23,7 @@ def _require_yt_dlp() -> None:
 
 
 class VideoInfo(TypedDict):
-    """yt-dlp 返回的 Resolver 视频基础信息。"""
+    """视频基础信息。"""
 
     title: str
     description: str
@@ -32,7 +32,7 @@ class VideoInfo(TypedDict):
 
 
 def _youtube_cookie_options(video_type: str) -> dict[str, object]:
-    """优先将配置字符串转为内存 Cookie 文件，且仅用于 YouTube。"""
+    """YouTube登录凭据参数。"""
     if video_type != "youtube":
         return {}
     cookie_text = get_plugin_config(Config).ytb_ck.strip()
@@ -67,7 +67,7 @@ def _youtube_cookie_options(video_type: str) -> dict[str, object]:
 
 
 def _youtube_options(video_type: str) -> dict[str, object]:
-    """统一启用 YouTube 的登录凭据、JS 运行时及官方 EJS 下载备用源。"""
+    """YouTube下载参数。"""
     if video_type != "youtube":
         return {}
     return {

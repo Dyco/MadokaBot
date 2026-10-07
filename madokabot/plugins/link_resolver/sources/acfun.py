@@ -17,14 +17,9 @@ headers = {
 
 
 def parse_url(url: str, proxy: str | None = None):
-    """
-        解析acfun链接
-    :param url:
-    :return:
-    """
+    """解析acfun链接。"""
     url_suffix = "?quickViewId=videoInfo_new&ajaxpipe=1"
     url = url + url_suffix
-    # print(url)
 
     response = httpx.get(
         url,
@@ -41,16 +36,13 @@ def parse_url(url: str, proxy: str | None = None):
     str_json = strs_remove_tail[0]
     str_json_escaped = escape_special_chars(str_json)
     video_info = json.loads(str_json_escaped)
-    # print(video_info)
     video_name = parse_video_name_fixed(video_info)
     ks_play_json = video_info['currentVideoInfo']['ksPlayJson']
     ks_play = json.loads(ks_play_json)
     representations = ks_play['adaptationSet'][0]['representation']
     if not representations:
         raise ValueError("ACFun 没有返回可用的视频流")
-    # 这里[d['url'] for d in representations]，从4k~360，此处默认720p
     url_m3u8s = representations[min(3, len(representations) - 1)]['url']
-    # print([d['url'] for d in representations])
     return url_m3u8s, video_name
 
 
@@ -60,11 +52,7 @@ def parse_m3u8(
     *,
     include_duration: bool = False,
 ):
-    """
-        解析m3u8链接
-    :param m3u8_url:
-    :return:
-    """
+    """M3U8链接解析方法。"""
     response = httpx.get(
         m3u8_url,
         headers=headers,
@@ -75,26 +63,17 @@ def parse_m3u8(
     )
     response.raise_for_status()
     m3u8_file = response.text
-    # 分离ts文件链接
     raw_pieces = re.split(r"\n#EXTINF:.{8},\n", m3u8_file)
-    # print(raw_pieces)
-    # 过滤头部\
     m3u8_relative_links = [piece.split("\n")[0].strip() for piece in raw_pieces[1:]]
-    # print(m3u8_relative_links)
-    # 修改尾部 去掉尾部多余的结束符
     if not m3u8_relative_links:
         raise ValueError("ACFun m3u8 未返回可下载的视频分片")
     duration = sum(
         float(value)
         for value in re.findall(r"#EXTINF:([0-9.]+)", m3u8_file)
     )
-    # print(m3u8_relative_links)
 
-    # 完整链接，直接加m3u8Url的通用前缀
     m3u8_full_urls = [urljoin(m3u8_url, item) for item in m3u8_relative_links]
-    # aria2c下载的文件名，就是取url最后一段，去掉末尾url参数(?之后是url参数)
     ts_names = [d.split("?")[0] for d in m3u8_relative_links]
-    # print(ts_names)
     first_segment_name = Path(ts_names[0]).name
     output_stem = first_segment_name[:-9] or Path(first_segment_name).stem
     output_folder_name = re.sub(
@@ -103,7 +82,6 @@ def parse_m3u8(
         output_stem,
     ).strip("._") or "acfun_video"
     output_file_name = output_folder_name + ".mp4"
-    # print(output_file_name)
     result = m3u8_full_urls, ts_names, output_folder_name, output_file_name
     return (*result, duration) if include_duration else result
 
@@ -115,11 +93,7 @@ async def download_m3u8_videos(
     proxy: str | None = None,
     budget: DownloadBudget | None = None,
 ):
-    """
-        批量下载m3u8
-    :param m3u8_full_urls:
-    :return:
-    """
+    """M3U8视频批量下载方法。"""
     target_dir = Path(output_dir or Path.cwd())
     target_dir.mkdir(parents=True, exist_ok=True)
     async with httpx.AsyncClient(
@@ -143,11 +117,7 @@ def escape_special_chars(str_json):
 
 
 def parse_video_name(video_info: dict) -> str:
-    """
-        获取视频信息
-    :param video_info:
-    :return:
-    """
+    """视频信息提取方法。"""
     ac_id = "ac" + video_info['dougaId'] if video_info['dougaId'] is not None else ""
     title = video_info['title'] if video_info['title'] is not None else ""
     author = video_info['user']['name'] if video_info['user']['name'] is not None else ""
@@ -219,11 +189,7 @@ async def merge_ac_file_to_mp4(
 
 
 def parse_video_name_fixed(video_info: dict) -> str:
-    """
-        校准文件名
-    :param video_info:
-    :return:
-    """
+    """视频文件名校准方法。"""
     f = parse_video_name(video_info)
     t = f.replace(" ", "-")
     return t

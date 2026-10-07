@@ -48,7 +48,7 @@ async def ensure_remote_total_within_limit(
     proxy: str | None = None,
     headers: dict[str, str] | None = None,
 ) -> None:
-    """在服务器提供 Content-Length 时，于下载正文前校验总大小。"""
+    """远程文件大小校验方法。"""
     url_list = [url for url in urls if url]
     if not url_list:
         return
@@ -91,7 +91,7 @@ async def download_video(
     ext_headers: dict[str, str] | None = None,
     max_size: int | None = None,
 ) -> str | None:
-    """下载视频到 Resolver 缓存目录。"""
+    """直链视频下载方法。"""
     path = CACHE_DIR / f"{time.time_ns()}.mp4"
     headers = COMMON_HEADER.copy()
     if ext_headers:
@@ -153,7 +153,7 @@ async def download_image(
     session: aiohttp.ClientSession | None = None,
     headers: dict[str, str] | None = None,
 ) -> str:
-    """下载图片；传入 session 时复用已有连接。"""
+    """下载图片。"""
     if not path:
         file_name = Path(urlparse(url).path).name or f"{time.time_ns()}.img"
         path = str(CACHE_DIR / f"{time.time_ns()}_{file_name}")

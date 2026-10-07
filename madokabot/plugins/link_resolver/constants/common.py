@@ -1,6 +1,4 @@
-"""
-通用解析
-"""
+"""通用解析。"""
 GENERAL_REQ_LINK = "http://47.99.158.118/video-crack/v2/parse?content={}"
 
 """
@@ -11,5 +9,4 @@ COMMON_HEADER = {
                   'UBrowser/6.2.4098.3 Safari/537.36'
 }
 
-# 插件名字
 PLUGIN_NAME = "madoka_link_resolver"

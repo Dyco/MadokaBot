@@ -9,7 +9,6 @@ from pathlib import Path
 from typing import Any
 
 JsonData = dict[str, Any] | list[Any]
-# JSON 文件的顶层数据使用对象或数组。
 
 
 class JsonDataStore:
@@ -26,7 +25,7 @@ class JsonDataStore:
         return deepcopy(self.default)
 
     def read(self) -> JsonData:
-        """从磁盘读取 JSON，文件不存在或内容无效时返回默认数据。"""
+        """从磁盘读取 JSON。"""
         if not self.save_path.is_file():
             return self._get_default()
         try:
@@ -40,7 +39,7 @@ class JsonDataStore:
         self.content = self.read()
 
     def write(self, data: JsonData | None = None) -> None:
-        """以 UTF-8 编码写入 JSON 数据，并自动创建父目录。"""
+        """以 UTF-8 编码写入 JSON 数据。"""
         if data is not None:
             self.content = data
         self.save_path.parent.mkdir(parents=True, exist_ok=True)

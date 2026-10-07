@@ -29,7 +29,7 @@ _last_request_at = 0.0
 
 
 class DanbooruAPIError(RuntimeError):
-    """Danbooru API returned data in an unexpected shape."""
+    """Danbooru接口数据异常。"""
 
 
 def is_danbooru_url(url: str) -> bool:
@@ -132,7 +132,7 @@ def _post_to_entry(post: Dict[str, Any]) -> Optional[Dict[str, Any]]:
 async def fetch_danbooru(
     rss: Rss, proxy: Optional[str]
 ) -> Tuple[Dict[str, Any], bool, Dict[str, str]]:
-    """Fetch a Danbooru post search through the official JSON API."""
+    """Danbooru帖子查询方法。"""
     global _last_request_at
 
     headers = {

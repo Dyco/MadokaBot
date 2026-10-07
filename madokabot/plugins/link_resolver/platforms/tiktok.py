@@ -31,13 +31,7 @@ from .video import (
 @resolve_handler
 @resolve_controller
 async def tiktok(bot: Bot, event: GroupMessageEvent) -> None:
-    """
-        tiktok解析
-    :param bot:
-    :param event:
-    :return:
-    """
-    # 消息
+    """TikTok解析方法。"""
     url = get_resolver_message(event)
 
     url_reg = r"(http:|https:)\/\/www.tiktok.com\/[A-Za-z\d._?%&+\-=\/#@]*"
@@ -63,7 +57,6 @@ async def tiktok(bot: Bot, event: GroupMessageEvent) -> None:
             trust_env=False,
         )
         url = str(temp_resp.url)
-        # logger.info(url)
     else:
         url = re.search(url_reg, url)[0]
     try:

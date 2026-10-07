@@ -1,8 +1,4 @@
-"""HLTV 比赛页解析器。
-
-解析器只依赖 HTML 字符串，因此可以在不访问网络的情况下单元测试；
-选择器对应 HLTV 当前页面的语义 class，而不是动态广告节点。
-"""
+"""HLTV 比赛页解析器。"""
 
 from __future__ import annotations
 
@@ -83,7 +79,7 @@ def _event_timestamp(node: Tag | None) -> datetime | None:
 
 
 def _event_status(soup: BeautifulSoup) -> str:
-    """读取赛事页顶部的 Live/Finished 状态标记。"""
+    """赛事状态读取方法。"""
     indicator = soup.select_one(".event-hub-indicator")
     if indicator is None:
         indicator = soup.select_one("[data-event-status]")
@@ -120,9 +116,7 @@ def _event_prize_display(node: Tag) -> str:
     prize_cell = _event_prize_cell(node)
     if prize_cell is None:
         return "TBA"
-    # HLTV 会把阶段赛事的提示信息放在 title 中，例如
-    # ``Spots in Stage 2``，但单元格真正展示的奖金文本仍然是
-    # ``Other``。优先读取可见文本，避免把 tooltip 当成奖金池。
+    # 奖金额取可见文本，不能取阶段提示的title。
     return (_text(prize_cell) or prize_cell.get("title") or "TBA").strip()
 
 
@@ -189,14 +183,14 @@ def _parse_event(node: Tag, page_url: str) -> EventData | None:
     event_type = _text(node.select_one("tr:first-child td.gtSmartphone-only"))
     lowered_name = name.casefold()
     if "major" in lowered_name:
-        # Major 的 Stage 赛事奖金列通常是 Other/TBA，优先按名称识别赛事级别。
+        # 阶段赛事奖金可能是Other/TBA，类型需按名称识别。
         event_type = "Major"
     elif not event_type and (
         "big-event" in node.get("class", []) or "ongoing-event" in node.get(
             "class", []
         )
     ):
-        # 筛选页的大型卡片没有显示赛事类型，按该页的国际赛事候选处理。
+        # 筛选页大卡片缺少类型，按国际赛事候选处理。
         event_type = "Intl. LAN"
 
     return EventData(
@@ -243,7 +237,7 @@ def _normalize_preformatted_text(node: Tag | None) -> tuple[str, str, str]:
 
 
 def _score_text(node: Tag | None) -> str | None:
-    """读取数字地图比分，TBA 或空值不视为已结束。"""
+    """读取数字地图比分。"""
     value = _text(node)
     return value if re.fullmatch(r"\d+", value) else None
 
@@ -254,7 +248,7 @@ _SCOREBOARD_MAP_NAMES = {
 
 
 def _normalize_map_name(value: str) -> str:
-    """统一地图名前缀、大小写、空白和 Dust II 别名；占位名不参与匹配。"""
+    """地图名规范化方法。"""
     name = re.sub(r"\s+", "", value.casefold().strip()).removeprefix("de_")
     if name in {"", "tba", "tbd", "default", "-"}:
         return ""
@@ -276,14 +270,14 @@ def _scoreboard_map_name(scoreboard: Tag) -> str:
 
 
 def _scoreboard_team_name(scoreboard: Tag, side: str) -> str:
-    """读取 Scoreboard 指定阵营当前对应的队伍名称。"""
+    """实时队伍名称读取方法。"""
     return _text(scoreboard.select_one(f".{side}TeamHeaderBg .teamName"))
 
 
 def _parse_scoreboard_result(
     soup: BeautifulSoup,
 ) -> tuple[str, str | None, str | None] | None:
-    """读取实时 Scoreboard 当前地图，并尽量映射实时比分。"""
+    """实时地图比分解析方法。"""
     scoreboard = soup.select_one("#scoreboardElement")
     if scoreboard is None:
         return None
@@ -304,9 +298,7 @@ def _parse_scoreboard_result(
     )
     team1_name = str(scoreboard.get("data-team1-name") or "").strip()
     team2_name = str(scoreboard.get("data-team2-name") or "").strip()
-    # scoreText 是当前地图的实时系列比分容器；只从它的两个子节点
-    # 读取比分，不能回退到 mapholder 的半场/历史比分。当前地图本身
-    # 仍然可以作为地图开始信号，所以 scoreText 缺失时保留地图名。
+    # 实时比分只取scoreText，缺失时仅保留开始信号。
     score_text = scoreboard.select_one(".scoreText")
     if score_text is None:
         return map_name, None, None
@@ -322,10 +314,10 @@ def _parse_scoreboard_result(
 
 
 def _parse_map_results(soup: BeautifulSoup) -> list[MapScore]:
-    """保留赛程地图位置，仅将实时 Scoreboard 叠加到唯一匹配的地图。"""
+    """赛程地图解析方法。"""
     results: list[MapScore] = []
     for holder in soup.select(".mapholder"):
-        # 未加载名称的卡片仍占据赛程位置，避免后续地图被误编号为图一。
+        # 未命名地图仍占赛程位置。
         name = _text(holder.select_one(".mapname, .dynamic-map-name-full")) or "TBA"
         team1_score = _score_text(
             holder.select_one(".results-left .results-team-score")
@@ -334,14 +326,12 @@ def _parse_map_results(soup: BeautifulSoup) -> list[MapScore]:
             holder.select_one(".results-right .results-team-score")
         )
         half_score = _text(holder.select_one(".results-center-half-score"))
-        # 进行中的地图也会显示当前回合比分，例如 (2:10;-:-)，不能把
-        # 两个当前分数误判成地图最终比分；完整的半场比分或 STATS 链接
-        # 才表示该地图已经结束。
+        # 当前回合比分不代表结束，需排除半场比分占位符。
         has_live_half_placeholder = bool(re.search(r"-\s*:\s*-", half_score))
         scores_are_final = (
             team1_score is not None
             and team2_score is not None
-            # 常规时间的 12:12 仍可能进入加时，平分不能作为地图结束。
+            # 平分可能进入加时，不能判定结束。
             and team1_score != team2_score
             and not has_live_half_placeholder
         )
@@ -349,8 +339,7 @@ def _parse_map_results(soup: BeautifulSoup) -> list[MapScore]:
             name=name,
             team1_score=team1_score,
             team2_score=team2_score,
-            # mapholder 只用于判断地图是否结束；其中的半场/延迟比分
-            # 不能作为比赛开始信号。
+            # 历史地图比分只用于结束判断。
             started=False,
             finished=scores_are_final,
         )
@@ -367,20 +356,19 @@ def _parse_map_results(soup: BeautifulSoup) -> list[MapScore]:
         for item in results
         if normalized_name and _normalize_map_name(item.name) == normalized_name
     ]
-    # 地图名未同步或出现重复名称时等待后续快照；不能追加虚构的图四/图六。
+    # 地图无法唯一匹配时等待后续快照，不能新增赛程位置。
     if len(matching_results) != 1:
         return results
     result = matching_results[0]
 
-    # 已有最终比分时保留地图卡片结果，避免 Scoreboard 收尾画面覆盖它。
+    # 最终比分不能被Scoreboard收尾画面覆盖。
     if result.is_finished:
         return results
     if team1_score is not None:
         result.team1_score = team1_score
     if team2_score is not None:
         result.team2_score = team2_score
-    # 当前地图是开始信号；不能使用已经写入 MapScore 的 mapholder
-    # 分数，否则半场比分会提前触发比赛开始通知。
+    # 开始信号只取实时地图，避免历史半场比分提前触发。
     result.started = True
     result.finished = False
     result.live = True
@@ -394,7 +382,7 @@ def _cell_text(row: Tag, selector: str, *, fallback: str = "-") -> str:
 
 
 def _visible_stat(row: Tag, selector: str, *, fallback: str = "-") -> str:
-    """优先选传统数据列，排除 eK-eD/eADR/eKAST 隐藏列。"""
+    """选手可见数据列查询方法。"""
     cell = row.select_one(f"{selector}.traditional-data")
     if cell is None:
         cells = row.select(selector)
@@ -436,7 +424,6 @@ def _parse_player(row: Tag, base_url: str) -> PlayerStats | None:
     if not nickname:
         nickname = full_name
     else:
-        # _text() 在 inline span 两侧会补空格；还原 HLTV 的 "First 'nick' Last"。
         full_name = re.sub(
             rf"'\s*{re.escape(nickname)}\s*'",
             lambda _: f"'{nickname}'",
@@ -609,7 +596,6 @@ def _status_code(
     if any(word in lowered for word in ("live", "now", "in progress", "ongoing")):
         return "live"
     if _LIVE_SCORE_RE.search(page_title):
-        # 部分实时页会把 0-1/1-0 只写入浏览器页签标题。
         return "live"
     if any(team.score is not None for team in teams):
         return "live"
@@ -637,7 +623,7 @@ def parse_match_html(
     page_url: str,
     fetched_at: datetime | None = None,
 ) -> MatchData:
-    """解析 HLTV match 页面并返回统一数据模型。"""
+    """HLTV比赛页面解析方法。"""
     with parsed_html(html) as soup:
         (
             header_teams,
@@ -651,7 +637,6 @@ def parse_match_html(
         map_names = _parse_maps(soup)
         stats_teams, map_stats = _parse_stats_tables(soup, page_url)
 
-        # Rating 表通常包含更可靠的队名和队标；用头部比分补回去。
         if stats_teams:
             for index, team in enumerate(stats_teams):
                 if index < len(header_teams):
@@ -729,8 +714,7 @@ def parse_event_html(
             return None
 
         date_nodes = soup.select("td.eventdate span[data-unix]")
-        # /events/<id>/matches 和 /results?event=<id> 也会包含赛事标题，
-        # 但它们不是详情页，没有日期表格。让调用方继续寻找 canonical overview。
+        # 只读取当前赛事节点，避免混入侧栏比赛。
         if not date_nodes and soup.select_one(
             ".event-header-component table.info, table.info"
         ) is None:
@@ -775,11 +759,10 @@ def parse_event_match_refs_html(
     section: str,
     event_id: str | None = None,
 ) -> list[EventMatchRef]:
-    """解析赛事 matches/results 页面中的比赛链接。"""
+    """赛事比赛链接解析方法。"""
     with parsed_html(html) as soup:
         refs: dict[str, EventMatchRef] = {}
 
-        # 旧调用方仍可能传入 result；对外统一保存为 finished。
         page_section = (
             MATCH_SECTION_FINISHED if section.casefold() == "result" else section
         )
@@ -831,14 +814,12 @@ def parse_event_match_refs_html(
             add_href(href, match_section, scheduled_at)
 
         if page_section == MATCH_SECTION_FINISHED:
-            # 当前 HLTV 的 /results?event=<id> 页面把赛事结果放在
-            # results-holder，侧栏中的推荐比赛不属于当前赛事。
             result_scope = soup.select_one(".results-holder")
             if result_scope is not None:
                 for anchor in result_scope.select('a[href*="/matches/"]'):
                     add_href(anchor.get("href"))
             else:
-                # 兼容旧的赛事概览页：淘汰赛信息会嵌在 bracket JSON 中。
+                # 旧赛事概览的比赛链接保存在bracket JSON中。
                 for bracket in soup.select("[data-slotted-bracket-json]"):
                     raw = str(bracket.get("data-slotted-bracket-json") or "")
                     for match in re.finditer(
@@ -847,8 +828,7 @@ def parse_event_match_refs_html(
                     ):
                         add_href(match.group(1))
         else:
-            # /events/<id>/matches 的 Live/Upcoming 比赛带有赛事 ID，
-            # 不能再扫描整页，否则会把右侧全站比赛列表混入订阅。
+            # 只读取当前赛事节点，避免混入侧栏比赛。
             wrapper_selector = ".matches-v4 [data-match-id][data-event-id]"
             if event_id:
                 wrapper_selector += f'[data-event-id="{event_id}"]'
@@ -868,8 +848,6 @@ def parse_event_match_refs_html(
                 add_match_node(wrapper, match_section)
 
             if not wrappers:
-                # 某些 HLTV 页面会省略 data-event-id，但仍会保留赛事页的
-                # matches-event-wrapper；只在这些局部容器内做回退解析。
                 for scope in soup.select(".matches-v4 .matches-event-wrapper"):
                     classes = scope.get("class", [])
                     if isinstance(classes, str):

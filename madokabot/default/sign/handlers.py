@@ -18,7 +18,7 @@ sign_locks: defaultdict[str, asyncio.Lock] = defaultdict(asyncio.Lock)
 
 @sign_matcher.handle()
 async def _handle_sign(bot: Bot, event: MessageEvent):
-    """串行处理同一用户的签到并返回用户卡片。"""
+    """签到命令处理方法。"""
     uid = event.get_user_id()
     username = event.sender.card or event.sender.nickname or uid
     lock = sign_locks[uid]

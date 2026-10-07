@@ -21,6 +21,7 @@ class MatchNotification:
     kind: str
     message: Message
     match_id: str = ""
+    event_id: str = ""
 
 
 def team_names(match: MatchData) -> tuple[str, str]:
@@ -59,19 +60,18 @@ def prediction_open_message(
     public_pool: int = 0,
     team_labels: list[str] | None = None,
 ) -> Message:
-    """生成开放竞猜节点，发送前使用当前群分配的两队编号。"""
+    """生成精简开放竞猜节点。"""
     first, second = team_names(match)
     labels = team_labels or ["A", "B"]
     format_code = match.format_code or "未知"
     return Message(
         MessageSegment.text(
-            f"【比赛编号：{match.match_id}】\n"
-            f"【team{labels[0]}：{first}】对阵【team{labels[1]}：{second}】的{format_code}比赛现已接受竞猜。\n"
-            "使用指令/cs <竞猜|预测> <竞猜编号|队伍名> <积分>参与。\n"
-            f"例如/cs 竞猜 team{labels[0]} 100\n"
-            f"【本场系统公池：{public_pool}积分】\n"
-            "获胜返还本金，并按下注积分占比分配对手池与公池。\n"
-            "【每场比赛仅可参与一次，无法修改】"
+            f"【已开放竞猜，{first}对阵{second}，{format_code}，编号{match.match_id}】\n"
+            "发送/cs <竞猜|预测> <竞猜编号|队伍名> <积分>参与\n"
+            f"team{labels[0]}：{first}\n"
+            f"team{labels[1]}：{second}\n"
+            f"如/cs 竞猜 team{labels[0]} 100\n\n"
+            "【每场比赛仅可参与一次，无法修改！】"
         )
     )
 
@@ -82,7 +82,7 @@ def prediction_notifications_with_labels(
     matches: dict[str, MatchData],
     states: dict[str, Any],
 ) -> list[MatchNotification]:
-    """为群开放通知填入编号；多场并行时附上该群全部可用编号。"""
+    """竞猜开放通知生成方法。"""
     if not any(item.kind == "prediction_open" for item in notifications):
         return notifications
     by_match = {candidate["match_id"]: candidate for candidate in candidates}
@@ -104,16 +104,13 @@ def prediction_notifications_with_labels(
             item.match_id,
         ))
     if len(candidates) > 1:
-        lines = ["当前可下注竞猜编号（截止后释放，新竞猜优先复用空位）："]
-        for candidate in candidates:
-            for label, name in zip(candidate["team_labels"], candidate["team_names"][:2]):
-                lines.append(f"team{label}：{name}（比赛编号：{candidate['match_id']}）")
-        if any(
-            label.isdigit()
-            for candidate in candidates
-            for label in candidate["team_labels"]
-        ):
-            lines.append("字母用尽，统一使用数字编号；旧字母仍按 A=1、B=2…对应。")
+        lines = ["当前可下注竞猜"]
+        for index, candidate in enumerate(candidates, start=1):
+            first, second = candidate["team_names"][:2]
+            labels = candidate["team_labels"]
+            lines.append(
+                f"{index}.{first}(team{labels[0]}) 对阵 {second}(team{labels[1]})"
+            )
         selected.append(MatchNotification(
             "prediction_open", Message(MessageSegment.text("\n".join(lines)))
         ))
@@ -127,33 +124,60 @@ def prediction_close_message(
     refunded: bool = False,
     public_pool: int = 0,
 ) -> Message:
-    """生成停止竞猜的通知节点。"""
+    """竞猜截止通知生成方法。"""
     first, second = team_names(match)
     teams = summary.get("teams")
     teams = teams if isinstance(teams, dict) else {}
     first_summary = teams.get(first, {})
     second_summary = teams.get(second, {})
     lines = [
-        f"【比赛编号：{match.match_id}】",
-        f"{first}对阵{second}的比赛已开始，已停止接受预测。",
+        f"比赛已开始（{first} VS {second} 编号{match.match_id}），竞猜已截止。",
         f"{first}：{int(first_summary.get('count', 0))}人预测，共计"
         f"{int(first_summary.get('points', 0))}积分。",
         f"{second}：{int(second_summary.get('count', 0))}人预测，共计"
         f"{int(second_summary.get('points', 0))}积分。",
-        f"本场系统公池：{public_pool}积分。",
+        f"系统公池：{public_pool}积分。",
     ]
     if refunded:
         lines.append("本场竞猜因一方没有积分参与，竞猜对局失败，已退回所有下注积分。")
     return Message(MessageSegment.text("\n".join(lines)))
 
 
+def prediction_settlement_message(report: dict[str, Any]) -> Message:
+    """竞猜结算通知生成方法。"""
+    if report["winner_name"]:
+        other_points = report["opponent_points"]
+        other_count = report["opponent_count"]
+        count_text = f"（{other_count}人）" if other_count else ""
+        lines = [
+            f"【{report['winner_name']}获胜】竞猜结算",
+            f"系统公池：{report['public_pool']}积分",
+            f"其他下注：{other_points}积分{count_text}",
+        ]
+    else:
+        lines = ["【竞猜退款】竞猜结算", "本场仅退回下注本金"]
+    for player in report["players"]:
+        lines.append(f"{player['name']}：{player['net_points']:+d}积分")
+    return Message(MessageSegment.text("\n".join(lines)))
+
+
 def map_result_message(match: MatchData, result: MapScore, index: int) -> Message:
-    """生成单张地图结束的合并转发文本节点。"""
+    """地图结束消息生成方法。"""
     first, second = team_names(match)
     label = MAP_LABELS[index] if index < len(MAP_LABELS) else str(index + 1)
+    winner = ""
+    try:
+        first_score = int(result.team1_score)
+        second_score = int(result.team2_score)
+    except (TypeError, ValueError):
+        pass
+    else:
+        if first_score != second_score:
+            winner = first if first_score > second_score else second
+    winner_text = f"，{winner}获胜" if winner else ""
     text = (
-        f"订阅赛事更新\n{first} 对阵 {second} 的图{label}结束，"
-        f"比分为 {first} {result.score_display} {second}"
+        f"图{label}结束{winner_text}\n"
+        f"比分为{first} {result.score_display} {second}"
     )
     return Message(MessageSegment.text(text))
 
@@ -164,18 +188,16 @@ def map_start_message(
     index: int,
     event_name: str = "",
 ) -> Message:
-    """生成单张地图开始的合并转发文本节点。"""
+    """地图开始消息生成方法。"""
     first, second = team_names(match)
     label = MAP_LABELS[index] if index < len(MAP_LABELS) else str(index + 1)
-    event_prefix = f"【{event_name}】" if event_name else ""
-    name_suffix = f"（{map_name}）" if map_name else ""
-    return Message(
-        MessageSegment.text(
-            f"订阅赛事更新\n"
-            f"{event_prefix}\n"
-            f"{first} 对阵 {second} 的图{label}{name_suffix}开始"
-        )
-    )
+    lines = [
+        f"{first}对阵{second}的比赛已开始",
+        f"图{label}：{map_name}" if map_name else f"图{label}",
+    ]
+    if event_name:
+        lines.append(f"【{event_name}】")
+    return Message(MessageSegment.text("\n".join(lines)))
 
 
 def final_message(match: MatchData) -> Message:

@@ -158,7 +158,7 @@ def aggregate_pw_match_stats(
     binding: PlayerBinding,
     matches: list[dict[str, Any]],
 ) -> dict[str, Any]:
-    """在聚合接口不可用时，使用公开比赛列表生成一个可展示的兜底统计。"""
+    """完美比赛数据聚合方法。"""
     total = len(matches)
     wins = 0
     ties = 0
@@ -289,7 +289,7 @@ def _pw_recent_match_views(
     stats: dict[str, Any],
     matches: list[Any],
 ) -> list[dict[str, str]]:
-    """转换近期比赛，并用分数历史补足接口缺失的 ELO 变化。"""
+    """完美近期比赛视图生成方法。"""
     score_changes: dict[str, int] = {}
     score_list = [as_dict(item) for item in as_list(stats.get("scoreList"))]
     for current, previous in zip(score_list, score_list[1:]):

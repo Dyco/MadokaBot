@@ -70,7 +70,7 @@ async def _shop_list(event: MessageEvent):
 
 
 async def _send_skin_shop(event: MessageEvent):
-    """发送商店首页并处理当前回复会话中的翻页请求。"""
+    """商店分页会话方法。"""
     uid = event.get_user_id()
     if not await UserAccount.is_registered(uid):
         await shop_cmd.finish("请先发送“注册”完成用户注册")
@@ -86,7 +86,7 @@ async def _send_skin_shop(event: MessageEvent):
 
     @waiter(waits=["message"], keep_session=True, block=True)
     async def wait_shop_page(reply_event: MessageEvent):
-        """仅接受回复当前商店消息的翻页输入。"""
+        """商店翻页回复检查方法。"""
         if not reply_event.reply:
             return None
         try:
@@ -135,7 +135,7 @@ async def _send_skin_shop(event: MessageEvent):
 
 @shop_cmd.assign("buy")
 async def _shop_buy_skin(event: MessageEvent, number: Match[str]):
-    """校验商品编号并购买立绘。"""
+    """立绘购买命令处理方法。"""
     uid = event.get_user_id()
     if not await UserAccount.is_registered(uid):
         await shop_cmd.finish("请先发送“注册”完成用户注册")

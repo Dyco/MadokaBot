@@ -22,7 +22,7 @@ from .values import parse_pw_steam_id
 async def bind_player(
     user_id: str, platform: str, player: str, qq_nickname: str = ""
 ) -> PlayerBinding:
-    """保存 5E 绑定，或共用 Steam 的全局账号绑定。"""
+    """玩家绑定方法。"""
     normalized = normalize_platform(platform)
     identifier = player.strip()
     if normalized is None or normalized not in {"5e", "pw"}:
@@ -44,7 +44,7 @@ async def bind_player(
 
 
 async def unbind_player(user_id: str, platform: str) -> PlayerBinding | None:
-    """5E 单独解绑；完美平台与 Steam 共用全局解绑。"""
+    """玩家解绑方法。"""
     normalized = normalize_platform(platform)
     if normalized not in {"5e", "pw"}:
         raise PlayerStatsError(f"平台仅支持 {SUPPORTED_PLATFORM_TEXT}")
@@ -59,7 +59,7 @@ async def unbind_player(user_id: str, platform: str) -> PlayerBinding | None:
 
 
 async def get_binding(user_id: str, platform: str) -> PlayerBinding | None:
-    """从公共数据库读取 5E 或共用 Steam 绑定。"""
+    """玩家绑定查询方法。"""
     normalized = normalize_platform(platform)
     if normalized == "5e":
         return await get_5e_binding(user_id)
@@ -77,7 +77,7 @@ async def fetch_player_stats(
     platform: str,
     nickname: str = "",
 ) -> dict[str, Any]:
-    """查询指定昵称；昵称为空时查询当前用户已经绑定的玩家。"""
+    """玩家战绩查询方法。"""
     normalized = normalize_platform(platform)
     if normalized not in {"5e", "pw"}:
         raise PlayerStatsError(f"平台仅支持 {SUPPORTED_PLATFORM_TEXT}")

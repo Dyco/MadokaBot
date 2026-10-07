@@ -1,15 +1,19 @@
-"""CS 赛事轮询与超时竞猜退款定时任务。"""
+"""CS 赛事轮询与未结算竞猜恢复定时任务。"""
 
 from __future__ import annotations
 
 from datetime import datetime, timezone
 
-from nonebot import logger
+from nonebot import get_driver, logger
 from nonebot_plugin_apscheduler import scheduler
+from nonebot_plugin_datastore.db import post_db_init
 
 from .config import config
-from .prediction import refund_expired_predictions
 from .subscriptions.polling import poll_subscriptions
+from .subscriptions.settlement import (
+    reconcile_unsettled_predictions,
+    send_pending_prediction_notifications,
+)
 
 
 @scheduler.scheduled_job(
@@ -18,7 +22,6 @@ from .subscriptions.polling import poll_subscriptions
     id="madokabot_cs_match_subscribe_poll",
     max_instances=1,
     coalesce=True,
-    # 机器人重启后立即检查持久化状态，避免错过赛事开始后的第一次轮询。
     next_run_time=datetime.now(timezone.utc),
 )
 async def poll_cs_match_subscriptions() -> None:
@@ -26,17 +29,32 @@ async def poll_cs_match_subscriptions() -> None:
     await poll_subscriptions()
 
 
-@scheduler.scheduled_job(
-    "interval",
-    minutes=5,
-    id="madokabot_cs_prediction_refund_expired",
-    max_instances=1,
-    coalesce=True,
-    next_run_time=datetime.now(timezone.utc),
-)
-async def refund_expired_cs_predictions() -> None:
-    """独立于网络抓取和订阅列表的竞猜退款兜底，只记录日志。"""
+async def reconcile_cs_predictions() -> None:
+    """启动竞猜补结算方法。"""
     try:
-        await refund_expired_predictions()
+        await reconcile_unsettled_predictions()
     except Exception:
-        logger.exception("CS 超时竞猜退款失败，将在下一轮重试")
+        logger.exception("CS 启动补结算失败，保留下注等待比赛结束或下次启动")
+
+
+@post_db_init
+async def schedule_prediction_recovery() -> None:
+    """竞猜恢复任务调度方法。"""
+    scheduler.add_job(
+        reconcile_cs_predictions,
+        "date",
+        run_date=datetime.now(timezone.utc),
+        id="madokabot_cs_prediction_refund_expired",
+        replace_existing=True,
+        max_instances=1,
+        misfire_grace_time=None,
+    )
+
+
+@get_driver().on_bot_connect
+async def send_prediction_notifications_on_connect() -> None:
+    """连接就绪通知补发方法。"""
+    try:
+        await send_pending_prediction_notifications(ready_only=True)
+    except Exception:
+        logger.exception("CS 连接恢复后发送结算通知失败，保留凭据等待重试")

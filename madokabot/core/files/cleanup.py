@@ -1,8 +1,4 @@
-"""跨插件的过期文件清理器。
-
-各插件只需注册自己的专用缓存目录；清理器不跟踪业务任务，
-仅根据文件的最后修改时间清理过期文件。
-"""
+"""过期文件清理模块。"""
 
 import asyncio
 import time
@@ -100,7 +96,7 @@ def _cleanup_target(target: CleanupTarget, now: float) -> tuple[int, int]:
 
 
 async def cleanup_expired_files() -> None:
-    """扫描所有已注册目录，删除过期文件。"""
+    """过期文件清理方法。"""
     now = time.time()
     for target in tuple(_cleanup_targets.values()):
         removed, failed = await asyncio.to_thread(_cleanup_target, target, now)

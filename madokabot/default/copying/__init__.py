@@ -14,6 +14,4 @@ __plugin_meta__ = PluginMetadata(
     config=CopyingConfig,
 )
 
-# NoneBot 将插件目录当作一个插件加载，不会自动执行目录下的普通模块；
-# 显式导入处理器以注册消息和控制命令 matcher。
 from . import handlers as handlers  # noqa: E402,F401

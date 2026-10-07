@@ -18,7 +18,7 @@ def number_text(value: Any, places: int = 2) -> str:
 
 
 def nonzero_number_text(value: Any, places: int = 2) -> str:
-    """将非零有限数值格式化；缺失、零或无效值统一显示横线。"""
+    """非零数值格式化方法。"""
     number = as_float(value)
     if number is None or not math.isfinite(number) or number == 0:
         return "-"
@@ -26,7 +26,7 @@ def nonzero_number_text(value: Any, places: int = 2) -> str:
 
 
 def score_text(value: Any) -> str:
-    """格式化平台分数，避免把整数分数显示成 1906.0。"""
+    """分数格式化方法。"""
     number = as_float(value)
     if number is None:
         return str(value or "-")
@@ -52,7 +52,7 @@ def ordered_match_score(
     is_loss: bool = False,
     is_tie: bool = False,
 ) -> str:
-    """把比分按玩家视角排列：胜利大分在前，失败小分在前。"""
+    """玩家视角比分排序方法。"""
     if score1 in (None, "") or score2 in (None, ""):
         return "-"
 
@@ -82,7 +82,7 @@ def time_text(value: Any, *, target_timezone: tzinfo | None = None) -> str:
     except (TypeError, ValueError):
         return raw.replace("T", " ", 1)[:16] or "-"
 
-    # 不同接口分别使用秒和毫秒时间戳。
+    # 兼容秒和毫秒时间戳。
     if timestamp > 10_000_000_000:
         timestamp /= 1000
     try:

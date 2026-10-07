@@ -5,7 +5,7 @@ _MAX_ACCOUNT_ID = 0xFFFFFFFF
 
 
 def normalize_steam_id(value: str) -> str:
-    """把 32 位账号 ID 或 Steam64 ID 规范为 Steam64 ID。"""
+    """SteamID规范化方法。"""
     raw = value.strip()
     if not raw.isascii() or not raw.isdigit():
         raise ValueError("Steam ID 必须是纯数字。")

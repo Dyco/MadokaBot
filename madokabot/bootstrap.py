@@ -32,7 +32,7 @@ __plugin_meta__ = PluginMetadata(
 
 @post_db_init
 async def _init_database() -> None:
-    """在业务模型加载完成、数据库就绪后建表并兼容历史账号字段。"""
+    """数据库初始化方法。"""
     await init_database()
     await migrate_user_schema()
 

@@ -37,16 +37,13 @@ def check_first_connect(_: LifecycleMetaEvent) -> bool:
 start_metaevent = on_metaevent(rule=check_first_connect, temp=True)
 
 
-# 启动时发送启动成功信息
 @start_metaevent.handle()
 async def start(bot: Bot) -> None:
-    # 启动后检查 data 目录，不存在就创建
     if not DATA_PATH.is_dir():
         DATA_PATH.mkdir(parents=True, exist_ok=True)
 
-    rss_list = Rss.read_rss()  # 读取list
-    # 上传恢复不依赖任何订阅源，优先执行，避免单个源初始化失败时
-    # 连带阻断重启后的上传与核验任务。
+    rss_list = Rss.read_rss()
+    # 上传恢复先于订阅初始化，单个源失败不能阻止恢复。
     try:
         await restore_upload_records(bot)
     except Exception:

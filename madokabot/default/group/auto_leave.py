@@ -22,7 +22,7 @@ def should_auto_leave_group(member_count: int) -> bool:
 
 
 async def _leave_group_after_delay(bot: Bot, group_id: int) -> None:
-    """发送入群提示，延迟复核白名单和群人数后决定是否退出。"""
+    """延迟退群检查方法。"""
     await _notify_group_join(bot, group_id)
     await asyncio.sleep(AUTO_LEAVE_DELAY_SECONDS)
 
@@ -57,7 +57,7 @@ async def _leave_group_after_delay(bot: Bot, group_id: int) -> None:
 
 
 async def _notify_group_join(bot: Bot, group_id: int) -> None:
-    """向非白名单新群提示权限限制，并按当前人数提示自动退群。"""
+    """入群提示方法。"""
     try:
         await bot.call_api(
             "send_group_msg",
@@ -89,7 +89,7 @@ async def _notify_group_join(bot: Bot, group_id: int) -> None:
 
 
 def schedule_auto_leave_group(bot: Bot, group_id: int) -> None:
-    """为非白名单新群安排一次入群提示和延迟退群检查。"""
+    """退群检查调度方法。"""
     if is_group_whitelisted(group_id):
         return
 
@@ -121,6 +121,6 @@ auto_leave_group_notice = on_notice()
 
 @auto_leave_group_notice.handle()
 async def _handle_group_increase(bot: Bot, event: GroupIncreaseNoticeEvent):
-    """机器人自身入群时安排提示和群规模检查。"""
+    """机器人入群处理方法。"""
     if event.user_id == event.self_id:
         schedule_auto_leave_group(bot, event.group_id)

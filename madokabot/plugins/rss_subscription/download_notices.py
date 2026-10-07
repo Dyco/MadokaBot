@@ -23,7 +23,7 @@ def _whitelisted_group_ids(group_ids: Sequence[str]) -> List[str]:
 async def send_msg(
     bot: Bot, msg: str, notice_group: Optional[List[str]] = None
 ) -> List[Dict[str, Any]]:
-    """向任务指定的白名单群发送状态通知。"""
+    """消息发送方法。"""
     logger.info(msg)
     msg_id: List[Dict[str, Any]] = []
     configured_group_ids = notice_group or config.down_status_msg_group

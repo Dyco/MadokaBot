@@ -31,7 +31,7 @@ class SkinService:
 
     @staticmethod
     async def switch_skin(uid: str, skin_key: str) -> tuple[bool, str]:
-        """校验立绘持有记录并切换当前使用的立绘。"""
+        """立绘切换方法。"""
         normalized_key = skin_key.strip().lower()
         skin_path = get_skin_map().get(normalized_key)
         if skin_path is None:
@@ -108,7 +108,7 @@ class SkinService:
 
     @staticmethod
     async def buy_shop_skin(uid: str, display_id: int) -> tuple[bool, str]:
-        """在同一事务中扣除积分并添加立绘库存，拒绝重复购买。"""
+        """立绘购买方法。"""
         skin_entries = list(get_skin_map().items())
         if display_id < 1 or display_id > len(skin_entries):
             return False, "该商品不存在或当前不可购买"

@@ -12,7 +12,7 @@ class ResponseTooLargeError(ValueError):
 
 
 async def read_limited_response(response: httpx.Response, limit: int) -> bytes:
-    """流式读取并限制解压后的大小，不能先读完整个响应再检查。"""
+    """限量响应读取方法。"""
     length = response.headers.get("content-length", "")
     if length.isdigit() and int(length) > limit:
         raise ResponseTooLargeError(f"响应超过 {limit} 字节限制")
@@ -25,7 +25,7 @@ async def read_limited_response(response: httpx.Response, limit: int) -> bytes:
 
 
 def resolve_proxy(*candidates: Any) -> str | None:
-    """返回第一个有效代理地址，并统一补全协议。"""
+    """返回第一个有效代理地址。"""
     for candidate in candidates:
         if candidate is None:
             continue

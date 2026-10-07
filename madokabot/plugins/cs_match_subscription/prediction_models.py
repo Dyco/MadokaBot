@@ -1,8 +1,8 @@
-"""CS 竞猜的持久化模型，与接口数据模型分开管理。"""
+"""CS 竞猜的持久化模型。"""
 
 from datetime import datetime
 
-from sqlalchemy import DateTime, Integer, String
+from sqlalchemy import Boolean, DateTime, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from madokabot.core.db.base import data, shanghai_now
@@ -32,3 +32,17 @@ class CsPrediction(data.Model):
         default=None,
         nullable=True,
     )
+
+
+class CsPredictionNotification(data.Model):
+    """竞猜群通知凭据。"""
+
+    __tablename__ = "cs_prediction_notification"
+
+    event_id: Mapped[str] = mapped_column(String(32), primary_key=True)
+    match_id: Mapped[str] = mapped_column(String(32), primary_key=True)
+    group_id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    winner_name: Mapped[str] = mapped_column(String(128), default="", nullable=False)
+    public_pool: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    final_text: Mapped[str] = mapped_column(Text, default="", nullable=False)
+    sent: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)

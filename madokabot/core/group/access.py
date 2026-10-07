@@ -10,16 +10,15 @@ from madokabot.core.storage.json_store import JsonDataStore
 GROUP_ACCESS_PATH = (
     assets.get_dir(ResourceType.JSON, ResourceFolder.GROUP) / "group_access.json"
 )
-# 白名单和黑名单唯一使用的 JSON 文件路径。
 
 _ACCESS_LIST_NAMES = ("whitelist", "blacklist")
 
 
 class GroupAccessType(IntEnum):
-    """群组访问类型，1 代表白名单，2 代表黑名单。"""
+    """群访问类型。"""
 
-    WHITELIST = 1  # 1：白名单
-    BLACKLIST = 2  # 2：黑名单
+    WHITELIST = 1
+    BLACKLIST = 2
 
 
 class GroupAccessStore:
@@ -35,7 +34,7 @@ class GroupAccessStore:
 
     @staticmethod
     def _normalize_group_id(group_id: str | int) -> str:
-        """统一群 ID 格式，并拒绝空值。"""
+        """群号规范化方法。"""
         value = str(group_id).strip()
         if not value:
             raise ValueError("群 ID 不能为空")
@@ -43,7 +42,7 @@ class GroupAccessStore:
 
     @staticmethod
     def _normalize_access_type(access_type: int) -> int:
-        """校验访问类型，1 代表白名单，2 代表黑名单。"""
+        """访问类型校验方法。"""
         if isinstance(access_type, bool) or not isinstance(access_type, int):
             raise TypeError("访问类型必须是 1（白名单）或 2（黑名单）")
         if access_type not in {
@@ -55,12 +54,12 @@ class GroupAccessStore:
 
     @staticmethod
     def _list_name(access_type: int) -> str:
-        """将访问类型转换为 JSON 中对应的名单名称。"""
+        """访问名单名称转换方法。"""
         return "whitelist" if access_type == GroupAccessType.WHITELIST else "blacklist"
 
     @staticmethod
     def _normalize_access(data: Any) -> dict[str, set[str]]:
-        """清洗白名单和黑名单，只保留非空群 ID。"""
+        """访问名单整理方法。"""
         if not isinstance(data, dict):
             data = {}
         return {
@@ -80,7 +79,7 @@ class GroupAccessStore:
         self.content = self._normalize_access(self.data_store.content)
 
     def save(self) -> None:
-        """保存访问名单到 group_access.json。"""
+        """访问名单保存方法。"""
         self.data_store.write(
             {
                 list_name: sorted(self.content[list_name])
@@ -94,7 +93,7 @@ class GroupAccessStore:
         return sorted(self.content[self._list_name(normalized_access_type)])
 
     def add(self, group_id: str | int, access_type: int) -> bool:
-        """将群 ID 写入指定名单，并返回数据是否发生变化。"""
+        """将群 ID 写入指定名单。"""
         normalized_group_id = self._normalize_group_id(group_id)
         normalized_access_type = self._normalize_access_type(access_type)
         target_name = self._list_name(normalized_access_type)
@@ -116,7 +115,7 @@ class GroupAccessStore:
         return True
 
     def remove(self, group_id: str | int) -> bool:
-        """从白名单和黑名单移除群 ID，并返回是否实际删除。"""
+        """从白名单和黑名单移除群 ID。"""
         normalized_group_id = self._normalize_group_id(group_id)
         changed = False
         for groups in self.content.values():
@@ -146,7 +145,7 @@ class GroupAccessStore:
         return self.contains(group_id, GroupAccessType.BLACKLIST)
 
     def is_allowed(self, group_id: str | int) -> bool:
-        """根据访问名单判断群组是否允许使用机器人功能。"""
+        """群访问权限检查方法。"""
         normalized_group_id = self._normalize_group_id(group_id)
         if normalized_group_id in self.content["blacklist"]:
             return False
@@ -156,7 +155,6 @@ class GroupAccessStore:
 
 
 group_access = GroupAccessStore()
-# 群组访问名单存储实例，实际数据保存于 group_access.json。
 
 
 def is_group_whitelisted(group_id: str | int) -> bool:

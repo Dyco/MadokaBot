@@ -7,7 +7,7 @@ from madokabot.core.resources import ResourceFolder, ResourceType, assets
 
 
 def get_group_name(group_id: str | int) -> str:
-    """读取公共群昵称，缺失时退回群号。"""
+    """群名称读取方法。"""
     data = group_settings.get(group_id, "group_info", {})
     name = data.get("group_name") if isinstance(data, dict) else None
     return name if isinstance(name, str) and name.strip() else str(group_id)

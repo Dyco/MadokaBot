@@ -19,7 +19,7 @@ from madokabot.core.group.access import is_group_whitelisted
 from madokabot.core.group.settings import group_settings
 from .config import config
 
-# 命令优先于普通消息处理，避免“复读 设置 3”等控制消息污染复读记录。
+# 控制命令不能计入复读记录。
 copying = on_message(priority=20, block=False)
 
 copying_switch_command = Alconna(
@@ -39,18 +39,13 @@ copying_switch_matcher = on_alconna(
 )
 
 
-# 保留这个名称，方便在运行时查看或测试默认阈值。
 copying_number = config.copying_number
 _GROUP_SETTINGS_NAME = "group_set"
 
 
 @dataclass
 class _CopyingState:
-    """一个群当前连续消息段的状态。
-
-    只保存上一条消息和计数，不保存整段历史，避免有人长时间刷屏时状态无限增长。
-    ``echoed`` 用来保证同一段连续消息只复读一次。
-    """
+    """群连续消息状态。"""
 
     last_message: Message | None = None
     repeat_count: int = 0
@@ -58,7 +53,6 @@ class _CopyingState:
     echoed: bool = False
 
 
-# 每个群独立计数，群 A 的消息不会影响群 B。
 msg_dict: dict[str, _CopyingState] = {}
 
 _COPYABLE_SEGMENT_TYPES = {"text", "image"}
@@ -98,7 +92,7 @@ def _freeze(value: Any) -> Any:
 
 
 def _image_identity_values(segment: Any) -> set[Any]:
-    """取得图片的稳定标识，排除仅描述文件大小等易变化字段。"""
+    """图片标识提取方法。"""
 
     data = getattr(segment, "data", {})
     return {
@@ -109,20 +103,14 @@ def _image_identity_values(segment: Any) -> set[Any]:
 
 
 def _image_equal(segment1: Any, segment2: Any) -> bool:
-    """比较两个图片消息段。
-
-    OneBot 的同一张图片在不同事件里可能只有 ``file`` 或 ``url`` 其中一个稳定，
-    也可能附带不同的 ``file_size``、缓存参数等元数据。因此不能只比较整个
-    ``data`` 字典，也不能只按文件大小判断。
-    """
+    """图片消息比较方法。"""
 
     identity1 = _image_identity_values(segment1)
     identity2 = _image_identity_values(segment2)
     if identity1 and identity2:
         return bool(identity1 & identity2)
 
-    # 没有可用稳定标识时，只有完整数据相同才认为是同一张图片；文件大小本身
-    # 不会被单独当作图片身份，避免把不同但大小相同的图片误判为相同。
+    # 缺少稳定标识时比较完整数据，不能只比较文件大小。
     return _freeze(getattr(segment1, "data", {})) == _freeze(
         getattr(segment2, "data", {})
     )
@@ -139,7 +127,7 @@ def _segment_equal(segment1: Any, segment2: Any) -> bool:
 
 
 def is_equal(msg1: Message, msg2: Message) -> bool:
-    """判断两条消息的内容是否相同，支持文字、图片及其组合。"""
+    """判断两条消息的内容是否相同。"""
 
     if len(msg1) != len(msg2):
         return False
@@ -164,7 +152,7 @@ def _default_group_settings() -> dict[str, Any]:
 
 
 def _get_group_settings(group_id: str) -> dict[str, Any]:
-    """读取群组设置，没有数据时写入默认设置。"""
+    """复读群设置读取方法。"""
 
     settings = group_settings.get(group_id, _GROUP_SETTINGS_NAME)
     if not isinstance(settings, dict):
@@ -174,8 +162,7 @@ def _get_group_settings(group_id: str) -> dict[str, Any]:
 
 
 def _get_threshold(settings: dict[str, Any]) -> int:
-    # 配置模型和指令都会保证阈值至少为 1；这里再做一次保护，避免群组 JSON
-    # 被手动修改后导致计数逻辑失效。
+    # 手动修改群配置可能绕过阈值校验。
     threshold = settings.get("threshold", copying_number)
     if not isinstance(threshold, int):
         return max(1, copying_number)
@@ -183,7 +170,7 @@ def _get_threshold(settings: dict[str, Any]) -> int:
 
 
 def _is_copyable(message: Message) -> bool:
-    """只处理文字、图片或文字与图片的组合消息。"""
+    """复读消息类型检查方法。"""
 
     return bool(message) and all(
         segment.type in _COPYABLE_SEGMENT_TYPES for segment in message
@@ -242,8 +229,7 @@ async def handle_copying(bot: Bot, event: Event):
     if group_id is None:
         return
 
-    # 某些适配器可能把机器人自己的消息再次作为事件分发，忽略它可以避免
-    # 机器人复读自己的复读消息而形成回路。
+    # 忽略机器人自身事件，防止复读回路。
     user_id = getattr(event, "user_id", None)
     self_id = getattr(bot, "self_id", None)
     if user_id is not None and self_id is not None and str(user_id) == str(self_id):
@@ -259,7 +245,7 @@ async def handle_copying(bot: Bot, event: Event):
 
     message = event.get_message()
     if not _is_copyable(message):
-        # 其它消息类型也算作“打断”，不能让 A、A、表情、A、A、A 错误触发。
+        # 其他消息类型也会打断连续复读。
         _reset_group_state(group_id)
         return
 
@@ -270,17 +256,14 @@ async def handle_copying(bot: Bot, event: Event):
         msg_dict[group_id] = state
 
     if state.last_message is not None and is_equal(state.last_message, message):
-        # 达到阈值后无需继续增长计数，避免超长连续刷屏造成无意义状态变化。
         state.repeat_count = min(state.repeat_count + 1, threshold)
-        # 始终保留紧邻的上一条消息。图片的不同事件可能轮换 file/url 等
-        # 标识，逐条比较才能正确判断“连续相同”。
+        # 图片标识可能轮换，连续判断需比较紧邻消息。
         state.last_message = deepcopy(message)
     else:
         state.last_message = deepcopy(message)
         state.repeat_count = 1
         state.echoed = False
 
-    # “连续 X 条”在第 X 条到达时触发，并且同一段只发送一次。
     if state.repeat_count >= threshold and not state.echoed:
         state.echoed = True
         await copying.send(message)

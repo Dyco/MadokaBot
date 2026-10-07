@@ -10,14 +10,14 @@ class SteamConfig(BaseModel):
     """Steam 查询、播报和冷却配置。"""
 
     steam_api_key: str
-    steam_request_interval: int = 60  # seconds
-    steam_batch_size: int = Field(default=25, ge=1, le=100)  # 玩家摘要每批人数
-    steam_broadcast_type: str = "part"  # all, part, none
+    steam_request_interval: int = 60
+    steam_batch_size: int = Field(default=25, ge=1, le=100)
+    steam_broadcast_type: str = "part"
     steam_disable_broadcast_on_startup: bool = False
     steam_command_priority: int = 10
-    steam_query_use_proxy: bool = True  # 主动查询使用全局代理
-    steam_monitor_use_proxy: bool = False  # 定时在线状态监控使用全局代理
-    steam_query_cooldown: int = 600  # 主动资料查询冷却秒数
+    steam_query_use_proxy: bool = True
+    steam_monitor_use_proxy: bool = False
+    steam_query_cooldown: int = 600
 
 
 config = get_plugin_config(SteamConfig)

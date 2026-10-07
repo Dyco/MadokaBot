@@ -44,14 +44,14 @@ def complete_series_notifications(
     state: dict[str, Any],
     rating_messages: list[Message],
 ) -> list[MatchNotification]:
-    """完整 Rating 到齐或重试耗尽时，完成一次系列赛结束通知。"""
+    """系列赛结束通知方法。"""
     notifications = [
         MatchNotification(
-            "series_end", Message(MessageSegment.text(state["rating_final_text"]))
+            "series_end", Message(MessageSegment.text(state["rating_final_text"])), match_id
         )
     ]
     notifications.extend(
-        MatchNotification("series_rating", message) for message in rating_messages
+        MatchNotification("series_rating", message, match_id) for message in rating_messages
     )
     state["rating_summary_sent"] = True
     state["rating_skipped"] = not bool(rating_messages)
@@ -76,7 +76,7 @@ async def process_event_match(
     has_single_target: bool,
     has_prediction_target: bool,
 ) -> list[MatchNotification]:
-    """根据一次比赛快照生成尚未推送的节点并更新内存状态。"""
+    """比赛快照处理方法。"""
     notifications: list[MatchNotification] = []
     initialized = bool(state.get("initialized", False))
     previous_scores = state.get("map_scores")
@@ -114,7 +114,7 @@ async def process_event_match(
     if not initialized:
         previous_scores = current_map_scores(match)
 
-        # 订阅时已经结束的地图只建立消息和 Rating 基线，避免补发历史数据。
+        # 订阅前已结束的地图只建基线，不补发通知。
         for index, result in enumerate(match.map_results):
             if not result.is_finished:
                 continue
@@ -131,7 +131,7 @@ async def process_event_match(
         started_maps = []
         state["started_maps"] = started_maps
     started_set = {str(value) for value in started_maps}
-    # 已观察到结束的地图永久关闭开始通知，避免页面比分回退后重新播报。
+    # 结束后的地图不能再次发送开始通知。
     for index, result in enumerate(match.map_results):
         if (
             result.is_finished
@@ -242,7 +242,7 @@ async def process_event_match(
         ):
             image = await rating_message(match, rating_cache, result.name)
             if image is None:
-                # 地图比分和对应 Rating 必须同时就绪后才推送地图结束。
+                # 地图结束通知需比分和Rating同时就绪。
                 continue
 
             notification = f"map_end:{index}"
@@ -276,8 +276,7 @@ async def process_event_match(
                 state["winner_name"] = winner_name
                 state["prediction_settled"] = True
         if not state.get("rating_summary_sent", False):
-            # 首次结束快照不计为重试，后续最多再尝试三轮。
-            # 保存纯文本比分，让后续网络失败时也能完成结束播报。
+            # 首个结束快照不计重试，后续最多三轮并保留比分兜底。
             state.setdefault("rating_retry_attempts", 0)
             state["rating_final_text"] = final_message(match).extract_plain_text()
             has_map_result = any(result.is_finished for result in match.map_results)

@@ -36,7 +36,7 @@ async def send_resolved_video(
     source: str | Path | None,
     proxy: str | None = None,
 ) -> bool:
-    """下载并发送视频；发送失败时保留文件，不降级为文件上传。"""
+    """解析视频发送方法。"""
     path: Path | None = None
     bot: Bot | None = None
     sent = False

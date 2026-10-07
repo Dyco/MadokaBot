@@ -18,7 +18,7 @@ poke_matcher = on_notice()
 
 @poke_matcher.handle()
 async def _handle_poke(event: PokeNotifyEvent):
-    """被戳时随机发送一条语音资源。"""
+    """戳一戳处理方法。"""
     if event.target_id != event.self_id:
         return
     await poke_matcher.finish(

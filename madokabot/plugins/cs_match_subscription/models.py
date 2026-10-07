@@ -7,11 +7,8 @@ from datetime import datetime
 from typing import Any
 
 
-# 赛事订阅的等待状态：尚未观察到第一场比赛实际进行。
 EVENT_STATUS_WAITING = "waiting"
-# 赛事订阅的进行状态：赛事已进入进行阶段，需要轮询比赛页面。
 EVENT_STATUS_ONGOING = "ongoing"
-# 赛事订阅的结束状态：赛事不再需要轮询。
 EVENT_STATUS_FINISHED = "finished"
 EVENT_STATUSES = {
     EVENT_STATUS_WAITING,
@@ -19,16 +16,14 @@ EVENT_STATUSES = {
     EVENT_STATUS_FINISHED,
 }
 
-# 赛事比赛在赛事列表中的来源。HLTV 的 matches 页面把正在进行的比赛
-# 放在 live-match-container 中，所以这里沿用 upcoming 作为“当前 live”状态；
-# waiting 只表示尚未开始，finished 表示已经进入 Results。
+# upcoming对应赛事页live，waiting对应未开始，finished对应Results。
 MATCH_SECTION_UPCOMING = "upcoming"
 MATCH_SECTION_WAITING = "waiting"
 MATCH_SECTION_FINISHED = "finished"
 
 
 def normalize_match_section(value: object) -> str:
-    """规范化赛事比赛来源，并兼容旧版的 ``result`` 字段。"""
+    """规范化赛事比赛来源。"""
     section = str(value or "").strip().casefold()
     if section in {MATCH_SECTION_FINISHED, "result"}:
         return MATCH_SECTION_FINISHED
@@ -55,7 +50,7 @@ class PlayerStats:
 
     @property
     def name_before_nick(self) -> str:
-        """昵称前的姓名片段，用于还原 HLTV 的 First 'nick' Last。"""
+        """昵称前的姓名片段。"""
         marker = f"'{self.nickname}'"
         if self.nickname and marker in self.full_name:
             return self.full_name.split(marker, 1)[0]
@@ -70,7 +65,7 @@ class PlayerStats:
 
     @property
     def swing_class(self) -> str:
-        """按 Swing 数值返回颜色类别，-1% 到 +1% 保持黑色。"""
+        """Swing颜色类别。"""
         try:
             value = float(self.swing.rstrip("%"))
         except ValueError:
@@ -138,7 +133,7 @@ class MapScore:
     name: str
     team1_score: str | None = None
     team2_score: str | None = None
-    # 该字段由实时 Scoreboard 识别当前地图设置；mapholder 分数不设置它。
+    # 开始状态只取实时Scoreboard，不取历史地图比分。
     started: bool = False
     finished: bool | None = None
     live: bool = False
@@ -152,12 +147,12 @@ class MapScore:
 
     @property
     def is_started(self) -> bool:
-        """判断地图是否已由实时 Scoreboard 当前地图确认开始。"""
+        """地图开始状态。"""
         return self.started
 
     @property
     def is_live(self) -> bool:
-        """判断地图是否被 HLTV Scoreboard 标记为当前实时地图。"""
+        """地图实时状态。"""
         return self.live
 
     @property
@@ -199,12 +194,12 @@ class MatchData:
         return any(team.players for team in self.teams)
 
     def has_map_rating(self, map_name: str) -> bool:
-        """判断指定地图 Rating 是否已经解析出选手数据。"""
+        """地图Rating数据检查方法。"""
         return any(team.players for team in self.map_stats.get(map_name, []))
 
     @property
     def rating_is_ready(self) -> bool:
-        """判断即时查询或结束汇总所需的 Rating 是否齐全。"""
+        """Rating完整性检查方法。"""
         finished_names: list[str] = []
         for result in self.map_results:
             if result.is_finished and result.name not in finished_names:
@@ -218,7 +213,7 @@ class MatchData:
 
     @property
     def has_started(self) -> bool:
-        """仅用实时 Scoreboard 当前地图判断比赛是否已开始。"""
+        """比赛开始状态。"""
         return any(
             result.is_started and not result.is_finished
             for result in self.map_results
@@ -232,7 +227,7 @@ class MatchData:
 
     @property
     def rating_map_names(self) -> list[str]:
-        """返回确实进行且有 Rating 数据的地图，排除未进行的 BP 地图。"""
+        """有效Rating地图列表。"""
         stats_names = set(self.map_stats)
         finished_names: list[str] = []
         for result in self.map_results:
@@ -245,7 +240,7 @@ class MatchData:
         if any(result.is_finished for result in self.map_results):
             return finished_names
 
-        # 某些页面结构没有地图比分节点；此时只能用已有统计区块作为回退。
+        # 缺少地图比分节点时回退到统计区块。
         names = [name for name in self.maps if name in stats_names]
         for name in self.map_stats:
             if name not in names:

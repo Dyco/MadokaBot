@@ -8,12 +8,12 @@ from .matchers import ASK_USAGE, CHAT_USAGE, ask_matcher, chat_matcher
 
 
 async def finish_reply(matcher, message: str):
-    """引用原消息发送回复并结束当前会话。"""
+    """会话回复方法。"""
     await matcher.finish(message, reply_message=True)
 
 
 async def _handle_chat(question: Match[str], matcher, mode: str, usage: str):
-    """校验问题，调用模型并发送回答及用量统计。"""
+    """聊天请求处理方法。"""
     if not question.available or not question.result.strip():
         await finish_reply(matcher, f"用法：{usage}")
 

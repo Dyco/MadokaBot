@@ -38,7 +38,7 @@ class HltvError(RuntimeError):
 
 @dataclass(frozen=True, slots=True)
 class FlaresolverrSession:
-    """FlareSolverr 返回的浏览器会话信息，供资源浏览器复用。"""
+    """FlareSolverr会话信息。"""
 
     user_agent: str = ""
     cookies: tuple[dict[str, object], ...] = ()
@@ -69,7 +69,7 @@ _CHALLENGE_SELECTORS = (
 
 
 def _flaresolverr_url() -> str:
-    """返回 FlareSolverr 的 v1 API 地址。"""
+    """FlareSolverr接口地址。"""
     value = str(config.hltv_flaresolverr_url).strip().rstrip("/")
     if not value:
         raise HltvError("未配置 FlareSolverr API 地址。")
@@ -77,7 +77,7 @@ def _flaresolverr_url() -> str:
 
 
 def _flaresolverr_proxy() -> dict[str, str] | None:
-    """将插件代理配置转换为 FlareSolverr 的 proxy 参数。"""
+    """FlareSolverr代理参数。"""
     proxy = config.hltv_flaresolverr_proxy
     if proxy is None:
         proxy = resolve_proxy(config.hltv_proxy, madoka_config.proxy)
@@ -92,7 +92,7 @@ def _flaresolverr_proxy() -> dict[str, str] | None:
 
 
 def _is_challenge_html(html: str) -> bool:
-    """识别 FlareSolverr 偶尔返回的未完成浏览器验证页。"""
+    """浏览器验证页检查方法。"""
     with parsed_html(html) as soup:
         title = soup.title.get_text(" ", strip=True) if soup.title else ""
         title_text = " ".join(title.casefold().split())
@@ -101,8 +101,7 @@ def _is_challenge_html(html: str) -> bool:
         if any(soup.select_one(selector) is not None for selector in _CHALLENGE_SELECTORS):
             return True
 
-        # 正常 HLTV 比赛页可能在新闻、回放描述等正文中出现诸如
-        # “just a moment”的普通短语，不能再对整篇正文做无条件匹配。
+        # 正文可能包含验证页常见短语，不能全文匹配。
         body = soup.body.get_text(" ", strip=True) if soup.body else ""
         body_text = " ".join(body.casefold().split())
         return len(body_text) <= 4_000 and any(
@@ -116,7 +115,7 @@ def get_flaresolverr_session() -> FlaresolverrSession | None:
 
 
 def _remember_flaresolverr_session(solution: dict[str, object]) -> None:
-    """保存 FlareSolverr 会话，供 Playwright 下载页面内图片。"""
+    """FlareSolverr会话保存方法。"""
     global _FLARESOLVERR_SESSION
 
     user_agent = solution.get("userAgent")
@@ -205,7 +204,7 @@ def _canonical_event_url(
     event_id: str,
     page_url: str,
 ) -> str | None:
-    """从赛事子页面找到带 slug 的 canonical overview 地址。"""
+    """赛事概览地址解析方法。"""
     with parsed_html(html) as soup:
         for anchor in soup.select(
             ".event-hub-top[href], .event-hub a[href], a[href*='/events/']"
@@ -226,7 +225,7 @@ def _canonical_event_url(
 
 
 def events_url() -> str:
-    """生成同时筛选 Major 和 International LAN 的 HLTV 赛事列表地址。"""
+    """HLTV赛事列表地址生成方法。"""
     base_url = urljoin(str(config.hltv_base_url).rstrip("/") + "/", "events")
     query = urlencode(
         [("eventType", "MAJOR"), ("eventType", "INTLLAN")],
@@ -235,7 +234,7 @@ def events_url() -> str:
 
 
 def _add_months(value: datetime, months: int) -> datetime:
-    """将日期推进指定月数，并处理目标月份没有当天日期的情况。"""
+    """将日期推进指定月数。"""
     month_index = value.year * 12 + value.month - 1 + months
     year, month_index = divmod(month_index, 12)
     month = month_index + 1
@@ -248,14 +247,13 @@ async def _call_flaresolverr(
     *,
     timeout: httpx.Timeout,
 ) -> dict[str, object]:
-    """取消调用方时仍等待在途请求收尾，期间保持服务端并发名额。"""
+    """FlareSolverr调用方法。"""
     async with _FLARESOLVERR_SEMAPHORE:
         task = asyncio.create_task(_request_flaresolverr(payload, timeout=timeout))
         try:
             return await asyncio.shield(task)
         except asyncio.CancelledError:
-            # 关闭 HTTP 连接不能取消远端 WebDriver。也不能只 shield 后
-            # 直接退出，否则下一次查询会与尚未结束的远端请求重叠。
+            # HTTP取消不会停止远端WebDriver，需等请求结束再释放并发名额。
             while not task.done():
                 try:
                     await asyncio.shield(task)
@@ -273,7 +271,7 @@ async def _request_flaresolverr(
     *,
     timeout: httpx.Timeout,
 ) -> dict[str, object]:
-    """用流式响应限制 JSON/HTML 体积；退出时关闭连接和客户端。"""
+    """FlareSolverr请求方法。"""
     try:
         async with httpx.AsyncClient(
             trust_env=False,
@@ -302,19 +300,19 @@ async def _request_flaresolverr(
 
 
 def _is_target_http_error(error: HltvError) -> bool:
-    """目标页面自身的 4xx/5xx 不需要重复解验证。"""
+    """目标页面错误检查方法。"""
     return "目标页面返回 HTTP " in str(error)
 
 
 async def _wait_flaresolverr_retry(attempt: int) -> None:
-    """按尝试次数递增等待，避免连续撞击同一个验证页。"""
+    """按尝试次数递增等待。"""
     delay = max(0.0, float(config.hltv_flaresolverr_retry_delay)) * (attempt + 1)
     if delay:
         await asyncio.sleep(delay)
 
 
 async def _fetch_html(page_url: str) -> tuple[str, str]:
-    """通过 FlareSolverr 获取页面 HTML 与最终地址。"""
+    """HLTV页面获取方法。"""
     timeout_seconds = max(5.0, float(config.hltv_flaresolverr_timeout))
     base_payload: dict[str, object] = {
         "cmd": "request.get",
@@ -335,8 +333,7 @@ async def _fetch_html(page_url: str) -> tuple[str, str]:
     attempts = max(1, int(config.hltv_flaresolverr_retry_attempts))
     for attempt in range(attempts):
         try:
-            # 不传 session 时 FlareSolverr 会在请求完成后自动关闭临时浏览器，
-            # 避免低频查询留下常驻 Chromium 进程持续占用内存。
+            # 不传session可让FlareSolverr自动关闭临时浏览器。
             result = await _call_flaresolverr(base_payload, timeout=api_timeout)
             if result.get("status") != "ok":
                 message = str(result.get("message") or "未提供错误信息").strip()
@@ -392,7 +389,6 @@ def filter_events(
     current = now or datetime.now(timezone.utc)
     if current.tzinfo is None:
         current = current.replace(tzinfo=timezone.utc)
-    # 以月份为边界，当前月加未来三个月都纳入查询范围。
     deadline_month = _add_months(current.replace(day=1), 3)
     deadline = deadline_month.replace(
         day=calendar.monthrange(deadline_month.year, deadline_month.month)[1],
@@ -425,7 +421,7 @@ def filter_events(
 
 
 async def fetch_events() -> list[EventData]:
-    """获取并筛选 HLTV 当前和未来三个月的重点赛事。"""
+    """重点赛事查询方法。"""
     page_url = events_url()
     html, response_url = await _fetch_html(page_url)
     return filter_events(
@@ -439,8 +435,7 @@ async def fetch_event(event_id: str) -> EventData:
     if not normalized_id.isdigit():
         raise HltvError("赛事 ID 必须是纯数字。")
 
-    # HLTV 新版不保证 /events/<id> 是详情页，部分 ID 会返回 404 或通用首页。
-    # 先访问结果入口，再从页面中的 event-hub-top 找到带 slug 的 canonical URL。
+    # 裸赛事ID地址可能失效，需从赛事页解析完整地址。
     candidates = [
         event_url(normalized_id, "results"),
         event_results_url(normalized_id),
@@ -456,7 +451,6 @@ async def fetch_event(event_id: str) -> EventData:
         try:
             page_html, response_url = await _fetch_html(request_url)
         except HltvError:
-            # 继续尝试新版结果入口、赛事 matches 页和其他候选地址。
             continue
 
         event = parse_event_html(
@@ -508,8 +502,7 @@ async def fetch_event_match_refs(event_id: str) -> list[EventMatchRef]:
             event_id=normalized_id,
         ):
             previous = refs.get(ref.match_id)
-            # 同一场比赛短时间内可能同时出现在两个页面；live 优先于
-            # finished，finished 优先于 waiting，避免结果页被未来列表覆盖。
+            # 同场记录以live、finished、waiting顺序合并。
             priority = {
                 MATCH_SECTION_WAITING: 0,
                 MATCH_SECTION_FINISHED: 1,
@@ -534,7 +527,7 @@ async def fetch_match(
     *,
     page_url: str | None = None,
 ) -> MatchData:
-    """抓取并解析一场赛事；有完整链接时保留 HLTV 的 slug。"""
+    """比赛详情查询方法。"""
     normalized_id = str(match_id).strip()
     if not normalized_id.isdigit():
         raise HltvError("赛事 ID 必须是纯数字。")

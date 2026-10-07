@@ -13,8 +13,8 @@ __plugin_meta__ = PluginMetadata(
 )
 
 
-ping_reply: str = "我在"  # 回复内容
-ping_keywords: list[str] = ["ping", "円香"]  # 触发关键词
+ping_reply: str = "我在"
+ping_keywords: list[str] = ["ping", "円香"]
 
 ping_matcher = on_message(
     rule=fullmatch(ping_keywords),
@@ -25,6 +25,6 @@ ping_matcher = on_message(
 
 @ping_matcher.handle()
 async def _handle_ping(event: MessageEvent):
-    """回应存活测试，并显示消息到达后的延迟。"""
+    """存活测试方法。"""
     ms = max(0.0, (time.time() - event.time) * 1000)
     await ping_matcher.finish(f"{ping_reply} ({ms:.0f}ms)")

@@ -138,7 +138,7 @@ class MediaProcessor:
         )
 
     async def _transcode_video_message(self, media: LocalMedia) -> LocalMedia:
-        """将不兼容的视频转换为 QQ 视频消息常用的 H.264/AAC。"""
+        """视频消息转码方法。"""
         output_path = media.path.with_name(
             f"{media.path.stem}.compatible-{uuid.uuid4().hex[:8]}.mp4"
         )
@@ -183,7 +183,7 @@ class MediaProcessor:
             raise
 
     async def compress_video(self, media: LocalMedia) -> LocalMedia:
-        """使用双遍 H.264 编码，将视频压到配置的目标大小附近。"""
+        """视频压缩方法。"""
         if media.mode is not MediaDeliveryMode.VIDEO_COMPRESS:
             return media
 

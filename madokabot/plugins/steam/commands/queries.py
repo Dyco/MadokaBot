@@ -33,7 +33,7 @@ from ..utils import (
 
 @steam_cmd.handle()
 async def check_command_context(target: MsgTarget, result: Arparma):
-    """拒绝私聊调用，并为无子命令的请求返回帮助。"""
+    """Steam命令上下文检查方法。"""
     if target.private:
         await steam_cmd.finish("暂不支持私聊消息")
     if not result.options:
@@ -42,7 +42,7 @@ async def check_command_context(target: MsgTarget, result: Arparma):
 
 @steam_cmd.assign("help")
 async def handle_help():
-    """返回 Steam 命令用法。"""
+    """帮助命令处理方法。"""
     await steam_cmd.finish(STEAM_USAGE)
 
 

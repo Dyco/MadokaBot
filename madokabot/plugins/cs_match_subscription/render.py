@@ -1,4 +1,4 @@
-"""Rating 3.0 HTML 生成与 Playwright 渲染。"""
+"""Rating卡片渲染模块。"""
 
 from __future__ import annotations
 
@@ -36,13 +36,13 @@ _RENDER_SEMAPHORE = asyncio.Semaphore(1)
 
 
 async def html_to_pic(**kwargs) -> bytes:
-    """限制本插件的并发截图，避免多条指令同时创建高分辨率页面。"""
+    """HTML截图方法。"""
     async with _RENDER_SEMAPHORE:
         return await _html_to_pic(**kwargs)
 
 
 def render_rating_html(match: MatchData, *, map_name: str | None = None) -> str:
-    """把赛事数据渲染为可独立打开的 rating.html 内容。"""
+    """Rating页面生成方法。"""
     template = _template_env.get_template(HTML_FILE_PATH.name)
     context = match.to_template_context(
         map_name=map_name,
@@ -56,7 +56,7 @@ async def render_rating_card(
     *,
     map_name: str | None = None,
 ) -> MessageSegment:
-    """通过 nonebot-plugin-htmlrender（Playwright）生成 QQ 图片消息。"""
+    """Rating卡片渲染方法。"""
     html = render_rating_html(match, map_name=map_name)
     image_bytes = await html_to_pic(
         html=html,
@@ -114,7 +114,7 @@ def render_event_list_html(
 
 
 async def render_event_list_card(events: list[EventData]) -> MessageSegment:
-    """通过 Playwright 将赛事卡片列表生成 QQ 图片消息。"""
+    """赛事列表卡片渲染方法。"""
     html = render_event_list_html(events)
     image_bytes = await html_to_pic(
         html=html,
@@ -186,7 +186,7 @@ def render_player_stats_html(data: dict[str, object]) -> str:
 
 
 async def render_player_stats_card(data: dict[str, object]) -> MessageSegment:
-    """通过 Playwright 把平台战绩卡片渲染为 QQ 图片。"""
+    """玩家战绩卡片渲染方法。"""
     context = dict(data)
     context["avatar_src"] = await fetch_image_data_url(str(data.get("avatar_url") or ""))
     stats_width = (

@@ -7,7 +7,6 @@ from PIL import Image, ImageDraw, ImageFont
 
 from madokabot.core.resources import ResourceType, ResourceFolder, assets
 
-# 樋口円香清冷色调
 CARD_BG = "#e5e8ec"
 PANEL_BG = "#f2f4f7"
 PANEL_ALT_BG = "#ebedf2"

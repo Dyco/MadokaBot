@@ -42,16 +42,9 @@ from .video import (
 @resolve_handler
 @resolve_controller
 async def ac(bot: Bot, event: GroupMessageEvent) -> None:
-    """
-        acfun解析
-    :param bot:
-    :param event:
-    :return:
-    """
-    # 消息
+    """AcFun解析方法。"""
     inputMsg = get_resolver_message(event)
 
-    # 短号处理
     if "m.acfun.cn" in inputMsg:
         inputMsg = f"https://www.acfun.cn/v/ac{re.search(r'ac=([^&?]*)', inputMsg)[1]}"
     else:
@@ -77,7 +70,6 @@ async def ac(bot: Bot, event: GroupMessageEvent) -> None:
     )
     if _skip_video_for_duration("ACFun", video_duration):
         return
-    # logger.info(output_folder_name, output_file_name)
     try:
         await ensure_remote_total_within_limit(
             m3u8_full_urls,

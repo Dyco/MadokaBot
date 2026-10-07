@@ -16,7 +16,6 @@ from PIL import Image, ImageSequence
 
 from .constants import PLUGIN_NAME
 
-# 动态尝试引入 html_to_pic
 try:
     from nonebot_plugin_htmlrender import html_to_pic
 
@@ -33,9 +32,7 @@ BILI_TEMPLATE_PATH = os.path.join(TEMPLATE_DIR, "bilibili-comment.html")
 COMMENT_TEMPLATE_CACHE = None
 BILI_TEMPLATE_CACHE = None
 
-# ==================== 1. HTML 模板定义 ====================
 
-# 抖音自适应主题模板 (默认 dark，通过 html.light 覆盖白天模式)
 DEFAULT_HTML_TEMPLATE = """<!DOCTYPE html>
 <html class="{{theme_class}}">
 <head>
@@ -100,7 +97,6 @@ DEFAULT_HTML_TEMPLATE = """<!DOCTYPE html>
 </html>
 """
 
-# B站自适应主题模板 (默认 light，通过 html.dark 覆盖暗黑模式)
 DEFAULT_BILI_HTML_TEMPLATE = """<!DOCTYPE html>
 <html class="{{theme_class}}">
 <head>
@@ -169,14 +165,13 @@ DEFAULT_BILI_HTML_TEMPLATE = """<!DOCTYPE html>
 
 
 def load_template(force_reload=False) -> str:
-    """载入并缓存抖音模板 (若存在0字节、旧版、破损模板将自动复原修复)"""
+    """抖音评论模板加载方法。"""
     global COMMENT_TEMPLATE_CACHE
     if not force_reload and COMMENT_TEMPLATE_CACHE is not None:
         return COMMENT_TEMPLATE_CACHE
     if not os.path.exists(TEMPLATE_DIR):
         os.makedirs(TEMPLATE_DIR)
 
-    # 自动识别空模板与旧版本模板 (无昼夜切换 class 属性的模板) 强制重写
     need_reset = False
     if not os.path.exists(TEMPLATE_PATH) or os.path.getsize(TEMPLATE_PATH) == 0:
         need_reset = True
@@ -197,14 +192,13 @@ def load_template(force_reload=False) -> str:
 
 
 def load_bili_template(force_reload=False) -> str:
-    """载入并缓存B站模板 (若存在0字节、旧版、破损模板将自动复原修复)"""
+    """B站评论模板加载方法。"""
     global BILI_TEMPLATE_CACHE
     if not force_reload and BILI_TEMPLATE_CACHE is not None:
         return BILI_TEMPLATE_CACHE
     if not os.path.exists(TEMPLATE_DIR):
         os.makedirs(TEMPLATE_DIR)
 
-    # 自动识别空模板与旧版本模板强制重写
     need_reset = False
     if not os.path.exists(BILI_TEMPLATE_PATH) or os.path.getsize(BILI_TEMPLATE_PATH) == 0:
         need_reset = True
@@ -224,10 +218,9 @@ def load_bili_template(force_reload=False) -> str:
     return BILI_TEMPLATE_CACHE
 
 
-# ==================== 2. 公共工具 ====================
 
 def get_theme_class() -> str:
-    """根据当前服务器时钟判定昼夜主题模式 (晚上8点到早上8点为 dark 护眼模式，其余时间为 light 明亮模式)"""
+    """昼夜主题选择方法。"""
     current_hour = time.localtime().tm_hour
     return "dark" if (current_hour >= 20 or current_hour < 8) else "light"
 
@@ -271,7 +264,6 @@ def get_level_color(level: int) -> str:
     return '#9499a0'
 
 
-# ==================== 3. 抖音评论模块 ====================
 
 async def download_and_convert_comment_img(session: aiohttp.ClientSession, url: str) -> bytes:
     if not url: return None
@@ -359,7 +351,6 @@ async def get_douyin_comments(session: aiohttp.ClientSession, aweme_id: str, hea
                 target_author_sec_uid = author_sec_uid or c.get("author_sec_uid")
                 is_author = bool(user_sec_uid and target_author_sec_uid and user_sec_uid == target_author_sec_uid)
 
-                # 配图
                 c_image = ""
                 image_list = c.get("image_list") or []
                 if image_list:
@@ -370,7 +361,6 @@ async def get_douyin_comments(session: aiohttp.ClientSession, aweme_id: str, hea
                               (fallback_urls[0] if fallback_urls else "") or \
                               img_node.get("uri", "")
 
-                # 大表情
                 c_sticker = ""
                 sticker_node = c.get("sticker") or {}
                 if sticker_node:
@@ -378,7 +368,6 @@ async def get_douyin_comments(session: aiohttp.ClientSession, aweme_id: str, hea
                     if animate_urls:
                         c_sticker = animate_urls[0]
 
-                # 高亮 @艾特
                 content = c.get("text", "")
                 text_extra = c.get("text_extra") or []
                 mentions = set()
@@ -398,7 +387,6 @@ async def get_douyin_comments(session: aiohttp.ClientSession, aweme_id: str, hea
                         f'<span style="color:#ff2c55;font-weight:600;">{escaped_at}</span>'
                     )
 
-                # 子评论
                 replies = c.get("reply_comment") or []
                 parsed_replies = []
                 for r in replies[:3]:
@@ -425,20 +413,18 @@ async def get_douyin_comments(session: aiohttp.ClientSession, aweme_id: str, hea
                             f'<span style="color:#ff2c55;font-weight:600;">{r_escaped_at}</span>'
                         )
 
-                    # 增加子评论头像的安全提取判定
                     r_avatar_list = r_user.get("avatar_thumb", {}).get("url_list")
                     r_avatar = r_avatar_list[0] if r_avatar_list else ""
 
                     parsed_replies.append({
                         "username": r_user.get("nickname", "未知"),
-                        "avatar": r_avatar,  # 使用安全过滤后的变量
+                        "avatar": r_avatar,
                         "content": r_content_html,
                         "like": r.get("digg_count", 0),
                         "time": format_comment_time(r.get("create_time", 0)),
                         "is_author": r_is_author
                     })
 
-                # 增加空列表判断，防止 avatar_thumb 存在但 url_list 为空列表时触发 IndexError
                 avatar_list = user.get("avatar_thumb", {}).get("url_list")
                 avatar = avatar_list[0] if avatar_list else ""
 
@@ -457,7 +443,6 @@ async def get_douyin_comments(session: aiohttp.ClientSession, aweme_id: str, hea
                     "replies": parsed_replies
                 })
 
-            # 异步并发转码
             async def process_media_bytes(item):
                 tasks = []
                 if item["image"]:
@@ -484,7 +469,7 @@ async def get_douyin_comments(session: aiohttp.ClientSession, aweme_id: str, hea
 
 
 def build_comments_html(comments: list) -> str:
-    """生成抖音评论列表的 HTML 块"""
+    """生成抖音评论列表的 HTML 块。"""
     html_parts = []
     default_avatar = "https://p3.douyinpic.com/aweme/100x100/default-avatar.png"
     for item in comments:
@@ -561,7 +546,7 @@ def build_comments_html(comments: list) -> str:
 
 
 async def render_comments_image(comments: list, title: str) -> bytes:
-    """抖音评论图渲染 (自适应模式切换 + 视口自适应缩短)"""
+    """抖音评论图片渲染方法。"""
     if not HTML_RENDER_AVAILABLE:
         raise ImportError("nonebot_plugin_htmlrender 不可用")
     template = load_template()
@@ -569,31 +554,26 @@ async def render_comments_image(comments: list, title: str) -> bytes:
         template = DEFAULT_HTML_TEMPLATE
     comments_html = build_comments_html(comments)
 
-    # 动态判定注入昼夜主题 CSS 类
     theme_class = get_theme_class()
     final_html = template.replace("{{theme_class}}", theme_class) \
         .replace("{{title}}", title) \
         .replace("{{total_comments}}", str(len(comments))) \
         .replace("{{comments}}", comments_html)
 
-    # 通过将初始视口高度设置为 100px 并配合 full_page，使 Playwright 智能截取元素滚动上限，自适应长度
     return await html_to_pic(final_html, viewport={"width": 810, "height": 100})
 
 
-# ==================== 4. 哔哩哔哩评论模块 ====================
 
 async def get_bilibili_comments(session: aiohttp.ClientSession, aid: int, sessdata: str, bvid: str = None,
                                 up_mid: int = None) -> List[Dict[str, Any]]:
-    """
-    抓取并解析哔哩哔哩评论
-    """
+    """抓取并解析哔哩哔哩评论。"""
     try:
         url = "https://api.bilibili.com/x/v2/reply/main"
         params = {
             "oid": str(aid),
             "type": "1",
-            "mode": "3",  # 热评模式
-            "ps": "10",  # 抓取10条
+            "mode": "3",
+            "ps": "10",
             "pn": "1"
         }
         headers = {
@@ -619,7 +599,6 @@ async def get_bilibili_comments(session: aiohttp.ClientSession, aid: int, sessda
                 commenter_mid = member.get("mid")
                 is_up = bool(commenter_mid and up_mid and int(commenter_mid) == int(up_mid))
 
-                # 评论内置图片
                 images = []
                 pictures = content_node.get("pictures") or []
                 for p in pictures:
@@ -627,7 +606,6 @@ async def get_bilibili_comments(session: aiohttp.ClientSession, aid: int, sessda
                     if img_url:
                         images.append(img_url.replace("http:", "https:"))
 
-                # 评论内置表情并缓存到映射字典
                 emojis = []
                 emote_map = {}
                 emote = content_node.get("emote") or {}
@@ -640,7 +618,6 @@ async def get_bilibili_comments(session: aiohttp.ClientSession, aid: int, sessda
                             emojis.append(url_https)
                             emote_map[e_text] = url_https
 
-                # 二级回复
                 sub_replies = item.get("replies") or []
                 parsed_replies = []
                 for r in sub_replies[:3]:
@@ -685,12 +662,11 @@ async def get_bilibili_comments(session: aiohttp.ClientSession, aid: int, sessda
                     "emote_map": emote_map,
                     "level": level,
                     "is_up": is_up,
-                    "image_bytes": [],  # 预留用于文字模式合并转发转码
+                    "image_bytes": [],
                     "emoji_bytes": [],
                     "replies": parsed_replies
                 })
 
-            # 高并发转换B站的多媒体表情和评论大图 (防 PC 裂图)
             async def process_bili_media_bytes(item):
                 img_tasks = [download_and_convert_comment_img(session, url) for url in item["images"]]
                 emo_tasks = [download_and_convert_comment_img(session, url) for url in item["emojis"]]
@@ -711,7 +687,7 @@ async def get_bilibili_comments(session: aiohttp.ClientSession, aid: int, sessda
 
 
 def build_bili_comments_html(comments: list) -> str:
-    """生成B站评论列表的 HTML 块 (支持表情符号占位符行内精准替换，移除下方赘余展示)"""
+    """B站评论页面生成方法。"""
     html_parts = []
     default_avatar = "https://i0.hdslb.com/bfs/face/moface.jpg"
     for item in comments:
@@ -731,7 +707,6 @@ def build_bili_comments_html(comments: list) -> str:
         if is_up:
             badges += '<span class="up-badge">UP</span>'
 
-        # 精准替换行内表情占位符并赋予其 CSS 样式 (保留 inline styling 避免本地老模板缓存导致白排版)
         emote_map = item.get("emote_map") or {}
         for placeholder, url in emote_map.items():
             content = content.replace(
@@ -739,7 +714,6 @@ def build_bili_comments_html(comments: list) -> str:
                 f'<img class="comment-emoji-inline" src="{url}" style="width: 22px; height: 22px; vertical-align: middle; margin: 0 3px; display: inline-block;" />'
             )
 
-        # 仅保留用户上传的自定义大图，评论内置的表情图已移至行内
         media_html = ""
         images = item.get("images") or []
         if images:
@@ -761,7 +735,6 @@ def build_bili_comments_html(comments: list) -> str:
                 r_username_class = "reply-username is-up" if r_is_up else "reply-username"
                 r_up_badge = ' <span class="up-badge">UP</span>' if r_is_up else ""
 
-                # 替换二级回复里的表情
                 r_emote_map = r.get("emote_map") or {}
                 for r_placeholder, r_url in r_emote_map.items():
                     r_content = r_content.replace(
@@ -804,16 +777,14 @@ def build_bili_comments_html(comments: list) -> str:
 
 
 async def render_bili_comments_image(comments: list, title: str) -> bytes:
-    """B站评论图渲染 (自适应模式切换 + 视口自适应缩短)"""
+    """B站评论图片渲染方法。"""
     if not HTML_RENDER_AVAILABLE:
         raise ImportError("nonebot_plugin_htmlrender 不可用")
     template = load_bili_template()
-    # 终极防护：如果是空字符串或读失败，直接使用内存默认模板防止生成白图
     if not template or not template.strip():
         template = DEFAULT_BILI_HTML_TEMPLATE
     comments_html = build_bili_comments_html(comments)
 
-    # 动态判定注入昼夜主题 CSS 类
     theme_class = get_theme_class()
     final_html = template.replace("{{theme_class}}", theme_class) \
         .replace("{{title}}", title) \
@@ -821,12 +792,11 @@ async def render_bili_comments_image(comments: list, title: str) -> bytes:
         .replace("{{comments}}", comments_html) \
         .replace("{{page_indicator}}", "")
 
-    # 通过将初始视口高度设置为 100px 并配合 full_page，使 Playwright 智能截取元素实际最大滚动长度，自适应长度
     return await html_to_pic(final_html, viewport={"width": 810, "height": 100})
 
 
 def format_bili_comments_to_nodes(bot_id, comments: list, title: str, nickname: str) -> list:
-    """B站评论区合并转发封装 (数据级多媒体字节流推送，解决裂图与静止)"""
+    """B站评论消息节点生成方法。"""
     nodes = []
     nodes.append(MessageSegment.node_custom(
         user_id=bot_id,
@@ -872,28 +842,22 @@ def format_bili_comments_to_nodes(bot_id, comments: list, title: str, nickname: 
 
 
 def format_comments_to_nodes(bot_id, comments: List[Dict[str, Any]], title: str, nickname: str) -> list:
-    """
-    格式化为文字合并转发包 (包含真实图片与表情 bytes 字节，自适应动静图)
-    """
+    """评论消息节点生成方法。"""
     nodes = []
 
-    # 1. 头部卡片
     nodes.append(MessageSegment.node_custom(
         user_id=bot_id,
         nickname=nickname,
         content=Message(f"💬 《{title}》 热门评论")
     ))
 
-    # 2. 逐条解析
     for c in comments:
-        # 去除 HTML 的 <br> 并替换回普通文本
         raw_text = re.sub(r'<br\s*/?>', '\n', c['content'])
-        raw_text = re.sub(r'<[^>]+>', '', raw_text)  # 移除艾特高亮的 span
+        raw_text = re.sub(r'<[^>]+>', '', raw_text)
 
         author_tag = " (作者)" if c.get("is_author") else ""
         text_line = f"👤 {c['username']}{author_tag} (👍{c['like']})：\n{raw_text}"
 
-        # 组装时间与属地
         text_footer = []
         if c.get("location"):
             text_footer.append(f"📍 {c['location']}")
@@ -903,7 +867,6 @@ def format_comments_to_nodes(bot_id, comments: List[Dict[str, Any]], title: str,
         if text_footer:
             text_line += f"\n({' | '.join(text_footer)})"
 
-        # 组装回复
         replies = c.get("replies") or []
         if replies:
             text_line += "\n\n  --- 回复 ---"
@@ -912,10 +875,8 @@ def format_comments_to_nodes(bot_id, comments: List[Dict[str, Any]], title: str,
                 r_author_tag = " (作者)" if r.get("is_author") else ""
                 text_line += f"\n  💬 {r['username']}{r_author_tag}: {clean_r_content}"
 
-        # 组装混合消息
         node_msg = Message(MessageSegment.text(text_line))
 
-        # 动静态多媒体字节流推送，解决 PC 裂图与静止问题
         if c.get("image_bytes"):
             node_msg.append(MessageSegment.image(c["image_bytes"]))
         elif c.get("image"):
@@ -926,7 +887,6 @@ def format_comments_to_nodes(bot_id, comments: List[Dict[str, Any]], title: str,
         elif c.get("sticker"):
             node_msg.append(MessageSegment.image(c["sticker"]))
 
-        # 封包
         nodes.append(
             MessageSegment.node_custom(
                 user_id=bot_id,

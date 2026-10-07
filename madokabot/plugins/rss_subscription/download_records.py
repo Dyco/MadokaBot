@@ -117,7 +117,7 @@ def _upload_item_id(gid: str, group_id: str, path: str) -> str:
 
 
 def _upload_item_size(file_info: Dict[str, Any], path: Path) -> int:
-    """优先读取本地文件大小，失败时使用 aria2 状态。"""
+    """上传文件大小读取方法。"""
     try:
         return path.stat().st_size
     except OSError:

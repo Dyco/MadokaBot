@@ -22,7 +22,7 @@ from .download_validation import _status_files
 
 
 async def _remove_download(gid: str, status: str = "") -> None:
-    """取消或清理 aria2 任务，避免超限任务继续下载。"""
+    """aria2任务清理方法。"""
     method = (
         "aria2.removeDownloadResult"
         if status in {"complete", "error", "removed"}

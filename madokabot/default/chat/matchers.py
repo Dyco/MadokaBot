@@ -1,4 +1,4 @@
-"""聊天与问答命令定义，统一遵循全局命令起始符。"""
+"""聊天与问答命令。"""
 
 from nonebot_plugin_alconna import Alconna, Args, on_alconna
 

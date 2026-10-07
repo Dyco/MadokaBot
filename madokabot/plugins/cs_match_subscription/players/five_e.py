@@ -27,7 +27,7 @@ async def _search_5e_player(
     client: httpx.AsyncClient,
     nickname: str,
 ) -> dict[str, str]:
-    """通过 5E 搜索接口选择精确昵称，否则选择首个结果。"""
+    """5E玩家搜索方法。"""
     payload = await request_json(
         client,
         "GET",
@@ -72,7 +72,7 @@ async def resolve_five_e_uuid(
     client: httpx.AsyncClient,
     domain: str,
 ) -> str:
-    """将 5E 玩家域名转换为战绩接口所需的 UUID。"""
+    """5E玩家UUID查询方法。"""
     payload = await request_json(
         client,
         "POST",
@@ -103,7 +103,7 @@ async def resolve_five_e_identity(nickname: str) -> PlayerBinding:
 
 
 def _extract_5e_match_list(payload: dict[str, Any]) -> list[Any]:
-    """解析 5E match/list 返回的比赛数组。"""
+    """5E比赛列表解析方法。"""
     data = payload.get("data")
     if isinstance(data, list):
         return data
@@ -114,7 +114,7 @@ async def _fetch_5e_recent_matches(
     client: httpx.AsyncClient,
     uuid: str,
 ) -> list[dict[str, Any]]:
-    """读取 5E 最近十场；仅使用支持 limit 的 match/list 接口。"""
+    """5E近期比赛查询方法。"""
     payload = await request_json(
         client,
         "GET",
@@ -139,7 +139,7 @@ async def _fetch_5e_recent_matches(
 
 
 async def fetch_five_e_stats(binding: PlayerBinding) -> dict[str, Any]:
-    """从 player_home 获取赛季/生涯资料，并单独读取近期逐场记录。"""
+    """5E战绩查询方法。"""
     async with create_client() as client:
         home_result = await request_json(
             client,
@@ -157,8 +157,7 @@ async def fetch_five_e_stats(binding: PlayerBinding) -> dict[str, Any]:
         ):
             raise PlayerStatsError("5E player_home 返回了未识别的数据结构")
 
-        # 两个阶段按顺序执行；比赛列表连续失败时也中断本次查询，
-        # 避免返回缺少近期对局的半成品卡片。
+        # 比赛列表查询失败时不能返回缺少近期对局的卡片。
         match_data = await _fetch_5e_recent_matches(client, binding.uuid)
 
     return build_five_e_view(binding, home_data, match_data)

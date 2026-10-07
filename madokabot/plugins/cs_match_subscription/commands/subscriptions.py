@@ -48,14 +48,12 @@ def _event_schedule_text(event: EventData) -> str:
 
 
 def _event_is_finished(event: EventData, refs: list[EventMatchRef]) -> bool:
-    """按赛事官方状态判断是否不可再订阅，并提供无状态时的兜底。"""
+    """赛事结束检查方法。"""
     if event.is_finished:
         return True
     if event.event_status != "unknown":
         return False
 
-    # 页面没有状态标记时，如果所有已发现的比赛都来自 Results，且赛事
-    # 结束时间已过，也视为已结束；存在 live 比赛则允许订阅。
     if not refs or any(ref.section == MATCH_SECTION_UPCOMING for ref in refs):
         return False
     if event.end_at is None:
@@ -72,7 +70,7 @@ async def handle_cs_sub(
     event: MessageEvent,
     event_id: Match[str],
 ) -> None:
-    """复用本地订阅；无快照时先表情回应，再获取赛事并建立比赛基线。"""
+    """赛事订阅命令处理方法。"""
     raw_id = event_id.result.strip() if event_id.available else ""
     if not raw_id.isdigit():
         await cs_cmd.finish("赛事 ID 无效，请使用数字，例如：CS sub 8057")
@@ -87,8 +85,6 @@ async def handle_cs_sub(
         else ""
     )
 
-    # 赛事订阅以 ID 为唯一键；当前会话重复订阅时只需追加推送目标，
-    # 直接复用本地快照，避免再次访问 HLTV/FlareSolverr。
     try:
         local_subscription = await add_event_target_if_exists(raw_id, target)
     except Exception:
@@ -201,7 +197,7 @@ async def handle_cs_unsub(
     event: MessageEvent,
     event_id: Match[str],
 ) -> None:
-    """让当前群退订指定赛事，但保留其他目标的订阅。"""
+    """让当前群退订指定赛事。"""
     target = await group_subscription_target(bot, event)
     if target is None:
         return

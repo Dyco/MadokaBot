@@ -14,18 +14,13 @@ from madokabot.core.resources import ResourceType, ResourceFolder, assets
 
 PLUGIN_NAME = "madokabot_cs_match_subscribe"
 CACHE_DIR = store.get_cache_dir(PLUGIN_NAME)
-# HLTV 赛事订阅统一保存于公共 JSON 资源目录。
 HLTV_SUB_PATH = assets.get_dir(ResourceType.JSON, ResourceFolder.CS) / "hltv_sub.json"
 ASSET_DIR = CACHE_DIR / "assets"
 PW_SESSION_PATH = store.get_data_file(PLUGIN_NAME, "pw_session.json")
 
 
 class Config(NoneBotConfig):
-    """插件配置。
-
-    HLTV 页面通过 FlareSolverr 获取，目标站点代理默认跟随 MadokaBot 的全局
-    proxy 配置；hltv_proxy 仅用于需要单独代理时覆盖它。
-    """
+    """插件配置。"""
 
     hltv_base_url: str = Field(
         default="https://www.hltv.org",

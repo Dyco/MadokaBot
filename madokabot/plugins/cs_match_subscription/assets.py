@@ -73,13 +73,13 @@ def _data_url(path: Path) -> str:
 
 
 def local_image_uri(subfolder: ResourceFolder, filename: str) -> str:
-    """解析资源管理器中的本地图片，供渲染视图直接使用。"""
+    """解析资源管理器中的本地图片。"""
     path = get_file(ResourceType.IMAGE, subfolder, filename)
     return path.resolve().as_uri() if path is not None else ""
 
 
 async def fetch_image_data_url(url: str) -> str:
-    """获取普通远程图片并转为 data URL；请求结束后立即关闭客户端。"""
+    """远程图片读取方法。"""
     value = str(url or "").strip()
     if not value or value.startswith("data:"):
         return value
@@ -108,7 +108,7 @@ async def fetch_image_data_url(url: str) -> str:
 
 
 def _placeholder_data_url(label: str, category: str) -> str:
-    """资源下载失败时使用内联 SVG，避免 Playwright 等待外链超时。"""
+    """占位图片生成方法。"""
     safe_label = (label[:2] or "?").upper()
     color = "#d9dde2" if category == "flag" else "#eef0f3"
     foreground = "#59636e"
@@ -123,14 +123,14 @@ def _placeholder_data_url(label: str, category: str) -> str:
 
 
 def _asset_dir(category: str) -> Path:
-    """返回资源分类目录；队标和国旗使用通用 CSTEAM 资源目录。"""
+    """赛事资源目录获取方法。"""
     if category in _CSTEAM_CATEGORIES:
         return resource_assets.get_dir(ResourceType.IMAGE, ResourceFolder.CSTEAM)
     return ensure_asset_dirs() / category
 
 
 def _find_cached_asset(url: str, category: str) -> Path | None:
-    """按 URL 哈希查找本地图片，队标和国旗优先走 assets/image/csteam。"""
+    """缓存资源查询方法。"""
     digest = hashlib.sha256(url.encode("utf-8")).hexdigest()[:16]
     target_dir = _asset_dir(category)
     if category in _CSTEAM_CATEGORIES:
@@ -138,7 +138,7 @@ def _find_cached_asset(url: str, category: str) -> Path | None:
         cached = get_file(ResourceType.IMAGE, ResourceFolder.CSTEAM, expected_name)
         if cached is not None and cached.stat().st_size:
             return cached
-        # 兼容同一 URL 曾以其他图片扩展名保存的本地资源。
+        # 兼容旧缓存的图片扩展名。
         cached_files = get_files(ResourceType.IMAGE, ResourceFolder.CSTEAM)
         exact_cached = next(
             (
@@ -174,7 +174,7 @@ def _find_cached_asset(url: str, category: str) -> Path | None:
 
 
 def _playwright_cookies(session: FlaresolverrSession) -> list[dict[str, object]]:
-    """转换为 Playwright 可接受的 Cookie 字段。"""
+    """浏览器Cookie转换方法。"""
     cookies: list[dict[str, object]] = []
     for raw_cookie in session.cookies:
         cookie = dict(raw_cookie)
@@ -208,7 +208,7 @@ async def _download_one(
     page = None
     try:
         page = await context.new_page()
-        # 收到响应头就检查类型和声明大小，避免先加载完整图片/错误页面。
+        # 读取响应体前校验类型和大小。
         response = await page.goto(url, wait_until="commit", timeout=timeout_ms)
         if response is not None and response.status >= 400:
             logger.warning("HLTV 资源浏览器请求失败：%s (HTTP %s)", url, response.status)
@@ -228,13 +228,11 @@ async def _download_one(
             )
             return None
 
-        # 直接保存 HTTP 响应，保留队标 PNG/SVG 原本的透明通道。
-        # 不能对 img 元素截图，否则透明区域会被浏览器图片文档的背景色填充。
         length = await response.header_value("content-length") or ""
         if length.isdigit() and int(length) > config.hltv_max_asset_size:
             logger.warning("HLTV 资源过大，已跳过：%s", url)
             return None
-        # commit 只等待响应头，响应体仍需独立超时，避免慢速下载挂住页面。
+        # commit只等待响应头，响应体需单独设置超时。
         content = await asyncio.wait_for(response.body(), timeout=timeout_ms / 1000)
         if not content:
             logger.warning("HLTV 资源响应为空：%s", url)
@@ -258,7 +256,7 @@ async def _download_assets(
     *,
     referer: str,
 ) -> dict[str, Path | None]:
-    """全局限制浏览器数量，并在拿到名额后重新检查缓存。"""
+    """赛事资源下载方法。"""
     async with _ASSET_BROWSER_SEMAPHORE:
         return await _download_assets_in_browser(refs, referer=referer)
 
@@ -268,7 +266,7 @@ async def _download_assets_in_browser(
     *,
     referer: str,
 ) -> dict[str, Path | None]:
-    """复用 Cookie 和 UA；浏览器、上下文和页面只在本次下载中存在。"""
+    """浏览器资源下载方法。"""
     if not refs:
         return {}
 
@@ -337,8 +335,7 @@ async def _download_assets_in_browser(
                     try:
                         await asyncio.gather(*tasks)
                     finally:
-                        # gather 的某个子任务失败不会自动取消其他任务。
-                        # 必须先收束下载，再关闭它们依赖的 context/browser。
+                        # gather异常不会取消其余任务，关闭浏览器前需收束下载。
                         for task in tasks:
                             if not task.done():
                                 task.cancel()
@@ -354,7 +351,7 @@ async def _download_assets_in_browser(
 
 
 async def enrich_match_assets(match: MatchData) -> MatchData:
-    """下载并将赛事图片转换为渲染可直接使用的 data URL。"""
+    """比赛图片资源补齐方法。"""
     refs: dict[str, tuple[str, str]] = {}
     team_groups = [match.teams, *match.map_stats.values()]
     for teams in team_groups:
@@ -386,7 +383,7 @@ async def enrich_match_assets(match: MatchData) -> MatchData:
 
 
 async def enrich_event_assets(events: list[EventData]) -> list[EventData]:
-    """下载赛事横幅和国旗，并转换为渲染可直接使用的 data URL。"""
+    """赛事图片资源补齐方法。"""
     refs: dict[str, tuple[str, str]] = {}
     for event in events:
         if event.banner_url:

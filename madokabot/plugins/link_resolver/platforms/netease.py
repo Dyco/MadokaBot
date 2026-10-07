@@ -37,7 +37,6 @@ from .runtime import (
 async def netease(bot: Bot, event: GroupMessageEvent):
     """解析网易云音乐分享链接。"""
     message = get_resolver_message(event)
-    # 识别短链接
     if "163cn.tv" in message:
         try:
             short_url = re.search(

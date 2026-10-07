@@ -53,7 +53,7 @@ def _build_status_api_url(screen_name: str | None, status_id: str) -> str:
 
 
 def _normalize_media(media_data: dict[str, Any]) -> tuple[TwitterMedia, ...]:
-    """将 FxTwitter 的媒体字段整理为统一结构。"""
+    """X媒体数据整理方法。"""
     raw_items = media_data.get("all")
     if not isinstance(raw_items, list):
         raw_items = []
@@ -112,7 +112,7 @@ def _read_duration_seconds(
 
 
 async def fetch_twitter_post(url: str, proxy: str | None) -> TwitterPost:
-    """通过 FxTwitter 获取 X 帖子的作者、正文和媒体列表。"""
+    """X帖子获取方法。"""
     match = _STATUS_PATTERN.search(url)
     if not match:
         raise TwitterParseError("未识别到有效的 X 帖子链接")
@@ -155,7 +155,7 @@ async def fetch_twitter_post(url: str, proxy: str | None) -> TwitterPost:
 
 
 def _format_height(format_info: dict[str, Any]) -> int:
-    """读取视频格式的高度，缺少字段时从 FxTwitter URL 推断。"""
+    """视频高度读取方法。"""
     height = format_info.get("height")
     if isinstance(height, (int, float)) and height > 0:
         return int(height)
@@ -166,7 +166,7 @@ def _format_height(format_info: dict[str, Any]) -> int:
 
 
 def select_twitter_video_url(media: TwitterMedia) -> str | None:
-    """只从 FxTwitter 返回的 MP4/H.264 格式中选择一个视频直链。"""
+    """X视频地址选择方法。"""
     candidates: list[tuple[int, float, str]] = []
     for format_info in media.formats:
         url = str(format_info.get("url") or "")

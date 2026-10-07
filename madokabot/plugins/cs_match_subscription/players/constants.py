@@ -30,9 +30,7 @@ FIVE_E_RETRY_DELAY = 0.5
 CHINA_TIMEZONE = timezone(timedelta(hours=8))
 
 
-# 完美平台旧版接口仍负责返回完整的个人统计，但必须使用当前客户端的
-# 公开请求头，并将 mySteamId 设为 0；使用手机号登录得到的旧 token 已无法
-# 稳定调用这两个接口。
+# 公开统计接口需使用当前请求头和mySteamId=0。
 PW_STATS_URL = "https://api.wmpvp.com/api/csgo/home/pvp/detailStats"
 
 
@@ -64,8 +62,7 @@ PLATFORM_ALIASES = {
 SUPPORTED_PLATFORM_TEXT = "5E、5e、5eplay、wm、pw 或 完美"
 
 
-# 5E 当前优先排位分段：这里使用每个分段的最高分作为边界，
-# 例如 2001-2150 分归入 A-，2401 分及以上进入 S 星级。
+# 段位边界取最高分，2401分以上按S星级处理。
 FIVE_E_RANK_TIERS = (
     (1200, "D", "Level_D.avif"),
     (1350, "C-", "Level_C1.avif"),
@@ -80,8 +77,7 @@ FIVE_E_RANK_TIERS = (
 )
 
 
-# 完美世界当前天梯分段。带“金色”的档位与同名普通档位是不同段位，
-# 不能只根据字母截断；2401 分以上由 stars 决定 S 段展示。
+# 金色与普通段位不同，S段展示由stars决定。
 PW_RANK_LIMITS = (
     (1000, "D"),
     (1150, "C"),

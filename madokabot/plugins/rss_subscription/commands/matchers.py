@@ -144,7 +144,7 @@ rss_cmd = on_alconna(
 async def check_rss_manage_permission(
     event: Event, bot: Bot, _: T_State, __: Arparma
 ) -> bool:
-    """为管理类子命令复用原有的 NoneBot 权限规则。"""
+    """RSS管理权限检查方法。"""
 
     if isinstance(event, GroupMessageEvent):
         if not is_group_whitelisted(event.group_id):
@@ -173,8 +173,6 @@ async def check_group_message(
     return True
 
 
-# 先由主 matcher 确认子命令，再进入各自独立的处理链。
-# 这样 got() 只会在对应子命令中启动，不会抢占其他命令的消息。
 rss_add_cmd = rss_cmd.dispatch(
     "add", additional=check_rss_manage_permission, block=True
 )

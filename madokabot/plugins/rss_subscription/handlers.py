@@ -31,7 +31,6 @@ for module in ROUTE_MODULES:
     import_module(f".routes.{module}", package=__package__)
 
 
-# 检查更新
 @HandlerRegistry.append_before_handler()
 async def load_updates(state: Dict[str, Any]) -> Dict[str, Any]:
     db = state.get("tinydb")
@@ -39,27 +38,24 @@ async def load_updates(state: Dict[str, Any]) -> Dict[str, Any]:
     return {"change_data": change_data}
 
 
-# 判断是否满足推送条件
 @HandlerRegistry.append_before_handler(priority=11)  # type: ignore
 async def filter_entries(rss: Rss, state: Dict[str, Any]) -> Dict[str, Any]:
     change_data = state.get("change_data")
     db = state.get("tinydb")
     for item in change_data.copy():
         summary = get_summary(item)
-        # 检查是否包含屏蔽词
         if config.black_word and re.findall("|".join(config.black_word), summary):
             logger.info("内含屏蔽词，已经取消推送该消息")
             write_item(db, item)
             change_data.remove(item)
             continue
-        # 检查是否匹配关键词 使用 down_torrent_keyword 字段,命名是历史遗留导致，实际应该是白名单关键字
+        # down_torrent_keyword实际表示关键词白名单。
         if rss.down_torrent_keyword and not re.search(
             rss.down_torrent_keyword, summary
         ):
             write_item(db, item)
             change_data.remove(item)
             continue
-        # 检查是否匹配黑名单关键词 使用 black_keyword 字段
         if rss.black_keyword and (
             re.search(rss.black_keyword, item["title"])
             or re.search(rss.black_keyword, summary)
@@ -67,7 +63,6 @@ async def filter_entries(rss: Rss, state: Dict[str, Any]) -> Dict[str, Any]:
             write_item(db, item)
             change_data.remove(item)
             continue
-        # 检查是否只推送有图片或视频的消息
         if (rss.only_pic or rss.only_has_pic) and not re.search(
             r"<img[^>]+>|<video\b|\[img]|\[CQ:(?:image|video)\b",
             summary,
@@ -101,14 +96,12 @@ async def filter_entries(rss: Rss, state: Dict[str, Any]) -> Dict[str, Any]:
     return {"change_data": change_data}
 
 
-# 如果启用了去重模式，对推送列表进行过滤
 @HandlerRegistry.append_before_handler(priority=12)  # type: ignore
 async def filter_duplicates(rss: Rss, state: Dict[str, Any]) -> Dict[str, Any]:
     change_data = state.get("change_data")
     conn = state.get("conn")
     db = state.get("tinydb")
 
-    # 检查是否启用去重 使用 duplicate_filter_mode 字段
     if not rss.duplicate_filter_mode:
         return {"change_data": change_data}
 
@@ -142,10 +135,8 @@ async def filter_duplicates(rss: Rss, state: Dict[str, Any]) -> Dict[str, Any]:
     }
 
 
-# 处理标题
 @HandlerRegistry.append_handler(parsing_type="title")
 async def handle_title(rss: Rss, item: Dict[str, Any]) -> str:
-    # 判断是否开启了只推送图片
     if rss.only_pic:
         return ""
 
@@ -155,20 +146,16 @@ async def handle_title(rss: Rss, item: Dict[str, Any]) -> str:
         title = re.sub(r" - 转发 .*", "", title)
 
     res = f"标题：{title}\n"
-    # 隔开标题和正文
     if not rss.only_title:
         res += "\n"
-    # 如果开启了只推送标题，跳过下面判断标题与正文相似度的处理
     if rss.only_title:
         return emoji.emojize(res, language="alias")
 
-    # 判断标题与正文相似度，避免标题正文一样，或者是标题为正文前N字等情况
     try:
         summary_html = Pq(get_summary(item))
         if not config.blockquote:
             summary_html.remove("blockquote")
         similarity = SequenceMatcher(None, summary_html.text()[: len(title)], title)
-        # 标题正文相似度
         if similarity.ratio() > 0.6:
             res = ""
     except Exception as e:
@@ -177,7 +164,6 @@ async def handle_title(rss: Rss, item: Dict[str, Any]) -> str:
     return emoji.emojize(res, language="alias")
 
 
-# 处理正文 判断是否是仅推送标题 、是否仅推送图片
 @HandlerRegistry.append_handler(parsing_type="summary", priority=1)
 async def skip_summary_if_only_title_or_picture(
     rss: Rss, tmp_state: Dict[str, Any]
@@ -188,8 +174,6 @@ async def skip_summary_if_only_title_or_picture(
     return ""
 
 
-# 处理正文 处理网页 tag
-# 路由处理器依靠同名、同优先级覆盖此默认步骤，保留 handle_summary 名称。
 @HandlerRegistry.append_handler(parsing_type="summary")  # type: ignore
 async def handle_summary(rss: Rss, item: Dict[str, Any], tmp: str) -> str:
     try:
@@ -199,25 +183,20 @@ async def handle_summary(rss: Rss, item: Dict[str, Any], tmp: str) -> str:
     return tmp
 
 
-# 处理正文 移除指定内容
 @HandlerRegistry.append_handler(parsing_type="summary", priority=11)  # type: ignore
 async def remove_summary_content(rss: Rss, tmp: str) -> str:
     """移除订阅配置指定的正文内容并整理空行。"""
-    # 移除指定内容
     if rss.content_to_remove:
         for pattern in rss.content_to_remove:
             tmp = re.sub(pattern, "", tmp)
-        # 去除多余换行
         while "\n\n\n" in tmp:
             tmp = tmp.replace("\n\n\n", "\n\n")
         tmp = tmp.strip()
     return emoji.emojize(tmp, language="alias")
 
 
-# 处理图片
 @HandlerRegistry.append_handler(parsing_type="picture")
 async def handle_picture(rss: Rss, item: Dict[str, Any], tmp: str) -> str:
-    # 判断是否开启了只推送标题
     if rss.only_title:
         return ""
 
@@ -232,22 +211,18 @@ async def handle_picture(rss: Rss, item: Dict[str, Any], tmp: str) -> str:
     except Exception as e:
         logger.warning(f"{rss.name} 没有正文内容！{e}")
 
-    # 判断是否开启了只推送图片
     return f"{res}\n" if rss.only_pic else f"{tmp + res}\n"
 
 
-# 处理来源
 @HandlerRegistry.append_handler(parsing_type="source")
 async def handle_source(item: Dict[str, Any]) -> str:
     return f"链接：{item['link']}\n"
 
 
-# 处理种子
 @HandlerRegistry.append_handler(parsing_type="torrent")
 async def handle_torrent(rss: Rss, item: Dict[str, Any]) -> str:
     res: List[str] = []
     if rss.down_torrent:
-        # 处理种子
         try:
             download_infos = await download_torrents(
                 rss=rss, item=item, proxy=get_proxy(rss.img_proxy)
@@ -265,7 +240,6 @@ async def handle_torrent(rss: Rss, item: Dict[str, Any]) -> str:
     return "\n".join(res)
 
 
-# 处理日期
 @HandlerRegistry.append_handler(parsing_type="date")
 async def handle_date(item: Dict[str, Any]) -> str:
     date = get_item_date(item)
@@ -273,7 +247,6 @@ async def handle_date(item: Dict[str, Any]) -> str:
     return f"日期：{date.format('YYYY年MM月DD日 HH:mm:ss')}"
 
 
-# 发送消息
 @HandlerRegistry.append_handler(parsing_type="after")
 async def handle_message(
     rss: Rss,

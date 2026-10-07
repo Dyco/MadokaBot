@@ -85,17 +85,16 @@ def convert_player_name_to_nickname(
 async def simplify_steam_player_data(
     player: Player, proxy: str = None, avatar_dir: Path = None
 ) -> Dict[str, str]:
-    """将 Steam 玩家资料整理为在线状态卡片需要的数据。"""
+    """Steam玩家数据整理方法。"""
     avatar = await fetch_avatar(player, avatar_dir, proxy)
 
     if player["personastate"] == 0:
         if not player.get("lastlogoff"):
             status = "离线"
         else:
-            time_logged_off = player["lastlogoff"]  # Unix timestamp
+            time_logged_off = player["lastlogoff"]
             time_to_now = calendar.timegm(time.gmtime()) - time_logged_off
 
-            # 将时间转换为自然语言
             if time_to_now < 60:
                 status = "上次在线 刚刚"
             elif time_to_now < 3600:

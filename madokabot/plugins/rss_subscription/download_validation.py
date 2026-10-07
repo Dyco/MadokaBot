@@ -76,7 +76,7 @@ def _oversized_videos(status: Dict[str, Any]) -> List[Dict[str, Any]]:
 
 
 def _total_download_size(status: Dict[str, Any]) -> int:
-    """返回已选文件总大小；没有文件明细时使用任务总大小。"""
+    """下载任务总大小计算方法。"""
     files = _status_files(status, selected_only=True)
     if files:
         return sum(_int_value(file_info.get("length")) for file_info in files)

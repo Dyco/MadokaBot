@@ -35,7 +35,6 @@ async def handle_add_cookies(rss_cookies: str = ArgPlainText("COOKIES")) -> None
         return
     name, cookies = parts
 
-    # 判断是否有该名称订阅
     rss = Rss.get_one_by_name(name=name)
     if rss is None:
         await rss_cookies_cmd.finish(f"❌ 不存在该订阅: {name}")

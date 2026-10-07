@@ -1,4 +1,4 @@
-"""为 OneBot V11 消息提供统一的表情回应工具。"""
+"""消息表情回应工具。"""
 
 from dataclasses import dataclass
 
@@ -12,13 +12,13 @@ def _resolve_emoji_id(
     emoji_id: str | int | None,
     default_emoji_id: str,
 ) -> str:
-    """优先使用调用方传入的表情 ID，空值时回退到默认值。"""
+    """回应表情选择方法。"""
     value = "" if emoji_id is None else str(emoji_id).strip()
     return value or str(default_emoji_id).strip()
 
 
 def _get_message_id(event: MessageEvent) -> int | None:
-    """读取消息事件的消息 ID，读取失败时返回空值。"""
+    """消息编号读取方法。"""
     value = getattr(event, "message_id", None)
     try:
         message_id = int(value)
@@ -60,7 +60,7 @@ async def _set_message_emoji(
 
 @dataclass
 class StatusResponse:
-    """记录一次状态回应，并负责将其切换为完成状态。"""
+    """记录一次状态回应。"""
 
     bot: Bot
     message_id: int
@@ -69,7 +69,7 @@ class StatusResponse:
     _completed: bool = False
 
     async def complete(self, emoji_id: str | int | None = None) -> bool:
-        """将状态回应更新为完成表情，空参数时使用创建时的默认值。"""
+        """完成状态更新方法。"""
         if self._completed:
             return True
 
@@ -102,7 +102,7 @@ async def respond(
     event: MessageEvent,
     emoji_id: str | int | None = None,
 ) -> bool:
-    """给收到的消息添加一次性回应，空表情参数时使用配置默认值。"""
+    """消息表情回应方法。"""
     message_id = _get_message_id(event)
     if message_id is None:
         return False
@@ -120,7 +120,7 @@ async def respond_with_status(
     response_emoji_id: str | int | None = None,
     complete_emoji_id: str | int | None = None,
 ) -> StatusResponse | None:
-    """先添加状态回应，空参数分别回退到配置中的开始和完成表情。"""
+    """消息状态回应方法。"""
     message_id = _get_message_id(event)
     if message_id is None:
         return None

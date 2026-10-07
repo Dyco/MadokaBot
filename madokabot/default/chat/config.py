@@ -6,11 +6,11 @@ from pydantic import BaseModel, field_validator
 
 
 class ChatConfig(BaseModel):
-    model_api_key: str = "" # NVIDIA API 密钥
-    model_base_url: str = "https://integrate.api.nvidia.com/v1" # OpenAI 兼容 API 地址
-    set_model: list[str] = ["meta/llama-3.1-70b-instruct"] # 聊天模型列表
-    chat_timeout: float = 60.0 # 请求超时时间，单位秒
-    chat_max_tokens: int = 2048 # 单次聊天最大输出 token 数
+    model_api_key: str = ""
+    model_base_url: str = "https://integrate.api.nvidia.com/v1"
+    set_model: list[str] = ["meta/llama-3.1-70b-instruct"]
+    chat_timeout: float = 60.0 # 单位：秒
+    chat_max_tokens: int = 2048
 
     @field_validator("set_model", mode="before")
     @classmethod

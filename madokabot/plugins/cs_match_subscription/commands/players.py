@@ -29,7 +29,7 @@ from ..render import render_player_stats_card
 
 
 def _normalize_mobile(value: str) -> str:
-    """清理手机号输入，兼容用户复制时带入的空格或 +86 前缀。"""
+    """手机号规范化方法。"""
     mobile = re.sub(r"\s+", "", value.strip())
     if mobile.startswith("+86"):
         mobile = mobile[3:]
@@ -43,7 +43,7 @@ async def handle_cs_login(
     mobile: Match[str],
     code: Match[str],
 ) -> None:
-    """使用用户自行获取的验证码登录，并保存返回的 Session。"""
+    """CS登录命令处理方法。"""
     if isinstance(event, GroupMessageEvent):
         try:
             await bot.delete_msg(message_id=event.message_id)
@@ -132,7 +132,7 @@ async def _handle_cs_bind(
 
 @cs_cmd.assign("subcommands.bind")
 async def handle_cs_bind(event: MessageEvent, params: Match[str]) -> None:
-    """解析平台和玩家昵称或 Steam ID 后执行绑定。"""
+    """CS绑定命令处理方法。"""
     raw_params = params.result.strip() if params.available else ""
     bind_args = raw_params.split(maxsplit=1)
     if not 1 <= len(bind_args) <= 2:
@@ -195,7 +195,7 @@ async def _handle_cs_player_stats(
     platform: str,
     nickname: str = "",
 ) -> None:
-    """读取绑定或指定昵称，并渲染平台战绩卡片。"""
+    """CS玩家战绩命令处理方法。"""
     target = nickname.strip()
     target_text = f"玩家 {target}" if target else "已绑定玩家"
     await cs_cmd.send(f"正在查询{platform_label(platform)}{target_text}的战绩…")

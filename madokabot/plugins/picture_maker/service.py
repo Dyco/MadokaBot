@@ -37,20 +37,19 @@ class PreparedImage:
 
     @property
     def data_url(self) -> str:
-        """将规范化后的图片转换为 HTML 可直接使用的 Data URL。"""
+        """图片Data URL转换方法。"""
         encoded = base64.b64encode(self.path.read_bytes()).decode("ascii")
         return f"data:image/png;base64,{encoded}"
 
 
 def _extract_palette(image: Image.Image, count: int = 5) -> tuple[str, ...]:
-    """使用 MMCQ 候选色和主色调过滤提取 TrackPic 风格的调色板。"""
+    """图片调色板提取方法。"""
     sample = image.convert("RGB")
     sample.thumbnail((128, 128), Image.Resampling.LANCZOS)
     if sample.width == 0 or sample.height == 0:
         return ()
 
-    # 直接压成 5 色会让大面积白底吞掉深色和高饱和色。
-    # 先生成更多 MMCQ 候选色，再做主色调过滤，保留图片里的颜色层次。
+    # 先保留更多候选色，避免白底吞掉深色。
     candidate_count = max(32, count * 8)
     quantized = sample.quantize(colors=candidate_count, method=Image.Quantize.MEDIANCUT)
     colors = quantized.getcolors(maxcolors=sample.width * sample.height) or []
@@ -72,8 +71,7 @@ def _extract_palette(image: Image.Image, count: int = 5) -> tuple[str, ...]:
         return colorsys.rgb_to_hsv(red, green, blue)[1]
 
     def is_pale_neutral(rgb: tuple[int, int, int]) -> bool:
-        # 白底、浅灰和压缩产生的近白色不参与前四个主色竞争，
-        # 但会保留一个最具代表性的浅色作为最后一个色块。
+        # 浅色不参与前四主色竞争，仅保留一个浅色色块。
         return lightness(rgb) >= 205 and saturation(rgb) < 0.16
 
     def is_near_white(rgb: tuple[int, int, int]) -> bool:
@@ -94,7 +92,7 @@ def _extract_palette(image: Image.Image, count: int = 5) -> tuple[str, ...]:
 
     selected: list[tuple[int, int, int]] = []
     for _, rgb in vivid_candidates:
-        # 避免 5 个位置被同一段蓝色或同一段灰色占满。
+        # 主色色块需避免近似色重复。
         if any(distance(rgb, existing) < 30 for existing in selected):
             continue
         selected.append(rgb)
@@ -116,7 +114,7 @@ def _extract_palette(image: Image.Image, count: int = 5) -> tuple[str, ...]:
 
 
 def _normalize_proxy_url(proxy: str | None) -> str | None:
-    """将主配置中的代理地址规范化为 httpx 可识别的 URL。"""
+    """代理地址规范化方法。"""
     value = str(proxy or "").strip()
     if not value:
         return None

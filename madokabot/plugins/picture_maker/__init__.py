@@ -13,5 +13,4 @@ __plugin_meta__ = PluginMetadata(
     supported_adapters=inherit_supported_adapters("nonebot_plugin_alconna"),
 )
 
-# 导入指令模块，完成 NoneBot matcher 注册。
 from . import matchers as _matchers  # noqa: E402,F401

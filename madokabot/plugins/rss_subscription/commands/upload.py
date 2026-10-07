@@ -40,7 +40,7 @@ FILE_SELECTION_TIMEOUT = 60.0
 
 
 def _extract_download_url(content: str) -> str | None:
-    """提取完整磁链或 torrent 地址，保留 tracker 等查询参数。"""
+    """下载链接提取方法。"""
     content = unescape(content.strip())
     target = re.search(r"magnet:\?[^\s]+", content, flags=re.I)
     if target is None:

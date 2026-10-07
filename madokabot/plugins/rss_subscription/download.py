@@ -62,7 +62,6 @@ if config.aria2_download_path:
     register_cleanup_path("rss-downloads", config.aria2_download_path)
 
 
-# 下载进度消息的撤回任务保存在进程内。
 
 SelectionHandler = Callable[
     [Bot, str, List[Dict[str, Any]], List[str], str], Awaitable[None]
@@ -76,7 +75,7 @@ async def _reject_content_and_queue_torrent(
     group_ids: Sequence[str],
     name: str,
 ) -> int:
-    """停止超限内容，但保留种子并送入原有上传队列。"""
+    """超限下载处理方法。"""
     torrent_file = _attach_torrent_to_status(task_info, status)
     await _remove_download(gid, str(status.get("status", "")))
     _clear_download_tracking(gid)
@@ -114,7 +113,6 @@ def _torrent_queue_result(queued_count: int) -> str:
     return "内容文件不会下载，但没有找到可上传的种子文件或目标群。"
 
 
-# 发送下载通知
 
 
 async def _abandon_metadata_after_timeout(
@@ -166,7 +164,7 @@ async def _prepare_manual_download(
     name: str,
     task_info: Dict[str, Any],
 ) -> bool:
-    """暂停多文件任务等待选择；单文件任务直接开始。"""
+    """手动下载准备方法。"""
     files = _status_files(info)
     if len(files) > 1:
         task_info["status"] = DownloadStatus.WAITING_SELECTION
@@ -249,7 +247,7 @@ async def _follow_metadata_download(
     child_gid: str,
     task_info: Dict[str, Any],
 ) -> None:
-    """把磁力元数据任务切换到 aria2 随后创建的 BT 下载任务。"""
+    """磁力下载任务跟踪方法。"""
     group_ids = list(task_info.get("group_ids") or [])
     name = str(task_info.get("name") or "下载任务")
     child_info = await get_status(child_gid)
@@ -336,7 +334,6 @@ async def check_download_status(
             logger.warning(f"接管磁力下载任务[{gid}]失败：{exc}")
         return
 
-    # 磁力元数据完成后，aria2 可能稍晚才写入 followedBy。
     if task_info.get("status") == DownloadStatus.METADATA and status not in {
         "error",
         "removed",
@@ -549,7 +546,7 @@ async def start_download(
 async def download_torrents(
     rss: Rss, item: Dict[str, Any], proxy: Optional[str]
 ) -> List[Dict[str, str]]:
-    """Submit all torrent links in one RSS entry to the download backend."""
+    """订阅种子下载方法。"""
     bot = await get_bot()
     if bot is None:
         raise ValueError("没有可用的 Bot，无法创建下载任务")

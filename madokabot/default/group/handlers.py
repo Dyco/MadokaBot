@@ -24,7 +24,7 @@ from madokabot.core.messaging.pagination import parse_page_command
 
 
 async def _get_group_id(target: Target, group_id: Match[str], command) -> str:
-    """解析群号参数，没有参数时使用当前群号。"""
+    """群号解析方法。"""
 
     if group_id.available:
         group_id_value = group_id.result.strip()

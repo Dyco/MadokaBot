@@ -21,7 +21,7 @@ _monitored_targets: dict[tuple[str, str, str], tuple[int, int]] = {}
 
 
 async def update_steam_info():
-    """按有效订阅去重轮询，并为新启用的群订阅建立状态基线。"""
+    """Steam玩家状态轮询方法。"""
     global _monitored_targets
 
     bind_map = {

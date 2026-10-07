@@ -23,21 +23,16 @@ async def prepare_rss_change(matcher: Matcher, content: AlcMatch[str]) -> None:
         matcher.set_arg("RSS_CHANGE", Message(content.result))
 
 
-# 处理带多个值的订阅参数
 def handle_property(value: str, property_list: List[Any]) -> List[Any]:
-    # 清空
     if value == "-1":
         return []
     value_list = value.split(",")
-    # 追加
     if value_list[0] == "":
         value_list.pop(0)
         return property_list + [i for i in value_list if i not in property_list]
-    # 防止用户输入重复参数,去重并保持原来的顺序
     return list(dict.fromkeys(value_list))
 
 
-# 处理类型为正则表达式的订阅参数
 def handle_regex_property(value: str, old_value: str) -> Optional[str]:
     result = None
     if not value:
@@ -92,7 +87,6 @@ def handle_time_change(value_to_change: str) -> str:
     return value_to_change
 
 
-# 处理要修改的订阅参数
 def handle_change_list(
     rss: Rss,
     key_to_change: str,
@@ -185,7 +179,6 @@ async def filter_rss_by_permissions(
             await rss_edit_cmd.finish(
                 "❌ 禁止在群组中修改订阅账号！如要取消订阅请使用 RSS 删除命令！"
             )
-        # 多群共享订阅由最早加入的群管理设置，后加入的群只接收推送或退出。
         rss_list = [
             rss
             for rss in rss_list
@@ -232,7 +225,6 @@ async def handle_rss_change(
         if rss_tmp := Rss.get_one_by_name(name=name):
             rss_list.append(rss_tmp)
 
-    # 出于公平考虑，限制订阅者只有当前群组或频道时才能修改订阅，否则只有超级管理员能修改
     rss_list = await filter_rss_by_permissions(
         rss_list, change_info, group_id, guild_channel_id
     )
@@ -257,7 +249,6 @@ async def handle_rss_change(
             if existing and existing.name not in {rss.name for rss in rss_list}:
                 await rss_edit_cmd.finish(f"❌ 已存在订阅名为 {name_value} 的订阅")
 
-    # 参数特殊处理：正文待移除内容
     rm_list_exist = re.search(
         r"(?<!\S)rm_list=(?:'[^']*'(?:,'[^']*')*|-1)", change_info
     )
@@ -266,7 +257,6 @@ async def handle_rss_change(
     changed_rss_list = await batch_change_rss(
         change_list, group_id, guild_channel_id, rss_list, rm_list_exist
     )
-    # 隐私考虑，不展示除当前群组或频道外的群组、频道和QQ
     rss_msg_list = [
         str(rss.hide_some_infos(group_id, guild_channel_id)) for rss in changed_rss_list
     ]
@@ -278,7 +268,6 @@ async def handle_rss_change(
 
 
 async def validate_rss_change(key_to_change: str, value_to_change: str) -> None:
-    # 对用户输入的去重模式参数进行校验
     mode_property_set = {"", "-1"} | {
         mode.value for mode in DuplicateFilterMode
     }
@@ -361,10 +350,8 @@ async def batch_change_rss(
             continue
         changed_rss_list.append(new_rss)
 
-        # 参数解析完毕，写入
         new_rss.upsert(rss_name)
 
-        # 加入定时任务
         if not new_rss.stop:
             await scheduler.add_job(new_rss)
         elif not rss.stop:
@@ -374,7 +361,6 @@ async def batch_change_rss(
     return changed_rss_list
 
 
-# 参数特殊处理：正文待移除内容
 def handle_rm_list(
     rss_list: List[Rss],
     change_info: str,
@@ -398,7 +384,6 @@ def handle_rm_list(
                 setattr(rss, "content_to_remove", valid_rm_list)
 
     change_list = [i.strip() for i in change_info.split() if i.strip()]
-    # 去掉订阅名
     change_list.pop(0)
 
     return change_list

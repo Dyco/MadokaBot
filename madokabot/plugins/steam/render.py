@@ -33,12 +33,7 @@ MEMBER_AVATAR_SIZE = 50
 def open_image_or_default(
     image_source, default_path: Path, context: str
 ) -> Image.Image:
-    """Open an image source, falling back to a bundled default asset.
-
-    Steam pages/CDNs can occasionally return HTML, rate-limit pages, or empty
-    payloads where an image is expected.  Keep the card renderable by replacing
-    only the bad asset with a local placeholder.
-    """
+    """图片读取方法。"""
     try:
         if isinstance(image_source, Image.Image):
             return image_source.copy()
@@ -58,7 +53,7 @@ def open_image_or_default(
 
 
 def fit_image_cover(image: Image.Image, target_size: Tuple[int, int]) -> Image.Image:
-    """Resize and center-crop an image so rendered cards keep a stable size."""
+    """图片居中裁剪方法。"""
     target_width, target_height = target_size
     if image.size == target_size:
         return image.copy()
@@ -75,7 +70,7 @@ def fit_image_cover(image: Image.Image, target_size: Tuple[int, int]) -> Image.I
 
 
 def open_optional_image(image_source, context: str) -> Optional[Image.Image]:
-    """Open an optional image, returning None when it is absent or invalid."""
+    """可选图片读取方法。"""
     try:
         if isinstance(image_source, Image.Image):
             return image_source.copy()
@@ -124,7 +119,6 @@ def draw_start_gaming(
     canvas = Image.open(gaming_path)
     canvas.paste(avatar.resize((66, 66), Image.BICUBIC), (15, 20))
 
-    # 绘制名称
     draw = ImageDraw.Draw(canvas)
     draw.text(
         (104, 14),
@@ -133,7 +127,6 @@ def draw_start_gaming(
         fill=hex_to_rgb("e3ffc2"),
     )
 
-    # 绘制"正在玩"
     draw.text(
         (103, 42),
         "正在玩",
@@ -141,7 +134,6 @@ def draw_start_gaming(
         fill=hex_to_rgb("969696"),
     )
 
-    # 绘制游戏名称
     draw.text(
         (104, 66),
         game_name,
@@ -161,11 +153,9 @@ def draw_parent_status(parent_avatar: Image.Image, parent_name: str) -> Image.Im
 
     draw = ImageDraw.Draw(canvas)
 
-    # 在左下角 (16, 16) 处绘制头像
     avatar_height = 120 - 16 - PARENT_AVATAR_SIZE
     canvas.paste(parent_avatar, (16, avatar_height))
 
-    # 绘制名称
     draw.text(
         (16 + PARENT_AVATAR_SIZE + 16, avatar_height + 12),
         parent_name,
@@ -173,7 +163,6 @@ def draw_parent_status(parent_avatar: Image.Image, parent_name: str) -> Image.Im
         fill=hex_to_rgb("6dcff6"),
     )
 
-    # 绘制状态
     draw.text(
         (16 + PARENT_AVATAR_SIZE + 16, avatar_height + 20 + 16),
         "在线",
@@ -223,7 +212,6 @@ def draw_friend_status(
     )
 
     if personastate == 2:
-        # 忙碌 加上一个忙碌图标
         canvas = draw_friend_status(friend_avatar, friend_name, status, 1, nickname)
         draw = ImageDraw.Draw(canvas)
 
@@ -238,7 +226,6 @@ def draw_friend_status(
         return canvas
 
     if personastate == 4:
-        # 打盹 加上一个 ZZZ
         canvas = draw_friend_status(friend_avatar, friend_name, status, 1, nickname)
         draw = ImageDraw.Draw(canvas)
 
@@ -252,7 +239,6 @@ def draw_friend_status(
 
         return canvas
 
-    # 绘制头像
     canvas.paste(friend_avatar, (22, 8))
 
     if status != "在线" and personastate == 1:
@@ -262,7 +248,6 @@ def draw_friend_status(
     else:
         fill = personastate_colors[personastate]
 
-    # 绘制名称
     draw.text(
         (22 + MEMBER_AVATAR_SIZE + 18, 12),
         display_name,
@@ -270,7 +255,6 @@ def draw_friend_status(
         fill=fill[0],
     )
 
-    # 绘制状态
     draw.text(
         (22 + MEMBER_AVATAR_SIZE + 16, 36),
         status,
@@ -282,7 +266,6 @@ def draw_friend_status(
 
 
 def draw_gaming_friends_status(data: List[Dict[str, str]]) -> Image.Image:
-    # 排序数据，按照游戏名称字母表顺序排序
     data.sort(key=lambda x: x["status"])
 
     canvas = Image.new(
@@ -293,7 +276,6 @@ def draw_gaming_friends_status(data: List[Dict[str, str]]) -> Image.Image:
 
     draw = ImageDraw.Draw(canvas)
 
-    # 绘制标题
     draw.text(
         (22, 22),
         "游戏中",
@@ -301,7 +283,6 @@ def draw_gaming_friends_status(data: List[Dict[str, str]]) -> Image.Image:
         font=ImageFont.truetype(font_regular_path, 22),
     )
 
-    # 绘制好友头像和名称
     friends_status_list = [
         draw_friend_status(
             d["avatar"], d["name"], d["status"], d["personastate"], d["nickname"]
@@ -309,7 +290,6 @@ def draw_gaming_friends_status(data: List[Dict[str, str]]) -> Image.Image:
         for d in data
     ]
 
-    # 拼接好友头像和名称
     for i, friend_status in enumerate(friends_status_list):
         canvas.paste(friend_status, (0, 64 + (MEMBER_AVATAR_SIZE + 16) * i))
 
@@ -325,7 +305,6 @@ def draw_online_friends_status(data: List[Dict[str, str]]) -> Image.Image:
 
     draw = ImageDraw.Draw(canvas)
 
-    # 绘制标题
     draw.text(
         (22, 22),
         "在线好友",
@@ -333,7 +312,6 @@ def draw_online_friends_status(data: List[Dict[str, str]]) -> Image.Image:
         font=ImageFont.truetype(font_regular_path, 22),
     )
 
-    # 绘制在线人数
     draw.text(
         (115, 25),
         f"({len(data)})",
@@ -341,7 +319,6 @@ def draw_online_friends_status(data: List[Dict[str, str]]) -> Image.Image:
         font=ImageFont.truetype(font_regular_path, 18),
     )
 
-    # 绘制好友头像和名称
     friends_status_list = [
         draw_friend_status(
             d["avatar"], d["name"], d["status"], d["personastate"], d["nickname"]
@@ -349,7 +326,6 @@ def draw_online_friends_status(data: List[Dict[str, str]]) -> Image.Image:
         for d in data
     ]
 
-    # 拼接好友头像和名称
     for i, friend_status in enumerate(friends_status_list):
         canvas.paste(friend_status, (0, 64 + (MEMBER_AVATAR_SIZE + 16) * i))
 
@@ -365,7 +341,6 @@ def draw_offline_friends_status(data: List[Dict[str, str]]) -> Image.Image:
 
     draw = ImageDraw.Draw(canvas)
 
-    # 绘制标题
     draw.text(
         (22, 22),
         "离线",
@@ -373,7 +348,6 @@ def draw_offline_friends_status(data: List[Dict[str, str]]) -> Image.Image:
         font=ImageFont.truetype(font_regular_path, 22),
     )
 
-    # 绘制离线人数
     draw.text(
         (72, 25),
         f"({len(data)})",
@@ -381,7 +355,6 @@ def draw_offline_friends_status(data: List[Dict[str, str]]) -> Image.Image:
         font=ImageFont.truetype(font_regular_path, 18),
     )
 
-    # 绘制好友头像和名称
     friends_status_list = [
         draw_friend_status(
             d["avatar"], d["name"], d["status"], d["personastate"], d["nickname"]
@@ -389,7 +362,6 @@ def draw_offline_friends_status(data: List[Dict[str, str]]) -> Image.Image:
         for d in data
     ]
 
-    # 拼接好友头像和名称
     for i, friend_status in enumerate(friends_status_list):
         canvas.paste(friend_status, (0, 64 + (MEMBER_AVATAR_SIZE + 16) * i))
 
@@ -427,7 +399,6 @@ def draw_friends_status(
         or (d["personastate"] == 4 and d["status"] == "在线")
         or (d["personastate"] in [2, 5, 6])
     ]
-    # 按 1, 2, 4, 5, 6, 3 的顺序排序
     online_data.sort(key=lambda x: (7 if x["personastate"] == 3 else x["personastate"]))
 
     if online_data:
@@ -439,7 +410,6 @@ def draw_friends_status(
         status_images.append(draw_offline_friends_status(offline_data))
         height += status_images[-1].height
 
-    # 拼合图片
     canvas = Image.new("RGB", (WIDTH, height), hex_to_rgb("1e2024"))
     draw = ImageDraw.Draw(canvas)
 
@@ -452,7 +422,6 @@ def draw_friends_status(
         canvas.paste(status_image, (0, y))
         y += status_image.height
 
-        # 绘制分割线
         if i != len(status_images) - 1:
             draw.rectangle([0, y - 1, WIDTH, y], fill=hex_to_rgb("333439"))
 
@@ -460,7 +429,7 @@ def draw_friends_status(
 
 
 def get_average_color(image: Image.Image) -> tuple[int, int, int]:
-    """获取图片的平均颜色"""
+    """获取图片的平均颜色。"""
     image_np = np.array(image)
     average_color = image_np.mean(axis=(0, 1)).astype(int)
     return tuple(average_color)
@@ -469,7 +438,7 @@ def get_average_color(image: Image.Image) -> tuple[int, int, int]:
 def split_image(
     image: Image.Image, rows: int, cols: int
 ) -> tuple[list[Image.Image], int, int]:
-    """将图片分割为rows * cols份"""
+    """将图片分割为rows * cols份。"""
     width, height = image.size
     piece_width = width // cols
     piece_height = height // rows
@@ -490,28 +459,25 @@ def split_image(
 
 
 def recolor_image(image: Image.Image, rows: int, cols: int) -> Image.Image:
-    """分片图片，提取平均颜色后拼接"""
-    total_average_color = get_average_color(image)  # 获取整体平均颜色
+    """图片分片调色方法。"""
+    total_average_color = get_average_color(image)
     pieces, piece_width, piece_height = split_image(image, rows, cols)
 
-    diameter = min(pieces[0].size)  # 以最小边为直径
+    diameter = min(pieces[0].size)
     radius = diameter // 2
     new_image = Image.new("RGB", image.size, total_average_color)
 
     for i, piece in enumerate(pieces):
-        average_color = get_average_color(piece)  # 获取每片的平均颜色
+        average_color = get_average_color(piece)
 
-        # 计算放置的位置
         row, col = divmod(i, cols)
         x = col * piece_width + piece_width // 2
         y = row * piece_height + piece_height // 2
 
-        # 画圆
         circle = Image.new("RGBA", (piece_width, piece_height), (0, 0, 0, 0))
         draw = ImageDraw.Draw(circle)
         draw.ellipse((0, 0, piece_width, piece_height), fill=average_color)
 
-        # 将圆形图片粘贴到新图片上
         new_image.paste(circle, (x - radius, y - radius), circle)
 
     new_image = new_image.filter(ImageFilter.SMOOTH)
@@ -523,43 +489,26 @@ def recolor_image(image: Image.Image, rows: int, cols: int) -> Image.Image:
 def create_gradient_image(
     size: Tuple[int, int], color1: Tuple[int, int, int], color2: Tuple[int, int, int]
 ) -> Image.Image:
-    """创建渐变图片"""
-    # 确保颜色值在 0-255 范围内
+    """创建渐变图片。"""
     color1 = tuple(max(0, min(255, c)) for c in color1)
     color2 = tuple(max(0, min(255, c)) for c in color2)
-    # 创建一个渐变的线性空间
     gradient_array = np.linspace(color1, color2, size[0])
 
-    # 将渐变数组的形状调整为 (height, width, 3)
     gradient_image = np.tile(gradient_array, (size[1], 1, 1)).astype(np.uint8)
 
     return Image.fromarray(gradient_image, "RGBA")
 
 
 def create_vertical_gradient_rect(width, height, start_color, end_color):
-    """
-    创建一个在竖直方向上渐变的矩形图像.
-
-    Args:
-        width (int): 矩形的宽度 (以像素为单位).
-        height (int): 矩形的高度 (以像素为单位).
-        start_color (tuple): 起始颜色，格式为 (R, G, B)，每个值范围为 0-255.
-        end_color (tuple): 结束颜色，格式为 (R, G, B)，每个值范围为 0-255.
-
-    Returns:
-        Image: PIL Image 对象，表示生成的渐变矩形.
-    """
+    """竖向渐变矩形生成方法。"""
     if width <= 0 or height <= 0:
         return Image.new("RGBA", (1, 1), (0, 0, 0, 0))
-    # 确保颜色不超过 0-255 的范围
     start_color = tuple(max(0, min(255, c)) for c in start_color)
     end_color = tuple(max(0, min(255, c)) for c in end_color)
 
-    # 使用 NumPy 创建一个线性渐变数组
     gradient_array = np.linspace(start_color, end_color, num=height, dtype=np.uint8)
     gradient_array = np.tile(gradient_array[:, np.newaxis, :], (1, width, 1))
 
-    # 使用 Pillow 创建图像并填充颜色
     image = Image.fromarray(gradient_array)
     return image
 
@@ -577,27 +526,21 @@ def get_brightest_and_darkest_color(
     saturation_threshold: int = 100,
     hue_difference_threshold: int = 30,
 ) -> Tuple[Tuple[int, int, int], Tuple[int, int, int]]:
-    """获取图片最亮和最暗的颜色"""
-    # 将RGB图像转换为HSV
+    """获取图片最亮和最暗的颜色。"""
     img_hsv = np.array(image.convert("HSV"))
 
-    # 设定一个阈值来定义“鲜艳的颜色”，例如饱和度大于150
     vivid_mask = img_hsv[..., 1] > saturation_threshold
 
-    # 获取饱和度较高（鲜艳）的像素索引
     vivid_pixels = img_hsv[vivid_mask]
 
     if len(vivid_pixels) < 10:
         return get_brightest_and_darkest_color(image, saturation_threshold - 10)
 
-    # 在鲜艳的像素中，根据亮度（V通道）找到最亮和最暗的颜色
     brightest_pixel = vivid_pixels[np.argmax(vivid_pixels[..., 2])]
     darkest_pixel = vivid_pixels[np.argmin(vivid_pixels[..., 2])]
 
-    # 获取最亮和最暗的颜色的色相差异
     hue_difference = abs(int(brightest_pixel[0]) - int(darkest_pixel[0]))
 
-    # 如果色相差异过小，则尝试寻找新的最暗颜色，直到色相差异大于设定阈值
     if hue_difference < hue_difference_threshold:
         possible_dark_pixels = vivid_pixels[vivid_pixels[..., 0] != brightest_pixel[0]]
         if len(possible_dark_pixels) > 0:
@@ -605,7 +548,6 @@ def get_brightest_and_darkest_color(
                 np.argmin(possible_dark_pixels[..., 2])
             ]
 
-    # 将最亮和最暗的像素从HSV转回RGB
     brightest_color = (
         Image.fromarray(np.uint8([[brightest_pixel]]), "HSV")
         .convert("RGB")
@@ -636,7 +578,6 @@ def draw_game_info(
 
     draw = ImageDraw.Draw(bg)
 
-    # 画游戏名
     draw.text(
         (260, 10),
         game_name,
@@ -644,7 +585,6 @@ def draw_game_info(
         fill=(255, 255, 255),
     )
 
-    # 画最后游玩时间
     font = ImageFont.truetype(font_light_path, 22)
     display_text = last_play_time
     draw.text(
@@ -654,7 +594,6 @@ def draw_game_info(
         fill=(150, 150, 150),
     )
 
-    # 画游戏时间
     font = ImageFont.truetype(font_light_path, 22)
     display_text = f"总时数 {game_time}"
     draw.text(
@@ -667,11 +606,9 @@ def draw_game_info(
     if completed_achievement_number is None or not total_achievement_number:
         return bg.crop((0, 0, bg.width, 110))
 
-    # 画成就  + 64 + 10
     achievement_bg = Image.new("RGBA", (860, 64), achievement_color)
     draw_achievement = ImageDraw.Draw(achievement_bg)
 
-    # 画成就进度
     font = ImageFont.truetype(font_light_path, 18)
     x = 14
     draw_achievement.text(
@@ -696,7 +633,6 @@ def draw_game_info(
     )
     achievement_bg.paste(progress_bar, (int(x), 24), progress_bar)
 
-    # 画成就图标
     x = 860 - 48 * 6 - 10 * 6
     for achievement in achievements:
         achievement_image = open_image_or_default(
@@ -726,7 +662,7 @@ def draw_player_status(
     player_name: str,
     player_id: str,
     player_description: str,
-    player_last_two_weeks_time: str,  # e.g. 10.2 小时
+    player_last_two_weeks_time: str,
     player_games: List[DrawPlayerStatusData],
     player_avatar_frame=None,
 ):
@@ -750,16 +686,13 @@ def draw_player_status(
         10,
         10,
     )
-    # 调暗背景
     enhancer = ImageEnhance.Brightness(bg)
     bg = enhancer.enhance(0.7)
-    # bg.size = (960, 1020)
     player_avatar = player_avatar.resize((200, 200))
     bg.paste(player_avatar, (40, 40))
 
     draw = ImageDraw.Draw(bg)
 
-    # 画头像外框
     draw.rectangle((40, 40, 240, 240), outline=(83, 164, 196), width=3)
 
     avatar_frame = open_optional_image(player_avatar_frame, "玩家头像框")
@@ -767,7 +700,6 @@ def draw_player_status(
         avatar_frame = avatar_frame.resize((220, 220), Image.BICUBIC)
         bg.paste(avatar_frame, (30, 30), avatar_frame.convert("RGBA"))
 
-    # 画昵称
     draw.text(
         (280, 48),
         player_name,
@@ -775,7 +707,6 @@ def draw_player_status(
         fill=(255, 255, 255),
     )
 
-    # 画ID
     draw.text(
         (280, 100),
         f"好友代码: {player_id}",
@@ -783,7 +714,6 @@ def draw_player_status(
         fill=(191, 191, 191),
     )
 
-    # 画简介
     description_parts = re.split(
         r"(\[H1\].*?\[/H1\])", player_description, flags=re.I | re.S
     )
@@ -828,7 +758,6 @@ def draw_player_status(
                 description_line_count += 1
                 description_y += line_height
 
-    # 画游戏
 
     brightest_color, darkest_color = get_brightest_and_darkest_color(player_bg)
     brightest_color = tuple(map(lambda x: x - 30 if x >= 30 else 0, brightest_color))
@@ -840,7 +769,6 @@ def draw_player_status(
     darkest_color = (darkest_color[0], darkest_color[1], darkest_color[2], 128)
     darkest_color = random_color_offset(darkest_color, 20)
 
-    # 画游戏信息
     hsv_achievement_color = rgb_to_hsv(*brightest_color[:3])
     achievement_color = tuple(
         map(
@@ -877,7 +805,6 @@ def draw_player_status(
             continue
         game_images.append(game_info)
 
-    # 画半透明黑色背景
     bg_game = Image.new(
         "RGBA", (920, 106 + sum([game_image.height + 26 for game_image in game_images]))
     )
@@ -893,11 +820,9 @@ def draw_player_status(
     )
     bg.paste(bg_game, (20, 272), bg_game)
 
-    # 画渐变条
     gradient = create_gradient_image((920, 50), brightest_color, darkest_color)
     bg.paste(gradient, (20, 272), gradient)
 
-    # 画渐变条的文字：最新动态，最近游戏
     draw.text(
         (34, 279),
         "最新动态",
@@ -936,38 +861,22 @@ def rounded_rectangle(
     border_width=0,
     border_color=(0, 0, 0),
 ):
-    """
-    将给定的Image.Image对象切割为圆角矩形。
-
-    Args:
-        image: 一个PIL Image对象。
-        radius: 圆角半径，单位为像素。
-        border: 是否需要边框，默认为False。
-        border_width: 边框宽度，单位为像素，默认为0。
-        border_color: 边框颜色，RGB元组，默认为黑色(0, 0, 0)。
-
-    Returns:
-        一个PIL Image对象，表示切割后的圆角矩形图像。
-    """
+    """圆角图片生成方法。"""
 
     width, height = image.size
 
     image_ = Image.new("RGBA", (width + 1, height + 1), (0, 0, 0, 0))
     image_.paste(image, (0, 0), image.convert("RGBA"))
 
-    # 创建一个圆角矩形的遮罩
     result = Image.new("RGBA", (width + 1, height + 1), (0, 0, 0, 0))
     mask = Image.new("L", (width + 1, height + 1), 0)
     draw = ImageDraw.Draw(mask)
     image_draw = ImageDraw.Draw(result)
 
-    # 绘制圆角矩形
     draw.rounded_rectangle((0, 0, width, height), radius=radius, fill=255)
 
-    # 应用遮罩到原始图像
     result.paste(image_, (0, 0), mask)
 
-    # 添加边框 (如果需要)
     if border:
         image_draw.rounded_rectangle(
             (0, 0, width, height),
@@ -984,7 +893,6 @@ def create_progress_bar(
 ):
     color_hsv = rgb_to_hsv(*color)
 
-    # 外条
     bar_color = tuple(
         map(int, hsv_to_rgb(color_hsv[0], color_hsv[1], color_hsv[2] * 0.8))
     )
@@ -997,7 +905,6 @@ def create_progress_bar(
         border_color=border_color,
     )
 
-    # 内条
     bar_color_top = tuple(
         map(int, hsv_to_rgb(color_hsv[0], color_hsv[1] / 2, color_hsv[2] * 5 / 2))
     )
@@ -1010,7 +917,6 @@ def create_progress_bar(
     )
     bar_image = rounded_rectangle(bar_image, 6)
 
-    # 合并
     border_image.paste(bar_image, (3, 2), bar_image)
 
     return border_image

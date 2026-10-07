@@ -19,7 +19,7 @@ class SteamGroupStore:
         self.settings = settings
 
     def is_broadcast_enabled(self, group_id: str) -> bool:
-        """读取群播报开关，未设置时默认启用。"""
+        """读取群播报开关。"""
         data = self.settings.get(group_id, "steam", {})
         if not isinstance(data, dict):
             return True
@@ -35,14 +35,14 @@ class SteamGroupStore:
 
 
 class PlayerStatusStore:
-    """独立保存跨群共用的玩家状态，避免轮询反复改写群配置。"""
+    """Steam玩家状态存储。"""
 
     def __init__(self, save_path: Path) -> None:
-        """通过公共 JSON 存储读取按 Steam ID 索引的玩家状态。"""
+        """玩家状态存储初始化方法。"""
         self.data_store = JsonDataStore(save_path, {})
 
     def get_players(self, steam_ids: list[str]) -> list[dict[str, Any]]:
-        """返回指定玩家的状态快照，供更新前后比较。"""
+        """返回指定玩家的状态快照。"""
         return [
             deepcopy(self.data_store.content[steam_id])
             for steam_id in steam_ids
@@ -52,7 +52,7 @@ class PlayerStatusStore:
     def update_by_players(
         self, players: list[dict[str, Any]], requested_ids: set[str]
     ) -> None:
-        """只更新成功返回的玩家；未返回者保留旧快照并标记过期。"""
+        """Steam玩家快照更新方法。"""
         updated = deepcopy(self.data_store.content)
         now = int(time.time())
         returned_ids = set()
@@ -83,7 +83,7 @@ class PlayerStatusStore:
     def compare(
         old_players: list[dict[str, Any]], new_players: list[dict[str, Any]]
     ) -> list[dict[str, Any]]:
-        """提取开始、结束和切换游戏的变化，首次遇到的玩家只建立基线。"""
+        """Steam游戏状态比较方法。"""
         previous = {item["steamid"]: item for item in old_players}
         changes = []
         for player in new_players:

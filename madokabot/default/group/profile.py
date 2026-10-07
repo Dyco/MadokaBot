@@ -1,4 +1,4 @@
-"""收到群事件时按需补齐群资料，并缓存群头像。"""
+"""群资料补齐模块。"""
 
 import asyncio
 from io import BytesIO
@@ -23,7 +23,7 @@ _profile_tasks: dict[int, asyncio.Task[None]] = {}
 async def ensure_group_profile(
     bot: Bot, group_id: int, group_name: str | None = None
 ) -> None:
-    """补齐群配置、群名称和头像，保留群内已有的插件数据。"""
+    """群资料补齐方法。"""
     saved = group_settings.get(group_id, GROUP_INFO_NAME)
     profile = dict(saved) if isinstance(saved, dict) else {}
 
@@ -63,7 +63,7 @@ async def ensure_group_profile(
 
 
 async def _fill_group_profile(bot: Bot, group_id: int) -> None:
-    """在后台补齐资料，结束后释放任务，让缺失字段可在下次事件重试。"""
+    """群资料后台补齐方法。"""
     try:
         await ensure_group_profile(bot, group_id)
     except Exception:
@@ -73,7 +73,7 @@ async def _fill_group_profile(bot: Bot, group_id: int) -> None:
 
 
 def schedule_group_profile(bot: Bot, group_id: int) -> None:
-    """资料缺失时安排后台补齐，同一个群同时只运行一个任务。"""
+    """群资料任务调度方法。"""
     if group_id in _profile_tasks:
         return
 
@@ -90,7 +90,7 @@ def schedule_group_profile(bot: Bot, group_id: int) -> None:
 
 @event_preprocessor
 async def _collect_event_group_profile(bot: BaseBot, event: BaseEvent) -> None:
-    """在群消息和群通知到达时补齐资料，不阻塞正常事件响应。"""
+    """群资料事件处理方法。"""
     if not isinstance(bot, Bot) or event.get_type() not in {"message", "notice"}:
         return
     group_id = getattr(event, "group_id", None)

@@ -7,11 +7,10 @@
         @font-face {
             font-family: 'CustomFont';
             src: url('{{ font_path }}') format('truetype');
-            /* 中文字体为常规静态字重，粗体由浏览器按需合成。 */
+
             font-weight: 400;
         }
 
-        /* 数字和西文使用更适合数据展示的字体，中文使用 sign/font.ttf。 */
         @font-face {
             font-family: 'RobotoFlex';
             src: url('{{ number_font_path }}') format('truetype');
@@ -27,7 +26,7 @@
         }
 
         :root {
-            /* 统一蓝紫灰配色，避免渲染页出现纯黑文字。 */
+
             --bg-gradient: linear-gradient(145deg, #e2ebf7 0%, #f8f9fc 48%, #e4e9f6 100%);
             --card-bg: rgba(248, 249, 252, 0.78);
             --main-color: #566187;
@@ -44,7 +43,7 @@
             --decoration-color: rgba(143, 175, 231, 0.32);
             --grid-color: rgba(143, 175, 231, 0.06);
             --shadow-color: rgba(86, 97, 135, 0.09);
-            /* 圆角按卡片、内板、气泡三个层级统一。 */
+
             --radius-card: 4px;
             --radius-panel: 8px;
             --radius-bubble: 16px;
@@ -98,7 +97,6 @@
                 linear-gradient(145deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0));
         }
 
-        /* 主卡与积分榜共享顶部，榜单作为主卡右侧的延伸。 */
         .card-group {
             display: flex;
             align-items: flex-start;
@@ -142,7 +140,6 @@
             z-index: 11;
         }
 
-        /* 以大小两枚柔和四角星点缀留白，保持低对比的冷蓝色。 */
         .star-decoration {
             flex-shrink: 0;
             width: 72px;
@@ -154,7 +151,6 @@
             pointer-events: none;
         }
 
-        /* 大星略高、小星略靠左且更淡，形成轻微错落。 */
         .star-large {
             transform: translateY(-3px);
         }
@@ -271,7 +267,6 @@
             gap: 10px;
         }
 
-        /* 功能图标统一为圆端细线，18px 下的实际描边约为 1.6px。 */
         .item-icon {
             width: 18px;
             height: 18px;
@@ -290,7 +285,6 @@
             font-weight: bold;
         }
 
-        /* 数字突出显示，单位与增量沿同一基线排列。 */
         .value-container {
             display: flex;
             align-items: baseline;
@@ -324,7 +318,6 @@
             background: repeating-linear-gradient(90deg, var(--main-color), var(--main-color) 1px, transparent 1px, transparent 3px);
         }
 
-        /* 榜单与对话气泡纵向排列，气泡跟随榜单高度自然下移。 */
         .ranking-column {
             display: flex;
             flex-direction: column;
@@ -334,7 +327,6 @@
             margin-top: 12px;
         }
 
-        /* 积分榜小于主卡片，每位用户分两行展示并用细线分隔。 */
         .ranking-card {
             box-sizing: border-box;
             flex-shrink: 0;
@@ -348,7 +340,6 @@
             border-radius: var(--radius-card);
         }
 
-        /* 在原有半透明底板内叠加白色圆角底板，保留外层边缘。 */
         .ranking-card::before {
             content: "";
             position: absolute;
@@ -426,7 +417,6 @@
             text-align: center;
         }
 
-        /* 前三名使用带白色数字的圆润小皇冠。 */
         .rank-crown {
             position: absolute;
             left: 0;
@@ -546,8 +536,6 @@
             text-shadow: 1px 1px 1px rgba(255, 255, 255, 0.8);
 
         }
-
-
 
         .watermark-sub {
             font-family: 'PlusJakartaSans', sans-serif;

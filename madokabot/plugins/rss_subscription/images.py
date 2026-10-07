@@ -47,7 +47,6 @@ VIDEO_CONTENT_TYPES = {
 }
 
 
-# 通过 ezgif 压缩 GIF
 @retry(stop=(stop_after_attempt(5) | stop_after_delay(30)))
 async def resize_gif(url: str, resize_ratio: int = 2) -> Optional[bytes]:
     async with aiohttp.ClientSession() as session:
@@ -79,7 +78,6 @@ async def resize_gif(url: str, resize_ratio: int = 2) -> Optional[bytes]:
         return await download_image(output_img_url, bool(get_proxy()))
 
 
-# 通过 ezgif 把视频中间 4 秒转 GIF 作为预览
 @retry(stop=(stop_after_attempt(5) | stop_after_delay(30)))
 async def get_preview_gif_from_video(url: str) -> str:
     async with aiohttp.ClientSession() as session:
@@ -122,25 +120,20 @@ async def get_preview_gif_from_video(url: str) -> str:
         return f'https:{d("img:nth-child(1)").attr("src")}'
 
 
-# 图片压缩
 async def zip_pic(url: str, content: bytes) -> Union[Image.Image, bytes, None]:
-    # 打开一个 JPEG/PNG/GIF/WEBP 图像文件
     try:
         im = Image.open(BytesIO(content))
     except UnidentifiedImageError:
         logger.error(f"无法识别图像文件 链接：[{url}]")
         return None
     if im.format != "GIF":
-        # 先把 WEBP 图像转为 PNG
         if im.format == "WEBP":
             im = im.convert("RGBA")
-        # 对图像文件进行缩小处理
         im.thumbnail((config.zip_size, config.zip_size))
         if im.mode not in {"RGB", "RGBA"}:
             im = im.convert("RGBA")
         width, height = im.size
         logger.debug(f"Resize image to: {width} x {height}")
-        # 和谐
         points = [(0, 0), (0, height - 1), (width - 1, 0), (width - 1, height - 1)]
         for x, y in points:
             im.putpixel((x, y), random.randint(0, 255))
@@ -154,7 +147,6 @@ async def zip_pic(url: str, content: bytes) -> Union[Image.Image, bytes, None]:
         return content
 
 
-# 将图片转化为 base64
 def get_pic_base64(content: Union[Image.Image, bytes, None]) -> str:
     if not content:
         return ""
@@ -167,7 +159,6 @@ def get_pic_base64(content: Union[Image.Image, bytes, None]) -> str:
     return ""
 
 
-# 去你的 pixiv.cat
 async def resolve_pixiv_cat_url(url: str) -> str:
     img_id = re.sub("https://pixiv.cat/", "", url)
     img_id = img_id[:-4]
@@ -210,7 +201,6 @@ async def download_image_detail(
                 url, headers=request_headers, proxy=get_proxy(open_proxy=proxy)
             )
             content = await resp.read()
-            # 如果图片无法获取到，直接返回
             if len(content) == 0:
                 if "pixiv.cat" in url:
                     url = await resolve_pixiv_cat_url(url=url)
@@ -219,7 +209,6 @@ async def download_image_detail(
                     f"图片[{url}]下载失败！ Content-Type: {resp.headers.get('Content-Type')} status: {resp.status}"
                 )
                 return None
-            # 如果图片格式为 SVG ，先转换为 PNG
             if resp.headers.get("Content-Type", "").startswith("image/svg+xml"):
                 next_url = str(
                     URL("https://images.weserv.nl/").with_query(f"url={url}&output=png")
@@ -249,17 +238,7 @@ async def handle_img_combo(
     rss: Optional[Rss] = None,
     headers: Optional[Mapping[str, str]] = None,
 ) -> str:
-    """'
-    下载图片并返回可用的CQ码
-
-    参数:
-        url: 需要下载的图片地址
-        img_proxy: 是否使用代理下载图片
-        rss: Rss对象
-    返回值:
-        返回当前图片的CQ码,以base64格式编码发送
-        如获取图片失败将会提示图片走丢了
-    """
+    """图片CQ码生成方法。"""
     if content := await download_image(url, img_proxy, headers):
         if rss is not None and rss.download_pic:
             _url = URL(url)
@@ -302,7 +281,7 @@ def _is_video_reference(url: str, media_type: str = "") -> bool:
 
 
 def _video_urls(item: Dict[str, Any], html: Pq) -> list[str]:
-    """从 HTML video/source 和常见 RSS 媒体字段中提取直链视频。"""
+    """订阅视频链接提取方法。"""
     urls: list[str] = []
     base_url = str(item.get("link") or "")
 
@@ -361,7 +340,7 @@ async def download_video(
     img_proxy: bool,
     headers: Optional[Mapping[str, str]] = None,
 ) -> Optional[Path]:
-    """流式下载直链视频，并在下载过程中执行统一大小限制。"""
+    """直链视频下载方法。"""
     request_headers = {"referer": f"{URL(url).scheme}://{URL(url).host}/"}
     if headers:
         request_headers.update(headers)
@@ -439,7 +418,6 @@ async def handle_video_combo(
         path.unlink(missing_ok=True)
 
 
-# 处理图片、视频
 async def handle_img(
     item: Dict[str, Any], img_proxy: bool, img_num: int, rss: Optional[Rss] = None
 ) -> str:
@@ -450,14 +428,11 @@ async def handle_img(
         cached_image = await handle_img_combo_with_content(
             item.get("gif_url", ""), item["image_content"], rss
         )
-        # 没有视频时保持原有行为：直接使用缓存图片，避免重复下载。
         if not video_urls:
             return cached_image
 
     img_str = cached_image
-    # 处理图片
     doc_img = [] if cached_image else list(html("img").items())
-    # 只发送限定数量的图片，防止刷屏
     if 0 < img_num < len(doc_img):
         img_str += f"\n因启用图片数量限制，目前只有 {img_num} 张图片："
         doc_img = doc_img[:img_num]
@@ -467,7 +442,6 @@ async def handle_img(
             url, img_proxy, rss, item.get("image_headers")
         )
 
-    # 处理视频本体；只有没有提取到可下载视频时，才回退发送封面。
     video_str = "".join(
         [
             await handle_video_combo(
@@ -490,14 +464,11 @@ async def handle_img(
     return img_str
 
 
-# 处理 bbcode 图片
 async def handle_bbcode_img(
     html: Pq, img_proxy: bool, img_num: int, rss: Optional[Rss] = None
 ) -> str:
     img_str = ""
-    # 处理图片
     img_list = re.findall(r"\[img[^]]*](.+)\[/img]", str(html), flags=re.I)
-    # 只发送限定数量的图片，防止刷屏
     if 0 < img_num < len(img_list):
         img_str += f"\n因启用图片数量限制，目前只有 {img_num} 张图片："
         img_list = img_list[:img_num]
@@ -508,12 +479,10 @@ async def handle_bbcode_img(
 
 
 def file_name_format(file_url: URL, rss: Rss) -> Tuple[Path, str]:
-    """
-    可以根据用户设置的规则来格式化文件名
-    """
+    """图片文件名格式化方法。"""
     format_rule = config.img_format or "{subs}/{name}"
     down_path = config.img_down_path or ""
-    rules = {  # 替换格式化字符串
+    rules = {
         "{subs}": Rss.handle_name(rss.name),
         "{name}": (
             (file_url.name or "image")
@@ -524,7 +493,7 @@ def file_name_format(file_url: URL, rss: Rss) -> Tuple[Path, str]:
     }
     for k, v in rules.items():
         format_rule = format_rule.replace(k, v)
-    if down_path == "":  # 如果没设置保存路径的话,就保存到默认目录下
+    if down_path == "":
         save_path = DATA_PATH / "image"
     elif Path(down_path).is_absolute():
         save_path = Path(down_path)
@@ -537,15 +506,12 @@ def file_name_format(file_url: URL, rss: Rss) -> Tuple[Path, str]:
 
 
 def save_image(content: bytes, file_url: URL, rss: Rss) -> None:
-    """
-    将压缩之前的原图保存到本地的电脑上
-    """
+    """原图保存方法。"""
     save_path, save_name = file_name_format(file_url=file_url, rss=rss)
 
     full_save_path = save_path / save_name
     try:
         full_save_path.write_bytes(content)
     except FileNotFoundError:
-        # 初次写入时文件夹不存在,需要创建一下
         save_path.mkdir(parents=True, exist_ok=True)
         full_save_path.write_bytes(content)

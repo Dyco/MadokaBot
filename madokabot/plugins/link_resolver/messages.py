@@ -1,4 +1,4 @@
-"""Resolver 的 OneBot 消息构造与目标选择。"""
+"""解析器消息工具。"""
 
 from pathlib import Path
 
@@ -22,7 +22,7 @@ NICKNAME = get_plugin_config(Config).global_prefix_nickname.strip()
 
 
 def get_resolver_message(event: GroupMessageEvent) -> str:
-    """返回可供解析器检查的文本，不包含图片和语音消息段。"""
+    """解析器消息文本提取方法。"""
     return str(event.get_message().exclude("image", "record")).strip()
 
 
@@ -46,7 +46,7 @@ def make_forward_nodes(
 
 
 def _build_forward_fallback(messages: list[MessageSegment]) -> str:
-    """提取合并转发中的文字，作为媒体发送失败时的降级内容。"""
+    """合并消息失败文本生成方法。"""
     texts: list[str] = []
     for node in messages:
         content = node.data.get("content")

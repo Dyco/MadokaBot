@@ -52,7 +52,7 @@ async def _request_with_model(
     question: str,
     mode: str,
 ) -> tuple[str, int | None]:
-    """请求指定模型并解析回答和用量。"""
+    """指定模型请求方法。"""
     payload = {
         "model": model,
         "messages": [
@@ -98,7 +98,7 @@ async def _request_with_model(
 
 
 async def chat_completion(question: str, mode: str) -> tuple[str, int | None, float, str]:
-    """依次尝试配置的模型，返回回答、用量、耗时和模型名。"""
+    """聊天模型调用方法。"""
     api_key = config.model_api_key.strip()
     if not api_key:
         raise ValueError("未配置 model_api_key，请先在环境中填写 API Key。")

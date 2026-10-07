@@ -11,21 +11,19 @@ from nonebot import logger
 from ..constants import BILIBILI_HEADER
 from ..downloads import DownloadBudget, MediaSizeLimitExceeded
 
-DOWNLOAD_PROGRESS_INTERVAL = 3.0  # 下载进度日志的最短间隔（秒）
+DOWNLOAD_PROGRESS_INTERVAL = 3.0
 
 
 async def is_ffmpeg_installed(
     ffmpeg_path: str = "ffmpeg",
     timeout: int = 10,
 ) -> bool:
-    """检查ffmpeg是否安装"""
+    """检查ffmpeg是否安装。"""
 
-    # 检查ffmpeg是否在环境变量中
     resolved_path = shutil.which(ffmpeg_path)
     if resolved_path:
         return True
 
-    # 如果仍然未找到，尝试异步调用ffmpeg命令
     try:
         process = await asyncio.create_subprocess_exec(
             ffmpeg_path,
@@ -57,13 +55,7 @@ async def download_b_file(
     max_size: int | None = None,
     budget: DownloadBudget | None = None,
 ) -> bool:
-    """
-        下载视频文件和音频文件
-    :param url:
-    :param full_file_name:
-    :param progress_callback:
-    :return:
-    """
+    """视频与音频下载方法。"""
     if not url:
         return False
 
@@ -113,22 +105,14 @@ async def merge_file_to_mp4(
     timeout: int = 1800,
     transcode_video: bool = False,
 ):
-    """
-    合并视频文件和音频文件
-    :param v_full_file_name: 视频文件路径
-    :param a_full_file_name: 音频文件路径
-    :param output_file_name: 输出文件路径
-    :param log_output: 是否显示 ffmpeg 输出日志，默认忽略
-    :return:
-    """
+    """视频与音频合并方法。"""
     logger.info(f'正在合并：{output_file_name}')
 
-    # 检查 ffmpeg 是否安装
     if not await is_ffmpeg_installed(ffmpeg_path, min(timeout, 10)):
         logger.error('ffmpeg 未安装，请先安装 ffmpeg 并配置环境变量。可参考插件主页说明。')
         raise RuntimeError(f"找不到 ffmpeg：{ffmpeg_path}")
 
-    # 使用参数列表构建命令，避免标题或路径中的字符被 shell 解释。
+    # FFmpeg参数不能交由shell解释。
     command = [ffmpeg_path, "-y", "-i", v_full_file_name]
     if a_full_file_name:
         command.extend(["-i", a_full_file_name])
@@ -182,9 +166,7 @@ async def merge_file_to_mp4(
 
 
 def extra_bili_info(video_info):
-    """
-        格式化视频信息
-    """
+    """格式化视频信息。"""
     video_state = video_info['stat']
     video_like, video_coin, video_favorite, video_share, video_view, video_danmaku, video_reply = video_state['like'], \
         video_state['coin'], video_state['favorite'], video_state['share'], video_state['view'], video_state['danmaku'], \

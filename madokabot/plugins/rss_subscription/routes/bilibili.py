@@ -10,7 +10,6 @@ from ..subscription import Rss
 from ..utils import get_author, get_summary
 
 
-# 处理正文 处理网页 tag
 @HandlerRegistry.append_handler(parsing_type="summary", rex="/bilibili/")
 async def handle_summary(rss: Rss, item: Dict[str, Any], tmp: str) -> str:
     try:

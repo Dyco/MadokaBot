@@ -21,7 +21,7 @@ _steam_query_timestamps: Dict[str, float] = {}
 
 
 def claim_query_slot(user_id: str) -> Optional[int]:
-    """占用资料查询名额；若仍在冷却中则返回剩余分钟数。"""
+    """占用资料查询名额。"""
     cooldown = config.steam_query_cooldown
     if cooldown <= 0:
         return None

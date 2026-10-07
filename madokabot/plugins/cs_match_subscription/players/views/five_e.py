@@ -28,7 +28,7 @@ from ..views.common import (
 
 
 def _five_e_rank_from_score(score: Any, stars: Any = None) -> str:
-    """按当前 5E ELO 和 S 段星数生成可读段位。"""
+    """5E段位计算方法。"""
     score_number = as_float(score)
     star_number = as_int(stars)
 
@@ -50,7 +50,7 @@ def _five_e_rank_from_score(score: Any, stars: Any = None) -> str:
 
 
 def _five_e_rank_label(score: Any, stars: Any = None, rank: Any = None) -> str:
-    """生成 5E 唯一的段位显示值，Top100 达标时优先显示排名。"""
+    """5E段位文本生成方法。"""
     score_number = as_float(score)
     star_number = as_int(stars)
     rank_number = as_int(rank)
@@ -73,7 +73,7 @@ def _five_e_rank_asset(
     rank: Any = None,
     level_id: Any = None,
 ) -> tuple[str, dict[str, str] | None]:
-    """根据当前 5E 分数/星数选择段位图，并返回图上的数字覆盖层。"""
+    """5E段位图片选择方法。"""
     score_number = as_float(score)
     star_number = as_int(stars)
     rank_number = as_int(rank)
@@ -93,7 +93,6 @@ def _five_e_rank_asset(
             if score_number <= limit:
                 return filename, None
 
-    # 主页仍可能只返回 level_id；仅用已知的 S 段 ID 作为无分数时的安全回退。
     level_assets = {
         51: "Level_S.avif",
         52: "Level_SS.avif",
@@ -109,7 +108,7 @@ def build_five_e_view(
     home: dict[str, Any],
     matches: list[Any],
 ) -> dict[str, Any]:
-    """把已确认结构的 5E player_home 数据适配为唯一卡片视图。"""
+    """5E卡片数据生成方法。"""
     career = as_dict(home.get("career"))
     season = as_dict(home.get("season_data"))
     uinfo = as_dict(home.get("uinfo"))
@@ -159,7 +158,7 @@ def build_five_e_view(
     )
     clutch_text = f"{clutch_total} 次" if clutch_total is not None else "-"
 
-    # player_home 的 modes["9"] 是唯一的当前优先排位数据源。
+    # 当前优先排位只取modes["9"]。
     elo_info = as_dict(home.get("elo_info"))
     modes = as_dict(elo_info.get("modes"))
     current_mode = as_dict(modes.get("9"))

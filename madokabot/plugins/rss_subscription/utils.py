@@ -18,7 +18,7 @@ bot_offline = False
 
 
 def get_proxy(open_proxy: bool = True) -> Optional[str]:
-    """Return the shared HTTP proxy, with the legacy RSS setting as fallback."""
+    """RSS代理配置读取方法。"""
     if not open_proxy:
         return None
 
@@ -30,7 +30,7 @@ def get_proxy(open_proxy: bool = True) -> Optional[str]:
 
 
 def get_summary(item: Dict[str, Any]) -> str:
-    """Extract an entry's HTML summary across common feedparser shapes."""
+    """订阅摘要提取方法。"""
     content = item.get("content")
     summary = (
         str(content[0].get("value", ""))
@@ -68,9 +68,7 @@ def convert_size(size_bytes: int) -> str:
 
 
 def cached_async(cache, key=hashkey):  # type: ignore
-    """
-    https://github.com/tkem/cachetools/commit/3f073633ed4f36f05b57838a3e5655e14d3e3524
-    """
+    """异步结果缓存装饰器。"""
 
     def decorator(func):  # type: ignore
         if cache is None:
@@ -82,10 +80,10 @@ def cached_async(cache, key=hashkey):  # type: ignore
 
             async def wrapper(*args, **kwargs):  # type: ignore
                 k = key(*args, **kwargs)
-                with suppress(KeyError):  # key not found
+                with suppress(KeyError):
                     return cache[k]
                 v = await func(*args, **kwargs)
-                with suppress(ValueError):  # value too large
+                with suppress(ValueError):
                     cache[k] = v
                 return v
 
@@ -124,13 +122,7 @@ async def send_msg(
     user_ids: Optional[List[str]] = None,
     group_ids: Optional[List[str]] = None,
 ) -> List[Dict[str, Any]]:
-    """
-    msg: str
-    user: List[str]
-    group: List[str]
-
-    发送消息到私聊或群聊
-    """
+    """消息发送方法。"""
     bot: Bot = await get_bot()  # type: ignore
     if bot is None:
         raise ValueError("There are not bots to get.")
@@ -144,7 +136,6 @@ async def send_msg(
     return msg_id
 
 
-# 校验正则表达式合法性
 def regex_validate(regex: str) -> bool:
     try:
         re.compile(regex)
@@ -153,7 +144,6 @@ def regex_validate(regex: str) -> bool:
         return False
 
 
-# 过滤合法好友
 async def filter_valid_user_id_list(bot: Bot, user_id_list: List[str]) -> List[str]:
     friend_list = await get_bot_friend_list(bot)
     valid_user_id_list = [
@@ -170,7 +160,6 @@ async def filter_valid_user_id_list(bot: Bot, user_id_list: List[str]) -> List[s
     return valid_user_id_list
 
 
-# 过滤合法群组
 async def filter_valid_group_id_list(bot: Bot, group_id_list: List[str]) -> List[str]:
     group_list = await get_bot_group_list(bot)
     valid_group_id_list = [
@@ -187,7 +176,6 @@ async def filter_valid_group_id_list(bot: Bot, group_id_list: List[str]) -> List
     return valid_group_id_list
 
 
-# 过滤合法频道
 async def filter_valid_guild_channel_id_list(
     bot: Bot, guild_channel_id_list: List[str]
 ) -> List[str]:

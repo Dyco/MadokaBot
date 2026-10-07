@@ -1,4 +1,4 @@
-"""加载 Steam 命令处理器，先注册会话入口检查。"""
+"""Steam命令处理器。"""
 
 from . import queries as queries
 from . import bindings as bindings

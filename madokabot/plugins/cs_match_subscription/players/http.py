@@ -40,7 +40,7 @@ async def request_json(
     retry_delay: float = 0.5,
     **kwargs: Any,
 ) -> dict[str, Any]:
-    """请求 JSON 接口，按配置重试临时错误并统一转换为业务异常。"""
+    """JSON接口请求方法。"""
     attempts = max(0, int(retry_attempts))
     retryable_statuses = {408, 425, 429, 500, 502, 503, 504}
 

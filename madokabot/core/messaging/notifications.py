@@ -6,7 +6,7 @@ from nonebot import logger
 from nonebot.adapters.onebot.v11 import Bot
 
 def _get_superuser_ids(bot: Bot) -> list[int]:
-    """从机器人配置中读取有效的管理员账号。"""
+    """管理员账号读取方法。"""
     configured_ids: Any = getattr(bot.config, "superusers", ())
     if isinstance(configured_ids, (str, int)):
         configured_ids = (configured_ids,)
@@ -23,7 +23,7 @@ def _get_superuser_ids(bot: Bot) -> list[int]:
 
 
 async def send_message_to_admin(message: str, bot: Bot) -> None:
-    """向配置中的第一个超级用户发送私聊消息。"""
+    """管理员通知方法。"""
     superuser_ids = _get_superuser_ids(bot)
     if not superuser_ids:
         logger.warning("未配置 SUPERUSERS，无法发送管理员私聊消息")

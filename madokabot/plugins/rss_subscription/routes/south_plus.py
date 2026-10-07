@@ -11,7 +11,6 @@ from ..subscription import Rss
 from ..utils import get_summary
 
 
-# 处理正文 处理网页 tag
 @HandlerRegistry.append_handler(parsing_type="summary", rex="(south|spring)-plus.net")
 async def handle_summary(item: Dict[str, Any], tmp: str) -> str:
     rss_str = handle_bbcode(html=Pq(get_summary(item)))
@@ -19,10 +18,8 @@ async def handle_summary(item: Dict[str, Any], tmp: str) -> str:
     return tmp
 
 
-# 处理图片
 @HandlerRegistry.append_handler(parsing_type="picture", rex="(south|spring)-plus.net")
 async def handle_picture(rss: Rss, item: Dict[str, Any], tmp: str) -> str:
-    # 判断是否开启了只推送标题
     if rss.only_title:
         return ""
 
@@ -37,15 +34,12 @@ async def handle_picture(rss: Rss, item: Dict[str, Any], tmp: str) -> str:
     except Exception as e:
         logger.warning(f"{rss.name} 没有正文内容！{e}")
 
-    # 判断是否开启了只推送图片
     return f"{res}\n" if rss.only_pic else f"{tmp + res}\n"
 
 
-# 处理来源
 @HandlerRegistry.append_handler(parsing_type="source", rex="(south|spring)-plus.net")
 async def handle_source(item: Dict[str, Any]) -> str:
     source = item["link"]
-    # issue 36 处理链接
     if re.search(r"^//", source):
         source = source.replace("//", "https://")
     return f"链接：{source}\n"

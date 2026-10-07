@@ -1,7 +1,6 @@
-"""加载 CS 命令处理器，先注册主命令入口。"""
+"""加载 CS 命令处理器。"""
 
-# 这些导入负责注册处理器，必须保持主命令检查在前。
-# isort: skip_file
+# 主命令检查必须先于子命令处理器注册。
 from . import queries as queries
 from . import settings as settings
 from . import players as players

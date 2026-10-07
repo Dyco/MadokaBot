@@ -5,7 +5,7 @@ import httpx
 
 try:
     import execjs
-except ImportError:  # PyExecJS 是抖音签名功能的可选依赖。
+except ImportError:
     execjs = None
 
 header = {
@@ -14,15 +14,10 @@ header = {
 
 
 def generate_x_bogus_url(url, headers):
-    """
-            生成抖音A-Bogus签名
-            :param url: 视频链接
-            :return: 包含X-Bogus签名的URL
-            """
+    """A-Bogus签名生成方法。"""
     if execjs is None:
         raise RuntimeError("抖音解析需要安装 PyExecJS 及可用的 JavaScript 运行时")
 
-    # 调用 JavaScript 函数
     query = urllib.parse.urlparse(url).query
     abogus_file_path = Path(__file__).with_name("a-bogus.js")
     with abogus_file_path.open("r", encoding="utf-8") as abogus_file:
@@ -30,16 +25,11 @@ def generate_x_bogus_url(url, headers):
     abogus = execjs.compile(abogus_file_path_transcoding).call(
         "generate_a_bogus", query, headers["User-Agent"]
     )
-    # logger.info('生成的A-Bogus签名为: {}'.format(abogus))
     return url + "&a_bogus=" + abogus
 
 
 async def dou_transfer_other(dou_url, proxy: str | None = None):
-    """
-        图集临时解决方案
-    :param dou_url:
-    :return:
-    """
+    """抖音图集获取方法。"""
     async with httpx.AsyncClient(
         timeout=20,
         follow_redirects=True,
@@ -58,12 +48,10 @@ async def dou_transfer_other(dou_url, proxy: str | None = None):
     if not item_id or not item_type:
         raise ValueError("备用 API 未返回 item_id 或 type")
 
-    # 备用API成功解析图集，直接处理
     if item_type == "图集":
         item = data.get("item", { })
         cover = item.get("cover", "")
         images = item.get("images", [])
-        # 只有在有图片的情况下才发送
         if images:
             author = data.get("author", { }).get("name", "")
             title = data.get("item", { }).get("title", "")

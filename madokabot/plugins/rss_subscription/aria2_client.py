@@ -53,7 +53,7 @@ def _rpc_params(params: Sequence[Any]) -> List[Any]:
 
 
 async def _rpc_call(method: str, params: Sequence[Any] = ()) -> Any:
-    """调用 aria2 JSON-RPC 并统一转换请求错误。"""
+    """aria2接口调用方法。"""
     payload = {
         "jsonrpc": "2.0",
         "id": "madokabot-rss",
@@ -136,11 +136,10 @@ async def add_download(
     url: str,
     proxy: Optional[str] = None,
 ) -> tuple[str, Optional[bytes]]:
-    """把磁力链接或 torrent 地址提交给 aria2，并保留原种子内容。"""
+    """aria2下载提交方法。"""
     options = _download_options(proxy)
     torrent_content: Optional[bytes] = None
     if url.lower().startswith("magnet:?"):
-        # 元数据本身仍需下载，实际 BT 任务保持暂停直至完成大小校验。
         options["pause-metadata"] = "true"
         result = await _rpc_call("aria2.addUri", [[url], options])
     else:

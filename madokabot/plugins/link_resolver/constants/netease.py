@@ -1,6 +1,4 @@
-"""
-NCM获取歌曲信息链接
-"""
+"""NCM获取歌曲信息链接。"""
 NETEASE_API_CN = 'https://www.markingchen.ink'
 
 """

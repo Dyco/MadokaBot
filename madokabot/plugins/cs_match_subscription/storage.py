@@ -27,14 +27,13 @@ from .models import (
 )
 
 _lock = asyncio.Lock()
-# 群设置中保存 HLTV 赛事 ID 列表的标签名。
 HLTV_SUB_GROUP_TAG = "hltv_sub"
 HLTV_EVENT_SETTINGS_NAME = "hltv_event_settings"
 _hltv_sub_store = JsonDataStore(HLTV_SUB_PATH, {})
 
 
 def _setting_bool(value: Any, default: bool) -> bool:
-    """读取群配置中的布尔值，并兼容旧配置中的字符串。"""
+    """读取群配置中的布尔值。"""
     if isinstance(value, bool):
         return value
     if isinstance(value, str):
@@ -47,7 +46,7 @@ def _setting_bool(value: Any, default: bool) -> bool:
 
 
 def get_hltv_event_settings(group_id: str | int) -> dict[str, bool]:
-    """读取群组赛事推送设置，竞猜默认开启并保留群组显式设置。"""
+    """群赛事设置读取方法。"""
     raw_settings = group_settings.get(group_id, HLTV_EVENT_SETTINGS_NAME, {})
     if not isinstance(raw_settings, dict):
         raw_settings = {}
@@ -79,7 +78,7 @@ def set_hltv_event_push_each_map(
 
 
 def toggle_hltv_event_start_notification(group_id: str | int) -> bool:
-    """切换群组赛事开始通知，并返回切换后的状态。"""
+    """切换群组赛事开始通知。"""
     settings = get_hltv_event_settings(group_id)
     settings["notify_start"] = not settings["notify_start"]
     group_settings.set(group_id, HLTV_EVENT_SETTINGS_NAME, settings)
@@ -87,7 +86,7 @@ def toggle_hltv_event_start_notification(group_id: str | int) -> bool:
 
 
 def toggle_hltv_event_prediction(group_id: str | int) -> bool:
-    """切换群组赛事竞猜，并返回切换后的状态。"""
+    """切换群组赛事竞猜。"""
     settings = get_hltv_event_settings(group_id)
     settings["prediction_enabled"] = not settings["prediction_enabled"]
     group_settings.set(group_id, HLTV_EVENT_SETTINGS_NAME, settings)
@@ -107,7 +106,7 @@ def _write(value: dict[str, dict[str, Any]]) -> None:
 
 
 def _add_group_event_tag(target: dict[str, str], event_id: str) -> None:
-    """将赛事 ID 写入群组的 HLTV 赛事推送标签。"""
+    """群赛事标签添加方法。"""
     if target.get("kind") != "group" or not target.get("id"):
         return
 
@@ -128,7 +127,7 @@ def _add_group_event_tag(target: dict[str, str], event_id: str) -> None:
 
 
 def _remove_group_event_tag(target: dict[str, str], event_id: str) -> None:
-    """从群组的 HLTV 赛事推送标签中移除赛事 ID。"""
+    """群赛事标签移除方法。"""
     if target.get("kind") != "group" or not target.get("id"):
         return
 
@@ -176,7 +175,7 @@ def _remove_event_from_group_tags(event_id: str) -> None:
 
 
 def _event_name(entry: dict[str, Any], event_id: str) -> str:
-    """读取赛事显示名称，缺失时回退到赛事 ID。"""
+    """读取赛事显示名称。"""
     name = str(entry.get("event_name") or "").strip()
     if not name:
         event_data = entry.get("event_data")
@@ -222,7 +221,7 @@ async def subscribe_event(
     event_end: str = "",
     match_refs: list[dict[str, str]] | None = None,
 ) -> bool:
-    """添加赛事订阅，并记录订阅时已经存在的比赛基线。"""
+    """添加赛事订阅。"""
     async with _lock:
         data = _read()
         normalized_event_id = str(event_id).strip()
@@ -343,11 +342,7 @@ async def add_event_target_if_exists(
     event_id: str,
     target: dict[str, str],
 ) -> tuple[bool, dict[str, Any]] | None:
-    """如果本地已有赛事订阅，只追加推送目标并返回本地快照。
-
-    返回 ``None`` 表示本地没有该赛事，调用方此时才需要访问 HLTV；
-    已结束的赛事不会重新打开订阅，也不会追加推送目标。
-    """
+    """已有赛事订阅目标添加方法。"""
     async with _lock:
         data = _read()
         normalized_event_id = str(event_id).strip()
@@ -404,7 +399,7 @@ async def unsubscribe_event(
 
 
 async def unsubscribe_all_events(target: dict[str, str]) -> int:
-    """移除当前目标对全部赛事的订阅，返回实际退订数量。"""
+    """移除当前目标对全部赛事的订阅。"""
     async with _lock:
         data = _read()
         removed = 0
@@ -517,6 +512,19 @@ async def update_event_state(
             stored_matches = entry.get("matches")
             if isinstance(stored_matches, dict):
                 _merge_prediction_team_labels(matches, stored_matches)
+                # 补结算可能先完成，旧快照不能撤销结算或重开竞猜。
+                for match_id, state in matches.items():
+                    stored = stored_matches.get(match_id)
+                    if (
+                        isinstance(state, dict)
+                        and isinstance(stored, dict)
+                        and stored.get("prediction_settled")
+                    ):
+                        state["prediction_settled"] = True
+                        state["prediction_closed"] = True
+                        state["prediction_open"] = False
+                        if stored.get("winner_name"):
+                            state["winner_name"] = stored["winner_name"]
             entry["matches"] = matches
         if status in EVENT_STATUSES:
             entry["status"] = status
@@ -536,7 +544,7 @@ def _target_in_entry(entry: dict[str, Any], target: dict[str, str]) -> bool:
 
 
 async def list_open_prediction_matches(group_id: str | int) -> list[dict[str, Any]]:
-    """读取当前群开放竞猜及其稳定编号，并补齐缺失的编号。"""
+    """开放竞猜查询方法。"""
     normalized_group_id = str(group_id).strip()
     if not get_hltv_event_settings(normalized_group_id)["prediction_enabled"]:
         return []
@@ -549,7 +557,7 @@ async def list_open_prediction_matches(group_id: str | int) -> list[dict[str, An
 
 
 def _allocate_prediction_team_labels(data: dict[str, Any]) -> bool:
-    """读取各赛事目标的竞猜开关，只为已开启的群分配编号。"""
+    """各群竞猜编号分配方法。"""
     groups = {
         str(target["id"])
         for entry in data.values()
@@ -568,7 +576,7 @@ def _merge_prediction_team_labels(
     matches: dict[str, Any],
     stored_matches: dict[str, Any],
 ) -> None:
-    """保留已预留的槽位和数字模式，避免较早取得的轮询快照覆盖编号。"""
+    """竞猜编号合并方法。"""
     for match_id, state in matches.items():
         stored = stored_matches.get(match_id)
         if not isinstance(state, dict) or not isinstance(stored, dict):
@@ -637,7 +645,7 @@ async def reserve_prediction_team_labels(
     event_id: str,
     matches: dict[str, Any],
 ) -> dict[str, list[dict[str, Any]]]:
-    """为本轮开放竞猜预留各群编号，但不提前提交通知和竞猜开关状态。"""
+    """竞猜编号预留方法。"""
     async with _lock:
         data = _read()
         entry = data.get(f"event:{event_id}")
@@ -649,7 +657,7 @@ async def reserve_prediction_team_labels(
         snapshot = deepcopy(data)
         snapshot[f"event:{event_id}"]["matches"] = matches
         _allocate_prediction_team_labels(snapshot)
-        # 只持久化编号，发送失败时仍可重试开放通知；预留编号不会被其他赛事抢占。
+        # 先预留编号，发送失败后仍可重试通知。
         for key, snapshot_entry in snapshot.items():
             if (
                 not isinstance(snapshot_entry, dict)
@@ -712,3 +720,29 @@ async def get_prediction_match_context(
                 "state": deepcopy(state),
             }
     return None
+
+
+async def get_prediction_settlement_state(event_id: str, match_id: str) -> dict[str, Any]:
+    """竞猜结算快照读取方法。"""
+    async with _lock:
+        entry = _read().get(f"event:{event_id}")
+        matches = entry.get("matches") if isinstance(entry, dict) else None
+        state = matches.get(str(match_id)) if isinstance(matches, dict) else None
+        return deepcopy(state) if isinstance(state, dict) else {}
+
+
+async def mark_prediction_settled(event_id: str, match_id: str, winner_name: str) -> None:
+    """竞猜结算状态同步方法。"""
+    async with _lock:
+        data = _read()
+        entry = data.get(f"event:{event_id}")
+        matches = entry.get("matches") if isinstance(entry, dict) else None
+        state = matches.get(str(match_id)) if isinstance(matches, dict) else None
+        if not isinstance(state, dict):
+            return
+        state["prediction_settled"] = True
+        state["prediction_closed"] = True
+        state["prediction_open"] = False
+        if winner_name:
+            state["winner_name"] = winner_name
+        _write(data)

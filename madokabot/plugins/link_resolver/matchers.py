@@ -23,7 +23,7 @@ def _resolver_rule(pattern: str) -> Rule:
 
 
 def _on_group_resolver(pattern: str, **kwargs):
-    """注册仅匹配群消息的平台 Resolver matcher。"""
+    """群解析器注册方法。"""
     return on_type(
         GroupMessageEvent,
         rule=_resolver_rule(pattern),

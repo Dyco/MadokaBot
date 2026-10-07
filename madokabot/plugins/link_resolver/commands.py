@@ -161,7 +161,7 @@ def _split_control_tokens(content: Match[str]) -> list[str]:
 
 
 def _is_control_command(tokens: list[str]) -> bool:
-    """判断参数是否属于 Resolver 开关控制命令。"""
+    """解析器控制命令检查方法。"""
     if not tokens:
         return False
     first = tokens[0].casefold()
@@ -204,7 +204,7 @@ async def _apply_control_command(
     event: GroupMessageEvent,
     tokens: list[str],
 ) -> None:
-    """应用 Resolver 的全局、平台和内容类型开关。"""
+    """解析器开关设置方法。"""
     target_id = _event_target_id(event)
 
     enabled = tokens[0].casefold() in OPEN_ACTIONS
@@ -267,7 +267,7 @@ async def _apply_control_command(
 
 
 async def resolver_access_rule(_: Bot, event: Event) -> bool:
-    """仅允许白名单群使用 Resolver，私聊消息直接忽略。"""
+    """解析器群访问规则。"""
     return isinstance(event, GroupMessageEvent) and is_group_whitelisted(
         event.group_id
     )
@@ -391,7 +391,7 @@ async def view_resolver_status(
     _: Bot,
     event: GroupMessageEvent,
 ) -> None:
-    """渲染并发送当前目标的 Resolver 内容状态表。"""
+    """解析器状态展示方法。"""
     target_id = _event_target_id(event)
     scope_name = f"当前群组 {event.group_id}"
 
@@ -414,7 +414,7 @@ async def handle_resolver_command(
     content: Match[str],
     result: Arparma,
 ) -> None:
-    """处理主命令；链接由对应的平台 matcher 继续处理。"""
+    """解析器命令处理方法。"""
     if result.subcommands:
         return
     tokens = _split_control_tokens(content) if content.available else []

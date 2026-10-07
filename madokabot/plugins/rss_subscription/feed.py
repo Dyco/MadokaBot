@@ -108,7 +108,6 @@ async def save_first_time_fetch(rss: Rss, new_rss: Dict[str, Any]) -> None:
     logger.info(f"{rss.name} 第一次抓取成功！")
 
 
-# 抓取 feed，读取缓存，检查更新，对更新进行处理
 async def start(rss: Rss) -> None:
     bot: Bot = await get_bot()  # type: ignore
     if bot is None:
@@ -120,14 +119,12 @@ async def start(rss: Rss) -> None:
         logger.info(f"{rss.name} 没有 RSS 白名单群组，跳过本次更新")
         return
 
-    # 先检查订阅者是否合法
     rss = await filter_and_validate_rss(rss, bot)
     if not any([rss.user_id, rss.group_id, rss.guild_channel_id]):
         await auto_stop_and_notify_admin(rss, bot)
         return
 
     new_rss, cached = await fetch_rss(rss)
-    # 检查是否存在rss记录
     _file = DATA_PATH / f"{Rss.handle_name(rss.name)}.json"
     first_time_fetch = not _file.exists()
 
@@ -209,10 +206,8 @@ async def fetch_rss_backup(
     return d
 
 
-# 获取 RSS 并解析为 json
 async def fetch_rss(rss: Rss) -> Tuple[Dict[str, Any], bool]:
     rss_url = rss.get_url()
-    # 对本机部署的 RSSHub 不使用代理
     local_host = ["localhost", "127.0.0.1"]
     proxy = get_proxy(rss.img_proxy) if URL(rss_url).host not in local_host else None
 

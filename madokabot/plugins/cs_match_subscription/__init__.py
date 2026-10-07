@@ -36,6 +36,5 @@ __plugin_meta__ = PluginMetadata(
     supported_adapters=inherit_supported_adapters("nonebot_plugin_alconna"),
 )
 
-# 分别注册命令处理器和定时任务。
 from . import commands as commands  # noqa: E402,F401
 from . import scheduler as scheduler  # noqa: E402,F401

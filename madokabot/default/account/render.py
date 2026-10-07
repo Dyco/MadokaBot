@@ -19,7 +19,7 @@ _SHANGHAI_TZ = ZoneInfo("Asia/Shanghai")
 
 
 def format_rank_points(points: int) -> str:
-    """缩写榜单积分，带单位时保留一位小数，超出 B 后使用科学计数法。"""
+    """排名积分格式化方法。"""
     for divisor, unit in (
         (1, ""),
         (1_000, "K"),
@@ -33,7 +33,7 @@ def format_rank_points(points: int) -> str:
 
 
 def mask_user_id(user_id: str) -> str:
-    """QQ 号仅展示前后两位，中间统一替换为两个星号。"""
+    """用户编号掩码方法。"""
     return f"{user_id[:2]}**{user_id[-2:]}"
 
 
@@ -126,7 +126,7 @@ async def render_sign_card(
 
 
 def get_sign_quote(favorability: int) -> str:
-    """根据当前时间与好感度选择一句台词。"""
+    """签到台词选择方法。"""
     hour = datetime.now(_SHANGHAI_TZ).hour
     if 5 <= hour < 7:
         time_tag = "early morning"

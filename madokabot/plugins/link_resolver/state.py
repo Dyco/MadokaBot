@@ -12,7 +12,6 @@ LINK_RESOLVER_DATA_NAME = PLUGIN_NAME
 COMMENT_MODE_KEY = "comment_mode"
 RESOLVER_CONTROL_KEY = "resolver_control"
 
-# 支持群组控制的平台标识。
 RESOLVER_KEYS = (
     "bilibili",
     "douyin",
@@ -25,7 +24,6 @@ RESOLVER_KEYS = (
     "kugou",
     "weibo",
 )
-# 可独立控制的解析内容类型。
 CONTENT_KEYS = ("image", "video", "comment")
 
 current_resolver_key: ContextVar[str | None] = ContextVar(
@@ -39,7 +37,7 @@ current_resolver_target: ContextVar[str | None] = ContextVar(
 
 
 def _normalize_comment_mode_map(value: Any) -> dict[str, str]:
-    """清洗评论模式，仅保留有效的群组和模式。"""
+    """清洗评论模式。"""
     if not isinstance(value, dict):
         return {}
     return {
@@ -50,7 +48,7 @@ def _normalize_comment_mode_map(value: Any) -> dict[str, str]:
 
 
 def _default_resolver_control() -> dict[str, Any]:
-    """返回一个默认全部开启的 Resolver 控制状态。"""
+    """解析器默认开关状态。"""
     return {
         "resolver_enabled": True,
         "resolver_overrides": {},
@@ -60,7 +58,7 @@ def _default_resolver_control() -> dict[str, Any]:
 
 
 def _normalize_resolver_control_map(value: Any) -> dict[str, dict[str, Any]]:
-    """清洗 Resolver 控制状态，忽略未知平台和内容类型。"""
+    """解析器开关状态整理方法。"""
     if not isinstance(value, dict):
         return {}
 
@@ -107,7 +105,7 @@ def _normalize_resolver_control_map(value: Any) -> dict[str, dict[str, Any]]:
 
 
 def _load_group_state() -> tuple[dict[str, str], dict[str, dict[str, Any]]]:
-    """从群组配置 JSON 读取 Resolver 状态。"""
+    """群解析器状态读取方法。"""
     comment_modes: dict[str, str] = {}
     control_map: dict[str, dict[str, Any]] = {}
 
@@ -130,7 +128,7 @@ def _save_group_state(
     comment_modes: dict[str, str],
     control_map: dict[str, dict[str, Any]],
 ) -> None:
-    """将 Resolver 状态合并写入群组配置 JSON。"""
+    """群解析器状态保存方法。"""
     target_ids = set(comment_modes) | set(control_map)
     for target_id in target_ids:
         raw_data = group_settings.get(target_id, LINK_RESOLVER_DATA_NAME, {})
@@ -157,7 +155,7 @@ def save_comment_mode_map(mode_map: dict[str, str]) -> None:
 
 
 def save_resolver_control_map() -> None:
-    """保存群组 Resolver 控制状态到群组配置 JSON。"""
+    """解析器控制状态保存方法。"""
     normalized_map = _normalize_resolver_control_map(resolver_control_map)
     resolver_control_map.clear()
     resolver_control_map.update(normalized_map)
@@ -176,7 +174,7 @@ def _get_resolver_control(target_id: int | str | None) -> dict[str, Any] | None:
 
 
 def _ensure_resolver_control(target_id: int | str) -> dict[str, Any]:
-    """创建并返回指定群组的 Resolver 控制状态。"""
+    """解析器控制状态初始化方法。"""
     key = str(target_id)
     if key not in resolver_control_map:
         resolver_control_map[key] = _default_resolver_control()
@@ -212,7 +210,7 @@ def is_content_enabled(
 
 
 def set_all_resolvers_enabled(target_id: int | str, enabled: bool) -> None:
-    """设置群组的全局解析开关，并清除平台覆盖状态。"""
+    """设置群组的全局解析开关。"""
     control = _ensure_resolver_control(target_id)
     control["resolver_enabled"] = enabled
     control["resolver_overrides"].clear()
@@ -232,7 +230,7 @@ def set_all_content_enabled(
     content_key: str,
     enabled: bool,
 ) -> None:
-    """设置群组的全局内容开关，并清除对应的平台覆盖状态。"""
+    """解析器全局开关设置方法。"""
     control = _ensure_resolver_control(target_id)
     control["content_enabled"][content_key] = enabled
     for overrides in control["content_overrides"].values():

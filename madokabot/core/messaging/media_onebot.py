@@ -22,14 +22,14 @@ from madokabot.core.files.cleanup import register_cleanup_path
 from .media_files import LocalMedia
 
 VIDEO_SEND_RETENTION_SECONDS = 300
-# 沿用历史缓存目录，避免迁移后遗留正在使用的媒体文件。
+# 暂存目录沿用历史路径。
 VIDEO_SEND_CACHE_DIR = store.get_cache_dir("madoka_bundle") / "video_send"
 VIDEO_SEND_CACHE_DIR.mkdir(parents=True, exist_ok=True)
 register_cleanup_path("common-video-send", VIDEO_SEND_CACHE_DIR)
 
 
 class OneBotMediaSender:
-    """向 OneBot 发送视频与文件，并管理视频暂存。"""
+    """向 OneBot 发送视频与文件。"""
 
     def __init__(self, upload_timeout: int) -> None:
         """保存上传超时并跟踪暂存清理任务。"""
@@ -37,7 +37,7 @@ class OneBotMediaSender:
         self._cleanup_tasks: set[asyncio.Task[None]] = set()
 
     async def _stage_video_for_send(self, media: LocalMedia) -> LocalMedia:
-        """为 OneBot 保留独立文件，避免发送端尚未读取时源文件已被清理。"""
+        """视频发送暂存方法。"""
         staged_path = VIDEO_SEND_CACHE_DIR / f"{uuid.uuid4().hex}{media.path.suffix}"
         try:
             await asyncio.to_thread(os.link, media.path, staged_path)

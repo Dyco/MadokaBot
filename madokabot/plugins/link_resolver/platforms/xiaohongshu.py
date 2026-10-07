@@ -47,11 +47,7 @@ from .video import (
 @resolve_handler
 @resolve_controller
 async def xiaohongshu(bot: Bot, event: GroupMessageEvent):
-    """
-        小红书解析
-    :param event:
-    :return:
-    """
+    """小红书解析方法。"""
     message_text = get_resolver_message(event).replace("&amp;", "&")
     url_match = re.search(
         r"https?://(?:xhslink|(?:www\.)?xiaohongshu)\.com/"
@@ -61,7 +57,6 @@ async def xiaohongshu(bot: Bot, event: GroupMessageEvent):
     if not url_match:
         await xhs.finish("未识别到有效的小红书链接。")
     msg_url = url_match.group(0)
-    # 如果没有设置xhs的ck就结束，因为获取不到
     xhs_ck = getattr(global_config, "xhs_ck", "")
     if xhs_ck == "":
         logger.error(global_config)
@@ -76,7 +71,6 @@ async def xiaohongshu(bot: Bot, event: GroupMessageEvent):
             ),
         )
         return
-    # 请求头
     headers = {
         "accept": (
             "text/html,application/xhtml+xml,application/xml;q=0.9,"
@@ -103,10 +97,8 @@ async def xiaohongshu(bot: Bot, event: GroupMessageEvent):
     if not xhs_id:
         await xhs.finish("无法从小红书链接中提取笔记 ID。")
     xhs_id = xhs_id.group(1)
-    # 解析 URL 参数
     parsed_url = urlparse(msg_url)
     params = parse_qs(parsed_url.query)
-    # 提取 xsec_source 和 xsec_token
     xsec_source = params.get("xsec_source", [None])[0] or "pc_feed"
     xsec_token = params.get("xsec_token", [None])[0]
 
@@ -117,7 +109,6 @@ async def xiaohongshu(bot: Bot, event: GroupMessageEvent):
         timeout=20,
         trust_env=False,
     ).text
-    # response_json = re.findall('window.__INITIAL_STATE__=(.*?)</script>', html)[0]
     try:
         response_json = re.findall("window.__INITIAL_STATE__=(.*?)</script>", html)[0]
     except IndexError:
@@ -148,7 +139,6 @@ async def xiaohongshu(bot: Bot, event: GroupMessageEvent):
     aio_task = []
     if type == "normal":
         image_list = note_data["imageList"]
-        # 批量下载
         async with aiohttp.ClientSession(
             proxy=XIAOHONGSHU_PROXY,
             trust_env=False,
@@ -166,13 +156,10 @@ async def xiaohongshu(bot: Bot, event: GroupMessageEvent):
                 )
             links_path = await asyncio.gather(*aio_task)
     elif type == "video":
-        # 这是一条解析有水印的视频
         logger.info(note_data["video"])
 
         video_url = note_data["video"]["media"]["stream"]["h264"][0]["masterUrl"]
 
-        # ⚠️ 废弃，解析无水印视频video.consumer.originVideoKey
-        # video_url = f"http://sns-video-bd.xhscdn.com/{note_data['video']['consumer']['originVideoKey']}"
         await send_forward(bot, event, xhs_info_node)
         if _skip_video_for_duration(
             "小红书",
@@ -190,13 +177,11 @@ async def xiaohongshu(bot: Bot, event: GroupMessageEvent):
             return
         except ValueError as exc:
             await xhs.finish(f"视频无法下载：{exc}")
-        # await xhs.send(Message(MessageSegment.video(path)))
         await send_resolved_video(event, path, XIAOHONGSHU_PROXY)
         return
     else:
         await xhs.finish(f"暂不支持的小红书内容类型：{type}")
 
-    # 说明和图片统一放进同一条合并转发。
     xhs_forward_nodes = [xhs_info_node]
     xhs_forward_nodes.extend(
         make_forward_nodes(
@@ -208,6 +193,5 @@ async def xiaohongshu(bot: Bot, event: GroupMessageEvent):
         )
     )
     await send_forward(bot, event, xhs_forward_nodes)
-    # 清除图片
     for temp in links_path:
         Path(temp).unlink(missing_ok=True)

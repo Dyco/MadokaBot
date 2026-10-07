@@ -42,7 +42,6 @@ async def handle_rsshub_routes(
         return
 
     rsshub_url = URL(str(config.rsshub))
-    # 对本机部署的 RSSHub 不使用代理
     local_host = [
         "localhost",
         "127.0.0.1",

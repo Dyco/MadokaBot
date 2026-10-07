@@ -49,7 +49,6 @@ async def wb(bot: Bot, event: GroupMessageEvent):
     weibo_id = None
     reg = r'(jumpUrl|qqdocurl)": ?"(.*?)"'
 
-    # 处理卡片问题
     if "com.tencent.structmsg" in message or "com.tencent.miniapp" in message:
         match = re.search(reg, message)
         logger.debug(f"微博卡片链接匹配结果: {match}")
@@ -58,36 +57,26 @@ async def wb(bot: Bot, event: GroupMessageEvent):
             logger.debug(f"微博卡片展开链接: {get_url}")
             if get_url:
                 message = json.loads('"' + get_url + '"')
-    # logger.info(message)
-    # 判断是否包含 "m.weibo.cn"
     if "m.weibo.cn" in message:
-        # https://m.weibo.cn/detail/4976424138313924
         match = re.search(r"(?<=detail/)[A-Za-z\d]+", message) or re.search(
             r"(?<=m.weibo.cn/)[A-Za-z\d]+/[A-Za-z\d]+",
             message,
         )
         weibo_id = match.group(0) if match else None
 
-    # 判断是否包含 "weibo.com/tv/show" 且包含 "mid="
     elif "weibo.com/tv/show" in message and "mid=" in message:
-        # https://weibo.com/tv/show/1034:5007449447661594?mid=5007452630158934
         match = re.search(r"(?<=mid=)[A-Za-z\d]+", message)
         if match:
             weibo_id = mid2id(match.group(0))
 
-    # 判断是否包含 "weibo.com"
     elif "weibo.com" in message:
-        # https://weibo.com/1707895270/5006106478773472
         match = re.search(r"(?<=weibo.com/)[A-Za-z\d]+/[A-Za-z\d]+", message)
         weibo_id = match.group(0) if match else None
 
-    # 无法获取到id则返回失败信息
     if not weibo_id:
         await weibo.finish(Message("解析失败：无法获取到wb的id"))
-    # 最终获取到的 id
     weibo_id = weibo_id.split("/")[1] if "/" in weibo_id else weibo_id
     logger.info(weibo_id)
-    # 请求数据
     headers = {
         "accept": (
             "text/html,application/xhtml+xml,application/xml;q=0.9,"
@@ -119,7 +108,6 @@ async def wb(bot: Bot, event: GroupMessageEvent):
             "page_info",
         ]
     )
-    # 微博说明和图片统一放进同一条合并转发；视频本体仍走统一的视频发送流程。
     weibo_forward_nodes = [
         make_forward_nodes(
             bot.self_id,
@@ -156,7 +144,6 @@ async def wb(bot: Bot, event: GroupMessageEvent):
             )
         )
     await send_forward(bot, event, weibo_forward_nodes)
-    # 清除图片
     for temp in links_path:
         Path(temp).unlink(missing_ok=True)
     if isinstance(page_info, dict):

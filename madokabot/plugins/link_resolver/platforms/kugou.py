@@ -37,11 +37,9 @@ from .runtime import (
 async def kugou(bot: Bot, event: GroupMessageEvent):
     """解析酷狗音乐分享链接。"""
     message = get_resolver_message(event)
-    # logger.info(message)
     reg1 = r"https?://.*?kugou\.com.*?(?=\s|$|\n)"
     reg2 = r'jumpUrl":\s*"(https?:\\/\\/[^"]+)"'
     reg3 = r'jumpUrl":\s*"(https?://[^"]+)"'
-    # 处理卡片问题
     if "com.tencent.structmsg" in message:
         match = re.search(reg2, message)
         if match:
@@ -69,7 +67,6 @@ async def kugou(bot: Bot, event: GroupMessageEvent):
         match = re.search(reg1, message)
         url = match.group()
 
-        # 使用 httpx 获取 URL 的标题
     response = httpx.get(
         url,
         follow_redirects=True,
@@ -82,7 +79,7 @@ async def kugou(bot: Bot, event: GroupMessageEvent):
         get_name = r"<title>(.*?)_高音质在线试听"
         name = re.search(get_name, title)
         if name:
-            kugou_title = name.group(1)  # 只输出歌曲名和歌手名的部分
+            kugou_title = name.group(1)
             kugou_vip_data = httpx.get(
                 KUGOU_TEMP_API.replace("{}", kugou_title),
                 headers=COMMON_HEADER,
@@ -90,12 +87,10 @@ async def kugou(bot: Bot, event: GroupMessageEvent):
                 timeout=20,
                 trust_env=False,
             ).json()
-            # logger.info(kugou_vip_data)
             kugou_url = kugou_vip_data.get("music_url")
             kugou_cover = kugou_vip_data.get("cover")
             kugou_name = kugou_vip_data.get("title")
             kugou_singer = kugou_vip_data.get("singer")
-            # 下载音频文件后会返回一个下载路径
             kugou_music_path = None
             try:
                 kugou_music_path = await download_audio(

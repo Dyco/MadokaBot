@@ -27,9 +27,6 @@ from .constants import (
     default_header_image_path,
 )
 
-# ----------------------------
-# HTTP CLIENT（修复并发关闭）
-# ----------------------------
 _http_clients: Dict[Optional[str], Tuple[httpx.AsyncClient, float]] = {}
 _http_client_lock = asyncio.Lock()
 HTTP_CLIENT_MAX_AGE = 60 * 30
@@ -67,9 +64,6 @@ async def get_http_client(proxy: Optional[str]) -> httpx.AsyncClient:
         return client
 
 
-# ----------------------------
-# CACHE（修复线程不安全）
-# ----------------------------
 STEAM_USER_CACHE_TTL = 30
 STEAM_USER_CACHE_MAXSIZE = 5000
 
@@ -120,9 +114,6 @@ async def get_steam_users_info_cached(
     return data
 
 
-# ----------------------------
-# SteamID 解析（修复返回类型）
-# ----------------------------
 def get_steam_id(steam_id_or_steam_friends_code: str) -> Optional[str]:
     """转换并校验 Steam64 ID 或好友码。"""
     try:
@@ -131,9 +122,6 @@ def get_steam_id(steam_id_or_steam_friends_code: str) -> Optional[str]:
         return None
 
 
-# ----------------------------
-# Steam API
-# ----------------------------
 async def get_steam_users_info(
     steam_ids: List[str],
     api_key: str,
@@ -208,9 +196,6 @@ async def get_steam_users_info(
     return {"response": {"players": all_players}}
 
 
-# ----------------------------
-# 通用 fetch
-# ----------------------------
 
 
 def _is_valid_image_bytes(data: bytes) -> bool:
@@ -264,7 +249,6 @@ def _url_from_attr(node, *attrs: str) -> Optional[str]:
             return value.strip()
     srcset = node.get("srcset")
     if isinstance(srcset, str) and srcset.strip():
-        # Prefer the largest candidate, which Steam usually lists last.
         return srcset.split(",")[-1].strip().split()[0]
     return None
 
@@ -306,7 +290,6 @@ def _extract_background_url(html: str, soup: BeautifulSoup) -> Optional[str]:
         if url:
             return url
 
-    # Match Sample.py's `background-image: url( '...' )` structure
     match = re.search(
         r"background-image\s*:\s*url\(\s*(['\"])(.*?)\1\s*\)",
         html,
@@ -315,9 +298,7 @@ def _extract_background_url(html: str, soup: BeautifulSoup) -> Optional[str]:
     if match:
         return _normalize_steam_url(match.group(2))
 
-    # Animated backgrounds have no usable static background-image. Prefer their
-    # poster frame rather than selecting an unrelated image from a broad class
-    # match.
+    # 动态背景取静态封面，不能从宽泛选择器取无关图片。
     animated_background = soup.select_one(
         ".profile_animated_background video[poster], "
         "video.profile_animated_background[poster]"
@@ -329,8 +310,7 @@ def _extract_background_url(html: str, soup: BeautifulSoup) -> Optional[str]:
 
 
 def _extract_avatar_url(html: str, soup: BeautifulSoup) -> Optional[str]:
-    # Steam's profile page exposes the canonical full-size avatar through this
-    # link even when the visible avatar markup changes (see Sample.py).
+    # 完整头像地址取canonical链接，避免依赖易变的头像节点。
     image_src = soup.find("link", rel="image_src")
     if image_src:
         url = _normalize_steam_url(image_src.get("href"))
@@ -374,7 +354,6 @@ def _find_recent_games_node(soup: BeautifulSoup):
 
 
 def _extract_recent_2_week_play_time(soup: BeautifulSoup) -> Optional[str]:
-    # This is the stable structure used by the reference implementation.
     play_time_node = soup.select_one(
         ".recentgame_quicklinks.recentgame_recentplaytime > div"
     )
@@ -433,8 +412,6 @@ async def _parse_recent_game(
     details_node = game.select_one(".game_info_details")
     details_text = details_node.get_text(" ", strip=True) if details_node else text
 
-    # Keep only the numeric portion. The drawing adapter adds the Chinese unit,
-    # matching the field contract used by Sample.py.
     play_time = _extract_text_by_patterns(
         details_text,
         (
@@ -543,9 +520,6 @@ async def _parse_recent_game(
     }
 
 
-# ----------------------------
-# 用户详情
-# ----------------------------
 def get_default_user_data(steam_id: Any) -> PlayerData:
     return {
         "steamid": str(steam_id),
@@ -652,8 +626,7 @@ async def get_user_data(
     )
 
     game_data = []
-    # Parse cards directly from the page. A `recentgame_quicklinks` element is
-    # inside a card, so treating it as the list container drops every game.
+    # recentgame_quicklinks位于卡片内，不能作为游戏列表容器。
     for game in soup.select("div.recent_game"):
         game_info = await _parse_recent_game(
             game, default_header_image, default_achievement_image, cache_path, proxy

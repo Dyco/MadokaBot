@@ -27,7 +27,6 @@ STATUS_COLUMNS = (
     ("comment", "评论"),
 )
 
-# 各平台当前代码实际可以发送的内容类型。
 RESOLVER_CAPABILITIES = {
     "bilibili": frozenset({"video", "image", "text", "comment"}),
     "douyin": frozenset({"video", "image", "text", "comment"}),
@@ -40,7 +39,6 @@ RESOLVER_CAPABILITIES = {
     "kugou": frozenset({"audio", "image", "text"}),
     "weibo": frozenset({"video", "image", "text"}),
 }
-# 表格中的平台名称、徽标文字与主题色。
 RESOLVER_DISPLAY = {
     "bilibili": ("B站", "B", "bilibili"),
     "douyin": ("抖音", "DY", "douyin"),
@@ -53,7 +51,6 @@ RESOLVER_DISPLAY = {
     "kugou": ("酷狗音乐", "KG", "kugou"),
     "weibo": ("微博", "WB", "weibo"),
 }
-# 全局配置中可填写的平台处理器名称。
 RESOLVER_HANDLER_NAMES = {
     "bilibili": frozenset({"bilibili"}),
     "douyin": frozenset({"dy", "douyin"}),
@@ -137,7 +134,7 @@ async def render_resolver_status_card(
     scope_name: str,
     globally_disabled: set[str] | None = None,
 ) -> MessageSegment:
-    """通过 html_to_pic 将 Resolver 状态表渲染为图片消息。"""
+    """解析器状态卡片渲染方法。"""
     template = _template_env.get_template(STATUS_TEMPLATE_NAME)
     html = template.render(
         **build_status_context(target_id, scope_name, globally_disabled)

@@ -16,19 +16,19 @@ from .service import get_points_ranking, transfer_points
 
 @point_cmd.handle()
 async def handle_point_root(result: Arparma) -> None:
-    """未指定子命令时展示积分命令用法。"""
+    """积分命令入口。"""
     if not result.subcommands:
         await point_cmd.finish(f"用法：{POINT_USAGE}")
 
 
 @point_cmd.assign("help")
 async def handle_point_help() -> None:
-    """返回积分命令说明。"""
+    """积分帮助方法。"""
     await point_cmd.finish(f"用法：{POINT_USAGE}")
 
 
 def format_points_ranking(title: str, ranking: list[tuple[str, str, int]]) -> str:
-    """用固定两个星号隐藏 QQ 号中段，昵称与积分之间保留两个空格。"""
+    """积分排名格式化方法。"""
     lines = [title]
     for index, (uid, nickname, points) in enumerate(ranking[:20], start=1):
         masked_id = f"{uid[:2]}**{uid[-2:]}" if len(uid) > 4 else "**"
@@ -41,7 +41,7 @@ def format_points_ranking(title: str, ranking: list[tuple[str, str, int]]) -> st
 
 @point_cmd.assign("list")
 async def handle_points_ranking(bot: Bot, event: MessageEvent) -> None:
-    """用三个合并转发节点展示提示、本群排名和全部用户排名。"""
+    """积分排名发送方法。"""
     if isinstance(event, GroupMessageEvent):
         try:
             members = await bot.get_group_member_list(group_id=event.group_id)
@@ -77,11 +77,11 @@ async def handle_points_ranking(bot: Bot, event: MessageEvent) -> None:
 
 @point_cmd.assign("transfer")
 async def handle_transfer(
-    event: MessageEvent, target: Match[At | str], amount: Match[str]
+    bot: Bot, event: MessageEvent, target: Match[At | str], amount: Match[str]
 ) -> None:
-    """从 QQ 号或艾特读取收款人，校验数量后执行转账。"""
+    """转账命令处理方法。"""
     if not target.available or not amount.available:
-        await point_cmd.finish(f"请补充收款人和积分数量。用法：{POINT_USAGE}")
+        await point_cmd.finish(f"请补充收款人和积分数量，使用空格分隔。用法：\n{POINT_USAGE}\n示例：积分 转账 @用户 100")
 
     recipient = target.result
     if isinstance(recipient, At):
@@ -101,7 +101,30 @@ async def handle_transfer(
     if not raw_amount.isascii() or not raw_amount.isdecimal() or int(raw_amount) <= 0:
         await point_cmd.finish("转账积分数量必须是正整数")
 
+    recipient_id = str(int(recipient_id))
+    recipient_name = await get_recipient_name(bot, event, recipient_id)
     ok, message = await transfer_points(
-        event.get_user_id(), str(int(recipient_id)), int(raw_amount)
+        event.get_user_id(), recipient_id, int(raw_amount), recipient_name
     )
-    await point_cmd.finish(message if ok else f"转账失败：{message}")
+    await point_cmd.finish(MessageSegment.text(message if ok else f"转账失败：{message}"))
+
+
+async def get_recipient_name(bot: Bot, event: MessageEvent, recipient_id: str) -> str:
+    """收款人昵称查询方法。"""
+    if isinstance(event, GroupMessageEvent):
+        try:
+            member = await bot.get_group_member_info(
+                group_id=event.group_id, user_id=int(recipient_id)
+            )
+            name = (member.get("card") or "").strip() or (member.get("nickname") or "").strip()
+            if name:
+                return name
+        except Exception as exc:
+            logger.debug(f"获取转账收款人群昵称失败：{exc}")
+
+    try:
+        user = await bot.get_stranger_info(user_id=int(recipient_id))
+        return (user.get("nickname") or "").strip()
+    except Exception as exc:
+        logger.debug(f"获取转账收款人 QQ 昵称失败：{exc}")
+        return ""

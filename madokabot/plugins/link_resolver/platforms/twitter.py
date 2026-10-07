@@ -41,7 +41,7 @@ from .video import (
 @resolve_handler
 @resolve_controller
 async def twitter(bot: Bot, event: GroupMessageEvent) -> None:
-    """解析 X 帖子；文字和图片合并转发，视频单独发送。"""
+    """X帖子解析方法。"""
     msg = get_resolver_message(event)
     try:
         post = await fetch_twitter_post(msg, TWITTER_PROXY)

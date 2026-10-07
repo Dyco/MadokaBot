@@ -21,7 +21,7 @@ async def handle_cs_event(
     event: MessageEvent,
     params: Match[str],
 ) -> None:
-    """无参数时展示赛事列表，有参数时处理当前群的赛事设置。"""
+    """赛事设置命令处理方法。"""
     raw_params = params.result.strip() if params.available else ""
     event_args = raw_params.split()
     if not event_args:

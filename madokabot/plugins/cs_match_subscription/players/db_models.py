@@ -7,7 +7,7 @@ from madokabot.core.db.base import data
 
 
 class FiveEBinding(data.Model):
-    """保存 QQ 用户的 5E 账号；完美平台共用 Steam 全局绑定。"""
+    """5E玩家绑定。"""
 
     __tablename__ = "madoka_cs_5e_binding"
 

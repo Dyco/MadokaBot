@@ -18,7 +18,7 @@ class SteamBinding(data.Model):
 
 
 class SteamGroupSubscription(data.Model):
-    """群内推送状态与备注；Steam ID 始终从全局绑定读取。"""
+    """Steam群订阅资料。"""
 
     __tablename__ = "madoka_steam_group_subscription"
 

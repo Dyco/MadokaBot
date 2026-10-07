@@ -9,7 +9,7 @@ from madokabot.core.user.models import UserStats
 async def get_points_ranking(
     member_ids: list[str] | None = None,
 ) -> list[tuple[str, str, int]]:
-    """筛选已注册账号并读取积分前二十名，同分时按用户编号稳定排序。"""
+    """积分排名查询方法。"""
     statement = select(
         UserStats.user_id,
         func.coalesce(
@@ -25,8 +25,10 @@ async def get_points_ranking(
         return list(result.tuples().all())
 
 
-async def transfer_points(sender_id: str, recipient_id: str, amount: int) -> tuple[bool, str]:
-    """在同一事务中按余额扣款并累加入账，失败时不改变双方积分。"""
+async def transfer_points(
+    sender_id: str, recipient_id: str, amount: int, recipient_name: str = ""
+) -> tuple[bool, str]:
+    """转账方法。"""
     if type(amount) is not int or amount <= 0:
         return False, "转账积分数量必须是正整数"
     if sender_id == recipient_id:
@@ -34,7 +36,7 @@ async def transfer_points(sender_id: str, recipient_id: str, amount: int) -> tup
 
     async with create_session() as session:
         recipient = await session.scalar(
-            select(UserStats.user_id).where(UserStats.user_id == recipient_id)
+            select(UserStats.qq_nickname).where(UserStats.user_id == recipient_id)
         )
         if recipient is None:
             return False, "收款人尚未注册，请对方先发送“注册”"
@@ -51,7 +53,7 @@ async def transfer_points(sender_id: str, recipient_id: str, amount: int) -> tup
             )
             if balance is None:
                 return False, "请先发送“注册”完成用户注册"
-            return False, f"积分不足，转账需要 {amount} 积分，你当前只有 {balance} 积分"
+            return False, f"积分不足，转账需要{amount}积分，你当前只有{balance}积分"
 
         credit = await session.execute(
             update(UserStats)
@@ -66,7 +68,7 @@ async def transfer_points(sender_id: str, recipient_id: str, amount: int) -> tup
             select(UserStats.points).where(UserStats.user_id == sender_id)
         )
         await session.commit()
+        name = recipient_name.strip() or recipient.strip() or f"QQ{recipient_id}"
         return True, (
-            f"转账成功：向 QQ {recipient_id} 转账 {amount} 积分，"
-            f"剩余 {remaining_points} 积分"
+            f"转账成功：向{name}转账{amount}积分，个人剩余{remaining_points}积分"
         )

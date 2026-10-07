@@ -21,7 +21,6 @@ class DownloadStatus(str, Enum):
     DELETE_FAILED = "delete_failed"
 
 
-# 下载任务状态保存在进程内，与原有下载后端保持一致。
 download_tasks: Dict[str, Dict[str, Any]] = {}
 
 

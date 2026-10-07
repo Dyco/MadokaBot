@@ -27,11 +27,9 @@ def show_rss_by_name(
         or (guild_channel_id and guild_channel_id not in rss.guild_channel_id)
     ):
         return f"❌ 订阅 {rss_name} 不存在或未订阅！"
-    # 隐私考虑，不展示除当前群组或频道外的群组、频道和QQ
     return str(rss.hide_some_infos(group_id, guild_channel_id))
 
 
-# 不带订阅名称默认展示当前群组或账号的订阅，带订阅名称就显示该订阅的
 @rss_show_cmd.handle()
 async def handle_rss_show(event: MessageEvent, content: AlcMatch[str]) -> None:
     rss_name = content.result.strip() if content.available else ""

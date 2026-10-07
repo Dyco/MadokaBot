@@ -11,7 +11,7 @@ notification_memory: dict[tuple[str, str], float] = {}
 
 
 def cleanup_notification_memory() -> None:
-    """清理短期推送幂等记忆，避免长期运行时无限增长。"""
+    """清理短期推送幂等记忆。"""
     deadline = monotonic() - NOTIFICATION_MEMORY_TTL
     expired = [
         key for key, created_at in notification_memory.items() if created_at < deadline
@@ -21,7 +21,7 @@ def cleanup_notification_memory() -> None:
 
 
 def notification_memory_key(match_id: str, notification: str) -> tuple[str, str]:
-    """组合比赛编号与通知类型，生成去重键。"""
+    """组合比赛编号与通知类型。"""
     return str(match_id), notification
 
 

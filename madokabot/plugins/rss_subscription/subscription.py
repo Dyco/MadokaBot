@@ -30,35 +30,34 @@ DUPLICATE_FILTER_VALUES = {mode.value for mode in DuplicateFilterMode}
 
 class Rss:
     def __init__(self, data: Optional[Dict[str, Any]] = None):
-        self.name: str = ""  # 订阅名
-        self.url: str = ""  # 订阅地址
-        self.user_id: List[str] = []  # 订阅用户（qq）
-        self.group_id: List[str] = []  # 订阅群组
-        self.guild_channel_id: List[str] = []  # 订阅子频道
+        self.name: str = ""
+        self.url: str = ""
+        self.user_id: List[str] = []
+        self.group_id: List[str] = []
+        self.guild_channel_id: List[str] = []
         self.img_proxy: bool = False
-        self.time: str = "5"  # 更新频率 分钟/次
-        self.only_title: bool = False  # 仅标题
-        self.only_pic: bool = False  # 仅图片
-        self.only_has_pic: bool = False  # 仅含有图片
-        self.download_pic: bool = False  # 是否要下载图片
+        self.time: str = "5"
+        self.only_title: bool = False
+        self.only_pic: bool = False
+        self.only_has_pic: bool = False
+        self.download_pic: bool = False
         self.cookies: str = ""
-        self.down_torrent: bool = False  # 是否下载种子
-        self.down_torrent_keyword: str = ""  # 过滤关键字，支持正则
-        self.black_keyword: str = ""  # 黑名单关键词
-        self.is_open_upload_group: bool = True  # 默认开启上传到群
-        self.duplicate_filter_mode: List[str] = []  # 去重模式
-        self.max_image_number: int = 0  # 图片数量限制，防止消息太长刷屏
-        self.content_to_remove: Optional[List[str]] = None  # 正文待移除内容，支持正则
+        self.down_torrent: bool = False
+        self.down_torrent_keyword: str = ""
+        self.black_keyword: str = ""
+        self.is_open_upload_group: bool = True
+        self.duplicate_filter_mode: List[str] = []
+        self.max_image_number: int = 0
+        self.content_to_remove: Optional[List[str]] = None
         self.etag: Optional[str] = None
-        self.last_modified: Optional[str] = None  # 上次更新时间
-        self.error_count: int = 0  # 连续抓取失败的次数，超过 100 就停止更新
-        self.stop: bool = False  # 停止更新
+        self.last_modified: Optional[str] = None
+        self.error_count: int = 0
+        self.stop: bool = False
         self.send_forward_msg: bool = (
-            False  # 当一次更新多条消息时，是否尝试发送合并消息
+            False
         )
         if data:
-            # 只加载当前订阅模型声明的字段，避免旧版本或外部后端字段
-            # 污染 MadokaBot 的通用订阅存储。
+            # 忽略模型之外的旧字段。
             known_fields = set(self.__dict__)
             self.__dict__.update(
                 {
@@ -98,7 +97,7 @@ class Rss:
 
     @staticmethod
     def _migrate_legacy_data() -> None:
-        """Move a standalone ELF_RSS data directory into MadokaBot storage once."""
+        """RSS旧数据迁移方法。"""
         if JSON_PATH.exists() or not LEGACY_JSON_PATH.exists():
             return
 
@@ -113,17 +112,13 @@ class Rss:
         if legacy_cache.exists() and not target_cache.exists():
             copy2(legacy_cache, target_cache)
 
-    # 返回订阅链接
     def get_url(self, rsshub: str = str(config.rsshub)) -> str:
         if URL(self.url).scheme in ["http", "https"]:
             return self.url
-        # 去除 rsshub地址末尾的斜杠 和 订阅地址开头的斜杠
         return f"{rsshub.rstrip('/')}/{self.url.lstrip('/')}"
 
-    # 读取记录
     @staticmethod
     def read_rss() -> List["Rss"]:
-        # 如果文件不存在
         Rss._migrate_legacy_data()
         if not JSON_PATH.exists():
             return []
@@ -137,7 +132,6 @@ class Rss:
             rss_list = [Rss(rss) for rss in db.all()]
         return rss_list
 
-    # 过滤订阅名中的特殊字符
     @staticmethod
     def handle_name(name: str) -> str:
         name = re.sub(r'[?*:"<>\\/|]', "_", name)
@@ -145,7 +139,6 @@ class Rss:
             name = "rss_"
         return name
 
-    # 查找是否存在当前订阅名 rss 要转换为 rss_
     @staticmethod
     def get_one_by_name(name: str) -> Optional["Rss"]:
         feed_list = Rss.read_rss()
@@ -153,7 +146,7 @@ class Rss:
 
     @staticmethod
     def normalize_url(url: str) -> str:
-        """Normalize a feed URL for duplicate checks without changing its meaning."""
+        """订阅地址规范化方法。"""
         rss = Rss()
         rss.url = url.strip()
         parsed = URL(rss.get_url()).with_fragment(None)
@@ -180,7 +173,6 @@ class Rss:
             None,
         )
 
-    # 添加订阅
     def add_user_or_group_or_channel(
         self,
         user: Optional[str] = None,
@@ -201,7 +193,6 @@ class Rss:
             self.guild_channel_id.append(guild_channel)
         self.upsert()
 
-    # 删除订阅 群组
     def delete_group(self, group: str) -> bool:
         if group not in self.group_id:
             return False
@@ -216,7 +207,6 @@ class Rss:
             db.update(tinydb_set("group_id", self.group_id), Query().name == self.name)  # type: ignore
         return True
 
-    # 删除订阅 子频道
     def delete_guild_channel(self, guild_channel: str) -> bool:
         if guild_channel not in self.guild_channel_id:
             return False
@@ -233,7 +223,6 @@ class Rss:
             )
         return True
 
-    # 删除整个订阅
     def delete_rss(self) -> None:
         with TinyDB(
             JSON_PATH,
@@ -245,18 +234,15 @@ class Rss:
             db.remove(Query().name == self.name)
         self.delete_file()
 
-    # 重命名订阅缓存 json 文件
     def rename_file(self, target: str) -> None:
         source = DATA_PATH / f"{Rss.handle_name(self.name)}.json"
         if source.exists():
             Path(target).parent.mkdir(parents=True, exist_ok=True)
             source.rename(target)
 
-    # 删除订阅缓存 json 文件
     def delete_file(self) -> None:
         (DATA_PATH / f"{Rss.handle_name(self.name)}.json").unlink(missing_ok=True)
 
-    # 隐私考虑，不展示除当前群组或频道外的群组、频道和QQ
     def hide_some_infos(
         self, group_id: Optional[int] = None, guild_channel_id: Optional[str] = None
     ) -> "Rss":

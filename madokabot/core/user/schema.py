@@ -7,7 +7,7 @@ from .models import UserStats
 
 
 async def migrate_user_schema() -> None:
-    """补齐历史账号表缺少的字段，保留原有表名和数据。"""
+    """用户表结构补齐方法。"""
     engine = get_engine()
     async with engine.begin() as conn:
         columns = await conn.run_sync(
@@ -35,7 +35,7 @@ async def migrate_user_schema() -> None:
                 "ADD COLUMN display_name VARCHAR(10) NOT NULL DEFAULT ''"
             )
 
-        # 旧数据库没有注册时间，补值后才能满足模型的非空约束。
+        # 旧账号需补齐非空注册时间。
         await conn.exec_driver_sql(
             f"UPDATE {UserStats.__tablename__} "
             "SET register_time = CURRENT_TIMESTAMP "

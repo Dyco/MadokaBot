@@ -12,7 +12,7 @@ class AssetManager:
         self.root = root
 
     def get_dir(self, res_type: ResourceType, plugin: ResourceFolder) -> Path:
-        """返回资源目录，并在目录尚不存在时创建它。"""
+        """资源目录获取方法。"""
         path = self.root / res_type.value / plugin.value
         path.mkdir(parents=True, exist_ok=True)
         return path
@@ -32,7 +32,7 @@ def get_files(res_type: ResourceType, plugin: ResourceFolder) -> list[Path]:
 
 
 def get_file(res_type: ResourceType, plugin: ResourceFolder, name: str) -> Path | None:
-    """获取指定文件，文件不存在时返回空值。"""
+    """资源文件查询方法。"""
     path = assets.get_dir(res_type, plugin) / name
     return path if path.is_file() else None
 
@@ -42,6 +42,6 @@ def get_indexed_files(
     plugin: ResourceFolder,
     prefix: str = "image",
 ) -> dict[str, Path]:
-    """按文件名排序生成连续运行时编号，例如 image01。"""
+    """资源文件索引方法。"""
     files = sorted(get_files(res_type, plugin))
     return {f"{prefix}{index:02d}": path for index, path in enumerate(files, start=1)}

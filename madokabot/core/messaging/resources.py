@@ -19,7 +19,7 @@ def resource_to_segment(res_type: ResourceType, file_path: Path) -> MessageSegme
 def get_random_resource_segment(
     res_type: ResourceType, plugin: ResourceFolder
 ) -> MessageSegment:
-    """随机选取目录内的资源，缺失时返回文字提示。"""
+    """随机资源消息生成方法。"""
     files = get_files(res_type, plugin)
     if not files:
         return MessageSegment.text(f"缺少资源: {res_type.value}/{plugin.value}")

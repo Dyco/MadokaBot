@@ -96,8 +96,6 @@ async def _fetch_pw_public_stats(
             PW_STATS_URL,
             headers=headers,
             json={
-                # 当前接口允许查询公开资料；传入登录 Session 中的 SteamID
-                # 会触发 4013（无效的账号），必须使用公开客户端的 0。
                 "mySteamId": 0,
                 "toSteamId": target_id,
                 "accessToken": "",
@@ -160,7 +158,7 @@ async def _fetch_pw_public_stats(
 async def _fetch_pw_stats_legacy(
     binding: PlayerBinding, target_id: int
 ) -> dict[str, Any]:
-    """兼容旧版手机号登录 Session 的完美平台查询。"""
+    """完美旧版战绩查询方法。"""
     session = load_pw_session()
     if not session:
         raise PlayerStatsError(
@@ -226,8 +224,7 @@ async def fetch_pw_stats(binding: PlayerBinding) -> dict[str, Any]:
     try:
         return await _fetch_pw_public_stats(binding, target_id)
     except PlayerStatsError as exc:
-        # 公开接口变更时保留旧 Session 作为兜底，但不会把公开玩家误报成
-        # “无效账号”；只有两条接口链路都失败才将错误返回给调用方。
+        # 公开接口失败时尝试旧会话，两条链路均失败才报错。
         if not load_pw_session():
             raise
         logger.warning("完美平台公开查询失败，尝试旧版 Session：%s", exc)
