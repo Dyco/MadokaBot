@@ -43,6 +43,7 @@ class CsPredictionNotification(data.Model):
     match_id: Mapped[str] = mapped_column(String(32), primary_key=True)
     group_id: Mapped[str] = mapped_column(String(64), primary_key=True)
     winner_name: Mapped[str] = mapped_column(String(128), default="", nullable=False)
+    # 保留已有数据库字段，赔率结算不再使用公池。
     public_pool: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     final_text: Mapped[str] = mapped_column(Text, default="", nullable=False)
     sent: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)

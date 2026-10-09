@@ -12,16 +12,18 @@ from nonebot.adapters.onebot.v11 import Message, MessageSegment
 from ..client import fetch_match
 from ..models import MatchData
 from ..prediction import (
-    DEFAULT_PREDICTION_PUBLIC_POOL,
     get_prediction_settlement_reports,
     list_unsettled_prediction_matches,
-    refund_uncontested_predictions,
     save_prediction_notification_text,
     settle_match_predictions,
 )
 from ..storage import get_prediction_settlement_state, mark_prediction_settled
 from .delivery import available_bots, broadcast_target_notifications
-from .notifications import MatchNotification, final_message, prediction_settlement_message
+from .notifications import (
+    MatchNotification,
+    final_message,
+    prediction_settlement_messages,
+)
 from .rating import render_check_rating_messages
 from .state import match_winner
 
@@ -65,29 +67,16 @@ async def reconcile_unsettled_predictions(
                 if not winner_name:
                     logger.warning("CS 比赛已结束但胜者暂不可确认，保留竞猜：%s", match_id)
                     continue
-                if "prediction_public_pool" not in state:
-                    logger.warning("CS 补结算缺少公池快照，使用默认值：%s", match_id)
-                public_pool = max(
-                    0, int(state.get("prediction_public_pool", DEFAULT_PREDICTION_PUBLIC_POOL))
-                )
-                refund = await refund_uncontested_predictions(
-                    event_id, match_id, [team.name for team in match.teams[:2]],
-                    public_pool=public_pool,
+                result = await settle_match_predictions(
+                    event_id, match_id, winner_name,
                     final_text=final_message(match).extract_plain_text(),
                 )
-                if refund["refunded"]:
-                    winner_name = ""
-                else:
-                    result = await settle_match_predictions(
-                        event_id, match_id, winner_name, public_pool=public_pool,
-                        final_text=final_message(match).extract_plain_text(),
-                    )
-                    if not result["settled_count"]:
-                        continue
+                if not result["settled_count"]:
+                    continue
                 settled_matches += 1
                 logger.info(
                     "CS 未结算竞猜已处理：event_id=%s match_id=%s winner=%s",
-                    event_id, match_id, winner_name or "单方下注退款",
+                    event_id, match_id, winner_name,
                 )
                 try:
                     await mark_prediction_settled(event_id, match_id, winner_name)
@@ -104,7 +93,7 @@ async def reconcile_unsettled_predictions(
 async def with_prediction_settlement_notifications(
     event_id: str, group_id: str, notifications: list[MatchNotification],
 ) -> list[MatchNotification]:
-    """竞猜结算消息合并方法。"""
+    """在比赛结束节点后合并本群及其他群的结算节点。"""
     selected = []
     for item in notifications:
         selected.append(item)
@@ -117,10 +106,10 @@ async def with_prediction_settlement_notifications(
             await save_prediction_notification_text(
                 event_id, item.match_id, item.message.extract_plain_text(),
             )
-            selected.append(MatchNotification(
-                "prediction_settlement", prediction_settlement_message(reports[0]),
-                item.match_id, event_id,
-            ))
+            selected.extend(
+                MatchNotification("prediction_settlement", message, item.match_id, event_id)
+                for message in prediction_settlement_messages(reports[0])
+            )
     return selected
 
 
@@ -129,7 +118,7 @@ async def send_pending_prediction_notifications(
     matches: dict[tuple[str, str], MatchData] | None = None,
     ready_only: bool = False,
 ) -> None:
-    """待发送竞猜通知补发方法。"""
+    """沿用群通知凭据补发比赛结束、本群及其他群结算节点。"""
     if not list(available_bots()):
         return
     excluded = exclude_matches or set()
@@ -170,8 +159,11 @@ async def send_pending_prediction_notifications(
             for report in group_reports:
                 nodes = [
                     MatchNotification("series_end", Message(MessageSegment.text(text)), match_id, event_id),
-                    MatchNotification("prediction_settlement", prediction_settlement_message(report), match_id, event_id),
                 ]
+                nodes.extend(
+                    MatchNotification("prediction_settlement", message, match_id, event_id)
+                    for message in prediction_settlement_messages(report)
+                )
                 nodes.extend(
                     MatchNotification("series_rating", message, match_id, event_id)
                     for message in rating_messages

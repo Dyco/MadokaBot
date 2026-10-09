@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from decimal import Decimal
 from pathlib import Path
 
 import nonebot_plugin_localstore as store
@@ -9,7 +10,7 @@ from nonebot import get_plugin_config
 from nonebot.config import Config as NoneBotConfig
 from pydantic import Field
 
-from madokabot.core.resources import ResourceType, ResourceFolder, assets
+from madokabot.core.resources import ResourceFolder, ResourceType, assets
 
 
 PLUGIN_NAME = "madokabot_cs_match_subscribe"
@@ -77,7 +78,17 @@ class Config(NoneBotConfig):
     cs_prediction_public_pool: int = Field(
         default=100,
         ge=0,
-        description="每场 CS 竞猜由系统追加的默认公池积分",
+        description="旧公池配置，仅保留配置兼容，竞猜结算不再使用",
+    )
+    cs_prediction_base_odds: Decimal = Field(
+        default=Decimal("1.8"),
+        ge=0,
+        description="CS 竞猜的基础奖励倍率，不含本金",
+    )
+    cs_prediction_odds_increment: Decimal = Field(
+        default=Decimal("0.2"),
+        ge=0,
+        description="对手每增加一名下注者追加的奖励倍率，人数最少按一人计算",
     )
     hltv_max_asset_size: int = Field(
         default=5 * 1024 * 1024,

@@ -337,7 +337,6 @@ async def poll_event_subscription(
                     selected,
                     prediction_candidates.get(str(target.get("id")), []),
                     loaded_matches,
-                    matches,
                 )
                 selected = await with_prediction_settlement_notifications(
                     event_id, str(target["id"]), selected,

@@ -11,7 +11,7 @@ from madokabot.core.messaging.response import respond
 from ..assets import enrich_event_assets
 from ..client import HltvError, fetch_events, fetch_match, match_id_from_url
 from ..matchers import CS_USAGE, UNSUPPORTED_LINK_MESSAGE, cs_cmd
-from ..prediction import get_prediction_detail
+from ..prediction import get_prediction_detail, prediction_odds
 from ..render import render_event_list_card
 from ..storage import target_from_event
 from ..subscriptions.delivery import send_rating_forward
@@ -36,7 +36,7 @@ async def handle_cs_list(
     event: MessageEvent,
     params: Match[str],
 ) -> None:
-    """按比赛 ID 查询当前群的竞猜情况。"""
+    """按比赛 ID 查询本群下注情况和跨群人数对应的奖励倍率。"""
     raw_params = params.result.strip() if params.available else ""
     list_args = raw_params.split()
     if len(list_args) == 1 and list_args[0].isdigit():
@@ -68,11 +68,16 @@ async def handle_cs_list(
         lines = [
             f"【比赛编号：{detail['match_id']}】",
             f"{first}对阵{second}，{detail['status']}。",
-            f"{first}：{first_summary.get('count', 0)}人预测，共计"
-            f"{first_summary.get('points', 0)}积分。",
-            f"{second}：{second_summary.get('count', 0)}人预测，共计"
-            f"{second_summary.get('points', 0)}积分。",
-            f"本场系统公池：{detail['public_pool']}积分。",
+            (
+                f"{first}：{first_summary.get('count', 0)}人预测，共计"
+                f"{first_summary.get('points', 0)}积分，"
+                f"积分比例{detail['odds'].get(first, prediction_odds(1)):.1f}。"
+            ),
+            (
+                f"{second}：{second_summary.get('count', 0)}人预测，共计"
+                f"{second_summary.get('points', 0)}积分，"
+                f"积分比例{detail['odds'].get(second, prediction_odds(1)):.1f}。"
+            ),
         ]
         if detail["winner_name"]:
             lines.append(f"获胜队伍：{detail['winner_name']}（积分已按各自结算记录入账）")
