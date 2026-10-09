@@ -5,7 +5,6 @@ from __future__ import annotations
 from datetime import datetime, timedelta, timezone
 from typing import Any
 
-from ..config import config
 from ..models import (
     EVENT_STATUS_FINISHED,
     EVENT_STATUS_WAITING,
@@ -168,7 +167,6 @@ def new_match_state(
         "prediction_settled": is_finished,
         "winner_name": "",
         "prediction_payout": 0,
-        "prediction_public_pool": int(config.cs_prediction_public_pool),
         "team_names": [],
         "format_code": "",
     }

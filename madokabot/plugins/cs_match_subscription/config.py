@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from decimal import Decimal
 from pathlib import Path
 
 import nonebot_plugin_localstore as store
@@ -9,7 +10,7 @@ from nonebot import get_plugin_config
 from nonebot.config import Config as NoneBotConfig
 from pydantic import Field
 
-from madokabot.core.resources import ResourceType, ResourceFolder, assets
+from madokabot.core.resources import ResourceFolder, ResourceType, assets
 
 
 PLUGIN_NAME = "madokabot_cs_match_subscribe"
@@ -77,7 +78,27 @@ class Config(NoneBotConfig):
     cs_prediction_public_pool: int = Field(
         default=100,
         ge=0,
-        description="每场 CS 竞猜由系统追加的默认公池积分",
+        description="旧公池配置，仅保留配置兼容，竞猜结算不再使用",
+    )
+    cs_prediction_base_odds: Decimal = Field(
+        default=Decimal("2.0"),
+        ge=0,
+        description="CS 竞猜的初始奖励倍率，结算时另退本金",
+    )
+    cs_prediction_odds_increment: Decimal = Field(
+        default=Decimal("0.3"),
+        ge=0,
+        description="对手从第二名下注者起，每增加一人增加的赔付比例",
+    )
+    cs_prediction_odds_decrement: Decimal = Field(
+        default=Decimal("0.2"),
+        ge=0,
+        description="本队从第二名下注者起，每增加一人减少的赔付比例",
+    )
+    cs_prediction_min_odds: Decimal = Field(
+        default=Decimal("1.5"),
+        ge=0,
+        description="CS 竞猜的最低赔付比例",
     )
     hltv_max_asset_size: int = Field(
         default=5 * 1024 * 1024,
@@ -92,6 +113,16 @@ class Config(NoneBotConfig):
     cs_rating_width: int = Field(default=810, ge=400)
     cs_rating_device_scale_factor: float = Field(default=2.0, ge=0.5, le=3.0)
     cs_stats_width: int = Field(default=900, ge=600)
+    cs_prediction_personal_width: int = Field(
+        default=720,
+        ge=700,
+        description="个人竞猜记录卡片的渲染宽度",
+    )
+    cs_prediction_rank_width: int = Field(
+        default=640,
+        ge=560,
+        description="竞猜排行榜卡片的渲染宽度",
+    )
     cs_stats_template_2_width: int = Field(
         default=1100,
         ge=700,

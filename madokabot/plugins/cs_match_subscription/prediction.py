@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import asyncio
 from datetime import datetime, timedelta, timezone
+from decimal import Decimal
 from typing import Any
 from zoneinfo import ZoneInfo
 
@@ -15,9 +16,10 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from madokabot.core.user.models import UserStats
+
 from .config import config
-from .prediction_models import CsPrediction, CsPredictionNotification
 from .prediction_labels import TEAM_LETTERS, prediction_team_labels
+from .prediction_models import CsPrediction, CsPredictionNotification
 from .storage import (
     get_prediction_match_context,
     list_open_prediction_matches,
@@ -26,7 +28,16 @@ from .storage import (
 _SETTLEMENT_LOCK = asyncio.Lock()
 _PREDICTION_TIMEOUT = timedelta(hours=12)
 _SHANGHAI_TZ = ZoneInfo("Asia/Shanghai")
-DEFAULT_PREDICTION_PUBLIC_POOL = int(config.cs_prediction_public_pool)
+
+
+def prediction_odds(team_count: int, opponent_count: int) -> Decimal:
+    """按跨群双方人数计算奖励倍率，从第二人起调整并限制最低值。"""
+    return max(
+        config.cs_prediction_min_odds,
+        config.cs_prediction_base_odds
+        - config.cs_prediction_odds_decrement * max(0, team_count - 1)
+        + config.cs_prediction_odds_increment * max(0, opponent_count - 1),
+    )
 
 
 async def _finish_prediction(
@@ -74,7 +85,6 @@ async def _record_prediction_notifications(
     session: AsyncSession,
     rows: list[CsPrediction],
     winner_name: str,
-    public_pool: int,
     final_text: str = "",
 ) -> None:
     """竞猜通知凭据保存方法。"""
@@ -84,7 +94,7 @@ async def _record_prediction_notifications(
             continue
         session.add(CsPredictionNotification(
             event_id=event_id, match_id=match_id, group_id=group_id,
-            winner_name=winner_name, public_pool=public_pool, final_text=final_text,
+            winner_name=winner_name, final_text=final_text,
         ))
 
 
@@ -201,6 +211,8 @@ async def place_prediction(
                 group_id=normalized_group_id,
                 user_id=normalized_user_id,
                 team_name=selected_team,
+                team1_name=str(selected["team_names"][0]),
+                team2_name=str(selected["team_names"][1]),
                 points=points,
             )
         )
@@ -225,7 +237,7 @@ async def get_prediction_summary(
     *,
     group_id: str | None = None,
 ) -> dict[str, Any]:
-    """统计比赛的竞猜人数和积分池。"""
+    """统计比赛的竞猜人数和下注积分。"""
     conditions = [
         CsPrediction.event_id == str(event_id),
         CsPrediction.match_id == str(match_id),
@@ -254,97 +266,15 @@ async def get_prediction_summary(
     }
 
 
-async def refund_uncontested_predictions(
-    event_id: str,
-    match_id: str,
-    team_names: list[str],
-    *,
-    public_pool: int = DEFAULT_PREDICTION_PUBLIC_POOL,
-    final_text: str = "",
-) -> dict[str, Any]:
-    """单方竞猜退款方法。"""
-    normalized_public_pool = max(0, int(public_pool))
-    normalized_teams = [
-        _normalize_team(team_name)
-        for team_name in team_names[:2]
-        if _normalize_team(team_name)
-    ]
-    if len(normalized_teams) < 2:
-        return {
-            "refunded": False,
-            "total_count": 0,
-            "total_points": 0,
-            "refunded_points": 0,
-        }
-
-    async with _SETTLEMENT_LOCK, create_session() as session:
-        rows = list(
-            (
-                await session.scalars(
-                    select(CsPrediction).where(
-                        CsPrediction.event_id == str(event_id),
-                        CsPrediction.match_id == str(match_id),
-                    )
-                )
-            ).all()
-        )
-        open_rows = [row for row in rows if row.result == "open"]
-        refunded_rows = [row for row in rows if row.result == "refund"]
-        if not open_rows:
-            return {
-                "refunded": bool(refunded_rows),
-                "total_count": len(rows),
-                "total_points": sum(row.points for row in rows),
-                "refunded_points": sum(row.points for row in refunded_rows),
-            }
-
-        points_by_team: dict[str, int] = {}
-        for row in open_rows:
-            normalized_name = _normalize_team(row.team_name)
-            points_by_team[normalized_name] = (
-                points_by_team.get(normalized_name, 0) + row.points
-            )
-        if normalized_public_pool > 0 or all(
-            points_by_team.get(team_name, 0) > 0 for team_name in normalized_teams
-        ):
-            return {
-                "refunded": False,
-                "total_count": len(open_rows),
-                "total_points": sum(row.points for row in open_rows),
-                "refunded_points": 0,
-            }
-
-        now = datetime.now(timezone.utc)
-        refunded_points = 0
-        claimed_rows = []
-        for row in open_rows:
-            if await _finish_prediction(
-                session, row, payout=row.points, result="refund", now=now
-            ):
-                refunded_points += row.points
-                claimed_rows.append(row)
-        await _record_prediction_notifications(session, claimed_rows, "", 0, final_text)
-        await session.commit()
-
-    return {
-        "refunded": True,
-        "total_count": len(open_rows),
-        "total_points": refunded_points,
-        "refunded_points": refunded_points,
-    }
-
-
 async def settle_match_predictions(
     event_id: str,
     match_id: str,
     winner_name: str,
     *,
-    public_pool: int = DEFAULT_PREDICTION_PUBLIC_POOL,
     final_text: str = "",
 ) -> dict[str, Any]:
-    """比赛竞猜结算方法。"""
+    """按双方跨群人数结算动态奖励并退回胜者本金，小数奖励向下取整。"""
     normalized_winner = _normalize_team(winner_name)
-    normalized_public_pool = max(0, int(public_pool))
     async with _SETTLEMENT_LOCK, create_session() as session:
         rows = list(
             (
@@ -362,8 +292,7 @@ async def settle_match_predictions(
             row for row in rows if _normalize_team(row.team_name) == normalized_winner
         ]
         winner_points = sum(row.points for row in winner_rows)
-        reward_points = total_points - winner_points + normalized_public_pool
-        settlement_points = total_points + normalized_public_pool
+        odds = prediction_odds(len(winner_rows), len(rows) - len(winner_rows))
         total_payout = 0
         settled_count = 0
         claimed_rows = []
@@ -372,8 +301,8 @@ async def settle_match_predictions(
         for row in rows:
             is_winner = row in winner_rows
             payout = (
-                row.points + reward_points * row.points // winner_points
-                if is_winner and winner_points > 0
+                row.points + int(row.points * odds)
+                if is_winner
                 else 0
             )
             if await _finish_prediction(
@@ -387,18 +316,16 @@ async def settle_match_predictions(
                 settled_count += 1
                 claimed_rows.append(row)
         await _record_prediction_notifications(
-            session, claimed_rows, winner_name, normalized_public_pool, final_text,
+            session, claimed_rows, winner_name, final_text,
         )
         await session.commit()
 
     return {
         "total_count": len(rows),
         "total_points": total_points,
-        "public_pool": normalized_public_pool,
-        "settlement_points": settlement_points,
+        "odds": odds,
         "winner_count": len(winner_rows),
         "winner_points": winner_points,
-        "reward_points": reward_points,
         "total_payout": total_payout,
         "settled_count": settled_count,
     }
@@ -423,60 +350,74 @@ async def get_prediction_settlement_reports(
     group_id: str | None = None,
     pending_only: bool = False,
 ) -> list[dict[str, Any]]:
-    """竞猜结算报告查询方法。"""
+    """按目标群拆分结算名单，其他群按净收益排序取前二十名。"""
     statement = select(CsPredictionNotification)
     for column, value in (
         (CsPredictionNotification.event_id, event_id),
         (CsPredictionNotification.match_id, match_id),
-        (CsPredictionNotification.group_id, group_id),
     ):
         if value is not None:
             statement = statement.where(column == str(value))
     if pending_only:
         statement = statement.where(CsPredictionNotification.sent.is_(False))
     reports = []
-    opponent_totals = {}
+    match_players = {}
     async with create_session() as session:
         receipts = list((await session.scalars(statement)).all())
+        if group_id is not None:
+            target_receipts = []
+            seen_matches = set()
+            for receipt in receipts:
+                match_key = (receipt.event_id, receipt.match_id)
+                if match_key in seen_matches:
+                    continue
+                seen_matches.add(match_key)
+                target = await session.get(
+                    CsPredictionNotification, (*match_key, str(group_id)),
+                )
+                if target is None:
+                    # 无本群下注时也保存凭据，使其他群结算通知沿用发送去重。
+                    target = CsPredictionNotification(
+                        event_id=receipt.event_id, match_id=receipt.match_id,
+                        group_id=str(group_id), winner_name=receipt.winner_name,
+                        final_text=receipt.final_text,
+                    )
+                    session.add(target)
+                if not pending_only or not target.sent:
+                    target_receipts.append(target)
+            receipts = target_receipts
         for receipt in receipts:
             match_key = (receipt.event_id, receipt.match_id)
-            if match_key not in opponent_totals:
-                # 对手池按同场跨群下注统计。
-                opponent_totals[match_key] = (await session.execute(
-                    select(func.coalesce(func.sum(CsPrediction.points), 0), func.count())
+            if match_key not in match_players:
+                rows = (await session.execute(
+                    select(CsPrediction, UserStats)
+                    .outerjoin(UserStats, CsPrediction.user_id == UserStats.user_id)
                     .where(
                         CsPrediction.event_id == receipt.event_id,
                         CsPrediction.match_id == receipt.match_id,
-                        CsPrediction.result == "lose",
+                        CsPrediction.result != "open",
                     )
-                )).one()
-            opponent_points, opponent_count = opponent_totals[match_key]
-            rows = (await session.execute(
-                select(CsPrediction, UserStats)
-                .outerjoin(UserStats, CsPrediction.user_id == UserStats.user_id)
-                .where(
-                    CsPrediction.event_id == receipt.event_id,
-                    CsPrediction.match_id == receipt.match_id,
-                    CsPrediction.group_id == receipt.group_id,
-                    CsPrediction.result != "open",
-                )
-                .order_by(CsPrediction.user_id)
-            )).all()
-            reports.append({
-                "event_id": receipt.event_id, "match_id": receipt.match_id,
-                "group_id": receipt.group_id, "winner_name": receipt.winner_name,
-                "public_pool": receipt.public_pool, "final_text": receipt.final_text,
-                "opponent_points": opponent_points, "opponent_count": opponent_count,
-                "sent": receipt.sent,
-                "players": [{
+                    .order_by(CsPrediction.net_points.desc(), CsPrediction.user_id)
+                )).all()
+                match_players[match_key] = [{
                     "name": (
                         str(user.display_name or user.qq_nickname or "").strip() if user else ""
                     ) + f"({_masked_user_id(row.user_id)})",
+                    "group_id": row.group_id,
                     "team_name": row.team_name, "points": row.points,
                     "payout": row.payout, "net_points": row.net_points,
                     "result": row.result,
-                } for row, user in rows],
+                } for row, user in rows]
+            players = match_players[match_key]
+            reports.append({
+                "event_id": receipt.event_id, "match_id": receipt.match_id,
+                "group_id": receipt.group_id, "winner_name": receipt.winner_name,
+                "final_text": receipt.final_text, "sent": receipt.sent,
+                "players": [player for player in players if player["group_id"] == receipt.group_id],
+                "other_players": [player for player in players if player["group_id"] != receipt.group_id][:20],
             })
+        if group_id is not None:
+            await session.commit()
     return reports
 
 
@@ -578,11 +519,23 @@ async def get_prediction_detail(
         str(match_id),
         group_id=str(group_id),
     )
+    global_summary = await get_prediction_summary(str(context["event_id"]), str(match_id))
+    team_names = [str(value) for value in state.get("team_names") or []]
+    odds = {}
+    for team_name in team_names:
+        team_count = sum(
+            team_summary["count"]
+            for name, team_summary in global_summary["teams"].items()
+            if _normalize_team(name) == _normalize_team(team_name)
+        )
+        odds[team_name] = prediction_odds(
+            team_count, global_summary["total_count"] - team_count,
+        )
     return {
         "event_id": str(context["event_id"]),
         "match_id": str(match_id),
         "status": status_text,
-        "team_names": [str(value) for value in state.get("team_names") or []],
+        "team_names": team_names,
         "team_labels": (
             prediction_team_labels(state, str(group_id))
             if state.get("prediction_open") and not state.get("prediction_closed")
@@ -590,9 +543,7 @@ async def get_prediction_detail(
         ),
         "summary": summary,
         "winner_name": str(state.get("winner_name") or ""),
-        "public_pool": int(
-            state.get("prediction_public_pool", DEFAULT_PREDICTION_PUBLIC_POOL)
-        ),
+        "odds": odds,
     }
 
 
@@ -604,8 +555,15 @@ def _masked_user_id(user_id: str) -> str:
     return f"{value[:2]}***{value[-2:]}"
 
 
+def _prediction_nickname(nickname: str, user_id: str) -> str:
+    """竞猜卡片昵称最多保留八个字符，无昵称时展示脱敏账号。"""
+    if not nickname:
+        return f"用户({_masked_user_id(user_id)})"
+    return f"{nickname[:8]}..." if len(nickname) > 8 else nickname
+
+
 async def get_prediction_personal_records(user_id: str) -> dict[str, Any]:
-    """跨群汇总个人全部竞猜成绩，并按下注时间列出最近三十条记录。"""
+    """汇总个人成绩，并读取最近三十条记录保存的对阵和获胜队伍。"""
     settled = CsPrediction.settled_at.is_not(None)
     won = settled & (CsPrediction.result == "win")
     lost = settled & (CsPrediction.result == "lose")
@@ -638,21 +596,32 @@ async def get_prediction_personal_records(user_id: str) -> dict[str, Any]:
         entries = []
         for row in rows:
             result = row.result if row.settled_at is not None else "open"
+            teams = [row.team1_name or row.team_name, row.team2_name or "未知队伍"]
+            winner_name = ""
+            if result == "win":
+                winner_name = row.team_name
+            elif result == "lose" and row.team1_name and row.team2_name:
+                winner_name = (
+                    row.team2_name if _normalize_team(row.team1_name) == _normalize_team(row.team_name)
+                    else row.team1_name
+                )
             entries.append({
                 "match_id": row.match_id,
                 "team_name": row.team_name,
+                "team_names": teams,
+                "winner_name": winner_name,
                 "points": row.points,
                 "created_at": row.created_at.strftime("%Y-%m-%d %H:%M"),
                 "result": result,
                 "result_label": {
-                    "win": "获胜", "lose": "未获胜", "refund": "已退款",
+                    "win": "获胜", "lose": "失败", "refund": "已退款",
                 }.get(result, "未结算"),
                 "net_points": row.net_points if result in {"win", "lose"} else 0,
             })
 
     settled_count = totals.wins + totals.losses
     return {
-        "nickname": nickname or f"用户({_masked_user_id(user_id)})",
+        "nickname": _prediction_nickname(nickname, user_id),
         "masked_user_id": _masked_user_id(user_id),
         "avatar_url": f"https://q1.qlogo.cn/g?b=qq&nk={user_id}&s=640",
         "total_count": totals.total_count,
@@ -671,7 +640,7 @@ async def get_prediction_ranking(
     scope: str,
     group_id: str,
 ) -> list[dict[str, Any]]:
-    """竞猜排名查询方法。"""
+    """汇总已结算竞猜并返回前二十名。"""
     async with create_session() as session:
         statement = select(CsPrediction).where(
             CsPrediction.result.in_(("win", "lose")),
@@ -711,14 +680,11 @@ async def get_prediction_ranking(
             -item[1]["total"],
             item[0],
         ),
-    )[:10]
+    )[:20]
     result: list[dict[str, Any]] = []
     for rank, (user_id, aggregate) in enumerate(ranked, start=1):
         user = users.get(user_id)
         nickname = str(user.display_name or user.qq_nickname or "").strip() if user else ""
-        display_name = nickname or f"用户({_masked_user_id(user_id)})"
-        if len(display_name) > 6 and nickname:
-            display_name = f"{nickname[:6]}..."
         win_rate = (
             aggregate["wins"] / aggregate["total"] * 100
             if aggregate["total"]
@@ -728,7 +694,7 @@ async def get_prediction_ranking(
             {
                 "rank": rank,
                 "user_id": user_id,
-                "nickname": display_name,
+                "nickname": _prediction_nickname(nickname, user_id),
                 "win_rate": f"{win_rate:.0f}%({aggregate['wins']}次)",
                 "total_count": aggregate["total"],
                 "net_points": aggregate["net_points"],
@@ -740,7 +706,7 @@ async def get_prediction_ranking(
 
 __all__ = [
     "PredictionError",
-    "DEFAULT_PREDICTION_PUBLIC_POOL",
+    "prediction_odds",
     "get_prediction_detail",
     "get_prediction_ranking",
     "get_prediction_personal_records",
@@ -751,7 +717,6 @@ __all__ = [
     "mark_prediction_notification_sent",
     "list_unsettled_prediction_matches",
     "place_prediction",
-    "refund_uncontested_predictions",
     "refund_expired_predictions",
     "settle_match_predictions",
 ]

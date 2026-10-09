@@ -22,7 +22,7 @@ __plugin_meta__ = PluginMetadata(
         "CS check <比赛链接>\n"
         "CS list <比赛ID>\n"
         "CS prediction <队伍名|竞猜编号> <积分>\n"
-        "CS prediction rank <本群|全部|个人|本人>\n"
+        "CS prediction rank <本群|全部|个人>\n"
         "CS login <手机号> <验证码>\n"
         "CS bind <5E|5e|5eplay> <玩家昵称>\n"
         "CS bind <wm|pw|完美> [Steam 32 位或 64 位 ID]\n"
@@ -37,4 +37,5 @@ __plugin_meta__ = PluginMetadata(
 )
 
 from . import commands as commands  # noqa: E402,F401
+from . import schema as schema  # noqa: E402,F401
 from . import scheduler as scheduler  # noqa: E402,F401

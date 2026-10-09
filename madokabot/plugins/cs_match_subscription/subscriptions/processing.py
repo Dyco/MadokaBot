@@ -8,11 +8,9 @@ from typing import Any
 from nonebot import logger
 from nonebot.adapters.onebot.v11 import Message, MessageSegment
 
-from ..config import config
 from ..models import MATCH_SECTION_FINISHED, MatchData
 from ..prediction import (
     get_prediction_summary,
-    refund_uncontested_predictions,
     settle_match_predictions,
 )
 from ..subscriptions.memory import notification_was_seen, remember_notification
@@ -98,19 +96,6 @@ async def process_event_match(
         state["scheduled_at"] = match.scheduled_at.isoformat()
     state["team_names"] = [team.name for team in match.teams[:2]]
     state["format_code"] = match.format_code or "未知"
-    try:
-        public_pool = max(
-            0,
-            int(
-                state.setdefault(
-                    "prediction_public_pool",
-                    int(config.cs_prediction_public_pool),
-                )
-            ),
-        )
-    except (TypeError, ValueError):
-        public_pool = int(config.cs_prediction_public_pool)
-    state["prediction_public_pool"] = public_pool
     if not initialized:
         previous_scores = current_map_scores(match)
 
@@ -181,7 +166,7 @@ async def process_event_match(
             notifications.append(
                 MatchNotification(
                     "prediction_open",
-                    prediction_open_message(match, public_pool=public_pool),
+                    prediction_open_message(match),
                     match_id,
                 )
             )
@@ -190,35 +175,14 @@ async def process_event_match(
         state["prediction_open"] = True
 
     if actual_started or match.is_finished:
-        summary: dict[str, Any] | None = None
-        refunded = False
-        if not state.get("prediction_settled", False):
-            summary = await get_prediction_summary(event_id, match_id)
-            refund_result = await refund_uncontested_predictions(
-                event_id,
-                match_id,
-                [team.name for team in match.teams[:2]],
-                public_pool=public_pool,
-            )
-            refunded = bool(refund_result.get("refunded", False))
-            if refunded:
-                state["prediction_settled"] = True
-                state["prediction_payout"] = 0
-
         if not state.get("prediction_closed_sent", False):
-            if summary is None:
-                summary = await get_prediction_summary(event_id, match_id)
+            summary = await get_prediction_summary(event_id, match_id)
             notification = "prediction_close"
             if not notification_was_seen(match_id, notification):
                 notifications.append(
                     MatchNotification(
                         "prediction_close",
-                        prediction_close_message(
-                            match,
-                            summary,
-                            refunded=refunded,
-                            public_pool=public_pool,
-                        ),
+                        prediction_close_message(match, summary),
                     )
                 )
                 remember_notification(match_id, notification)
@@ -271,7 +235,6 @@ async def process_event_match(
                     event_id,
                     match_id,
                     winner_name,
-                    public_pool=public_pool,
                 )
                 state["winner_name"] = winner_name
                 state["prediction_settled"] = True

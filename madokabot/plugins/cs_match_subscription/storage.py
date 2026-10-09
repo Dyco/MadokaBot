@@ -300,10 +300,6 @@ async def subscribe_event(
                     match_state.setdefault("prediction_settled", is_finished)
                     match_state.setdefault("winner_name", "")
                     match_state.setdefault("prediction_payout", 0)
-                    match_state.setdefault(
-                        "prediction_public_pool",
-                        int(config.cs_prediction_public_pool),
-                    )
                     match_state.setdefault("team_names", [])
                     match_state.setdefault("format_code", "")
                 continue
@@ -327,7 +323,6 @@ async def subscribe_event(
                 "prediction_settled": is_finished,
                 "winner_name": "",
                 "prediction_payout": 0,
-                "prediction_public_pool": int(config.cs_prediction_public_pool),
                 "team_names": [],
                 "format_code": "",
             }
@@ -473,16 +468,6 @@ async def list_active_events() -> dict[str, dict[str, Any]]:
             if "matches" not in entry or not isinstance(entry.get("matches"), dict):
                 entry["matches"] = {}
                 changed = True
-            for match_state in entry["matches"].values():
-                if (
-                    isinstance(match_state, dict)
-                    and "prediction_public_pool" not in match_state
-                ):
-                    match_state["prediction_public_pool"] = int(
-                        config.cs_prediction_public_pool
-                    )
-                    changed = True
-
             if (
                 entry.get("status") != EVENT_STATUS_FINISHED
                 and not entry.get("completed", False)
@@ -729,6 +714,20 @@ async def get_prediction_settlement_state(event_id: str, match_id: str) -> dict[
         matches = entry.get("matches") if isinstance(entry, dict) else None
         state = matches.get(str(match_id)) if isinstance(matches, dict) else None
         return deepcopy(state) if isinstance(state, dict) else {}
+
+
+async def get_prediction_match_states(
+    match_keys: list[tuple[str, str]],
+) -> dict[tuple[str, str], dict[str, Any]]:
+    """一次读取历史竞猜对阵回填所需的比赛快照。"""
+    async with _lock:
+        data = _read()
+        states = {}
+        for event_id, match_id in match_keys:
+            entry = data.get(f"event:{event_id}", {})
+            state = entry.get("matches", {}).get(match_id, {})
+            states[(event_id, match_id)] = deepcopy(state)
+        return states
 
 
 async def mark_prediction_settled(event_id: str, match_id: str, winner_name: str) -> None:
