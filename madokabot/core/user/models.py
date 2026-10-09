@@ -24,6 +24,9 @@ class UserStats(data.Model):
     points: Mapped[int] = mapped_column(Integer, default=10, nullable=False)
     favorability: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     skin_asset: Mapped[str] = mapped_column(String, default="", nullable=False)
+    sign_template: Mapped[str] = mapped_column(
+        String, default="daily_sign_01.html", nullable=False
+    )
 
 
 class UserProfile(data.Model):

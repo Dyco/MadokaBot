@@ -4,6 +4,7 @@ from nonebot_plugin_datastore import create_session
 from sqlalchemy import func, select, update
 
 from madokabot.core.user.models import UserStats
+from madokabot.core.user.ranking import get_ranking_superusers
 
 
 async def get_points_ranking(
@@ -16,7 +17,7 @@ async def get_points_ranking(
             func.nullif(UserStats.display_name, ""), UserStats.qq_nickname
         ),
         UserStats.points,
-    )
+    ).where(UserStats.user_id.not_in(get_ranking_superusers()))
     if member_ids is not None:
         statement = statement.where(UserStats.user_id.in_(member_ids))
     statement = statement.order_by(UserStats.points.desc(), UserStats.user_id).limit(20)

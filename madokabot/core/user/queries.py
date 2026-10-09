@@ -5,6 +5,7 @@ from sqlalchemy import and_, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from .models import SignRecord, UserStats
+from .ranking import get_ranking_superusers
 
 _SHANGHAI_TZ = ZoneInfo("Asia/Shanghai")
 
@@ -59,6 +60,7 @@ class UserQueries:
                 func.coalesce(SignRecord.total_count, 0),
             )
             .outerjoin(SignRecord, SignRecord.user_id == UserStats.user_id)
+            .where(UserStats.user_id.not_in(get_ranking_superusers()))
             .order_by(UserStats.points.desc(), UserStats.user_id)
             .limit(5)
         )

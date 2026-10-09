@@ -12,10 +12,38 @@ from nonebot_plugin_htmlrender import html_to_pic
 from madokabot.core.resources import ResourceType, ResourceFolder, get_file
 from madokabot.core.user.models import SignRecord, UserStats
 from madokabot.core.user.queries import UserQueries
-from madokabot.default.shop.catalog import get_skin_path
+from madokabot.default.shop.catalog import get_sign_template_path, get_skin_path
 from .config import HTML_FILE_PATH
 
 _SHANGHAI_TZ = ZoneInfo("Asia/Shanghai")
+
+
+def get_template_font_context(template_name: str) -> dict[str, str]:
+    """只加载所选模板需要的字体，预览与正式卡片共用同一套资源。"""
+    if template_name in ("daily_sign_02.html", "daily_sign_03.html"):
+        fonts = {
+            "body_font_path": "NotoSansSC[wght].ttf",
+            "latin_medium_font_path": "BarlowCondensed-Medium.ttf",
+            "latin_bold_font_path": "BarlowCondensed-Bold.ttf",
+        }
+        if template_name == "daily_sign_02.html":
+            fonts.update({
+                "title_font_path": "SmileySans-Oblique.ttf",
+                "latin_italic_font_path": "BarlowCondensed-BlackItalic.ttf",
+            })
+    else:
+        fonts = {
+            "font_path": "font.ttf",
+            "number_font_path": "RobotoFlex.ttf",
+            "english_font_path": "PlusJakartaSans.ttf",
+        }
+    context = {}
+    for variable, filename in fonts.items():
+        path = get_file(ResourceType.FONT, ResourceFolder.SIGN, filename)
+        if path is None:
+            raise FileNotFoundError(f"签到字体资源不存在：font/sign/{filename}")
+        context[variable] = path.resolve().as_uri()
+    return context
 
 
 def format_rank_points(points: int) -> str:
@@ -44,24 +72,10 @@ async def render_sign_card(
     reward_data: dict[str, int] | None = None,
 ) -> MessageSegment:
     """渲染签到或用户资料卡片。"""
-    if not HTML_FILE_PATH.is_file():
+    template_path = get_sign_template_path(user.sign_template) or HTML_FILE_PATH
+    if not template_path.is_file():
         raise FileNotFoundError(f"签到模板不存在：{HTML_FILE_PATH}")
-
-    font_file = get_file(ResourceType.FONT, ResourceFolder.SIGN, "font.ttf")
-    if font_file is None:
-        raise FileNotFoundError("签到字体资源不存在：font/sign/font.ttf")
-
-    number_font_file = get_file(
-        ResourceType.FONT, ResourceFolder.SIGN, "RobotoFlex.ttf"
-    )
-    if number_font_file is None:
-        raise FileNotFoundError("签到字体资源不存在：font/sign/RobotoFlex.ttf")
-
-    english_font_file = get_file(
-        ResourceType.FONT, ResourceFolder.SIGN, "PlusJakartaSans.ttf"
-    )
-    if english_font_file is None:
-        raise FileNotFoundError("签到字体资源不存在：font/sign/PlusJakartaSans.ttf")
+    font_context = get_template_font_context(template_path.name)
 
     chara_path = get_skin_path(user.skin_asset)
     chara_display_name = None
@@ -104,20 +118,23 @@ async def render_sign_card(
         )
         for uid, nickname, points, total_count in points_ranking
     ]
-    template = Template(HTML_FILE_PATH.read_text(encoding="utf-8"), autoescape=True)
+    current_ranking_index = next(
+        (index for index, (uid, _, _, _) in enumerate(points_ranking, start=1)
+         if uid == user.user_id), None,
+    )
+    template = Template(template_path.read_text(encoding="utf-8"), autoescape=True)
     html = template.render(
         title=title,
         items=items,
         quote=get_sign_quote(user.favorability),
         chara_b64=chara_b64,
         chara_name=chara_display_name,
-        font_path=font_file.resolve().as_uri(),
-        number_font_path=number_font_file.resolve().as_uri(),
-        english_font_path=english_font_file.resolve().as_uri(),
+        **font_context,
         user_name=user.display_name or user_name,
         daily_sign_order=daily_sign_order,
         user_id=mask_user_id(str(user.user_id)),
         ranking=ranking,
+        current_ranking_index=current_ranking_index,
         current_time=now.strftime("%Y-%m-%d %H:%M:%S"),
     )
 

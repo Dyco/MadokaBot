@@ -6,8 +6,8 @@ from .config import AccountConfig
 
 __plugin_meta__ = PluginMetadata(
     name="账号",
-    description="注册账号、查询用户资料、付费改名和设置已拥有的立绘",
-    usage="注册\n设置 立绘 <立绘ID>\n设置 改名 <名字>（最多 10 字，消耗 10 积分）\n查询 立绘/资料",
+    description="注册账号、查询资料和库存、付费改名、切换立绘及签到模板",
+    usage="注册\n设置 立绘 <立绘ID>\n设置 签到模板 <模板ID>\n设置 改名 <名字>（最多 10 字，消耗 10 积分）\n查询 立绘/签到模板/资料/积分",
     type="application",
     config=AccountConfig,
 )

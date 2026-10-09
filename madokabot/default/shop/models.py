@@ -1,4 +1,4 @@
-"""商店及立绘持有记录。"""
+"""商店立绘及签到模板的持有记录。"""
 
 from sqlalchemy import Integer, String
 from sqlalchemy.orm import Mapped, mapped_column

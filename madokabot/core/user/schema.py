@@ -35,6 +35,12 @@ async def migrate_user_schema() -> None:
                 "ADD COLUMN display_name VARCHAR(10) NOT NULL DEFAULT ''"
             )
 
+        if "sign_template" not in columns:
+            await conn.exec_driver_sql(
+                f"ALTER TABLE {UserStats.__tablename__} "
+                "ADD COLUMN sign_template VARCHAR NOT NULL DEFAULT 'daily_sign_01.html'"
+            )
+
         # 旧账号需补齐非空注册时间。
         await conn.exec_driver_sql(
             f"UPDATE {UserStats.__tablename__} "

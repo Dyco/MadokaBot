@@ -37,8 +37,9 @@ def _clip_name(name: str, limit: int = 18) -> str:
     return name[: limit - 3] + "..."
 
 
-def _load_skin_image(asset_name: str) -> Image.Image:
-    image_path = assets.get_dir(ResourceType.IMAGE, ResourceFolder.CHAR) / asset_name
+def _load_shop_image(asset_name: str, content: ResourceFolder) -> Image.Image:
+    """按商品分类加载立绘或模板预览。"""
+    image_path = assets.get_dir(ResourceType.IMAGE, content) / asset_name
     with Image.open(image_path) as image:
         return image.convert("RGBA")
 
@@ -57,7 +58,9 @@ def _draw_preview(
     canvas: Image.Image,
     panel_box: tuple[int, int, int, int],
     asset_name: str,
+    content: ResourceFolder,
 ) -> None:
+    """在商品面板内缩放并绘制对应分类的图片。"""
     draw = ImageDraw.Draw(canvas)
     x1, _, x2, y2 = panel_box
 
@@ -69,7 +72,7 @@ def _draw_preview(
         width=2,
     )
 
-    preview = _load_skin_image(asset_name)
+    preview = _load_shop_image(asset_name, content)
     resized = _resize_preview(preview, max_width=(x2 - x1) - 24)
     paste_x = x1 + ((x2 - x1) - resized.width) // 2
     paste_y = y2 - resized.height
@@ -82,7 +85,9 @@ def render_shop_list_card(
     page: int = 1,
     page_size: int = PAGE_SIZE,
     total_pages: int | None = None,
+    category: str = "skin",
 ) -> bytes:
+    """立绘沿用原有网格，签到模板以双列展示完整横版预览。"""
     if page_size <= 0:
         raise ValueError("page_size 必须大于 0")
     if total_pages is None:
@@ -92,7 +97,9 @@ def render_shop_list_card(
 
     page = max(1, min(page, total_pages))
     page_items = items[(page - 1) * page_size : page * page_size]
-    grid_rows = max(1, math.ceil(page_size / GRID_COLUMNS))
+    columns = 2 if category == "sign" else GRID_COLUMNS
+    content = ResourceFolder.SIGN if category == "sign" else ResourceFolder.CHAR
+    grid_rows = max(1, math.ceil((len(page_items) if category == "sign" else page_size) / columns))
 
     title_font = _load_font(44, bold=True)
     subtitle_font = _load_font(24, bold=True)
@@ -102,12 +109,13 @@ def render_shop_list_card(
     outer_padding = 34
     header_height = 142
     footer_height = 24
-    cell_width = 400
-    cell_height = 420
+    cell_width = 520 if category == "sign" else 400
+    cell_height = 450 if category == "sign" else 420
+    frame_height = 350 if category == "sign" else THUMB_FRAME_HEIGHT
     gap_x = 24
     gap_y = 24
 
-    width = outer_padding * 2 + GRID_COLUMNS * cell_width + (GRID_COLUMNS - 1) * gap_x
+    width = outer_padding * 2 + columns * cell_width + (columns - 1) * gap_x
     height = (
         outer_padding * 2
         + header_height
@@ -127,7 +135,8 @@ def render_shop_list_card(
         width=2,
     )
     draw.text(
-        (width // 2, 62), "积分商店", font=title_font, fill=TEXT_MAIN, anchor="mm"
+        (width // 2, 62), "签到模板商店" if category == "sign" else "积分商店",
+        font=title_font, fill=TEXT_MAIN, anchor="mm"
     )
     draw.text(
         (width - 58, 56),
@@ -157,8 +166,8 @@ def render_shop_list_card(
         )
     else:
         for index, item in enumerate(page_items):
-            col = index % GRID_COLUMNS
-            row = index // GRID_COLUMNS
+            col = index % columns
+            row = index // columns
             card_x = grid_origin_x + col * (cell_width + gap_x)
             card_y = grid_origin_y + row * (cell_height + gap_y)
             card_box = (card_x, card_y, card_x + cell_width, card_y + cell_height)
@@ -176,9 +185,9 @@ def render_shop_list_card(
                 card_x + 20,
                 card_y + 18,
                 card_x + cell_width - 20,
-                card_y + 18 + THUMB_FRAME_HEIGHT,
+                card_y + 18 + frame_height,
             )
-            _draw_preview(image, preview_box, item["asset_name"])
+            _draw_preview(image, preview_box, item["asset_name"], content)
 
             owned = item["owned"]
             current = item["current"]
@@ -192,8 +201,8 @@ def render_shop_list_card(
                 status_text = "[未拥有]"
                 status_color = UNOWNED_COLOR
 
-            name_text = _clip_name(Path(item["asset_name"]).stem, limit=20)
-            number_text = f"#{item['display_id']}"
+            name_text = _clip_name(item.get("name", Path(item["asset_name"]).stem), limit=20)
+            number_text = item["item_key"]
             price_text = f"价格：{item['price']}积分"
 
             draw.text(

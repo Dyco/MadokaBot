@@ -35,6 +35,9 @@ async def _init_database() -> None:
     """数据库初始化方法。"""
     await init_database()
     await migrate_user_schema()
+    from .default.shop.service import grant_default_sign_templates
+
+    await grant_default_sign_templates()
 
 
 PACKAGE_ROOT = Path(__file__).resolve().parent

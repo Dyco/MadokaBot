@@ -5,7 +5,7 @@ from nonebot_plugin_datastore import create_session
 
 from madokabot.core.user.models import SignRecord, UserStats
 from madokabot.default.shop.models import UserInventory
-from madokabot.default.shop.catalog import SKIN_SHOP
+from madokabot.default.shop.catalog import DEFAULT_SIGN_ASSET, SIGN_SHOP, SKIN_SHOP
 from .config import config
 
 RENAME_COST = 10
@@ -80,6 +80,13 @@ async def register_user(
     )
     sign = SignRecord(user_id=uid)
     session.add_all([user, sign])
+    session.add(UserInventory(
+        user_id=uid,
+        resource_type=SIGN_SHOP.type.name,
+        content=SIGN_SHOP.content.name,
+        file_name=DEFAULT_SIGN_ASSET,
+        quantity=1,
+    ))
     if config.initial_chara:
         session.add(
             UserInventory(

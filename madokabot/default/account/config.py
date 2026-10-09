@@ -13,4 +13,4 @@ class AccountConfig(BaseModel):
 
 
 config = get_plugin_config(AccountConfig)
-HTML_FILE_PATH = Path(__file__).parent / "templates" / "daily_sign.html"
+HTML_FILE_PATH = Path(__file__).parent / "templates" / "daily_sign_01.html"

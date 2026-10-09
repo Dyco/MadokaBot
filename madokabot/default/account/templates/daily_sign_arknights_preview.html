@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <style>
+
+        @font-face { font-family: 'NotoSansSC'; src: url('{{ body_font_path }}'); font-weight: 100 900; }
+        @font-face { font-family: 'BarlowCondensed'; src: url('{{ latin_medium_font_path }}'); font-weight: 500; }
+        @font-face { font-family: 'BarlowCondensed'; src: url('{{ latin_bold_font_path }}'); font-weight: 700; }
+        :root { --ink: #21272b; --paper: #f7f8f6; --blue: #00b3dd; --orange: #ff792f; }
+        * { box-sizing: border-box; }
+        body { margin: 0; width: 900px; height: 600px; overflow: hidden; color: var(--paper); background: #29343b; font-family: 'NotoSansSC', sans-serif; }
+        .stage { position: relative; width: 900px; height: 600px; overflow: hidden; isolation: isolate; }
+        .environment { position: absolute; inset: 0; width: 900px; height: 600px; object-fit: cover; filter: saturate(.65) brightness(.83) blur(.6px); z-index: -3; }
+        .stage::after { content: ''; position: absolute; inset: 0; z-index: -2; pointer-events: none; background: linear-gradient(90deg, rgba(19,28,34,.05) 35%, rgba(19,28,34,.18)); box-shadow: inset 0 0 45px rgba(8,18,23,.12); }
+        .top-shade { position: absolute; inset: 0 0 auto; height: 145px; background: linear-gradient(rgba(15,26,32,.72), transparent); z-index: -1; }
+        .masthead { position: absolute; left: 28px; top: 24px; display: flex; align-items: center; gap: 10px; z-index: 7; }
+        .agency-mark { width: 31px; height: 35px; fill: none; stroke: currentColor; stroke-width: 1.5; }
+        .agency-name { font: 700 19px/19px 'BarlowCondensed', sans-serif; letter-spacing: 2px; }
+        .agency-name small { display: block; margin-top: 5px; font: 500 9px 'BarlowCondensed', sans-serif; letter-spacing: 2.2px; opacity: .72; }
+        .date-strip { position: absolute; right: 31px; top: 19px; font: 500 12px 'BarlowCondensed', sans-serif; letter-spacing: 1.4px; z-index: 8; }
+        .date-strip span { padding-left: 12px; opacity: .7; }
+        .identity { position: absolute; left: 29px; top: 205px; width: 177px; z-index: 7; }
+        .producer-emblem { position: relative; width: 96px; height: 84px; margin-bottom: 10px; background: rgba(15,23,27,.68); clip-path: polygon(0 100%, 50% 0, 100% 100%); }
+        .producer-emblem::before { content: '283'; position: absolute; left: 17px; top: 34px; font: 700 39px/41px 'BarlowCondensed', sans-serif; }
+        .producer-emblem::after { content: ''; position: absolute; bottom: 4px; left: 14px; width: 67px; height: 3px; background: #e2c648; }
+        .user-name { display: block; width: 177px; padding: 4px 8px; background: rgba(20,28,33,.75); font-size: 24px; line-height: 33px; font-weight: 750; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .user-name.compact { font-size: 16px; }
+        .user-id { display: inline-block; padding: 3px 8px; color: #f4f6f7; background: rgba(20,28,33,.7); font: 500 12px 'BarlowCondensed', sans-serif; letter-spacing: 1px; }
+        .identity small { display: block; margin-top: 9px; font: 500 9px 'BarlowCondensed', sans-serif; letter-spacing: 2px; color: #c6d0d4; }
+        .chara-container { position: absolute; left: 109px; bottom: -7px; width: 414px; height: 562px; display: flex; align-items: flex-end; justify-content: center; z-index: 3; }
+        .chara-img { max-width: 100%; max-height: 100%; object-fit: contain; filter: drop-shadow(0 5px 12px rgba(8,18,24,.16)); }
+        .empty-portrait { position: absolute; left: 234px; top: 275px; width: 160px; color: #e3e9eb; text-align: center; font-size: 12px; letter-spacing: 2px; }
+        .empty-portrait svg { display: block; margin: 0 auto 18px; width: 52px; height: 52px; fill: none; stroke: currentColor; }
+        .heading { position: absolute; left: 486px; top: 127px; width: 383px; height: 119px; padding: 13px 21px; color: var(--ink); background: rgba(250,251,249,.94); box-shadow: 0 3px 10px rgba(13,22,28,.12); z-index: 7; }
+        .heading::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 3px; background: var(--orange); }
+        .heading-icon { position: absolute; width: 139px; height: 139px; right: 0; top: -8px; color: #d5d9d9; opacity: .55; }
+        .heading small { position: relative; font: 700 11px 'BarlowCondensed', sans-serif; letter-spacing: 2px; color: #748187; }
+        .title-main { position: relative; margin: 2px 0 0; font-size: 41px; line-height: 49px; font-weight: 900; letter-spacing: -1px; }
+        .daily-sign-order { position: relative; display: inline-flex; align-items: baseline; gap: 5px; margin-top: 2px; padding: 0 9px 1px; color: #f7f9f9; background: #2c3339; font-size: 12px; line-height: 23px; font-style: italic; }
+        .daily-sign-order strong { color: #54d8f6; font: italic 700 24px/24px 'BarlowCondensed', sans-serif; }
+        .data-card { position: absolute; left: 420px; top: 42px; width: 451px; height: 471px; z-index: 8; pointer-events: none; }
+        .score { position: absolute; top: 0; right: 0; width: 319px; height: 63px; padding: 0 10px; border-bottom: 2px solid rgba(239,245,246,.65); background: linear-gradient(90deg, rgba(26,36,42,.2), rgba(26,36,42,.74)); }
+        .score-label { position: absolute; left: 10px; top: 19px; display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; }
+        .score-label small { position: absolute; left: 27px; top: 19px; white-space: nowrap; font: 500 8px 'BarlowCondensed', sans-serif; letter-spacing: .8px; opacity: .6; }
+        .credit-icon { width: 20px; height: 25px; fill: none; stroke: var(--blue); stroke-width: 2.4; }
+        .score-value { position: absolute; top: 6px; right: 10px; display: flex; align-items: baseline; gap: 6px; }
+        .score-number { font: 500 45px/51px 'BarlowCondensed', sans-serif; }
+        .score-number.compact { font-size: 33px; line-height: 38px; }
+        .score-number.dense { font-size: 26px; line-height: 38px; }
+        .score:has(.score-number.compact, .score-number.dense) .score-label { top: 4px; font-size: 9px; }
+        .score:has(.score-number.compact, .score-number.dense) .credit-icon { width: 14px; height: 17px; }
+        .score:has(.score-number.compact, .score-number.dense) .score-label small { display: none; }
+        .score:has(.score-number.compact, .score-number.dense) .score-value { top: 18px; }
+        .reward { font: 700 17px 'BarlowCondensed', sans-serif; color: #7fe0f5; }
+        .score-stripes { display: none; }
+        .stats-grid { position: absolute; left: 66px; top: 224px; width: 383px; height: 297px; }
+        .stats-row { position: absolute; width: 184px; height: 105px; color: var(--ink); background: rgba(246,248,246,.96); box-shadow: 0 2px 8px rgba(10,20,27,.12); overflow: hidden; }
+        .stats-row::after { content: ''; position: absolute; right: 0; bottom: 0; width: 100px; height: 32px; opacity: .09; background: conic-gradient(#586367 25%, transparent 0 50%, #586367 0 75%, transparent 0) 0 0 / 8px 8px; mask-image: linear-gradient(90deg, transparent, black); }
+        .stats-row:nth-child(1) { left: 0; top: 0; }
+        .stats-row:nth-child(2) { right: 0; top: 0; width: 185px; color: white; background: rgba(0,157,192,.9); border-top: 4px solid #25333c; }
+        .stats-row:nth-child(3) { left: 0; top: 139px; width: 94px; height: 158px; color: #f1f5f6; background: rgba(28,42,50,.78); border-top: 2px solid rgba(244,246,246,.8); backdrop-filter: blur(5px); }
+        .stats-label { position: relative; z-index: 1; padding: 8px 13px 0; font-size: 21px; font-weight: 850; letter-spacing: -1px; }
+        .stats-row:nth-child(2) .stats-label { padding-top: 4px; }
+        .stats-row:nth-child(3) .stats-label { padding: 9px 8px 0; font-size: 16px; letter-spacing: -1px; }
+        .stat-icon { position: absolute; width: 96px; height: 96px; top: 6px; right: -12px; fill: currentColor; opacity: .1; }
+        .stats-row:nth-child(2) .stat-icon { opacity: .18; }
+        .stats-row:nth-child(3) .stat-icon { width: 128px; height: 128px; right: -27px; top: 36px; opacity: .13; }
+        .stats-value { position: relative; display: flex; align-items: baseline; gap: 4px; padding: 0 13px; margin-top: 3px; z-index: 1; }
+        .stats-value strong { font: 700 41px/45px 'BarlowCondensed', sans-serif; }
+        .stats-value strong.compact { font-size: 30px; }
+        .unit { font-size: 11px; opacity: .7; }
+        .stats-row:nth-child(3) .stats-value { padding: 7px 8px 0; gap: 2px; }
+        .stats-row:nth-child(3) .stats-value strong { font-size: 34px; }
+        .stats-row:nth-child(3) .stats-value strong.compact { font-size: 27px; }
+        .stats-code { position: absolute; bottom: 7px; left: 14px; font: 500 9px 'BarlowCondensed', sans-serif; letter-spacing: 1px; opacity: .55; }
+        .stats-row:nth-child(3) .stats-code { left: 9px; font-size: 8px; letter-spacing: .6px; }
+        .delta { position: absolute; top: 58px; right: 10px; font: 700 12px 'BarlowCondensed', sans-serif; }
+        .ranking-card { position: absolute; left: 592px; top: 405px; width: 277px; height: 158px; padding: 7px 10px 9px; color: #ecf2f4; background: rgba(22,34,42,.8); border-top: 2px solid rgba(240,245,246,.8); box-shadow: 0 2px 8px rgba(13,22,28,.12); backdrop-filter: blur(5px); z-index: 8; }
+        .ranking-header { display: flex; justify-content: space-between; align-items: center; height: 24px; padding: 0 4px 5px; }
+        .ranking-title { margin: 0; font-size: 14px; font-weight: 800; }
+        .ranking-header small { color: #a0afb7; font: 500 9px 'BarlowCondensed', sans-serif; letter-spacing: 1.2px; }
+        .ranking-row { display: grid; grid-template-columns: 17px minmax(0, 1fr) 56px 35px; gap: 5px; align-items: center; height: 23px; padding: 0 4px; border-top: 1px solid rgba(156,174,185,.14); }
+        .ranking-position { font: 700 15px 'BarlowCondensed', sans-serif; color: #c7d4da; }
+        .ranking-user { display: flex; align-items: baseline; gap: 4px; min-width: 0; }
+        .ranking-name { font-size: 11px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .ranking-id { font: 500 9px 'BarlowCondensed', sans-serif; color: #91a4af; margin-left: auto; flex-shrink: 0; }
+        .ranking-points, .ranking-count { text-align: right; color: #9cabb4; font-size: 8px; white-space: nowrap; }
+        .ranking-points b, .ranking-count b { font: 500 13px 'BarlowCondensed', sans-serif; color: #e9f0f4; }
+        .ranking-row.current { background: rgba(0,179,221,.21); border-left: 2px solid var(--blue); }
+        .ranking-row.current .ranking-position, .ranking-row.current .ranking-name, .ranking-row.current b { color: #69ddf6; }
+        .ranking-empty { padding: 37px 0; color: #a0afb7; text-align: center; font-size: 12px; }
+        .bubble { position: absolute; left: 29px; bottom: 48px; width: 372px; min-height: 69px; padding: 14px 16px 12px; color: #eff3f3; background: rgba(16,28,36,.74); border-left: 2px solid #eef3f3; box-shadow: 0 2px 8px rgba(12,20,24,.12); backdrop-filter: blur(5px); z-index: 9; }
+        .bubble-caption { position: absolute; top: -10px; left: 12px; padding: 2px 8px; color: white; background: var(--orange); font: 700 10px 'BarlowCondensed', sans-serif; letter-spacing: 1.6px; }
+        .bubble-text { font-size: 13px; line-height: 1.8; }
+        .bubble.long .bubble-text { font-size: 12px; }
+        .footer { position: absolute; bottom: 14px; left: 30px; right: 31px; display: flex; align-items: center; justify-content: space-between; color: #bac8ce; font: 500 9px 'BarlowCondensed', sans-serif; letter-spacing: 1.7px; z-index: 10; }
+        .skin-note { max-width: 420px; font: 400 8px 'NotoSansSC', sans-serif; letter-spacing: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .home-indicator { position: absolute; bottom: 7px; left: 385px; width: 131px; height: 3px; border-radius: 3px; background: rgba(214,225,231,.33); }
+        .heading, .stats-row, .score, .identity { transform: translateZ(0); }
+    </style>
+</head>
+<body>
+    <div class="stage">
+
+        <img class="environment" src="{{ background_b64 }}" alt="">
+        <div class="top-shade"></div>
+        <header class="masthead"><svg class="agency-mark" viewBox="0 0 32 32" aria-hidden="true"><path d="M16 2 30 28H2Z M16 9v12 M10 21h12 M11 26h10"/></svg><div class="agency-name">MADOKABOT<small>283 PRODUCTION</small></div></header>
+        <div class="date-strip">{{ current_time[:10].replace('-', '/') }}<span>{{ current_time[11:16] }} / UTC+8</span></div>
+        <div class="identity"><div class="producer-emblem"></div><span class="user-name{{ ' compact' if user_name | length > 6 else '' }}">{{ user_name }}</span><span class="user-id">QQ / {{ user_id }}</span><small>PRODUCER / ACCOUNT</small></div>
+        {% if chara_b64 %}<div class="chara-container"><img class="chara-img" src="{{ chara_b64 }}"></div>
+        {% else %}<div class="empty-portrait"><svg viewBox="0 0 52 52" aria-hidden="true"><path d="M1 14V1h13 M38 1h13v13 M51 38v13H38 M14 51H1V38 M26 7v38 M7 26h38"/><circle cx="26" cy="26" r="12"/></svg>未选择立绘</div>{% endif %}
+        <div class="heading"><svg class="heading-icon" viewBox="0 0 100 100" aria-hidden="true"><path d="m50 1 46 49-46 49L4 50Zm0 13L17 50l33 36 33-36Z M43 23h14v54H43z M27 43h46v14H27z" fill="currentColor"/></svg><small>DAILY / ACTIVITY TERMINAL</small><h1 class="title-main">{{ title }}</h1>{% if daily_sign_order %}<div class="daily-sign-order">今日第 <strong>{{ daily_sign_order }}</strong> 位签到</div>{% endif %}</div>
+        <div class="data-card">
+            {% for label, value, delta in items if label == '总积分' %}
+            {% set parts = value.split(' ', 1) %}
+            <div class="score"><div class="score-label"><svg class="credit-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 2 10 5-10 5L2 7Z M2 12l10 5 10-5 M2 17l10 5 10-5"/></svg>{{ label }}<small>ACCOUNT CREDIT</small></div>
+                <div class="score-value"><strong class="score-number{{ ' dense' if parts[0] | length > 11 else ' compact' if parts[0] | length > 6 else '' }}">{{ parts[0] }}</strong>{% if delta %}<span class="reward">{{ delta }}</span>{% endif %}</div><span class="score-stripes"></span>
+            </div>
+            {% endfor %}
+            <div class="stats-grid">
+                {% for label, value, delta in items if label != '总积分' %}
+                {% set parts = value.split(' ', 1) %}
+                <div class="stats-row"><div class="stats-label"><svg class="stat-icon" viewBox="0 0 100 100" aria-hidden="true">
+                    {% if label == '好感度' %}<path d="M50 88 11 49V23L30 10l20 17 20-17 19 13v26Z M24 55 50 80l26-25-26 12Z" fill-rule="evenodd"/>
+                    {% elif label in ('连续陪伴', '连续签到') %}<path d="M25 5h50l-5 20H30Z M33 31h34l5 14H28Z M28 51h44l13 40H15Zm14 8L31 83h38L58 59Z" fill-rule="evenodd"/>
+                    {% elif label == '累计签到' %}<path d="M11 18h78v72H11Zm11 24v37h56V42Z M25 5h10v25H25z M65 5h10v25H65z M32 52h12v16H32z M54 52h12v16H54z" fill-rule="evenodd"/>{% endif %}
+                </svg>{{ label }}</div><div class="stats-value"><strong class="{{ 'compact' if parts[0] | length > 4 else '' }}">{{ parts[0] }}</strong>{% if parts | length > 1 %}<span class="unit">{{ parts[1] }}</span>{% endif %}</div><span class="stats-code">{{ 'AFFINITY' if label == '好感度' else 'CONTINUOUS' if label in ('连续陪伴', '连续签到') else 'TOTAL RECORD' }}</span>{% if delta %}<span class="delta">{{ delta }}</span>{% endif %}</div>
+                {% endfor %}
+            </div>
+        </div>
+        <div class="ranking-card"><div class="ranking-header"><h2 class="ranking-title">积分排名</h2><small>ARCHIVE / TOP 05</small></div>
+            {% for nickname, uid, points, total_count in ranking %}
+            <div class="ranking-row{{ ' current' if loop.index == (current_ranking_index | default(none)) else '' }}"><span class="ranking-position">{{ '%02d' | format(loop.index) }}</span><div class="ranking-user"><span class="ranking-name">{{ nickname }}</span><span class="ranking-id">{{ uid }}</span></div><span class="ranking-points"><b>{{ points }}</b> 积分</span><span class="ranking-count"><b>{{ total_count }}</b> 次</span></div>
+            {% else %}<div class="ranking-empty">暂无排名</div>{% endfor %}
+        </div>
+        <div class="bubble{{ ' long' if quote | length > 28 else '' }}"><div class="bubble-caption">ASSISTANT / VOICE RECORD</div><div class="bubble-text">「{{ quote }}」</div></div>
+        <footer class="footer"><span class="skin-note">{% if chara_name %}立绘 / {{ chara_name.replace('_', ' / ') }}{% else %}283 PRODUCTION / ASSISTANT ARCHIVE{% endif %}</span><span>PERSONAL TERMINAL / DAILY RECORD</span></footer><div class="home-indicator"></div>
+    </div>
+</body>
+</html>

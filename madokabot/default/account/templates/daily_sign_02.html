@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        @font-face { font-family: 'NotoSansSC'; src: url('{{ body_font_path }}'); font-weight: 100 900; }
+        @font-face { font-family: 'SmileySans'; src: url('{{ title_font_path }}'); font-weight: 400; }
+        @font-face { font-family: 'BarlowCondensed'; src: url('{{ latin_medium_font_path }}'); font-weight: 500; }
+        @font-face { font-family: 'BarlowCondensed'; src: url('{{ latin_bold_font_path }}'); font-weight: 700; }
+        @font-face { font-family: 'BarlowCondensed'; src: url('{{ latin_italic_font_path }}'); font-weight: 900; font-style: italic; }
+        :root { --blue: #0758d3; --cyan: #75f2ff; --ink: #052551; --paper: #f2fbff; }
+        * { box-sizing: border-box; }
+        body { margin: 0; width: 900px; height: 600px; overflow: hidden; font-family: 'NotoSansSC', sans-serif; font-weight: 500; background: var(--blue); }
+        .stage { position: relative; width: 900px; height: 600px; overflow: hidden; isolation: isolate; }
+        .stage::before { content: ''; position: absolute; inset: 0; z-index: -3; background: radial-gradient(ellipse at 82% 8%, #61e3fa 0%, #167ae2 36%, #0755cc 66%, #153c9e 100%); }
+        .stage::after { content: ''; position: absolute; inset: 0; z-index: -2; background: linear-gradient(150deg, transparent 46%, rgba(1, 32, 94, .55)); }
+        .water-field { position: absolute; inset: 0; width: 900px; height: 600px; z-index: -1; }
+        .masthead { position: absolute; left: 42px; top: 26px; display: flex; gap: 15px; align-items: center; color: var(--paper); font: 700 12px 'BarlowCondensed', sans-serif; letter-spacing: 2px; }
+        .masthead::before { content: ''; width: 26px; height: 3px; background: var(--cyan); }
+        .hero-type { position: absolute; top: 42px; left: 29px; z-index: 6; color: var(--paper); font: italic 900 119px/.95 'BarlowCondensed', sans-serif; letter-spacing: -2.5px; transform: rotate(-6deg); text-shadow: 3px 4px 0 rgba(4, 40, 119, .36); }
+        .hero-type span { color: var(--cyan); }
+        .date-strip { position: absolute; top: 22px; right: 24px; width: 90px; height: 90px; display: flex; flex-direction: column; align-items: center; justify-content: center; border: 2px solid rgba(242, 251, 255, .88); border-left-width: 6px; border-radius: 50%; z-index: 10; color: var(--paper); background: rgba(3, 52, 113, .13); }
+        .date-strip small { font: 700 9px 'BarlowCondensed', sans-serif; letter-spacing: 2px; }
+        .date-strip strong { font: italic 900 32px/34px 'BarlowCondensed', sans-serif; }
+        .date-strip span { font: 500 11px 'BarlowCondensed', sans-serif; letter-spacing: 1px; }
+        .data-card { position: absolute; left: 38px; top: 148px; width: 354px; height: 420px; padding: 23px 26px 24px; z-index: 8; color: var(--paper); }
+        .user-info { display: flex; align-items: baseline; gap: 9px; margin-bottom: 5px; }
+        .user-name { max-width: 180px; font-size: 13px; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .user-id { color: #9dd4f6; font: 500 11px 'BarlowCondensed', sans-serif; letter-spacing: .3px; white-space: nowrap; }
+        .title-main { margin: 0; font: 400 46px/54px 'SmileySans', 'NotoSansSC', sans-serif; letter-spacing: -1px; }
+        .daily-sign-order { color: #b0daf6; font-size: 12px; font-style: italic; line-height: 22px; margin-bottom: 13px; }
+        .daily-sign-order .number { font-size: 19px; color: var(--cyan); font-weight: 900; }
+        .number { font-family: 'BarlowCondensed', 'NotoSansSC', sans-serif; font-weight: 700; font-variant-numeric: tabular-nums; }
+        .score { position: relative; color: var(--ink); padding: 11px 14px 10px; margin: 5px -2px 13px; }
+        .score::before { content: ''; position: absolute; inset: -4px -10px 0 -12px; z-index: -1; background: var(--paper); clip-path: polygon(2% 4%, 100% 0, 95% 96%, 0 100%); }
+        .score::after { content: ''; position: absolute; left: -19px; top: 6px; bottom: -2px; width: 6px; background: var(--cyan); transform: skewX(-5deg); }
+        .score-label { display: flex; justify-content: space-between; align-items: center; font-size: 11px; color: #3d6b9d; }
+        .score-label small { font: 700 10px 'BarlowCondensed', sans-serif; letter-spacing: 1.8px; color: #0870c4; }
+        .score-value { display: flex; align-items: baseline; gap: 12px; }
+        .score-number { font-size: 62px; line-height: 59px; font-weight: 700; letter-spacing: -.5px; }
+        .score-number.compact { font-size: 46px; letter-spacing: -.5px; }
+        .score-number.dense { font-size: 36px; letter-spacing: -.5px; }
+        .reward { color: var(--paper); background: var(--blue); padding: 3px 9px; margin-left: auto; font-size: 16px; font-weight: 700; transform: skewX(-7deg); }
+        .stats-row { position: relative; isolation: isolate; display: flex; justify-content: space-between; align-items: baseline; height: 44px; padding: 7px 0; }
+        .stats-row::before { content: ''; position: absolute; inset: 3px -5px; z-index: -1; background: rgba(2, 43, 118, .36); clip-path: polygon(1% 5%, 100% 0, 98% 94%, 0 100%); }
+        .stats-row + .stats-row { transform: translateX(7px); }
+        .stats-row + .stats-row + .stats-row { transform: translateX(14px); }
+        .stats-label { font: 400 20px 'SmileySans', 'NotoSansSC', sans-serif; color: var(--paper); }
+        .stat-icon { display: inline-block; width: 18px; height: 20px; margin-right: 8px; vertical-align: -3px; color: var(--cyan); fill: currentColor; transform: skewX(-8deg); }
+        .stat-icon .icon-detail { fill: none; stroke: var(--paper); stroke-width: 1.6; stroke-linecap: square; stroke-linejoin: miter; }
+        .stats-value { display: flex; align-items: baseline; gap: 5px; }
+        .stats-value strong { font-size: 30px; line-height: 30px; font-weight: 700; }
+        .unit { color: #aacff0; font-size: 11px; }
+        .delta { color: var(--cyan); font-size: 12px; font-weight: 700; }
+        .skin-note { position: absolute; left: 26px; right: 22px; bottom: 21px; color: #94c0e6; font-size: 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .ranking-card { position: absolute; left: 406px; top: 224px; width: 194px; height: 291px; padding: 21px 12px 16px; z-index: 9; color: var(--paper); }
+        .ranking-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 9px; border-bottom: 2px solid var(--cyan); padding-bottom: 8px; }
+        .ranking-title { margin: 0; font: 400 19px 'SmileySans', 'NotoSansSC', sans-serif; }
+        .ranking-header small { font: italic 900 13px 'BarlowCondensed', sans-serif; letter-spacing: .5px; color: var(--cyan); }
+        .ranking-row { position: relative; isolation: isolate; display: grid; grid-template-columns: 24px minmax(0, 1fr); column-gap: 8px; height: 43px; align-content: center; padding-left: 5px; }
+        .ranking-row::before { content: ''; position: absolute; inset: 2px -6px; z-index: -1; background: rgba(2, 37, 95, .58); clip-path: polygon(3% 0, 100% 0, 97% 100%, 0 100%); }
+        .ranking-row.current::before { background: var(--cyan); }
+        .ranking-position { grid-row: span 2; align-self: center; font: italic 900 29px 'BarlowCondensed', sans-serif; color: #7abbeb; }
+        .rank-1 .ranking-position { color: var(--cyan); }
+        .ranking-user { display: flex; align-items: baseline; gap: 4px; min-width: 0; }
+        .ranking-name { font-size: 12px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .ranking-id { color: #8fa9ca; font: 500 10px 'BarlowCondensed', sans-serif; flex-shrink: 0; }
+        .ranking-value { display: flex; justify-content: space-between; gap: 3px; color: #9cb3d1; font-size: 9px; line-height: 16px; }
+        .ranking-points { color: #dceeff; }
+        .ranking-points .number { font-size: 13px; font-weight: 700; }
+        .ranking-row.current .ranking-position, .ranking-row.current .ranking-name, .ranking-row.current .ranking-points { color: var(--ink); }
+        .ranking-row.current .ranking-id, .ranking-row.current .ranking-value { color: #285f85; }
+        .ranking-empty { padding-top: 62px; color: #88a3c5; text-align: center; font-size: 12px; }
+        .chara-container { position: absolute; right: -17px; bottom: -34px; width: 458px; height: 640px; display: flex; align-items: flex-end; justify-content: center; z-index: 4; }
+        .chara-img { max-height: 94%; max-width: 100%; object-fit: contain; filter: drop-shadow(-5px 3px 0 rgba(0, 40, 103, .44)); }
+        .chara-shadow { position: absolute; bottom: 0; max-height: 94%; max-width: 100%; object-fit: contain; transform: translate(-34px, -6px) rotate(-3deg); filter: brightness(0) invert(1); opacity: .18; }
+        .bubble { position: absolute; right: 28px; bottom: 65px; width: 274px; padding: 17px 20px; z-index: 12; color: var(--ink); }
+        .bubble::before { content: ''; position: absolute; inset: 0; z-index: -1; background: var(--paper); clip-path: polygon(4% 4%, 100% 0, 98% 92%, 11% 100%, 0 63%); }
+        .bubble::after { content: ''; position: absolute; left: -8px; top: 10px; width: 9px; height: 24px; background: var(--cyan); transform: rotate(15deg); }
+        .bubble-text { font-size: 14px; font-weight: 500; line-height: 1.7; text-align: center; }
+        .bubble.long .bubble-text { font-size: 12px; }
+        .signature { position: absolute; left: 42px; bottom: 16px; color: var(--paper); font: 700 11px 'BarlowCondensed', sans-serif; letter-spacing: 2px; }
+        .signature span { color: var(--cyan); }
+        .side-type { position: absolute; right: 12px; top: 108px; color: rgba(255,255,255,.5); writing-mode: vertical-rl; font: italic 900 12px 'BarlowCondensed', sans-serif; letter-spacing: 4px; z-index: 6; }
+    </style>
+</head>
+<body>
+    <div class="stage">
+        <svg class="water-field" viewBox="0 0 900 600" aria-hidden="true">
+            <defs><linearGradient id="water-flow" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#79efff" stop-opacity=".65"/><stop offset="1" stop-color="#0c64da" stop-opacity=".06"/></linearGradient></defs>
+            <path d="M560 -60C215 115 466 349 698 395S1078 438 797 634" fill="none" stroke="url(#water-flow)" stroke-width="88"/>
+            <g fill="none" stroke="#95eaff" transform="rotate(-17 700 320)">
+                <ellipse cx="716" cy="334" rx="330" ry="193" stroke-width="2" opacity=".6"/>
+                <ellipse cx="716" cy="334" rx="304" ry="169" stroke-width="1" opacity=".35"/>
+                <ellipse cx="716" cy="334" rx="363" ry="227" stroke-width="1" opacity=".2"/>
+            </g>
+            <path d="M-25 595C293 364 591 735 960 407" fill="none" stroke="#42cef4" stroke-width="20" opacity=".23"/>
+            <path d="M-25 565C260 384 607 697 960 377" fill="none" stroke="#a8f2ff" stroke-width="1" opacity=".5"/>
+            <g fill="none" stroke="#b9f5ff"><circle cx="562" cy="101" r="8" opacity=".45"/><circle cx="585" cy="70" r="3" opacity=".6"/><circle cx="863" cy="421" r="6" opacity=".35"/><circle cx="468" cy="559" r="4" opacity=".35"/></g>
+        </svg>
+        <div class="masthead">283 PRODUCTION / NOCTCHILL</div>
+        <div class="hero-type">CHECK <span>IN.</span></div>
+        <div class="date-strip"><small>TODAY</small><strong>{{ current_time[5:10].replace('-', '.') }}</strong><span>{{ current_time[11:16] }}</span></div>
+        <div class="data-card">
+            <div class="user-info"><span class="user-name">{{ user_name }}</span><span class="user-id">QQ / {{ user_id }}</span></div>
+            <h1 class="title-main">{{ title }}</h1>
+            {% if daily_sign_order %}
+            <div class="daily-sign-order">今日第 <span class="number">{{ daily_sign_order }}</span> 位签到</div>
+            {% endif %}
+            {% for label, value, delta in items %}
+            {% set parts = value.split(' ', 1) %}
+            {% if label == '总积分' %}
+            <div class="score">
+                <div class="score-label">{{ label }}<small>TOTAL POINTS</small></div>
+                <div class="score-value"><span class="number score-number{{ ' dense' if parts[0] | length > 11 else ' compact' if parts[0] | length > 6 else '' }}">{{ parts[0] }}</span>{% if delta %}<span class="number reward">{{ delta }}</span>{% endif %}</div>
+            </div>
+            {% else %}
+            <div class="stats-row">
+                <span class="stats-label">
+                    <svg class="stat-icon" viewBox="0 0 24 24" aria-hidden="true">
+                        {% if label == '好感度' %}
+                        <path d="M12 21 2 11 3 5 8 3 12 7 17 3 22 5 23 11Z"/>
+                        <path class="icon-detail" d="m6 7 2-1 3 3 M14 15l5-5"/>
+                        {% elif label in ('连续陪伴', '连续签到') %}
+                        <path d="M14 2a10 10 0 1 0 8 15 9 9 0 0 1-8-15Z"/>
+                        <path d="m18 2 1.5 4.5L24 8l-4.5 1.5L18 14l-1.5-4.5L12 8l4.5-1.5Z"/>
+                        <path class="icon-detail" d="m6 12 1 4 3 2"/>
+                        {% elif label == '累计签到' %}
+                        <path d="m5 3 17-1-2 19-18 1Z"/>
+                        <path class="icon-detail" d="m6 12 4 4 8-9 M7 19l8-.5"/>
+                        {% endif %}
+                    </svg>{{ label }}
+                </span>
+                <div class="stats-value"><strong class="number">{{ parts[0] }}</strong>{% if parts | length > 1 %}<span class="unit">{{ parts[1] }}</span>{% endif %}{% if delta %}<span class="number delta">{{ delta }}</span>{% endif %}</div>
+            </div>
+            {% endif %}
+            {% endfor %}
+            {% if chara_name %}<div class="skin-note">立绘 / {{ chara_name.replace('樋口円香_', '').replace('_', ' / ') }}</div>{% endif %}
+        </div>
+        <div class="ranking-card">
+            <div class="ranking-header"><h2 class="ranking-title">积分排名</h2><small>TOP 05</small></div>
+            {% for nickname, uid, points, total_count in ranking %}
+            <div class="ranking-row rank-{{ loop.index }}{{ ' current' if loop.index == (current_ranking_index | default(none)) else '' }}">
+                <span class="ranking-position">{{ '%02d' | format(loop.index) }}</span>
+                <div class="ranking-user"><span class="ranking-name">{{ nickname[:5] ~ '…' if nickname | length > 6 else nickname }}</span><span class="ranking-id">{{ uid }}</span></div>
+                <div class="ranking-value"><span class="ranking-points"><span class="number">{{ points }}</span> 积分</span><span><span class="number">{{ total_count }}</span> 次</span></div>
+            </div>
+            {% else %}<div class="ranking-empty">暂无排名</div>{% endfor %}
+        </div>
+        {% if chara_b64 %}<div class="chara-container"><img class="chara-shadow" src="{{ chara_b64 }}"><img class="chara-img" src="{{ chara_b64 }}"></div>{% endif %}
+        <div class="bubble{{ ' long' if quote | length > 28 else '' }}"><div class="bubble-text">「{{ quote }}」</div></div>
+        <div class="side-type">SHINY COLORS / DAILY RECORD</div>
+        <div class="signature">MADOKABOT <span>//</span> YOUR DAILY RECORD.</div>
+    </div>
+</body>
+</html>

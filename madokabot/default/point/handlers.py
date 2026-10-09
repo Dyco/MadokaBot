@@ -1,6 +1,7 @@
 """积分命令的参数校验与回复。"""
 
 from nonebot import logger
+from nonebot.matcher import Matcher
 from nonebot.adapters.onebot.v11 import (
     Bot,
     GroupMessageEvent,
@@ -8,7 +9,10 @@ from nonebot.adapters.onebot.v11 import (
     MessageEvent,
     MessageSegment,
 )
-from nonebot_plugin_alconna import Arparma, At, Match
+from nonebot_plugin_alconna import Arparma, At, Check, Match, assign
+
+from madokabot.core.user.accounts import UserAccount
+from madokabot.default.account.matchers import query_cmd
 
 from .matchers import POINT_USAGE, point_cmd
 from .service import get_points_ranking, transfer_points
@@ -25,6 +29,19 @@ async def handle_point_root(result: Arparma) -> None:
 async def handle_point_help() -> None:
     """积分帮助方法。"""
     await point_cmd.finish(f"用法：{POINT_USAGE}")
+
+
+# assign复用函数的注册索引，跨命令共享方法需用handle分别注册。
+@query_cmd.handle(parameterless=[Check(assign("point"))])
+@point_cmd.handle(parameterless=[Check(assign("query"))])
+async def handle_point_query(event: MessageEvent, matcher: Matcher) -> None:
+    """个人积分查询方法。"""
+    try:
+        points, rank = await UserAccount.get_points_and_rank(event.get_user_id())
+    except LookupError:
+        await matcher.finish("请先发送“注册”完成用户注册")
+    rank_text = f"排名第{rank}名" if rank is not None else "未参与排名"
+    await matcher.finish(f"查询结果：制作人当前持有{points}积分，{rank_text}。")
 
 
 def format_points_ranking(title: str, ranking: list[tuple[str, str, int]]) -> str:

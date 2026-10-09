@@ -6,20 +6,23 @@ from arclet.alconna import StrMulti
 from nonebot_plugin_alconna import Alconna, Args, Subcommand, on_alconna
 
 RENAME_USAGE = "设置 改名 <名字>（1～10 个字符或汉字，每次消耗 10 积分）"
-SET_USAGE = "设置 立绘 <立绘编号>\n" + RENAME_USAGE
+SET_USAGE = "设置 立绘 <立绘编号>\n设置 签到模板 <模板编号，如 sign02>\n" + RENAME_USAGE
 
-QUERY_USAGE = "查询 立绘/资料"
+QUERY_USAGE = "查询 立绘/签到模板/资料/积分"
 
 set_cmd_alc = Alconna(
     "set",
     Subcommand("chara", Args["skin_id?", str], alias=["立绘"]),
+    Subcommand("sign", Args["template_id?", str], alias=["签到", "签到模板"]),
     Subcommand("rename", Args["name?", StrMulti], alias=["改名", "更名"]),
 )
 
 query_cmd_alc = Alconna(
     "query",
     Subcommand("chara", alias=["立绘"]),
+    Subcommand("sign", alias=["签到", "签到模板"]),
     Subcommand("data", alias=["资料"]),
+    Subcommand("point", alias=["积分"]),
 )
 
 set_cmd = on_alconna(

@@ -5,7 +5,7 @@ from nonebot_plugin_datastore import create_session
 
 from madokabot.core.user.queries import UserQueries
 from madokabot.core.user.accounts import UserAccount
-from madokabot.default.shop.service import SkinService
+from madokabot.default.shop.service import SignTemplateService, SkinService
 from .render import render_sign_card
 from .matchers import QUERY_USAGE, RENAME_USAGE, SET_USAGE, query_cmd, set_cmd
 from .service import rename_user
@@ -42,6 +42,15 @@ async def _rename(event: MessageEvent, name: Match[str]):
     await set_cmd.finish(message)
 
 
+@set_cmd.assign("sign")
+async def _set_sign_template(event: MessageEvent, template_id: Match[str]):
+    """切换当前账号库存中的签到模板。"""
+    if not template_id.available or not template_id.result.strip():
+        await set_cmd.finish(f"用法：{SET_USAGE}")
+    _, message = await SignTemplateService.switch_template(event.get_user_id(), template_id.result)
+    await set_cmd.finish(message)
+
+
 @query_cmd.handle()
 async def handle_query_base(result: Arparma):
     """返回账号查询命令的使用说明。"""
@@ -67,6 +76,22 @@ async def _query_skin_list(event: MessageEvent):
     ]
     await query_cmd.finish(
         "已拥有立绘：\n" + "\n".join(lines) + "\n\n切换方式：设置 立绘 <立绘ID>"
+    )
+
+
+@query_cmd.assign("sign")
+async def _query_sign_templates(event: MessageEvent):
+    """列出持有的签到模板及当前使用状态。"""
+    if not await UserAccount.is_registered(event.get_user_id()):
+        await query_cmd.finish("请先发送“注册”完成用户注册")
+    items = await SignTemplateService.get_owned_template_list(event.get_user_id())
+    lines = [
+        f"{'[使用中] ' if item['current'] else ''}{item['item_key']}：{item['name']}"
+        for item in items
+    ]
+    await query_cmd.finish(
+        "已拥有签到模板：\n" + ("\n".join(lines) or "暂无可用模板")
+        + "\n\n切换方式：设置 签到模板 <模板ID>"
     )
 
 
