@@ -1,11 +1,48 @@
-from sqlalchemy import func, select
+from datetime import datetime, time, timedelta
+from zoneinfo import ZoneInfo
+
+from sqlalchemy import and_, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from .models import SignRecord, UserStats
 
+_SHANGHAI_TZ = ZoneInfo("Asia/Shanghai")
+
 
 class UserQueries:
     """用户数据查询。"""
+
+    @staticmethod
+    async def get_daily_sign_order(
+        session: AsyncSession,
+        sign: SignRecord,
+        now: datetime,
+    ) -> int | None:
+        """按上海日期和签到时间查询当日全局顺序，同一时间按用户编号排序。"""
+        if sign.last_sign_date is None:
+            return None
+        signed_at = sign.last_sign_date
+        if signed_at.tzinfo is not None:
+            signed_at = signed_at.astimezone(_SHANGHAI_TZ).replace(tzinfo=None)
+        today = now.astimezone(_SHANGHAI_TZ).date()
+        if signed_at.date() != today:
+            return None
+        day_start = datetime.combine(today, time.min)
+        return await session.scalar(
+            select(func.count())
+            .select_from(SignRecord)
+            .where(
+                SignRecord.last_sign_date >= day_start,
+                SignRecord.last_sign_date < day_start + timedelta(days=1),
+                or_(
+                    SignRecord.last_sign_date < signed_at,
+                    and_(
+                        SignRecord.last_sign_date == signed_at,
+                        SignRecord.user_id <= sign.user_id,
+                    ),
+                ),
+            )
+        )
 
     @staticmethod
     async def get_points_ranking(

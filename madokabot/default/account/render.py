@@ -91,8 +91,10 @@ async def render_sign_card(
             ("累计签到", f"{sign.total_count} 次", None),
         ]
 
+    now = datetime.now(_SHANGHAI_TZ)
     async with create_session() as session:
         points_ranking = await UserQueries.get_points_ranking(session)
+        daily_sign_order = await UserQueries.get_daily_sign_order(session, sign, now)
     ranking = [
         (
             nickname or "未命名",
@@ -113,9 +115,10 @@ async def render_sign_card(
         number_font_path=number_font_file.resolve().as_uri(),
         english_font_path=english_font_file.resolve().as_uri(),
         user_name=user.display_name or user_name,
+        daily_sign_order=daily_sign_order,
         user_id=mask_user_id(str(user.user_id)),
         ranking=ranking,
-        current_time=datetime.now(_SHANGHAI_TZ).strftime("%Y-%m-%d %H:%M:%S"),
+        current_time=now.strftime("%Y-%m-%d %H:%M:%S"),
     )
 
     image_bytes = await html_to_pic(
