@@ -1,4 +1,6 @@
-FROM python:3.12 as requirements_stage
+FROM python:3.12 AS requirements_stage
+
+ENV PIP_INDEX_URL=https://pypi.tuna.tsinghua.edu.cn/simple
 
 WORKDIR /wheel
 
@@ -9,7 +11,10 @@ COPY ./pyproject.toml \
   /wheel/
 
 
-RUN python -m pip wheel --wheel-dir=/wheel --no-cache-dir --requirement ./requirements.txt
+RUN --mount=type=cache,target=/root/.cache/pip \
+    python -m pip wheel \
+    --wheel-dir=/wheel \
+    --requirement ./requirements.txt
 
 RUN python -m pipx run --no-cache nb-cli generate -f /tmp/bot.py
 
@@ -18,6 +23,8 @@ FROM node:24-bookworm-slim AS node_runtime
 
 FROM python:3.12-slim
 
+ENV PIP_INDEX_URL=https://pypi.tuna.tsinghua.edu.cn/simple
+
 WORKDIR /app
 
 ENV TZ Asia/Shanghai
@@ -25,6 +32,12 @@ ENV PYTHONPATH=/app
 
 COPY ./docker/gunicorn_conf.py ./docker/start.sh /
 COPY --from=node_runtime /usr/local/bin/node /usr/local/bin/node
+
+RUN sed -i \
+    -e 's|deb.debian.org|mirrors.tuna.tsinghua.edu.cn|g' \
+    -e 's|security.debian.org|mirrors.tuna.tsinghua.edu.cn|g' \
+    /etc/apt/sources.list.d/debian.sources
+
 RUN chmod +x /start.sh \
   && apt-get update \
   && apt-get install -y --no-install-recommends \

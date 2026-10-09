@@ -716,6 +716,20 @@ async def get_prediction_settlement_state(event_id: str, match_id: str) -> dict[
         return deepcopy(state) if isinstance(state, dict) else {}
 
 
+async def get_prediction_match_states(
+    match_keys: list[tuple[str, str]],
+) -> dict[tuple[str, str], dict[str, Any]]:
+    """一次读取历史竞猜对阵回填所需的比赛快照。"""
+    async with _lock:
+        data = _read()
+        states = {}
+        for event_id, match_id in match_keys:
+            entry = data.get(f"event:{event_id}", {})
+            state = entry.get("matches", {}).get(match_id, {})
+            states[(event_id, match_id)] = deepcopy(state)
+        return states
+
+
 async def mark_prediction_settled(event_id: str, match_id: str, winner_name: str) -> None:
     """竞猜结算状态同步方法。"""
     async with _lock:

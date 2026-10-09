@@ -37,4 +37,5 @@ __plugin_meta__ = PluginMetadata(
 )
 
 from . import commands as commands  # noqa: E402,F401
+from . import schema as schema  # noqa: E402,F401
 from . import scheduler as scheduler  # noqa: E402,F401

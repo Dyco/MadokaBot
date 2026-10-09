@@ -209,6 +209,8 @@ async def place_prediction(
                 group_id=normalized_group_id,
                 user_id=normalized_user_id,
                 team_name=selected_team,
+                team1_name=str(selected["team_names"][0]),
+                team2_name=str(selected["team_names"][1]),
                 points=points,
             )
         )
@@ -550,7 +552,7 @@ def _masked_user_id(user_id: str) -> str:
 
 
 async def get_prediction_personal_records(user_id: str) -> dict[str, Any]:
-    """跨群汇总个人全部竞猜成绩，并按下注时间列出最近三十条记录。"""
+    """汇总个人成绩，并读取最近三十条记录保存的对阵和获胜队伍。"""
     settled = CsPrediction.settled_at.is_not(None)
     won = settled & (CsPrediction.result == "win")
     lost = settled & (CsPrediction.result == "lose")
@@ -583,14 +585,25 @@ async def get_prediction_personal_records(user_id: str) -> dict[str, Any]:
         entries = []
         for row in rows:
             result = row.result if row.settled_at is not None else "open"
+            teams = [row.team1_name or row.team_name, row.team2_name or "未知队伍"]
+            winner_name = ""
+            if result == "win":
+                winner_name = row.team_name
+            elif result == "lose" and row.team1_name and row.team2_name:
+                winner_name = (
+                    row.team2_name if _normalize_team(row.team1_name) == _normalize_team(row.team_name)
+                    else row.team1_name
+                )
             entries.append({
                 "match_id": row.match_id,
                 "team_name": row.team_name,
+                "team_names": teams,
+                "winner_name": winner_name,
                 "points": row.points,
                 "created_at": row.created_at.strftime("%Y-%m-%d %H:%M"),
                 "result": result,
                 "result_label": {
-                    "win": "获胜", "lose": "未获胜", "refund": "已退款",
+                    "win": "获胜", "lose": "失败", "refund": "已退款",
                 }.get(result, "未结算"),
                 "net_points": row.net_points if result in {"win", "lose"} else 0,
             })

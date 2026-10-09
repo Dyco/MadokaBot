@@ -17,68 +17,75 @@
       background: #edf2f6; color: #17232e;
       font-family: "CS Source Han Sans SC", Arial, "Microsoft YaHei", sans-serif;
     }
-    .page { padding: 22px 24px 26px; }
+    .page { padding: 16px; }
     .card { overflow: hidden; border: 1px solid #cad5df; border-radius: 6px; background: #fff; }
-    .heading { padding: 18px 22px; background: linear-gradient(135deg, #263b4d, #385b73); color: #fff; }
-    .title { font-size: 23px; font-weight: 800; }
-    .scope { margin-top: 5px; color: #d8e8f3; font-size: 13px; }
-    .player { display: flex; align-items: center; gap: 12px; padding: 18px 22px 10px; }
-    .avatar, .avatar-fallback { width: 48px; height: 48px; flex: 0 0 48px; border-radius: 50%; }
+    .heading { padding: 13px 20px; background: linear-gradient(135deg, #263b4d, #385b73); color: #fff; }
+    .title { font-size: 21px; font-weight: 800; }
+    .player { display: flex; align-items: center; gap: 12px; padding: 16px 20px; }
+    .avatar, .avatar-fallback { width: 50px; height: 50px; flex: 0 0 50px; border-radius: 50%; }
     .avatar { object-fit: cover; }
-    .avatar-fallback { display: flex; align-items: center; justify-content: center; background: #d8e7f0; color: #34546a; font-weight: 800; }
-    .nickname { font-size: 19px; font-weight: 700; overflow-wrap: anywhere; }
-    .muted { color: #7b8b98; font-size: 12px; }
-    .summary { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 15px; padding: 14px 22px; }
-    .label { color: #7b8b98; font-size: 12px; }
-    .value { margin-top: 4px; font-size: 20px; font-weight: 800; }
-    .note { padding: 0 22px 18px; color: #7b8b98; font-size: 12px; }
-    .section { padding: 13px 22px; background: #f5f8fa; font-size: 15px; font-weight: 700; }
-    .row { display: grid; grid-template-columns: 145px minmax(0, 1fr) 85px 80px 100px; align-items: center; border-bottom: 1px solid #e2e8ed; font-size: 14px; }
+    .avatar-fallback { display: flex; align-items: center; justify-content: center; background: #d8e7f0; color: #34546a; font-size: 22px; font-weight: 800; }
+    .identity { flex: 0 1 155px; min-width: 0; }
+    .nickname { overflow: hidden; font-size: 17px; font-weight: 700; white-space: nowrap; text-overflow: ellipsis; }
+    .muted { color: #677786; font-size: 12px; }
+    .summary { flex: 1; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); text-align: center; }
+    .summary > div { border-left: 1px solid #e2e8ed; }
+    .label { color: #677786; font-size: 12px; }
+    .value { margin-top: 3px; font-size: 21px; font-weight: 800; }
+    .value .muted { font-size: 16px; font-weight: 500; }
+    .positive { color: #16713f; }
+    .negative { color: #b5293d; }
+    .section { padding: 9px 20px; border-top: 1px solid #e2e8ed; background: #f5f8fa; font-size: 13px; font-weight: 700; }
+    .row { display: grid; grid-template-columns: 142px 116px minmax(0, 1fr) 128px 74px 74px; align-items: center; min-height: 37px; border-bottom: 1px solid #fff; font-size: 13px; text-align: center; }
     .row:last-child { border-bottom: 0; }
-    .row > div { min-width: 0; padding: 12px 10px; overflow-wrap: anywhere; }
-    .table-head { background: #f5f8fa; color: #7b8b98; font-size: 12px; font-weight: 700; }
-    .positive { color: #198754; }
-    .negative { color: #c53d4b; }
-    .team { margin-bottom: 4px; font-weight: 700; }
-    .empty { padding: 38px 20px; color: #768492; text-align: center; }
+    .row > div { min-width: 0; padding: 7px 6px; line-height: 22px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+    .table-head { min-height: 33px; background: #e8eef3; color: #526677; font-size: 12px; font-weight: 700; }
+    .table-head > div { padding: 5px 6px; }
+    .win { background: #e1f2e7; color: #205e3b; }
+    .lose { background: #fbe5e8; color: #933143; }
+    .neutral { background: #eef1f4; color: #5f6b77; }
+    .time, .match-id { font-size: 12px; }
+    .versus, .bet-team { font-size: 12px; opacity: .8; }
+    .winner { font-weight: 900; }
+    .result { display: inline-block; min-width: 52px; padding: 0 7px; border-radius: 4px; font-size: 12px; font-weight: 800; color: #fff; }
+    .win .result { background: #237746; }
+    .lose .result { background: #bc3d52; }
+    .neutral .result { background: #788592; }
+    .profit { font-weight: 800; }
+    .empty { padding: 28px 20px; color: #768492; text-align: center; }
   </style>
 </head>
 <body>
   <main class="page">
     <section class="card">
-      <header class="heading">
-        <div class="title">竞猜个人记录</div>
-        <div class="scope">跨群统计 · 全部历史成绩</div>
-      </header>
+      <header class="heading"><div class="title">竞猜个人记录</div></header>
       <div class="player">
         {% if avatar_src %}<img class="avatar" src="{{ avatar_src }}" alt="">
         {% else %}<div class="avatar-fallback">{{ nickname[:1] }}</div>{% endif %}
-        <div><div class="nickname">{{ nickname }}</div><div class="muted">{{ masked_user_id }}</div></div>
+        <div class="identity"><div class="nickname">{{ nickname }}</div><div class="muted">{{ masked_user_id }}</div></div>
+        <div class="summary">
+          <div><div class="label">总参与</div><div class="value">{{ total_count }}次</div></div>
+          <div><div class="label">胜率</div><div class="value">{{ win_rate }}</div></div>
+          <div><div class="label">净收益</div><div class="value {{ 'positive' if net_points >= 0 else 'negative' }}">{{ '+' if net_points >= 0 else '' }}{{ net_points }}</div></div>
+          <div><div class="label">胜-负</div><div class="value"><span class="positive">{{ wins }}</span><span class="muted"> - </span><span class="negative">{{ losses }}</span></div></div>
+        </div>
       </div>
-      <div class="summary">
-        <div><div class="label">总参与</div><div class="value">{{ total_count }}次</div></div>
-        <div><div class="label">已结算胜负</div><div class="value">{{ settled_count }}次</div></div>
-        <div><div class="label">胜率</div><div class="value">{{ win_rate }}</div></div>
-        <div><div class="label">净收益 / 积分</div><div class="value {{ 'positive' if net_points >= 0 else 'negative' }}">{{ '+' if net_points >= 0 else '' }}{{ net_points }}</div></div>
-        <div><div class="label">获胜</div><div class="value">{{ wins }}次</div></div>
-        <div><div class="label">未获胜</div><div class="value">{{ losses }}次</div></div>
-        <div><div class="label">未结算</div><div class="value">{{ pending_count }}次</div></div>
-        <div><div class="label">已退款</div><div class="value">{{ refund_count }}次</div></div>
-      </div>
-      <div class="note">胜率与净收益仅统计已结算胜负，未结算和退款不计入成绩。</div>
-      <div class="section">最近参与记录（{{ entries|length }}条，最多30条）</div>
+      <div class="section">最近参与记录 · {{ entries|length }}条</div>
       {% if entries %}
-        <div class="row table-head"><div>下注时间</div><div>竞猜队伍 / 比赛编号</div><div>下注积分</div><div>结果</div><div>净收益</div></div>
+        <div class="row table-head"><div>时间</div><div>编号</div><div>队伍</div><div>下注</div><div>结果</div><div>收益</div></div>
         {% for entry in entries %}
-          <div class="row">
-            <div class="muted">{{ entry.created_at }}</div>
-            <div><div class="team">{{ entry.team_name }}</div><div class="muted">编号{{ entry.match_id }}</div></div>
-            <div>{{ entry.points }}</div>
-            <div>{{ entry.result_label }}</div>
-            <div class="{{ 'positive' if entry.net_points >= 0 else 'negative' }}">
-              {% if entry.result in ['win', 'lose', 'refund'] %}{{ '+' if entry.net_points >= 0 else '' }}{{ entry.net_points }}
-              {% else %}<span class="muted">待结算</span>{% endif %}
+          <div class="row {{ entry.result if entry.result in ['win', 'lose'] else 'neutral' }}">
+            <div class="time">{{ entry.created_at }}</div>
+            <div class="match-id">Match{{ entry.match_id }}</div>
+            <div>
+              {% for team in entry.team_names %}
+                {% if not loop.first %}<span class="versus"> VS </span>{% endif %}
+                {% if team == entry.winner_name %}<strong class="winner">{{ team }}</strong>{% else %}<span>{{ team }}</span>{% endif %}
+              {% endfor %}
             </div>
+            <div>{{ entry.points }} <span class="bet-team">- {{ entry.team_name }}</span></div>
+            <div><span class="result">{{ entry.result_label }}</span></div>
+            <div class="profit">{% if entry.result in ['win', 'lose'] %}{{ '+' if entry.net_points >= 0 else '' }}{{ entry.net_points }}{% else %}-{% endif %}</div>
           </div>
         {% endfor %}
       {% else %}<div class="empty">你还没有参与过竞猜。</div>{% endif %}
