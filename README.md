@@ -3,6 +3,24 @@
 樋口円香机器人，正在开发中…
 当前版本 Ver.0.3.0
 
+## 浏览器环境与部署
+
+图片渲染依赖 Playwright 的 Chromium。Docker 镜像在安装 Python 依赖后下载匹配的浏览器并安装系统依赖，服务器更新后在项目目录执行：
+
+```bash
+docker compose build nonebot
+docker compose up -d nonebot
+docker compose logs --tail=100 nonebot
+```
+
+非 Docker 部署需在机器人使用的 Python 环境中，以运行机器人的用户安装浏览器；Linux 系统依赖安装需要管理员权限：
+
+```bash
+python -m playwright install --with-deps chromium
+```
+
+出现 `Executable doesn't exist` 时，检查浏览器是否安装在相同用户、相同运行环境下。若安装失败，查看安装命令的完整输出；下载超时可设置 `PLAYWRIGHT_DOWNLOAD_CONNECTION_TIMEOUT=120000` 后重试，无法访问下载地址时需配置可用的 `HTTPS_PROXY`。更新 Playwright 后需要重新安装匹配的浏览器。
+
 ## 项目结构
 
 ```text
