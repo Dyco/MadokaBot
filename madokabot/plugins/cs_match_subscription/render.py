@@ -144,7 +144,7 @@ async def render_prediction_rank_card(
     *,
     scope_label: str,
 ) -> MessageSegment:
-    """将竞猜排行榜渲染为图片消息。"""
+    """按排行榜卡片宽度生成图片，展示紧凑的竞猜排名。"""
     avatar_sources = await asyncio.gather(
         *(
             fetch_image_data_url(str(entry.get("avatar_url") or ""))
@@ -163,7 +163,7 @@ async def render_prediction_rank_card(
             scope_label=scope_label,
         ),
         template_path=TEMPLATE_DIR.resolve().as_uri(),
-        viewport={"width": config.cs_stats_width, "height": 10},
+        viewport={"width": config.cs_prediction_rank_width, "height": 10},
         device_scale_factor=config.cs_rating_device_scale_factor,
         full_page=True,
     )
@@ -180,13 +180,13 @@ def render_prediction_personal_html(data: dict[str, object]) -> str:
 
 
 async def render_prediction_personal_card(data: dict[str, object]) -> MessageSegment:
-    """将个人竞猜记录渲染为图片，沿用排行榜的字体与尺寸。"""
+    """按个人记录卡片宽度生成图片，沿用排行榜的字体与缩放比例。"""
     context = dict(data)
     context["avatar_src"] = await fetch_image_data_url(str(data.get("avatar_url") or ""))
     image_bytes = await html_to_pic(
         html=render_prediction_personal_html(context),
         template_path=TEMPLATE_DIR.resolve().as_uri(),
-        viewport={"width": config.cs_stats_width, "height": 10},
+        viewport={"width": config.cs_prediction_personal_width, "height": 10},
         device_scale_factor=config.cs_rating_device_scale_factor,
         full_page=True,
     )

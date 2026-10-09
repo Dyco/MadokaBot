@@ -14,81 +14,106 @@
     {% endif %}
 
     * { box-sizing: border-box; }
-    html, body { margin: 0; padding: 0; overflow: hidden; }
+    html, body { margin: 0; padding: 0; }
     body {
       width: 100%;
-      background: #edf2f6;
-      color: #17232e;
+      background: #eef2f8;
+      color: #2f3c4d;
       font-family: "CS Source Han Sans SC", Arial, "Microsoft YaHei", sans-serif;
     }
-    .page { padding: 22px 24px 26px; }
+    .page {
+      padding: 8px;
+      background:
+        radial-gradient(ellipse 90% 48% at 0 2%, rgba(162, 201, 232, .7), transparent 75%),
+        radial-gradient(ellipse 85% 55% at 100% 40%, rgba(198, 189, 229, .6), transparent 78%),
+        radial-gradient(ellipse 95% 48% at 10% 100%, rgba(173, 210, 212, .6), transparent 75%),
+        #eef2f8;
+    }
     .card {
       overflow: hidden;
-      border: 1px solid #cad5df;
-      border-radius: 6px;
-      background: #fff;
-      box-shadow: 0 4px 14px rgba(45, 67, 84, .12);
+      border: 1px solid rgba(255, 255, 255, .85);
+      border-radius: 12px;
+      background: rgba(255, 255, 255, .28);
+      backdrop-filter: blur(10px) saturate(120%);
+      -webkit-backdrop-filter: blur(10px) saturate(120%);
+      box-shadow: 0 8px 24px rgba(83, 102, 141, .12), inset 0 1px 0 rgba(255, 255, 255, .8);
     }
     .heading {
+      position: relative;
+      overflow: hidden;
       display: flex;
-      align-items: end;
-      justify-content: space-between;
-      padding: 18px 22px 15px;
-      background: linear-gradient(135deg, #263b4d, #385b73);
-      color: #fff;
-    }
-    .title { font-size: 23px; font-weight: 800; letter-spacing: 1px; }
-    .scope { color: #d8e8f3; font-size: 13px; }
-    .empty { padding: 38px 20px; color: #768492; text-align: center; }
-    .row {
-      display: grid;
-      grid-template-columns: 54px 1.6fr 1.1fr .8fr .9fr;
-      min-height: 74px;
       align-items: center;
-      border-bottom: 1px solid #e2e8ed;
+      justify-content: space-between;
+      padding: 8px 14px;
+      border-bottom: 1px solid rgba(255, 255, 255, .65);
+    }
+    .heading-art { position: absolute; top: -24px; right: -18px; width: 360px; height: 96px; opacity: .55; pointer-events: none; }
+    .title { position: relative; font-size: 18px; font-weight: 700; letter-spacing: 1px; }
+    .scope { position: relative; padding: 2px 8px; border: 1px solid rgba(255, 255, 255, .75); border-radius: 5px; background: rgba(255, 255, 255, .35); color: #64768f; font-size: 12px; }
+    .empty { padding: 24px 14px; color: #788695; text-align: center; }
+    .row, .table-head { display: grid; grid-template-columns: 44px minmax(0, 1fr) 120px 86px 104px; align-items: center; }
+    .row {
+      min-height: 32px;
+      border-bottom: 1px solid rgba(99, 119, 142, .08);
+      background: rgba(255, 255, 255, .1);
     }
     .row:last-child { border-bottom: 0; }
-    .row > div { min-width: 0; padding: 10px 12px; }
-    .rank { color: #5d7180; font-size: 21px; font-weight: 800; text-align: center; }
-    .player { display: flex; align-items: center; gap: 10px; }
+    .row > div { min-width: 0; padding: 3px 6px; }
+    .rank { color: #788695; font-size: 14px; font-weight: 700; text-align: center; }
+    .rank-number { display: block; width: 22px; margin: 0 auto; border-radius: 6px; line-height: 22px; }
+    .podium-1 { background: rgba(186, 212, 241, .28); }
+    .podium-2 { background: rgba(210, 199, 237, .24); }
+    .podium-3 { background: rgba(229, 205, 222, .2); }
+    .podium-1 .rank-number { background: rgba(150, 182, 223, .4); color: #466991; }
+    .podium-2 .rank-number { background: rgba(185, 171, 214, .35); color: #75648f; }
+    .podium-3 .rank-number { background: rgba(212, 176, 197, .3); color: #92677e; }
+    .player { display: flex; align-items: center; gap: 6px; }
     .avatar, .avatar-fallback {
-      width: 42px; height: 42px; flex: 0 0 42px; border-radius: 50%;
+      width: 24px; height: 24px; flex: 0 0 24px; border-radius: 50%;
+      box-shadow: 0 0 0 1px rgba(255, 255, 255, .85), 0 2px 6px rgba(89, 110, 145, .08);
     }
     .avatar { object-fit: cover; }
     .avatar-fallback {
       display: flex; align-items: center; justify-content: center;
-      background: #d8e7f0; color: #34546a; font-weight: 800;
+      background: linear-gradient(145deg, #f3f7fc, #dce6f3); color: #6c8097; font-size: 12px; font-weight: 700;
     }
-    .nickname { overflow: hidden; font-size: 16px; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
-    .label { margin-bottom: 3px; color: #8a98a4; font-size: 11px; }
-    .value { color: #293b49; font-size: 15px; font-weight: 700; }
-    .positive { color: #198754; }
-    .negative { color: #c53d4b; }
+    .nickname { min-width: 0; overflow: hidden; font-size: 14px; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
+    .value { overflow: hidden; color: #2f3c4d; font-size: 13px; font-weight: 600; line-height: 22px; text-align: center; text-overflow: ellipsis; white-space: nowrap; }
+    .points { font-weight: 700; }
+    .positive { color: #24785b; }
+    .negative { color: #ad4568; }
     .table-head {
-      display: grid;
-      grid-template-columns: 54px 1.6fr 1.1fr .8fr .9fr;
-      background: #f5f8fa;
-      color: #7b8b98;
+      min-height: 27px;
+      border-bottom: 1px solid rgba(148, 164, 190, .18);
+      background: rgba(255, 255, 255, .28);
+      color: #788695;
       font-size: 12px;
-      font-weight: 700;
+      font-weight: 600;
+      text-align: center;
     }
-    .table-head div { padding: 9px 12px; }
+    .table-head div { padding: 4px 6px; }
+    .table-head .player-head { text-align: left; }
   </style>
 </head>
 <body>
   <main class="page">
     <section class="card">
       <header class="heading">
+        <!-- 细光弧呼应连续色雾，为玻璃表面增加柔和反光。 -->
+        <svg class="heading-art" viewBox="0 0 340 90" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+          <path d="M20 104C66 65 109 31 166 34C225 37 268 75 354 48" fill="none" stroke="#fff" stroke-width="1.5" stroke-opacity=".65"/>
+          <path d="M46 116C98 72 134 53 184 58C238 64 288 98 354 74" fill="none" stroke="#fff" stroke-opacity=".3"/>
+        </svg>
         <div class="title">竞猜排行榜</div>
         <div class="scope">{{ scope_label }}</div>
       </header>
       {% if entries %}
         <div class="table-head">
-          <div>排名</div><div>玩家</div><div>胜率</div><div>总参与</div><div>积分</div>
+          <div>排名</div><div class="player-head">玩家</div><div>胜率</div><div>总参与</div><div>积分</div>
         </div>
         {% for entry in entries %}
-          <div class="row">
-            <div class="rank">{{ entry.rank }}</div>
+          <div class="row{% if entry.rank <= 3 %} podium-{{ entry.rank }}{% endif %}">
+            <div class="rank"><span class="rank-number">{{ entry.rank }}</span></div>
             <div class="player">
               {% if entry.avatar_src %}
                 <img class="avatar" src="{{ entry.avatar_src }}" alt="">
@@ -97,18 +122,9 @@
               {% endif %}
               <div class="nickname">{{ entry.nickname }}</div>
             </div>
-            <div>
-              <div class="label">胜率</div>
-              <div class="value">{{ entry.win_rate }}</div>
-            </div>
-            <div>
-              <div class="label">总参与</div>
-              <div class="value">{{ entry.total_count }}次</div>
-            </div>
-            <div>
-              <div class="label">积分</div>
-              <div class="value {{ 'positive' if entry.net_points >= 0 else 'negative' }}">{{ '+' if entry.net_points >= 0 else '' }}{{ entry.net_points }}</div>
-            </div>
+            <div class="value">{{ entry.win_rate }}</div>
+            <div class="value">{{ entry.total_count }}次</div>
+            <div class="value points {{ 'positive' if entry.net_points >= 0 else 'negative' }}">{{ '+' if entry.net_points >= 0 else '' }}{{ entry.net_points }}</div>
           </div>
         {% endfor %}
       {% else %}

@@ -60,18 +60,19 @@ def prediction_open_message(
     *,
     team_labels: list[str] | None = None,
 ) -> Message:
-    """生成开放竞猜节点，提示倍率默认按对手一人下注展示。"""
+    """生成开放竞猜节点，展示队伍编号和参与示例。"""
     first, second = team_names(match)
     labels = team_labels or ["A", "B"]
     format_code = match.format_code or "未知"
     return Message(
         MessageSegment.text(
             f"【已开放竞猜，{first}对阵{second}，{format_code}，编号{match.match_id}】\n"
-            "发送/cs <竞猜|预测> <竞猜编号|队伍名> <积分>参与\n"
-            f"team{labels[0]}：{first}（积分比例{prediction_odds(1):.1f}）\n"
-            f"team{labels[1]}：{second}（积分比例{prediction_odds(1):.1f}）\n"
-            f"如/cs 竞猜 team{labels[0]} 100\n\n"
-            "【每场比赛仅可参与一次，无法修改！】"
+            "【每场比赛仅可参与一次，无法修改！】\n"
+            "发送/cs <竞猜> <队伍名> <积分>参与，使用空格分隔\n"
+            f"team{labels[0]}：{first}\n"
+            f"team{labels[1]}：{second}\n"
+            "示例：\n"
+            f"/cs 竞猜 team{labels[0]} 100"
         )
     )
 
@@ -81,7 +82,7 @@ def prediction_notifications_with_labels(
     candidates: list[dict[str, Any]],
     matches: dict[str, MatchData],
 ) -> list[MatchNotification]:
-    """竞猜开放通知生成方法。"""
+    """为每场开放竞猜生成群队伍编号节点和独立规则节点。"""
     if not any(item.kind == "prediction_open" for item in notifications):
         return notifications
     by_match = {candidate["match_id"]: candidate for candidate in candidates}
@@ -101,6 +102,9 @@ def prediction_notifications_with_labels(
             ),
             item.match_id,
         ))
+        selected.append(MatchNotification(
+            "prediction_open", prediction_rules_message(), item.match_id,
+        ))
     if len(candidates) > 1:
         lines = ["当前可下注竞猜"]
         for index, candidate in enumerate(candidates, start=1):
@@ -115,27 +119,42 @@ def prediction_notifications_with_labels(
     return selected
 
 
+def prediction_rules_message() -> Message:
+    """生成动态赔付规则节点，示例与实际倍率计算保持一致。"""
+    return Message(MessageSegment.text(
+        f"赛事采用动态比例返还积分，初始比例{config.cs_prediction_base_odds:.1f}。\n"
+        "双方0人或1人均按1人计算，从第2人起：\n"
+        f"下注队伍每增加一人，减少{config.cs_prediction_odds_decrement:.1f}赔付比例。\n"
+        f"对手队伍每增加一人，增加{config.cs_prediction_odds_increment:.1f}赔付比例。\n"
+        f"最低赔付比例{config.cs_prediction_min_odds:.1f}。\n"
+        "例如队伍A被5人下注，队伍B被3人下注。\n"
+        f"队伍A - {prediction_odds(5, 3):.1f}倍率，"
+        f"队伍B - {prediction_odds(3, 5):.1f}倍率\n"
+        "获胜后退回本金，再按赔付比例发放奖励。"
+    ))
+
+
 def prediction_close_message(
     match: MatchData,
     summary: dict[str, Any],
 ) -> Message:
-    """展示截止时的跨群下注汇总和按对手人数计算的倍率。"""
+    """展示截止时的跨群下注汇总和双方动态倍率。"""
     first, second = team_names(match)
     teams = summary.get("teams")
     teams = teams if isinstance(teams, dict) else {}
     first_summary = teams.get(first, {})
     second_summary = teams.get(second, {})
+    first_count = int(first_summary.get("count", 0))
+    second_count = int(second_summary.get("count", 0))
     lines = [
         f"比赛已开始（{first} VS {second} 编号{match.match_id}），竞猜已截止。",
         (
-            f"{first}：{int(first_summary.get('count', 0))}人预测，共计"
-            f"{int(first_summary.get('points', 0))}积分，"
-            f"积分比例{prediction_odds(int(second_summary.get('count', 0))):.1f}。"
+            f"{first} ({prediction_odds(first_count, second_count):.1f})："
+            f"{first_count}人预测，共计{int(first_summary.get('points', 0))}积分。"
         ),
         (
-            f"{second}：{int(second_summary.get('count', 0))}人预测，共计"
-            f"{int(second_summary.get('points', 0))}积分，"
-            f"积分比例{prediction_odds(int(first_summary.get('count', 0))):.1f}。"
+            f"{second} ({prediction_odds(second_count, first_count):.1f})："
+            f"{second_count}人预测，共计{int(second_summary.get('points', 0))}积分。"
         ),
     ]
     return Message(MessageSegment.text("\n".join(lines)))

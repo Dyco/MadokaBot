@@ -30,11 +30,13 @@ _PREDICTION_TIMEOUT = timedelta(hours=12)
 _SHANGHAI_TZ = ZoneInfo("Asia/Shanghai")
 
 
-def prediction_odds(opponent_count: int) -> Decimal:
-    """按跨群对手人数计算奖励倍率，零人按一人计算。"""
-    return (
+def prediction_odds(team_count: int, opponent_count: int) -> Decimal:
+    """按跨群双方人数计算奖励倍率，从第二人起调整并限制最低值。"""
+    return max(
+        config.cs_prediction_min_odds,
         config.cs_prediction_base_odds
-        + config.cs_prediction_odds_increment * max(1, opponent_count)
+        - config.cs_prediction_odds_decrement * max(0, team_count - 1)
+        + config.cs_prediction_odds_increment * max(0, opponent_count - 1),
     )
 
 
@@ -271,7 +273,7 @@ async def settle_match_predictions(
     *,
     final_text: str = "",
 ) -> dict[str, Any]:
-    """按对手人数结算倍率奖励并退回胜者本金，小数奖励向下取整。"""
+    """按双方跨群人数结算动态奖励并退回胜者本金，小数奖励向下取整。"""
     normalized_winner = _normalize_team(winner_name)
     async with _SETTLEMENT_LOCK, create_session() as session:
         rows = list(
@@ -290,7 +292,7 @@ async def settle_match_predictions(
             row for row in rows if _normalize_team(row.team_name) == normalized_winner
         ]
         winner_points = sum(row.points for row in winner_rows)
-        odds = prediction_odds(len(rows) - len(winner_rows))
+        odds = prediction_odds(len(winner_rows), len(rows) - len(winner_rows))
         total_payout = 0
         settled_count = 0
         claimed_rows = []
@@ -519,14 +521,16 @@ async def get_prediction_detail(
     )
     global_summary = await get_prediction_summary(str(context["event_id"]), str(match_id))
     team_names = [str(value) for value in state.get("team_names") or []]
-    odds = {
-        team_name: prediction_odds(sum(
+    odds = {}
+    for team_name in team_names:
+        team_count = sum(
             team_summary["count"]
             for name, team_summary in global_summary["teams"].items()
-            if _normalize_team(name) != _normalize_team(team_name)
-        ))
-        for team_name in team_names
-    }
+            if _normalize_team(name) == _normalize_team(team_name)
+        )
+        odds[team_name] = prediction_odds(
+            team_count, global_summary["total_count"] - team_count,
+        )
     return {
         "event_id": str(context["event_id"]),
         "match_id": str(match_id),
@@ -549,6 +553,13 @@ def _masked_user_id(user_id: str) -> str:
     if len(value) <= 4:
         return value
     return f"{value[:2]}***{value[-2:]}"
+
+
+def _prediction_nickname(nickname: str, user_id: str) -> str:
+    """竞猜卡片昵称最多保留八个字符，无昵称时展示脱敏账号。"""
+    if not nickname:
+        return f"用户({_masked_user_id(user_id)})"
+    return f"{nickname[:8]}..." if len(nickname) > 8 else nickname
 
 
 async def get_prediction_personal_records(user_id: str) -> dict[str, Any]:
@@ -610,7 +621,7 @@ async def get_prediction_personal_records(user_id: str) -> dict[str, Any]:
 
     settled_count = totals.wins + totals.losses
     return {
-        "nickname": nickname or f"用户({_masked_user_id(user_id)})",
+        "nickname": _prediction_nickname(nickname, user_id),
         "masked_user_id": _masked_user_id(user_id),
         "avatar_url": f"https://q1.qlogo.cn/g?b=qq&nk={user_id}&s=640",
         "total_count": totals.total_count,
@@ -629,7 +640,7 @@ async def get_prediction_ranking(
     scope: str,
     group_id: str,
 ) -> list[dict[str, Any]]:
-    """竞猜排名查询方法。"""
+    """汇总已结算竞猜并返回前二十名。"""
     async with create_session() as session:
         statement = select(CsPrediction).where(
             CsPrediction.result.in_(("win", "lose")),
@@ -669,14 +680,11 @@ async def get_prediction_ranking(
             -item[1]["total"],
             item[0],
         ),
-    )[:10]
+    )[:20]
     result: list[dict[str, Any]] = []
     for rank, (user_id, aggregate) in enumerate(ranked, start=1):
         user = users.get(user_id)
         nickname = str(user.display_name or user.qq_nickname or "").strip() if user else ""
-        display_name = nickname or f"用户({_masked_user_id(user_id)})"
-        if len(display_name) > 6 and nickname:
-            display_name = f"{nickname[:6]}..."
         win_rate = (
             aggregate["wins"] / aggregate["total"] * 100
             if aggregate["total"]
@@ -686,7 +694,7 @@ async def get_prediction_ranking(
             {
                 "rank": rank,
                 "user_id": user_id,
-                "nickname": display_name,
+                "nickname": _prediction_nickname(nickname, user_id),
                 "win_rate": f"{win_rate:.0f}%({aggregate['wins']}次)",
                 "total_count": aggregate["total"],
                 "net_points": aggregate["net_points"],

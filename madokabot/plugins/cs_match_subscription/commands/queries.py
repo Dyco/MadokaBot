@@ -36,7 +36,7 @@ async def handle_cs_list(
     event: MessageEvent,
     params: Match[str],
 ) -> None:
-    """按比赛 ID 查询本群下注情况和跨群人数对应的奖励倍率。"""
+    """按比赛 ID 查询本群下注情况和跨群双方人数对应的动态倍率。"""
     raw_params = params.result.strip() if params.available else ""
     list_args = raw_params.split()
     if len(list_args) == 1 and list_args[0].isdigit():
@@ -69,14 +69,14 @@ async def handle_cs_list(
             f"【比赛编号：{detail['match_id']}】",
             f"{first}对阵{second}，{detail['status']}。",
             (
-                f"{first}：{first_summary.get('count', 0)}人预测，共计"
-                f"{first_summary.get('points', 0)}积分，"
-                f"积分比例{detail['odds'].get(first, prediction_odds(1)):.1f}。"
+                f"{first} ({detail['odds'].get(first, prediction_odds(0, 0)):.1f})："
+                f"{first_summary.get('count', 0)}人预测，共计"
+                f"{first_summary.get('points', 0)}积分。"
             ),
             (
-                f"{second}：{second_summary.get('count', 0)}人预测，共计"
-                f"{second_summary.get('points', 0)}积分，"
-                f"积分比例{detail['odds'].get(second, prediction_odds(1)):.1f}。"
+                f"{second} ({detail['odds'].get(second, prediction_odds(0, 0)):.1f})："
+                f"{second_summary.get('count', 0)}人预测，共计"
+                f"{second_summary.get('points', 0)}积分。"
             ),
         ]
         if detail["winner_name"]:

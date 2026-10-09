@@ -14,51 +14,75 @@
     * { box-sizing: border-box; }
     html, body { margin: 0; padding: 0; }
     body {
-      background: #edf2f6; color: #17232e;
+      background: #eef2f8; color: #2f3c4d;
       font-family: "CS Source Han Sans SC", Arial, "Microsoft YaHei", sans-serif;
     }
-    .page { padding: 16px; }
-    .card { overflow: hidden; border: 1px solid #cad5df; border-radius: 6px; background: #fff; }
-    .heading { padding: 13px 20px; background: linear-gradient(135deg, #263b4d, #385b73); color: #fff; }
-    .title { font-size: 21px; font-weight: 800; }
-    .player { display: flex; align-items: center; gap: 12px; padding: 16px 20px; }
-    .avatar, .avatar-fallback { width: 50px; height: 50px; flex: 0 0 50px; border-radius: 50%; }
+    .page {
+      padding: 10px;
+      background:
+        radial-gradient(ellipse 90% 48% at 0 2%, rgba(162, 201, 232, .7), transparent 75%),
+        radial-gradient(ellipse 85% 55% at 100% 40%, rgba(198, 189, 229, .6), transparent 78%),
+        radial-gradient(ellipse 95% 48% at 10% 100%, rgba(173, 210, 212, .6), transparent 75%),
+        #eef2f8;
+    }
+    .card {
+      overflow: hidden; border: 1px solid rgba(255, 255, 255, .85); border-radius: 12px;
+      background: rgba(255, 255, 255, .28);
+      backdrop-filter: blur(10px) saturate(120%);
+      -webkit-backdrop-filter: blur(10px) saturate(120%);
+      box-shadow: 0 8px 24px rgba(83, 102, 141, .12), inset 0 1px 0 rgba(255, 255, 255, .8);
+    }
+    .heading { position: relative; padding: 8px 14px; border-bottom: 1px solid rgba(255, 255, 255, .65); }
+    .title { position: relative; font-size: 18px; font-weight: 700; letter-spacing: 1px; }
+    .heading-art { position: absolute; top: -36px; right: -22px; width: 520px; height: 138px; opacity: .55; pointer-events: none; }
+    .player { position: relative; display: flex; align-items: center; gap: 8px; padding: 10px 14px; background: linear-gradient(110deg, rgba(255, 255, 255, .15), rgba(226, 235, 250, .08)); }
+    .avatar, .avatar-fallback { width: 44px; height: 44px; flex: 0 0 44px; border-radius: 50%; box-shadow: 0 0 0 2px rgba(255, 255, 255, .85), 0 3px 8px rgba(89, 110, 145, .1); }
     .avatar { object-fit: cover; }
-    .avatar-fallback { display: flex; align-items: center; justify-content: center; background: #d8e7f0; color: #34546a; font-size: 22px; font-weight: 800; }
-    .identity { flex: 0 1 155px; min-width: 0; }
-    .nickname { overflow: hidden; font-size: 17px; font-weight: 700; white-space: nowrap; text-overflow: ellipsis; }
-    .muted { color: #677786; font-size: 12px; }
+    .avatar-fallback { display: flex; align-items: center; justify-content: center; background: linear-gradient(145deg, #f3f7fc, #dce6f3); color: #6c8097; font-size: 20px; font-weight: 700; }
+    .identity { flex: 0 1 144px; min-width: 0; }
+    .nickname { overflow: hidden; font-size: 16px; font-weight: 700; white-space: nowrap; text-overflow: ellipsis; }
+    .muted { color: #8491a0; font-size: 12px; }
     .summary { flex: 1; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); text-align: center; }
-    .summary > div { border-left: 1px solid #e2e8ed; }
-    .label { color: #677786; font-size: 12px; }
-    .value { margin-top: 3px; font-size: 21px; font-weight: 800; }
+    .summary > div { border-left: 1px solid rgba(255, 255, 255, .75); }
+    .label { color: #788695; font-size: 12px; }
+    .value { margin-top: 2px; font-size: 20px; font-weight: 700; }
     .value .muted { font-size: 16px; font-weight: 500; }
-    .positive { color: #16713f; }
-    .negative { color: #b5293d; }
-    .section { padding: 9px 20px; border-top: 1px solid #e2e8ed; background: #f5f8fa; font-size: 13px; font-weight: 700; }
-    .row { display: grid; grid-template-columns: 142px 116px minmax(0, 1fr) 128px 74px 74px; align-items: center; min-height: 37px; border-bottom: 1px solid #fff; font-size: 13px; text-align: center; }
+    .positive { color: #24785b; }
+    .negative { color: #ad4568; }
+    .section { position: relative; padding: 5px 14px; border-top: 1px solid rgba(148, 164, 190, .16); background: rgba(255, 255, 255, .22); color: #526173; font-size: 13px; font-weight: 600; }
+    .row { display: grid; grid-template-columns: 124px 80px minmax(0, 1fr) 144px 62px 62px; align-items: center; min-height: 30px; border-bottom: 1px solid rgba(99, 119, 142, .08); font-size: 13px; text-align: center; }
     .row:last-child { border-bottom: 0; }
-    .row > div { min-width: 0; padding: 7px 6px; line-height: 22px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
-    .table-head { min-height: 33px; background: #e8eef3; color: #526677; font-size: 12px; font-weight: 700; }
-    .table-head > div { padding: 5px 6px; }
-    .win { background: #e1f2e7; color: #205e3b; }
-    .lose { background: #fbe5e8; color: #933143; }
-    .neutral { background: #eef1f4; color: #5f6b77; }
-    .time, .match-id { font-size: 12px; }
-    .versus, .bet-team { font-size: 12px; opacity: .8; }
-    .winner { font-weight: 900; }
-    .result { display: inline-block; min-width: 52px; padding: 0 7px; border-radius: 4px; font-size: 12px; font-weight: 800; color: #fff; }
-    .win .result { background: #237746; }
-    .lose .result { background: #bc3d52; }
-    .neutral .result { background: #788592; }
-    .profit { font-weight: 800; }
-    .empty { padding: 28px 20px; color: #768492; text-align: center; }
+    .row > div { min-width: 0; padding: 4px; line-height: 21px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+    .table-head { min-height: 29px; border-bottom-color: rgba(148, 164, 190, .18); background: rgba(255, 255, 255, .28); color: #788695; font-size: 12px; font-weight: 600; }
+    .table-head > div { padding: 3px 4px; }
+    .win { background: rgba(203, 235, 217, .46); box-shadow: inset 3px 0 #4c9878; }
+    .lose { background: rgba(245, 203, 219, .48); box-shadow: inset 3px 0 #c06a89; }
+    .neutral { background: rgba(238, 244, 252, .3); box-shadow: inset 2px 0 #c5ced9; }
+    .time, .match-id { color: #788695; font-size: 12px; }
+    .versus { color: #8b97a5; font-size: 12px; line-height: 1; }
+    .bet { font-size: 12px; font-weight: 700; }
+    .result { display: block; min-width: 52px; padding: 0 7px; border: 1px solid; border-radius: 4px; line-height: 18px; font-size: 12px; font-weight: 600; }
+    .win .result { border-color: #bedbcd; background: #dceee4; color: #24785b; }
+    .lose .result { border-color: #e7bccb; background: #f3dbe4; color: #ad4568; }
+    .neutral .result { border-color: #dfe5ec; background: #ecf0f5; color: #788695; }
+    .profit { font-weight: 700; }
+    .win .profit { color: #24785b; }
+    .lose .profit { color: #ad4568; }
+    .neutral .profit { color: #788695; }
+    .empty { padding: 24px 14px; color: #788695; text-align: center; }
   </style>
 </head>
 <body>
   <main class="page">
     <section class="card">
-      <header class="heading"><div class="title">竞猜个人记录</div></header>
+      <header class="heading">
+        <!-- 细光弧延伸至统计区，呼应背景色雾和玻璃反光。 -->
+        <svg class="heading-art" viewBox="0 0 340 90" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+          <path d="M20 104C66 65 109 31 166 34C225 37 268 75 354 48" fill="none" stroke="#fff" stroke-width="1.5" stroke-opacity=".65"/>
+          <path d="M46 116C98 72 134 53 184 58C238 64 288 98 354 74" fill="none" stroke="#fff" stroke-opacity=".3"/>
+        </svg>
+        <div class="title">竞猜个人记录</div>
+      </header>
       <div class="player">
         {% if avatar_src %}<img class="avatar" src="{{ avatar_src }}" alt="">
         {% else %}<div class="avatar-fallback">{{ nickname[:1] }}</div>{% endif %}
@@ -76,14 +100,14 @@
         {% for entry in entries %}
           <div class="row {{ entry.result if entry.result in ['win', 'lose'] else 'neutral' }}">
             <div class="time">{{ entry.created_at }}</div>
-            <div class="match-id">Match{{ entry.match_id }}</div>
+            <div class="match-id">M.{{ entry.match_id }}</div>
             <div>
               {% for team in entry.team_names %}
                 {% if not loop.first %}<span class="versus"> VS </span>{% endif %}
-                {% if team == entry.winner_name %}<strong class="winner">{{ team }}</strong>{% else %}<span>{{ team }}</span>{% endif %}
+                <span>{{ team }}</span>
               {% endfor %}
             </div>
-            <div>{{ entry.points }} <span class="bet-team">- {{ entry.team_name }}</span></div>
+            <div class="bet">{{ entry.points }} ({{ entry.team_name }})</div>
             <div><span class="result">{{ entry.result_label }}</span></div>
             <div class="profit">{% if entry.result in ['win', 'lose'] %}{{ '+' if entry.net_points >= 0 else '' }}{{ entry.net_points }}{% else %}-{% endif %}</div>
           </div>
