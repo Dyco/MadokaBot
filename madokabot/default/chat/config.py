@@ -10,7 +10,11 @@ class ChatConfig(BaseModel):
 
     model_api_key: str = ""
     model_base_url: str = "https://dashscope.aliyuncs.com/compatible-mode/v1"
-    set_model: list[str] = ["qwen-plus"]
+    set_model: list[str] = [
+        "qwen3.8-flash",
+        "qwen3.8-27b",
+        "qwen3.7-flash-2026-07-15",
+    ]
     chat_enable_search: bool = True  # 问答与闲聊均启用联网搜索。
     chat_timeout: float = 60.0 # 单位：秒
     chat_max_tokens: int = 2048
