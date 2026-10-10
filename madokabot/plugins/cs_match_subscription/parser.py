@@ -171,6 +171,11 @@ def _parse_event(node: Tag, page_url: str) -> EventData | None:
     if not name:
         return None
 
+    is_featured = (
+        "featured-event" in node.get("class", [])
+        or node.find_parent(id="FEATURED") is not None
+        or node.find_parent(class_="featured-events") is not None
+    )
     date_nodes = node.select("[data-unix]")
     start_at = _event_timestamp(date_nodes[0] if date_nodes else None)
     end_at = _event_timestamp(date_nodes[1] if len(date_nodes) > 1 else None)
@@ -186,9 +191,9 @@ def _parse_event(node: Tag, page_url: str) -> EventData | None:
         # 阶段赛事奖金可能是Other/TBA，类型需按名称识别。
         event_type = "Major"
     elif not event_type and (
-        "big-event" in node.get("class", []) or "ongoing-event" in node.get(
-            "class", []
-        )
+        is_featured
+        or "big-event" in node.get("class", [])
+        or "ongoing-event" in node.get("class", [])
     ):
         # 筛选页大卡片缺少类型，按国际赛事候选处理。
         event_type = "Intl. LAN"
@@ -208,6 +213,7 @@ def _parse_event(node: Tag, page_url: str) -> EventData | None:
         start_at=start_at,
         end_at=end_at,
         url=_absolute_url(href, page_url) or "",
+        is_featured=is_featured,
     )
 
 
@@ -893,5 +899,9 @@ def parse_events_html(
             if previous is None or (
                 previous.prize_pool is None and event.prize_pool is not None
             ):
+                if previous is not None:
+                    event.is_featured = event.is_featured or previous.is_featured
                 events[event.event_id] = event
+            else:
+                previous.is_featured = previous.is_featured or event.is_featured
         return list(events.values())

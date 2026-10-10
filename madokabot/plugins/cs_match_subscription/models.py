@@ -109,6 +109,8 @@ class EventData:
     url: str = ""
     format_text: str = ""
     event_status: str = "unknown"
+    # 列表页的精选赛事需要补查详情后再筛选。
+    is_featured: bool = False
 
     @property
     def is_finished(self) -> bool:

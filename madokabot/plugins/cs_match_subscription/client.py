@@ -421,16 +421,35 @@ def filter_events(
 
 
 async def fetch_events() -> list[EventData]:
-    """重点赛事查询方法。"""
+    """读取赛事列表，补全精选赛事详情后按日期和奖金筛选。"""
     page_url = events_url()
     html, response_url = await _fetch_html(page_url)
-    return filter_events(
-        parse_events_html(html, page_url=response_url)
-    )
+    events = parse_events_html(html, page_url=response_url)
+    for index, event in enumerate(events):
+        if not event.is_featured:
+            continue
+        try:
+            detail = await fetch_event(event.event_id, page_url=event.url)
+        except HltvError as exc:
+            logger.warning(f"补查 HLTV 精选赛事 {event.event_id} 详情失败：{exc}")
+            continue
+        detail.event_type = detail.event_type or event.event_type
+        detail.is_featured = True
+        # 列表横幅适合大卡片，详情页可能只提供赛事小图标。
+        detail.banner_url = event.banner_url or detail.banner_url
+        detail.flag_url = detail.flag_url or event.flag_url
+        detail.location = detail.location or event.location
+        if detail.team_count == "-":
+            detail.team_count = event.team_count
+        if detail.prize_pool is None and event.prize_pool is not None:
+            detail.prize_pool = event.prize_pool
+            detail.prize_display = event.prize_display
+        events[index] = detail
+    return filter_events(events)
 
 
-async def fetch_event(event_id: str) -> EventData:
-    """抓取并解析赛事详情。"""
+async def fetch_event(event_id: str, *, page_url: str | None = None) -> EventData:
+    """抓取并解析赛事详情，优先使用列表提供的完整链接。"""
     normalized_id = str(event_id).strip()
     if not normalized_id.isdigit():
         raise HltvError("赛事 ID 必须是纯数字。")
@@ -442,6 +461,8 @@ async def fetch_event(event_id: str) -> EventData:
         event_url(normalized_id, "matches"),
         event_url(normalized_id),
     ]
+    if page_url:
+        candidates.insert(0, page_url)
     tried: set[str] = set()
     while candidates:
         request_url = candidates.pop(0)
