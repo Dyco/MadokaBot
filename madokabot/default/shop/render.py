@@ -21,6 +21,8 @@ THUMB_HEIGHT = 300
 THUMB_FRAME_HEIGHT = THUMB_HEIGHT + 20
 GRID_COLUMNS = 4
 PAGE_SIZE = 12
+SIGN_GRID_COLUMNS = 3
+SIGN_PAGE_SIZE = 9
 
 
 def _load_font(size: int, bold: bool = False) -> ImageFont.FreeTypeFont:
@@ -83,11 +85,13 @@ def render_shop_list_card(
     items: list[dict[str, Any]],
     points: int,
     page: int = 1,
-    page_size: int = PAGE_SIZE,
+    page_size: int | None = None,
     total_pages: int | None = None,
     category: str = "skin",
 ) -> bytes:
-    """立绘沿用原有网格，签到模板以双列展示完整横版预览。"""
+    """签到模板每行三款、默认每页九款，末页按实际数量收缩行数。"""
+    if page_size is None:
+        page_size = SIGN_PAGE_SIZE if category == "sign" else PAGE_SIZE
     if page_size <= 0:
         raise ValueError("page_size 必须大于 0")
     if total_pages is None:
@@ -97,7 +101,7 @@ def render_shop_list_card(
 
     page = max(1, min(page, total_pages))
     page_items = items[(page - 1) * page_size : page * page_size]
-    columns = 2 if category == "sign" else GRID_COLUMNS
+    columns = SIGN_GRID_COLUMNS if category == "sign" else GRID_COLUMNS
     content = ResourceFolder.SIGN if category == "sign" else ResourceFolder.CHAR
     grid_rows = max(1, math.ceil((len(page_items) if category == "sign" else page_size) / columns))
 

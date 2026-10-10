@@ -14,15 +14,15 @@ from nonebot_plugin_waiter import waiter
 
 from madokabot.core.user.accounts import UserAccount
 from .service import SignTemplateService, SkinService
-from .render import render_shop_list_card
+from .render import SIGN_PAGE_SIZE, render_shop_list_card
 from .config import config
 from .matchers import SHOP_USAGE, shop_cmd
 from madokabot.core.messaging.pagination import extract_message_id, parse_page_command
 
 
-def _calc_total_pages(item_count: int) -> int:
-    """按商店每页数量计算总页数。"""
-    return max(1, math.ceil(item_count / config.shop_page_size))
+def _calc_total_pages(item_count: int, page_size: int | None = None) -> int:
+    """按指定每页数量计算总页数，未指定时使用立绘商店配置。"""
+    return max(1, math.ceil(item_count / (config.shop_page_size if page_size is None else page_size)))
 
 
 async def _build_shop_page(
@@ -34,13 +34,14 @@ async def _build_shop_page(
         await SignTemplateService.get_shop_template_list(uid)
         if category == "sign" else await SkinService.get_shop_skin_list(uid)
     )
-    total_pages = _calc_total_pages(len(items))
+    page_size = SIGN_PAGE_SIZE if category == "sign" else config.shop_page_size
+    total_pages = _calc_total_pages(len(items), page_size)
     current_page = max(1, min(page, total_pages))
     image_data = render_shop_list_card(
         items,
         points,
         page=current_page,
-        page_size=config.shop_page_size,
+        page_size=page_size,
         total_pages=total_pages,
         category=category,
     )

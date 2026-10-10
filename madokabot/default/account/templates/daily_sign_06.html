@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        @font-face { font-family: 'NotoSansSC'; src: url('{{ body_font_path }}'); font-weight: 100 900; }
+        @font-face { font-family: 'NotoSerifSC'; src: url('{{ title_font_path }}'); font-weight: 900; }
+        :root { --paper: #f4eedc; --ink: #304c40; --gold: #a0814e; --muted: #82836d; --line: #c7b992; }
+        * { box-sizing: border-box; }
+        body { margin: 0; width: 900px; height: 600px; overflow: hidden; background: var(--paper); color: var(--ink); font-family: 'NotoSansSC', sans-serif; }
+        .stage { position: relative; width: 900px; height: 600px; overflow: hidden; isolation: isolate; }
+        .stage::before { content: ''; position: absolute; inset: 0; z-index: -3; background: radial-gradient(ellipse at 22% 28%, #fffaeb 0, transparent 62%), radial-gradient(ellipse at 75% 65%, #d8cfad55, transparent 55%), repeating-linear-gradient(0deg, #6a593905 0 1px, transparent 1px 3px); }
+        .stage::after { content: ''; position: absolute; inset: 0; pointer-events: none; z-index: 10; box-shadow: inset 0 0 70px #826a3314; }
+        .frame { position: absolute; inset: 19px; border: 1px solid var(--gold); z-index: -1; }
+        .frame::before { content: ''; position: absolute; inset: 5px; border: 1px solid var(--line); }
+        .botanical { position: absolute; inset: 0; width: 900px; height: 600px; z-index: -1; }
+        .masthead { position: absolute; left: 62px; right: 62px; top: 42px; display: flex; justify-content: space-between; color: var(--gold); font: 11px Georgia, serif; letter-spacing: 2.1px; }
+        .heading { position: absolute; left: 62px; top: 78px; width: 385px; }
+        .title-main { margin: 0; font: 900 46px/1.3 'NotoSerifSC', serif; letter-spacing: 7px; }
+        .daily-sign-order { margin-top: 8px; font-size: 11px; letter-spacing: 2px; color: var(--muted); }
+        .daily-sign-order strong { padding: 0 4px; font: italic 22px Georgia, serif; color: var(--gold); }
+        .heading-rule { width: 366px; height: 19px; margin-top: 8px; color: var(--gold); }
+        .identity { position: absolute; top: 205px; left: 63px; width: 365px; display: flex; align-items: baseline; gap: 14px; }
+        .user-name { min-width: 0; max-width: 245px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 17px; font-weight: 500; letter-spacing: 2px; }
+        .user-id { margin-left: auto; flex-shrink: 0; color: var(--muted); font: 12px Georgia, serif; letter-spacing: 1px; }
+        .data-card { position: absolute; left: 62px; top: 249px; width: 366px; }
+        .score { position: relative; height: 101px; border-bottom: 1px solid var(--line); }
+        .score-ornament { position: absolute; right: 0; top: 11px; width: 87px; height: 77px; color: var(--gold); opacity: .65; }
+        .score-label { color: var(--gold); font-size: 11px; letter-spacing: 3px; }
+        .score-value { display: flex; align-items: baseline; gap: 12px; margin-top: 6px; }
+        .score-number { font: 64px/1 Georgia, serif; letter-spacing: -2px; }
+        .score-number.compact { font-size: 43px; letter-spacing: -1px; }
+        .score-number.dense { font-size: 31px; letter-spacing: -1px; }
+        .reward { color: var(--gold); font: italic 20px Georgia, serif; }
+        .stats { display: grid; grid-template-columns: repeat(3, 1fr); padding: 18px 0 17px; }
+        .stats-row { padding: 0 17px; border-left: 1px solid var(--line); }
+        .stats-row:first-child { padding-left: 0; border-left: 0; }
+        .stats-label { display: block; margin-bottom: 7px; color: var(--muted); font-size: 11px; letter-spacing: 1px; white-space: nowrap; }
+        .stats-value { display: flex; align-items: baseline; gap: 5px; white-space: nowrap; }
+        .stats-value strong { font: 28px Georgia, serif; }
+        .stats-value.dense strong { font-size: 23px; }
+        .unit { color: var(--muted); font-size: 9px; }
+        .delta { color: var(--gold); font: 11px Georgia, serif; }
+        .ranking-card { position: absolute; left: 62px; top: 436px; width: 366px; }
+        .ranking-header { display: flex; align-items: center; gap: 13px; margin-bottom: 8px; }
+        .ranking-header::after { content: ''; height: 1px; flex: 1; background: var(--line); }
+        .ranking-title { margin: 0; color: var(--gold); font-size: 11px; font-weight: 400; letter-spacing: 3px; }
+        .ranking-row { display: grid; grid-template-columns: 25px minmax(0, 1fr) 60px 56px; align-items: baseline; column-gap: 7px; height: 18px; padding: 0 5px 0 0; font-size: 11px; }
+        .ranking-position { color: var(--gold); font: italic 12px Georgia, serif; }
+        .ranking-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; letter-spacing: 1px; }
+        .ranking-value { text-align: right; font: 11px Georgia, serif; }
+        .ranking-value small { margin-left: 3px; color: var(--muted); font: 8px 'NotoSansSC', sans-serif; }
+        .ranking-row.current { position: relative; background: #354f450b; font-weight: 500; }
+        .ranking-row.current::before { content: '◆'; position: absolute; left: -12px; top: 3px; font-size: 6px; color: var(--gold); }
+        .ranking-empty { color: var(--muted); padding: 22px 0; font-size: 11px; letter-spacing: 2px; }
+        .halo { position: absolute; left: 471px; top: 73px; width: 366px; height: 403px; z-index: -2; }
+        .chara-container { position: absolute; left: 521px; top: 123px; width: 275px; height: 398px; overflow: hidden; display: flex; justify-content: center; align-items: flex-end; z-index: 1; }
+        .chara-img { display: block; max-width: 100%; max-height: 100%; object-fit: contain; filter: saturate(.77) sepia(.09); }
+        .empty-portrait { position: absolute; left: 530px; top: 272px; width: 245px; text-align: center; color: var(--muted); font-size: 13px; letter-spacing: 3px; }
+        .bubble { position: absolute; left: 479px; bottom: 61px; width: 359px; min-height: 84px; padding: 20px 26px 14px; background: var(--paper); border: 1px solid var(--gold); border-radius: 50% 50% 0 0 / 18px 18px 0 0; z-index: 3; text-align: center; }
+        .bubble::before { content: ''; position: absolute; inset: 4px; border: 1px solid #c7b99299; border-radius: 50% 50% 0 0 / 15px 15px 0 0; pointer-events: none; }
+        .speaker { position: relative; display: flex; justify-content: center; align-items: center; gap: 12px; margin-bottom: 8px; color: var(--gold); font-size: 10px; letter-spacing: 2.5px; }
+        .speaker::before, .speaker::after { content: ''; width: 24px; height: 7px; border-top: 1px solid var(--gold); border-bottom: 1px solid var(--line); border-radius: 50%; }
+        .cartouche-crest { position: absolute; width: 58px; height: 25px; left: calc(50% - 29px); top: -13px; color: var(--gold); }
+        .bubble-text { position: relative; font-size: 12px; line-height: 1.8; letter-spacing: .5px; }
+        .bubble.long .bubble-text { font-size: 11px; }
+        .footer { position: absolute; left: 62px; right: 62px; bottom: 36px; display: flex; justify-content: space-between; color: var(--muted); font: 9px Georgia, serif; letter-spacing: 1.4px; }
+    </style>
+</head>
+<body>
+    <main class="stage">
+        <div class="frame"></div>
+        <svg class="botanical" viewBox="0 0 900 600" fill="none" aria-hidden="true">
+            <defs>
+                <g id="leaf"><path d="M0 0C-24-6-28-27-17-49C-3-39 9-18 0 0Z" fill="#a8b493" stroke="#687e61" stroke-width="1"/><path d="M0 0C-5-14-10-30-17-45 M-5-14-15-18 M-8-24-2-31 M-12-33-21-36" stroke="#687e61" stroke-width=".6"/></g>
+                <g id="flower">
+                    <path d="M0 0C-7-21-43-23-35-47C-19-46-13-32-8-23C-22-47-13-64 0-70C13-64 22-47 8-23C13-32 19-46 35-47C43-23 7-21 0 0Z" fill="#c9a69c" stroke="#876d59" stroke-width="1.1"/>
+                    <path d="M0-6C-12-30-37-23-32-7C-18-16-13 7 0 0C13 7 18-16 32-7C37-23 12-30 0-6Z" fill="#e5d7b6" stroke="#876d59"/>
+                    <path d="M0-9V-63 M-3-13C-9-29-23-35-30-42 M3-13C9-29 23-35 30-42 M-6-15C-19-21-25-16-28-11 M6-15C19-21 25-16 28-11" stroke="#876d59" stroke-width=".7"/>
+                    <path d="M0-5C-6-13-5-20 0-25C5-20 6-13 0-5Z" fill="#b49455"/>
+                </g>
+                <g id="bud"><path d="M0 0C-11-8-9-23-2-32C9-23 11-10 0 0Z" fill="#c9a69c" stroke="#876d59"/><path d="M0 0-2-27 M0-4-7-14 M0-4 6-16" stroke="#876d59" stroke-width=".6"/></g>
+                <g id="corner"><path d="M0 85V0h85 M7 67V7h60 M0 43C25 43 43 25 43 0 M7 55C37 55 55 37 55 7" stroke="#a38451"/><path d="M15 37C16 18 30 11 39 13C37 29 28 36 15 37Z" fill="#bcc3a6" stroke="#a38451"/><path d="M15 37C28 32 30 21 36 16 M8 70C29 69 49 50 50 30 M8 78C26 81 41 75 40 65C39 59 29 62 33 67" stroke="#a38451" stroke-width=".8"/></g>
+            </defs>
+            <use href="#corner" transform="translate(25 25) scale(.7)"/><use href="#corner" transform="translate(875 25) scale(-.7 .7)"/>
+            <use href="#corner" transform="translate(25 575) scale(.7 -.7)"/><use href="#corner" transform="translate(875 575) scale(-.7 -.7)"/>
+            <path d="M454 530C503 475 471 410 488 355C507 298 480 256 514 203C533 171 517 136 495 116 M483 430C455 410 450 372 460 343 M493 350C526 319 540 287 534 255 M501 229C477 210 470 185 477 163 M805 531C857 463 824 405 846 344C861 300 841 253 853 215C867 173 850 137 831 112" stroke="#758366" stroke-width="2.1"/>
+            <path d="M462 526C503 454 484 402 501 351 M814 523C848 464 832 405 855 350 M481 406C453 400 441 370 455 354C469 339 482 357 469 364C462 367 458 361 462 357 M850 330C877 315 868 277 852 284C841 290 852 305 859 296 M494 247C460 246 451 217 461 207C472 196 485 211 475 217" stroke="#a38451" stroke-width=".9"/>
+            <path d="M31 110C45 134 45 151 33 167C22 182 24 211 33 227 M31 250C44 278 42 305 32 321 M31 348C44 376 43 401 32 420 M869 110C855 134 855 151 867 167C878 182 876 211 867 227 M869 250C856 278 858 305 868 321 M869 348C856 376 857 401 868 420" stroke="#a38451" stroke-width=".7" opacity=".7"/>
+            <use href="#leaf" transform="translate(486 434) rotate(-58) scale(.85)"/><use href="#leaf" transform="translate(483 404) rotate(30) scale(.8)"/>
+            <use href="#leaf" transform="translate(489 369) rotate(-62) scale(.8)"/><use href="#leaf" transform="translate(499 334) rotate(63) scale(.85)"/>
+            <use href="#leaf" transform="translate(495 301) rotate(-30) scale(.8)"/><use href="#leaf" transform="translate(502 257) rotate(39) scale(.75)"/>
+            <use href="#leaf" transform="translate(508 211) rotate(-30) scale(.9)"/><use href="#leaf" transform="translate(519 179) rotate(34) scale(.85)"/>
+            <use href="#flower" transform="translate(493 164) rotate(-18) scale(.9)"/><use href="#bud" transform="translate(475 202) rotate(-24) scale(.7)"/>
+            <use href="#flower" transform="translate(473 342) rotate(-27) scale(.7)"/><use href="#bud" transform="translate(458 389) rotate(-14) scale(.7)"/>
+            <use href="#leaf" transform="translate(842 450) rotate(35) scale(.8)"/><use href="#leaf" transform="translate(840 412) rotate(-52) scale(.85)"/>
+            <use href="#leaf" transform="translate(843 373) rotate(34) scale(.8)"/><use href="#leaf" transform="translate(851 337) rotate(-44) scale(.85)"/>
+            <use href="#leaf" transform="translate(850 296) rotate(26) scale(.75)"/><use href="#leaf" transform="translate(851 250) rotate(-36) scale(.8)"/>
+            <use href="#leaf" transform="translate(854 210) rotate(26) scale(.8)"/><use href="#flower" transform="translate(840 174) rotate(16) scale(.9)"/>
+            <use href="#flower" transform="translate(849 425) rotate(24) scale(.72)"/><use href="#bud" transform="translate(852 271) rotate(24) scale(.7)"/>
+            <path d="M354 564h59c15 0 19-12 37-12s22 12 37 12h59 M413 564c13 0 21-6 37-6s24 6 37 6 M436 558q14-21 28 0q-14 12-28 0Z M450 548v20" stroke="#a38451" stroke-width=".8"/>
+        </svg>
+        <div class="masthead"><span>283 PRODUCTION</span><span>SHINY COLORS / NOCTCHILL</span></div>
+        <header class="heading">
+            <h1 class="title-main">{{ title }}</h1>
+            {% if daily_sign_order %}<div class="daily-sign-order">今日第 <strong>{{ daily_sign_order }}</strong> 位签到</div>{% endif %}
+            <svg class="heading-rule" viewBox="0 0 366 19" fill="none" aria-hidden="true"><path d="M0 10h131c15 0 20-9 31-9s13 15 21 15s10-15 21-15s16 9 31 9h131 M131 10c17 0 21 8 31 8s14-9 21-9s11 9 21 9s14-8 31-8 M175 9q8-12 16 0q-8 8-16 0Z" stroke="currentColor" stroke-width=".8"/><circle cx="183" cy="7" r="1.5" fill="currentColor"/></svg>
+        </header>
+        <div class="identity"><span class="user-name">{{ user_name }}</span><span class="user-id">QQ {{ user_id }}</span></div>
+        <section class="data-card">
+            {% for label, value, delta in items if label == '总积分' %}
+            {% set number = value.split(' ', 1)[0] %}
+            <div class="score">
+                <div class="score-label">{{ label }}</div><div class="score-value"><span class="score-number{{ ' dense' if number | length > 11 else ' compact' if number | length > 6 else '' }}">{{ number }}</span>{% if delta %}<span class="reward">{{ delta }}</span>{% endif %}</div>
+                <svg class="score-ornament" viewBox="0 0 87 77" fill="none" aria-hidden="true"><path d="M44 73V9 M44 62C10 61 7 26 24 24C36 23 35 39 27 37C21 35 23 30 27 31 M44 62C78 61 81 26 64 24C52 23 53 39 61 37C67 35 65 30 61 31 M44 51C22 46 17 10 28 5C43 14 43 36 44 51ZM44 51C66 46 71 10 60 5C45 14 45 36 44 51Z M44 39C31 27 34 9 44 2C54 9 57 27 44 39Z M44 73C30 68 14 69 8 60 M44 73C58 68 74 69 80 60" stroke="currentColor" stroke-width=".8"/><path d="M44 38C37 24 39 15 44 9C49 15 51 24 44 38Z" fill="#a8b493" opacity=".7"/></svg>
+            </div>
+            {% endfor %}
+            <div class="stats">
+                {% for label, value, delta in items if label != '总积分' %}{% set parts = value.split(' ', 1) %}
+                <div class="stats-row"><span class="stats-label">{{ label }}</span><div class="stats-value{{ ' dense' if parts[0] | length > 3 else '' }}"><strong>{{ parts[0] }}</strong>{% if parts | length > 1 %}<span class="unit">{{ parts[1] }}</span>{% endif %}{% if delta %}<span class="delta">{{ delta }}</span>{% endif %}</div></div>
+                {% endfor %}
+            </div>
+        </section>
+        <section class="ranking-card">
+            <div class="ranking-header"><h2 class="ranking-title">积分排名</h2></div>
+            {% for nickname, uid, points, total_count in ranking %}
+            <div class="ranking-row{{ ' current' if loop.index == (current_ranking_index | default(none)) else '' }}"><span class="ranking-position">{{ '%02d' | format(loop.index) }}</span><span class="ranking-name">{{ nickname }}</span><span class="ranking-value">{{ points }}</span><span class="ranking-value">{{ total_count }}<small>次</small></span></div>
+            {% else %}<div class="ranking-empty">暂无排名</div>{% endfor %}
+        </section>
+        <svg class="halo" viewBox="0 0 366 403" fill="none" aria-hidden="true">
+            <path d="M10 403V188a173 173 0 0 1 346 0v215" fill="#395646" stroke="#a38451" stroke-width="1.4"/>
+            <circle cx="183" cy="188" r="159" fill="#ded4b4" stroke="#c3ad78"/>
+            <circle cx="183" cy="188" r="151" fill="#536a51" stroke="#a38451" stroke-width=".8"/>
+            <circle cx="183" cy="188" r="129" fill="#eee5ca" stroke="#a38451" stroke-width=".8"/>
+            <circle cx="183" cy="188" r="117" stroke="#c2b68d" stroke-width=".6"/>
+            {% for angle in range(0, 360, 15) %}
+            <g transform="rotate({{ angle }} 183 188)"><path d="M183 40C172 47 173 58 183 65C193 58 194 47 183 40Z" fill="#d7d6b5" stroke="#a38451" stroke-width=".7"/><path d="M183 42v20" stroke="#8c966f" stroke-width=".6"/><circle cx="183" cy="33" r="1.2" fill="#a38451"/></g>
+            {% endfor %}
+            <path d="M19 403V188a164 164 0 0 1 328 0v215 M40 335c28-36 46-40 69-12s43 28 74-6c31 34 51 34 74 6s41-24 69 12 M39 351c29-35 47-39 70-11s43 28 74-6c31 34 51 34 74 6s41-24 70 11 M40 377c28-36 46-40 69-12s43 28 74-6c31 34 51 34 74 6s41-24 69 12" stroke="#c4b47e" stroke-width=".8" opacity=".8"/>
+        </svg>
+        {% if chara_b64 %}<div class="chara-container"><img class="chara-img" src="{{ chara_b64 }}" alt="角色立绘"></div>
+        {% else %}<div class="empty-portrait">未选择立绘</div>{% endif %}
+        <div class="bubble{{ ' long' if quote | length > 28 else '' }}">
+            <svg class="cartouche-crest" viewBox="0 0 58 25" fill="none" aria-hidden="true"><path d="M0 17C15 17 14 8 29 8s14 9 29 9" fill="var(--paper)" stroke="currentColor"/><path d="M29 20C13 16 13 4 19 2C26 5 27 11 29 20ZM29 20C45 16 45 4 39 2C32 5 31 11 29 20Z M29 20C21 13 22 3 29 0C36 3 37 13 29 20Z" fill="var(--paper)" stroke="currentColor" stroke-width=".8"/><path d="M29 4v17" stroke="currentColor" stroke-width=".6"/></svg>
+            <div class="speaker">{{ chara_name.split('_')[0] if chara_b64 and chara_name else '今日寄语' }}</div><div class="bubble-text">「{{ quote }}」</div>
+        </div>
+        <footer class="footer"><span>MADOKABOT VER.3.1.0</span><span>{{ current_time[:10].replace('-', '.') }} · {{ current_time[11:16] }}</span></footer>
+    </main>
+</body>
+</html>

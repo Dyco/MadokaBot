@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <style>
+    {% if font_uri %}@font-face { font-family: Reborn; src: url('{{ font_uri }}'); }{% endif %}
+    * { box-sizing: border-box; }
+    body { width: 1080px; margin: 0; padding: 44px; background: #091c26; color: #eef7f3; font-family: Reborn, 'Microsoft YaHei', sans-serif; }
+    .eyebrow { font-family: sans-serif; font-size: 15px; letter-spacing: 5px; color: #87c9b0; }
+    header { display: flex; justify-content: space-between; align-items: flex-start; }
+    h1 { font-size: 46px; margin: 10px 0 4px; letter-spacing: 5px; }
+    .date { color: #a5b9bf; text-align: right; line-height: 1.9; font-size: 18px; }
+    .identity { margin-top: 28px; padding-top: 26px; border-top: 1px solid #29424b; }
+    .name { color: #afc5c7; font-size: 20px; overflow-wrap: anywhere; }
+    .destination { display: flex; justify-content: space-between; align-items: center; gap: 20px; margin: 6px 0 18px; }
+    h2 { font-size: 48px; margin: 0; line-height: 1.5; max-width: 760px; overflow-wrap: anywhere; }
+    .gender { border: 1px solid #527d77; color: #b6e8d5; padding: 8px 20px; border-radius: 40px; white-space: nowrap; font-size: 20px; }
+    .map { background: #102b37; border: 1px solid #284652; border-radius: 18px; overflow: hidden; padding: 18px 12px 8px; }
+    svg { display: block; width: 100%; height: auto; }
+    .grid { stroke: #20424e; stroke-width: .6; }
+    .land { fill: #345360; stroke: #102b37; stroke-width: .45; stroke-linejoin: round; }
+    .selected { fill: #a7e8ba; stroke: #d9f7d8; stroke-width: .6; }
+    .map-footer { display: flex; justify-content: space-between; padding: 8px 18px; color: #92b1b8; font-size: 14px; }
+    .map-footer b { color: #b5ebcc; font-weight: normal; }
+    .facts { display: grid; grid-template-columns: 1fr 1fr 1fr; padding: 24px 0; gap: 20px; }
+    .fact { border-right: 1px solid #29424b; }
+    .fact:last-child { border: 0; }
+    .fact-label { font-size: 16px; color: #91aeb7; margin-bottom: 7px; }
+    .fact-value { font-family: Reborn, sans-serif; font-size: 27px; color: #e1f3eb; }
+    .fact-value small { font-size: 16px; color: #91aeb7; }
+    .bottom { display: grid; grid-template-columns: 1fr 310px; gap: 32px; padding: 26px 0; border-top: 1px solid #29424b; }
+    .section-title { font-size: 16px; color: #a5c0c1; letter-spacing: 3px; margin-bottom: 18px; }
+    .attribute { display: grid; grid-template-columns: 54px 1fr 36px; align-items: center; gap: 15px; margin: 14px 0; font-size: 18px; }
+    .track { height: 8px; background: #223d47; border-radius: 20px; overflow: hidden; }
+    .bar { height: 100%; background: linear-gradient(90deg, #468d88, #c8edb0); border-radius: 20px; }
+    .attribute span:last-child { text-align: right; font-family: sans-serif; color: #d2ebdd; }
+    .rating { background: #14332f; border: 1px solid #3a6050; border-radius: 18px; text-align: center; padding: 20px 14px; }
+    .score { font-family: sans-serif; font-size: 88px; line-height: 1.2; font-weight: bold; color: #d8edb8; }
+    .score small { font-size: 20px; color: #87a697; font-weight: normal; }
+    .grade { font-size: 21px; margin: 8px 0; color: #d5e9ca; }
+    .caption { font-size: 14px; color: #91b0a3; }
+    .comment { margin: 0 0 25px; padding: 18px 22px; background: #102b37; border-radius: 12px; color: #b4cec9; font-size: 19px; line-height: 1.6; }
+    footer { border-top: 1px solid #29424b; padding-top: 18px; font-size: 13px; color: #819fa9; line-height: 1.9; text-align: right; }
+  </style>
+</head>
+<body>
+  <header>
+    <div><div class="eyebrow">DAILY REBORN / NEW LIFE ARCHIVE</div><h1>每日投胎</h1></div>
+    <div class="date">{{ result.date }}<br>每天一次 · 零点重置</div>
+  </header>
+  <section class="identity">
+    <div class="name">{{ name }}，这一次，你出生在</div>
+    <div class="destination"><h2>{{ result.country.name }}</h2><div class="gender">{{ result.gender }}婴</div></div>
+  </section>
+  <div class="map">
+    <svg viewBox="0 0 1000 440" xmlns="http://www.w3.org/2000/svg" aria-label="出生地世界地图">
+      <g class="grid">
+        {% for x in range(0, 1001, 125) %}<path d="M{{ x }} 0V440"/>{% endfor %}
+        {% for y in range(69, 440, 83) %}<path d="M0 {{ y }}H1000"/>{% endfor %}
+      </g>
+      {% for region in regions %}<path class="land{% if region.code == result.country.map_code %} selected{% endif %}" fill-rule="evenodd" d="{{ region.path }}"/>{% endfor %}
+      <circle cx="{{ marker_x }}" cy="{{ marker_y }}" r="14" fill="#eaf7c8" opacity=".15"/>
+      <circle cx="{{ marker_x }}" cy="{{ marker_y }}" r="7" fill="#edf7ca" stroke="#143832" stroke-width="2"/>
+      <circle cx="{{ marker_x }}" cy="{{ marker_y }}" r="2" fill="#205442"/>
+    </svg>
+    <div class="map-footer"><b>● 本次出生地</b><span>世界出生地图 · 示意图</span></div>
+  </div>
+  <div class="facts">
+    <div class="fact"><div class="fact-label">抽中该地区的概率</div><div class="fact-value">{{ probability }}</div></div>
+    <div class="fact"><div class="fact-label">该地区年度出生人数</div><div class="fact-value">{{ births }} <small>人</small></div></div>
+    <div class="fact"><div class="fact-label">该地区粗出生率</div><div class="fact-value">{{ '%.2f'|format(result.country.birth_rate) }} <small>‰</small></div></div>
+  </div>
+  <div class="bottom">
+    <div><div class="section-title">初始人生属性</div>
+      {% for label, value in result.attributes.items() %}<div class="attribute"><span>{{ label }}</span><div class="track"><div class="bar" style="width: {{ value }}%"></div></div><span>{{ value }}</span></div>{% endfor %}
+    </div>
+    <div class="rating"><div class="section-title">综合开局评分</div><div class="score">{{ result.score }}<small> / 100</small></div><div class="grade">{{ result.label }}</div><div class="caption">五项属性的平均分</div></div>
+  </div>
+  <p class="comment">{{ result.comment }}</p>
+  <footer>MadokBot Ver.0.3.1</footer>
+</body>
+</html>

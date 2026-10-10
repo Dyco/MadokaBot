@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        @font-face { font-family: 'NotoSansSC'; src: url('{{ body_font_path }}'); font-weight: 100 900; }
+        @font-face { font-family: 'NotoSerifSC'; src: url('{{ title_font_path }}'); font-weight: 900; }
+        @font-face { font-family: 'BarlowCondensed'; src: url('{{ latin_medium_font_path }}'); font-weight: 500; }
+        :root { --navy: #101c2c; --panel: #17283b; --gold: #bd9d62; --cream: #f0e0b9; --muted: #9b9d9c; --line: #bd9d624d; }
+        * { box-sizing: border-box; }
+        body { margin: 0; width: 900px; height: 600px; overflow: hidden; background: var(--navy); color: var(--cream); font-family: 'NotoSansSC', sans-serif; }
+        .stage { position: relative; isolation: isolate; width: 900px; height: 600px; overflow: hidden; }
+        .stage::before { content: ''; position: absolute; inset: 0; z-index: -4; background: radial-gradient(ellipse at 50% 40%, #29425880, transparent 62%), repeating-linear-gradient(90deg, #ffffff02 0 1px, transparent 1px 4px); }
+        .stage::after { content: ''; position: absolute; inset: 0; z-index: 10; pointer-events: none; box-shadow: inset 0 0 80px #040b1559; }
+        .architecture { position: absolute; inset: 0; width: 900px; height: 600px; z-index: -2; }
+        .masthead { position: absolute; left: 65px; right: 65px; top: 38px; display: flex; justify-content: space-between; color: var(--gold); font: 500 12px 'BarlowCondensed', sans-serif; letter-spacing: 2.6px; }
+        .heading { position: absolute; left: 291px; top: 64px; width: 318px; text-align: center; }
+        .title-main { margin: 0; font: 900 40px/1.4 'NotoSerifSC', serif; letter-spacing: 8px; padding-left: 8px; color: var(--cream); }
+        .daily-sign-order { margin-top: 5px; color: var(--muted); font-size: 11px; font-style: italic; line-height: 24px; letter-spacing: 1.3px; }
+        .daily-sign-order strong { padding: 0 4px; color: var(--gold); font: italic 500 23px 'BarlowCondensed', sans-serif; }
+        .identity { position: absolute; left: 65px; top: 181px; width: 226px; }
+        .user-name { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 18px; font-weight: 450; letter-spacing: 2px; }
+        .user-id { display: block; margin-top: 8px; color: var(--muted); font: 500 12px 'BarlowCondensed', sans-serif; letter-spacing: 2px; }
+        .data-card { position: absolute; left: 65px; top: 251px; width: 226px; }
+        .score { height: 111px; border-bottom: 1px solid var(--line); }
+        .score-label { color: var(--gold); font-size: 11px; letter-spacing: 3px; }
+        .score-value { display: flex; align-items: baseline; gap: 9px; margin-top: 7px; }
+        .score-number { font: 500 74px/1 'BarlowCondensed', sans-serif; letter-spacing: 1px; color: var(--cream); }
+        .score-number.compact { font-size: 46px; letter-spacing: 0; }
+        .score-number.dense { font-size: 31px; letter-spacing: 0; }
+        .reward { color: var(--gold); font: 500 18px 'BarlowCondensed', sans-serif; }
+        .stats-row { display: flex; align-items: center; height: 51px; border-bottom: 1px solid var(--line); }
+        .stats-label { display: flex; gap: 11px; align-items: center; color: #c1c1b4; font-size: 12px; letter-spacing: 1px; }
+        .stat-mark { width: 13px; height: 17px; color: var(--gold); }
+        .stats-value { margin-left: auto; display: flex; align-items: baseline; gap: 5px; }
+        .stats-value strong { color: var(--cream); font: 500 29px 'BarlowCondensed', sans-serif; }
+        .unit { color: var(--muted); font-size: 9px; }
+        .delta { color: var(--gold); font: 500 12px 'BarlowCondensed', sans-serif; }
+        .ranking-card { position: absolute; right: 65px; top: 181px; width: 226px; }
+        .ranking-header { display: flex; justify-content: space-between; align-items: center; height: 48px; margin-bottom: 7px; border-top: 1px solid var(--gold); border-bottom: 1px solid var(--line); }
+        .ranking-title { margin: 0; color: var(--cream); font-size: 16px; font-weight: 450; letter-spacing: 3px; }
+        .ranking-flourish { width: 40px; height: 25px; color: var(--gold); }
+        .ranking-row { position: relative; display: grid; grid-template-columns: 28px minmax(0, 1fr); gap: 0 11px; align-content: center; height: 52px; padding: 3px 9px; border-bottom: 1px solid var(--line); }
+        .ranking-position { grid-row: span 2; align-self: center; color: var(--gold); font: 500 26px 'BarlowCondensed', sans-serif; }
+        .ranking-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; letter-spacing: 1px; }
+        .ranking-value { display: flex; justify-content: space-between; margin-top: 3px; color: var(--muted); font-size: 9px; }
+        .ranking-value b { color: #ccc8b7; font: 500 13px 'BarlowCondensed', sans-serif; margin-right: 3px; }
+        .ranking-row.current { background: #bd9d621c; }
+        .ranking-row.current::before { content: ''; position: absolute; left: 0; top: 16px; width: 2px; height: 20px; background: var(--gold); }
+        .ranking-empty { padding-top: 90px; text-align: center; font-size: 12px; letter-spacing: 2px; color: var(--muted); }
+        .chara-container { position: absolute; left: 337px; top: 178px; width: 226px; height: 354px; display: flex; justify-content: center; align-items: flex-end; overflow: hidden; z-index: 1; }
+        .chara-img { display: block; max-width: 100%; max-height: 100%; object-fit: contain; filter: saturate(.78) contrast(1.02) drop-shadow(0 0 15px #050e2055); }
+        .empty-portrait { position: absolute; left: 337px; top: 310px; width: 226px; text-align: center; color: var(--muted); font-size: 12px; letter-spacing: 2px; }
+        .bubble { position: absolute; left: 307px; bottom: 64px; width: 286px; min-height: 83px; padding: 14px 18px; background: var(--panel); z-index: 4; text-align: center; border-top: 1px solid var(--gold); border-bottom: 1px solid var(--gold); clip-path: polygon(0 10px, 10px 0, calc(100% - 10px) 0, 100% 10px, 100% calc(100% - 10px), calc(100% - 10px) 100%, 10px 100%, 0 calc(100% - 10px)); }
+        .bubble::before { content: ''; position: absolute; inset: 5px 17px; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); pointer-events: none; }
+        .speaker { display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 8px; color: var(--gold); font-size: 10px; letter-spacing: 2px; }
+        .speaker::before, .speaker::after { content: ''; width: 23px; height: 1px; background: var(--gold); }
+        .bubble-text { color: #e0dccb; font-size: 12px; line-height: 1.8; }
+        .bubble.long .bubble-text { font-size: 11px; }
+        .footer { position: absolute; left: 65px; right: 65px; bottom: 35px; display: flex; justify-content: space-between; color: #a3997f; font: 500 10px 'BarlowCondensed', sans-serif; letter-spacing: 1.6px; }
+    </style>
+</head>
+<body>
+    <main class="stage">
+        <svg class="architecture" viewBox="0 0 900 600" fill="none" aria-hidden="true">
+            <defs>
+                <linearGradient id="gold-blade" x1="440" y1="170" x2="345" y2="536" gradientUnits="userSpaceOnUse"><stop stop-color="#d5bb85"/><stop offset=".55" stop-color="#ac915b"/><stop offset="1" stop-color="#746347"/></linearGradient>
+                <linearGradient id="steel-blade" x1="520" y1="170" x2="400" y2="536" gradientUnits="userSpaceOnUse"><stop stop-color="#456078"/><stop offset="1" stop-color="#213447"/></linearGradient>
+                <g id="corner"><path d="M0 75V0h75 M6 45V6h39 M12 30V12h18 M0 18h18V0 M6 27h21V6" stroke="#bd9d62" stroke-width="1"/><path d="M12 30 30 12 M6 45 45 6" stroke="#bd9d62" stroke-width=".6" opacity=".6"/></g>
+                <g id="fan"><path d="M0 0-44-49H44ZM0 0-32-57H32ZM0 0-18-63H18Z" stroke="#bd9d62" stroke-width=".7"/><path d="M0 0V-63 M-44-49H44 M-32-57H32 M-18-63H18" stroke="#bd9d62" stroke-width=".7"/></g>
+            </defs>
+            <path d="M98 22h704 M22 98v404 M878 98v404 M98 578h704 M98 28h704 M28 98v404 M872 98v404 M98 572h704" stroke="#bd9d62" stroke-width=".8" opacity=".8"/>
+            <use href="#corner" transform="translate(22 22)"/><use href="#corner" transform="translate(878 22) scale(-1 1)"/>
+            <use href="#corner" transform="translate(22 578) scale(1 -1)"/><use href="#corner" transform="translate(878 578) scale(-1 -1)"/>
+            <path d="M65 157h154l15-15h57 M609 142h57l15 15h154 M65 163h157l15-15h54 M609 148h54l15 15h157" stroke="#bd9d62" stroke-width=".8"/>
+            <path d="M72 104h111 M76 96h103 M82 88h91 M88 80h79 M94 72h67 M728 104h107 M732 96h99 M738 88h87 M744 80h75 M750 72h63" stroke="#bd9d62" opacity=".18"/>
+            <path d="M303 536 352 175h155L382 536Z" fill="#263d50" opacity=".8"/>
+            <path d="M326 536 462 171h43L369 536Z" fill="url(#gold-blade)"/>
+            <path d="M389 536 532 171h51L440 536Z" fill="url(#steel-blade)"/>
+            <path d="M313 536 449 171 M452 536 595 171" stroke="#cdb27a" stroke-width=".8" opacity=".65"/>
+            <path d="M349 217h72 M343 225h77 M338 233h80 M497 347h85 M494 355h90 M490 363h96" stroke="#b9c2c1" stroke-width=".7" opacity=".35"/>
+            <path d="M331 284h39l12-12h27 M332 292h41l12-12h24 M504 406h37l13-13h31 M501 414h43l13-13h28" stroke="#cdb27a" stroke-width=".8" opacity=".55"/>
+            <path d="M332 188 335 207 346 213 335 218 332 237 329 218 318 213 329 207Z" stroke="#bd9d62" stroke-width=".8" fill="#bd9d6214"/>
+            <use href="#fan" transform="translate(176 537) scale(.28)"/><use href="#fan" transform="translate(724 537) scale(.28)"/>
+            <path d="M375 559h52l11-11h24l11 11h52 M399 564h102 M444 553l6-6 6 6-6 6Z" stroke="#bd9d62" stroke-width=".8"/>
+        </svg>
+        <div class="masthead"><span>283 PRODUCTION</span><span>SHINY COLORS / NOCTCHILL</span></div>
+        <header class="heading"><h1 class="title-main">{{ title }}</h1>{% if daily_sign_order %}<div class="daily-sign-order">今日第 <strong>{{ daily_sign_order }}</strong> 位签到</div>{% endif %}</header>
+        <div class="identity"><span class="user-name">{{ user_name }}</span><span class="user-id">QQ / {{ user_id }}</span></div>
+        <section class="data-card">
+            {% for label, value, delta in items %}{% set parts = value.split(' ', 1) %}
+            {% if label == '总积分' %}
+            <div class="score"><div class="score-label">{{ label }}</div><div class="score-value"><span class="score-number{{ ' dense' if parts[0] | length > 11 else ' compact' if parts[0] | length > 6 else '' }}">{{ parts[0] }}</span>{% if delta %}<span class="reward">{{ delta }}</span>{% endif %}</div></div>
+            {% else %}
+            <div class="stats-row"><span class="stats-label"><svg class="stat-mark" viewBox="0 0 13 17" fill="none" aria-hidden="true"><path d="m6.5 1 5.5 7.5L6.5 16 1 8.5Z M6.5 4v9" stroke="currentColor" stroke-width=".8"/></svg>{{ label }}</span><div class="stats-value"><strong>{{ parts[0] }}</strong>{% if parts | length > 1 %}<span class="unit">{{ parts[1] }}</span>{% endif %}{% if delta %}<span class="delta">{{ delta }}</span>{% endif %}</div></div>
+            {% endif %}{% endfor %}
+        </section>
+        <section class="ranking-card">
+            <div class="ranking-header"><h2 class="ranking-title">积分排名</h2><svg class="ranking-flourish" viewBox="0 0 40 25" fill="none" aria-hidden="true"><path d="M20 24 1 9h38ZM20 24 7 4h26ZM20 24 14 0h12ZM20 24V0" stroke="currentColor" stroke-width=".7"/></svg></div>
+            {% for nickname, uid, points, total_count in ranking %}
+            <div class="ranking-row{{ ' current' if loop.index == (current_ranking_index | default(none)) else '' }}"><span class="ranking-position">{{ '%02d' | format(loop.index) }}</span><span class="ranking-name">{{ nickname }}</span><div class="ranking-value"><span><b>{{ points }}</b>积分</span><span><b>{{ total_count }}</b>次</span></div></div>
+            {% else %}<div class="ranking-empty">暂无排名</div>{% endfor %}
+        </section>
+        {% if chara_b64 %}<div class="chara-container"><img class="chara-img" src="{{ chara_b64 }}" alt="角色立绘"></div>{% else %}<div class="empty-portrait">未选择立绘</div>{% endif %}
+        <div class="bubble{{ ' long' if quote | length > 28 else '' }}"><div class="speaker">{{ chara_name.split('_')[0] if chara_b64 and chara_name else '今日寄语' }}</div><div class="bubble-text">「{{ quote }}」</div></div>
+        <footer class="footer"><span>MADOKABOT VER.3.1.0</span><span>{{ current_time[:10].replace('-', '.') }} · {{ current_time[11:16] }}</span></footer>
+    </main>
+</body>
+</html>

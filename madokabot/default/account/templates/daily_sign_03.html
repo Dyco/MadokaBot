@@ -22,9 +22,9 @@
         .title-main { margin: 0; font-size: 34px; font-weight: 450; line-height: 44px; letter-spacing: 5px; }
         .daily-sign-order { margin-top: 1px; color: var(--muted); font-size: 11px; line-height: 24px; font-style: italic; letter-spacing: .7px; }
         .daily-sign-order strong { color: var(--ink); font: italic 700 18px 'BarlowCondensed', sans-serif; padding: 0 3px; }
-        .section-code { position: absolute; right: 0; top: 2px; text-align: right; }
-        .section-code strong { font: 500 36px/38px 'BarlowCondensed', sans-serif; letter-spacing: 2px; }
-        .section-code span { display: block; color: var(--muted); font: 500 10px 'BarlowCondensed', sans-serif; letter-spacing: 3px; }
+        .record-status { position: absolute; right: 0; top: 19px; width: 224px; padding-bottom: 13px; border-bottom: 1px solid var(--line); font-size: 12px; letter-spacing: 1.5px; }
+        .record-status::before { content: ''; display: inline-block; width: 6px; height: 6px; margin-right: 10px; vertical-align: 2px; background: var(--ink); }
+        .record-status::after { content: ''; position: absolute; right: 0; bottom: -2px; width: 27px; height: 3px; background: repeating-linear-gradient(90deg, var(--muted) 0 3px, transparent 3px 6px); }
         .identity { position: absolute; left: 43px; top: 157px; width: 514px; display: flex; align-items: center; gap: 15px; }
         .identity-mark { width: 30px; height: 30px; flex-shrink: 0; fill: var(--ink); }
         .user-name { font-size: 18px; font-weight: 500; max-width: 285px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -33,7 +33,6 @@
         .score { position: relative; background: var(--ink); color: var(--light); height: 111px; padding: 13px 18px 12px; }
         .score::before { content: ''; position: absolute; left: -15px; top: 0; bottom: 0; width: 5px; background: var(--ink); }
         .score-label { display: flex; justify-content: space-between; font-size: 12px; letter-spacing: 2px; }
-        .score-label small { color: #c2bead; font: 500 11px 'BarlowCondensed', sans-serif; letter-spacing: 2px; }
         .score-value { display: flex; align-items: baseline; gap: 8px; padding-top: 5px; }
         .score-number { font: 500 62px/61px 'BarlowCondensed', sans-serif; letter-spacing: 1px; }
         .score-number.compact { font-size: 43px; letter-spacing: 0; }
@@ -49,7 +48,6 @@
         .ranking-card { position: absolute; left: 351px; top: 214px; width: 209px; height: 300px; }
         .ranking-header { display: flex; justify-content: space-between; align-items: center; padding: 0 7px 12px; border-bottom: 3px double var(--ink); }
         .ranking-title { margin: 0; font-size: 17px; font-weight: 450; letter-spacing: 2px; }
-        .ranking-header small { color: var(--muted); font: 500 11px 'BarlowCondensed', sans-serif; letter-spacing: 1px; }
         .ranking-row { position: relative; display: grid; grid-template-columns: 27px minmax(0, 1fr); column-gap: 8px; height: 48px; padding: 4px 9px; align-content: center; border-bottom: 1px solid rgba(133,130,116,.35); }
         .ranking-position { grid-row: span 2; align-self: center; font: 500 24px 'BarlowCondensed', sans-serif; }
         .ranking-user { display: flex; align-items: baseline; gap: 5px; min-width: 0; }
@@ -65,28 +63,29 @@
         .portrait-field { position: absolute; right: 29px; top: 147px; width: 285px; height: 357px; z-index: -1; border-left: 1px solid rgba(133,130,116,.3); }
         .portrait-field::before { content: ''; position: absolute; left: 21px; right: 2px; top: 81px; height: 263px; border: 1px solid rgba(133,130,116,.25); border-radius: 50%; }
         .portrait-field::after { content: ''; position: absolute; left: 19px; right: 0; top: 212px; height: 1px; background: rgba(133,130,116,.3); }
-        .portrait-code { position: absolute; right: 44px; top: 158px; font: 500 9px 'BarlowCondensed', sans-serif; letter-spacing: 3px; color: var(--muted); }
-        .chara-container { position: absolute; right: 21px; bottom: 52px; height: 435px; width: 324px; display: flex; justify-content: center; align-items: flex-end; z-index: 3; }
+        .portrait-score { position: absolute; left: 17px; top: 83px; width: 263px; height: 239px; color: var(--ink); opacity: .14; }
+        .chara-container { position: absolute; right: 42px; top: 156px; height: 378px; width: 268px; overflow: hidden; display: flex; justify-content: center; align-items: flex-end; z-index: 3; }
         .chara-img { max-height: 100%; max-width: 100%; object-fit: contain; filter: drop-shadow(8px 6px 0 rgba(69,68,60,.1)); }
         .empty-portrait { position: absolute; right: 55px; top: 295px; width: 232px; text-align: center; color: var(--muted); font-size: 13px; letter-spacing: 3px; }
         .empty-portrait svg { display: block; width: 56px; height: 56px; margin: 0 auto 20px; stroke: var(--muted); fill: none; stroke-width: 1; }
-        .bubble { position: absolute; right: 34px; bottom: 61px; width: 270px; min-height: 55px; padding: 12px 14px 11px 23px; background: rgba(238,235,221,.94); border-top: 1px solid var(--ink); border-bottom: 1px solid var(--ink); z-index: 6; }
-        .bubble::before { content: ''; position: absolute; left: 9px; top: 18px; width: 4px; height: 4px; background: var(--ink); box-shadow: 0 8px var(--ink); }
+        .bubble { position: absolute; right: 34px; bottom: 61px; width: 280px; min-height: 78px; display: flex; flex-direction: column; justify-content: center; gap: 7px; padding: 10px 14px 12px 23px; background: var(--light); border-top: 1px solid var(--ink); border-bottom: 1px solid var(--ink); z-index: 6; }
+        .bubble::before { content: ''; position: absolute; left: 9px; bottom: 23px; width: 4px; height: 4px; background: var(--ink); box-shadow: 0 8px var(--ink); }
+        .communication-header { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--muted); font-size: 10px; line-height: 14px; letter-spacing: 1px; }
         .bubble-text { font-size: 12px; line-height: 1.8; }
         .bubble.long .bubble-text { font-size: 11px; }
-        .skin-note { position: absolute; left: 43px; bottom: 66px; width: 517px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--muted); font-size: 8px; letter-spacing: .3px; }
-        .footer { position: absolute; left: 43px; right: 43px; bottom: 36px; display: flex; align-items: center; justify-content: space-between; font: 500 10px 'BarlowCondensed', sans-serif; letter-spacing: 2px; color: var(--muted); }
-        .ornament { width: 121px; height: 9px; fill: var(--ink); opacity: .55; }
+        .footer { position: absolute; left: 43px; right: 43px; bottom: 36px; height: 12px; font: 500 10px/12px 'BarlowCondensed', sans-serif; letter-spacing: 1.5px; color: var(--muted); }
+        .footer-brand { position: absolute; right: 0; top: 0; }
+        .ornament { position: absolute; left: 50%; top: 1px; transform: translateX(-50%); width: 121px; height: 9px; fill: var(--ink); opacity: .55; }
     </style>
 </head>
 <body>
     <div class="stage">
         <div class="frame"></div>
-        <div class="masthead">283 PRODUCTION <span>PERSONAL ARCHIVE / {{ current_time[:10].replace('-', '.') }} &nbsp; {{ current_time[11:16] }}</span></div>
+        <div class="masthead">283 PRODUCTION <span>{{ current_time[:10].replace('-', '.') }} &nbsp; {{ current_time[11:16] }}</span></div>
         <header class="heading">
             <h1 class="title-main">{{ title }}</h1>
             {% if daily_sign_order %}<div class="daily-sign-order">今日第 <strong>{{ daily_sign_order }}</strong> 位签到</div>{% endif %}
-            <div class="section-code"><strong>DAILY : RECORD</strong><span>PRODUCER ACTIVITY LOG</span></div>
+            <div class="record-status">{{ '签到记录已保存' if title == '每日签到' else '个人档案已读取' }}</div>
         </header>
         <div class="identity">
             <svg class="identity-mark" viewBox="0 0 30 30" aria-hidden="true"><path d="M2 2h4v26H2zM10 7h15v16H10z"/><path d="M13 10h9v10h-9z" fill="var(--paper)"/><path d="M17 0h1v30h-1z" opacity=".3"/></svg>
@@ -97,7 +96,7 @@
             {% set parts = value.split(' ', 1) %}
             {% if label == '总积分' %}
             <div class="score">
-                <div class="score-label">{{ label }}<small>TOTAL POINTS</small></div>
+                <div class="score-label">{{ label }}</div>
                 <div class="score-value"><span class="score-number{{ ' dense' if parts[0] | length > 11 else ' compact' if parts[0] | length > 6 else '' }}">{{ parts[0] }}</span>{% if delta %}<span class="reward">{{ delta }}</span>{% endif %}</div>
             </div>
             {% else %}
@@ -113,7 +112,7 @@
             {% endfor %}
         </div>
         <div class="ranking-card">
-            <div class="ranking-header"><h2 class="ranking-title">积分排名</h2><small>TOP : 05</small></div>
+            <div class="ranking-header"><h2 class="ranking-title">积分排名</h2></div>
             {% for nickname, uid, points, total_count in ranking %}
             <div class="ranking-row{{ ' current' if loop.index == (current_ranking_index | default(none)) else '' }}">
                 <span class="ranking-position">{{ '%02d' | format(loop.index) }}</span>
@@ -122,12 +121,20 @@
             </div>
             {% else %}<div class="ranking-empty">暂无排名</div>{% endfor %}
         </div>
-        <div class="portrait-field"></div><div class="portrait-code">PORTRAIT / 283</div>
+        <div class="portrait-field" aria-hidden="true">
+            <svg class="portrait-score" viewBox="0 0 263 239" fill="none">
+                <path d="M0 27h263 M0 35h263 M0 43h263 M0 51h263 M0 59h263 M0 163h263 M0 171h263 M0 179h263 M0 187h263 M0 195h263" stroke="currentColor" stroke-width=".8"/>
+                <path d="M17 23v40 M22 23v40 M240 159v40 M245 159v40 M7 111h23 M18.5 99.5v23 M233 111h23 M244.5 99.5v23" stroke="currentColor"/>
+                <path d="M47 32h5v6h-5z M63 48h5v6h-5z M205 168h5v6h-5z M222 184h5v6h-5z" fill="currentColor"/>
+            </svg>
+        </div>
         {% if chara_b64 %}<div class="chara-container"><img class="chara-img" src="{{ chara_b64 }}"></div>
         {% else %}<div class="empty-portrait"><svg viewBox="0 0 56 56" aria-hidden="true"><path d="M1 1h54v54H1z M1 28h54 M28 1v54"/><circle cx="28" cy="28" r="17"/></svg>未选择立绘</div>{% endif %}
-        <div class="bubble{{ ' long' if quote | length > 28 else '' }}"><div class="bubble-text">「{{ quote }}」</div></div>
-        {% if chara_name %}<div class="skin-note">立绘 / {{ chara_name.replace('_', ' / ') }}</div>{% endif %}
-        <footer class="footer"><span>MADOKABOT : DAILY ARCHIVE</span><svg class="ornament" viewBox="0 0 121 9" aria-hidden="true"><path d="M0 4h121v1H0z M25 0h1v9h-1z M31 0h3v9h-3z M43 2h5v5h-5z M55 3h3v3h-3z M63 3h3v3h-3z M72 2h5v5h-5z M87 0h3v9h-3z M95 0h1v9h-1z"/></svg><span>NOCTCHILL / PERSONAL RECORD</span></footer>
+        <div class="bubble{{ ' long' if quote | length > 28 else '' }}">
+            <div class="communication-header">通信记录{% if chara_b64 and chara_name %}：{{ chara_name.split('_')[0] }}{% endif %}</div>
+            <div class="bubble-text">「{{ quote }}」</div>
+        </div>
+        <footer class="footer"><span>MADOKABOT VER.3.1.0</span><svg class="ornament" viewBox="0 0 121 9" aria-hidden="true"><path d="M0 4h121v1H0z M25 0h1v9h-1z M31 0h3v9h-3z M43 2h5v5h-5z M55 3h3v3h-3z M63 3h3v3h-3z M72 2h5v5h-5z M87 0h3v9h-3z M95 0h1v9h-1z"/></svg><span class="footer-brand">SHINY COLORS / NOCTCHILL</span></footer>
     </div>
 </body>
 </html>

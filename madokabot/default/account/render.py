@@ -28,13 +28,20 @@ def get_template_font_context(template_name: str) -> dict[str, str]:
             "number_font_path": "font.ttf",
             "title_font_path": "NotoSerifSC-Black.otf",
         }
-    elif template_name in ("daily_sign_02.html", "daily_sign_03.html"):
+    elif template_name in ("daily_sign_06.html", "daily_sign_07.html"):
+        fonts = {
+            "body_font_path": "NotoSansSC[wght].ttf",
+            "title_font_path": "NotoSerifSC-Black.otf",
+        }
+        if template_name == "daily_sign_07.html":
+            fonts["latin_medium_font_path"] = "BarlowCondensed-Medium.ttf"
+    elif template_name in ("daily_sign_02.html", "daily_sign_03.html", "daily_sign_05.html"):
         fonts = {
             "body_font_path": "NotoSansSC[wght].ttf",
             "latin_medium_font_path": "BarlowCondensed-Medium.ttf",
             "latin_bold_font_path": "BarlowCondensed-Bold.ttf",
         }
-        if template_name == "daily_sign_02.html":
+        if template_name in ("daily_sign_02.html", "daily_sign_05.html"):
             fonts.update({
                 "title_font_path": "SmileySans-Oblique.ttf",
                 "latin_italic_font_path": "BarlowCondensed-BlackItalic.ttf",
