@@ -8,6 +8,7 @@ import httpx
 from nonebot import logger
 
 from madokabot.core.config import config as madoka_config
+
 from .config import config
 from .prompts import get_system_prompt
 
@@ -52,7 +53,7 @@ async def _request_with_model(
     question: str,
     mode: str,
 ) -> tuple[str, int | None]:
-    """指定模型请求方法。"""
+    """使用指定模型请求回答，并按配置启用百炼联网搜索。"""
     payload = {
         "model": model,
         "messages": [
@@ -62,6 +63,7 @@ async def _request_with_model(
         "max_tokens": config.chat_max_tokens,
         "temperature": 0.7,
         "stream": False,
+        "enable_search": config.chat_enable_search,
     }
     headers = {
         "Authorization": f"Bearer {api_key}",

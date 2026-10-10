@@ -6,15 +6,19 @@ from pydantic import BaseModel, field_validator
 
 
 class ChatConfig(BaseModel):
+    """千问模型调用及联网搜索配置。"""
+
     model_api_key: str = ""
-    model_base_url: str = "https://integrate.api.nvidia.com/v1"
-    set_model: list[str] = ["meta/llama-3.1-70b-instruct"]
+    model_base_url: str = "https://dashscope.aliyuncs.com/compatible-mode/v1"
+    set_model: list[str] = ["qwen-plus"]
+    chat_enable_search: bool = True  # 问答与闲聊均启用联网搜索。
     chat_timeout: float = 60.0 # 单位：秒
     chat_max_tokens: int = 2048
 
     @field_validator("set_model", mode="before")
     @classmethod
     def normalize_models(cls, value: Any) -> list[str]:
+        """将列表、JSON 列表或逗号分隔配置规范为模型列表。"""
         if value is None:
             return []
         if isinstance(value, str):
