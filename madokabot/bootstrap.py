@@ -16,6 +16,7 @@ from nonebot_plugin_datastore.db import post_db_init  # noqa: E402
 
 from .core.config import CoreConfig  # noqa: E402
 from .core.db import init_database  # noqa: E402
+from .core.group import requests as group_requests  # noqa: E402,F401
 from .core.user.schema import migrate_user_schema  # noqa: E402
 
 __plugin_meta__ = PluginMetadata(

@@ -9,8 +9,8 @@ require("nonebot_plugin_htmlrender")
 from .config import Config
 
 __plugin_meta__ = PluginMetadata(
-    name="CS相关插件，支持订阅HLTV赛事或查询5E/完美平台玩家信息",
-    description="查询 HLTV CS 赛事数据，渲染 Rating 3.0 统计卡片并订阅赛事比赛更新。",
+    name="CS插件",
+    description="查询HLTV CS赛事数据，渲染Rating 3.0统计卡片并订阅赛事比赛更新。",
     usage=(
         "CS help\n"
         "CS event\n"
@@ -25,15 +25,16 @@ __plugin_meta__ = PluginMetadata(
         "CS prediction rank <本群|全部|个人>\n"
         "CS login <手机号> <验证码>\n"
         "CS bind <5E|5e|5eplay> <玩家昵称>\n"
-        "CS bind <wm|pw|完美> [Steam 32 位或 64 位 ID]\n"
+        "CS bind <wm|pw|完美> [Steam32位或64位ID]\n"
         "CS unbind <5E|5e|5eplay|wm|pw|完美>\n"
-        "CS 战绩 <5E | 5e | 5eplay> [玩家昵称]\n"
-        "CS 战绩 <wm | pw | 完美> [Steam 32 位或 64 位 ID]\n"
+        "CS 战绩 <5E|5e|5eplay> [玩家昵称]\n"
+        "CS 战绩 <wm|pw|完美> [Steam32位或64位ID]\n"
     ),
     type="application",
     homepage="https://github.com/Dyco/MadokaBot",
     config=Config,
     supported_adapters=inherit_supported_adapters("nonebot_plugin_alconna"),
+    extra={"help_category": "拓展功能", "help_order": 10},
 )
 
 from . import commands as commands  # noqa: E402,F401

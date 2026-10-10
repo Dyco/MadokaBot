@@ -10,7 +10,7 @@ from .config import GreetingConfig, config
 __plugin_meta__ = PluginMetadata(
     name="打招呼",
     description="机器人连接成功后向管理员发送问候消息",
-    usage="机器人启动后自动向管理员发送问候消息",
+    usage="",
     type="application",
     config=GreetingConfig,
     supported_adapters={"~onebot.v11"},

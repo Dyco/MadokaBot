@@ -9,6 +9,7 @@ __plugin_meta__ = PluginMetadata(
     description="查询个人积分、向已注册用户转账，查询本群与全部用户积分排名",
     usage=POINT_USAGE,
     type="application",
+    extra={"help_category": "基础功能", "help_order": 20},
 )
 
 from . import handlers as handlers  # noqa: E402,F401

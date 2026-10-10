@@ -1,17 +1,30 @@
 """机器人基础功能与扩展插件的帮助入口。"""
 
-from nonebot import get_driver, on_message
+from nonebot import get_driver, get_loaded_plugins, logger, on_message
+from nonebot.adapters.onebot.v11 import (
+    Bot,
+    GroupMessageEvent,
+    Message,
+    MessageEvent,
+    MessageSegment,
+    OneBotV11AdapterException,
+)
 from nonebot.matcher import Matcher
 from nonebot.plugin import PluginMetadata
 from nonebot.rule import fullmatch
 from nonebot_plugin_alconna import on_alconna
 
+from madokabot.core.version import get_bot_version
+
 __plugin_meta__ = PluginMetadata(
     name="帮助",
-    description="列出机器人提供的主要功能和指令",
-    usage="帮助 / help",
+    description="通过合并转发展示插件分类、功能说明和使用方法",
+    usage="帮助/help",
     type="application",
+    supported_adapters={"~onebot.v11"},
 )
+
+HELP_CATEGORIES = ("响应内容", "基础功能", "拓展功能")
 
 help_message = on_message(rule=fullmatch(["帮助", "help"]))
 help_command = on_alconna(
@@ -23,31 +36,66 @@ help_command = on_alconna(
 )
 
 
-def build_help_text() -> str:
-    """帮助文本生成方法。"""
-    prefix = next(iter(sorted(get_driver().config.command_start)), "")
-    commands = (
-        "设置 立绘 <立绘ID>",
-        "设置 签到模板 <sign01 / sign02 / sign03>",
-        "设置 改名 <名字>（最多 10 字，消耗 10 积分）",
-        "查询 立绘/签到模板/资料",
-        "查询 积分（查询自己的积分与总排名）",
-        "积分 查询（查询自己的积分与总排名）",
-        "积分 转账 <@用户|QQ号> <积分数量>（也可使用 point）",
-        "积分 排名/List（本群与全部用户积分前 20 名）",
-        "商店 列表/立绘/签到模板",
-        "商店 购买 <skin01 / sign02>",
-        "copying on/off/set <数量>",
+def build_help_messages() -> list[str]:
+    """按元数据中的帮助分类和顺序生成总览及插件详情。"""
+    groups: dict[str, list[PluginMetadata]] = {
+        category: [] for category in HELP_CATEGORIES
+    }
+    for plugin in get_loaded_plugins():
+        metadata = plugin.metadata
+        if metadata is None:
+            continue
+        category = metadata.extra.get("help_category")
+        if category in groups:
+            groups[category].append(metadata)
+
+    overview = [f"以下是MadokaBot Ver{get_bot_version()}的全部插件内容"]
+    details = []
+    for category, plugins in groups.items():
+        if not plugins:
+            continue
+        plugins.sort(key=lambda meta: (meta.extra.get("help_order", 100), meta.name))
+        overview.append(f"——{category}——")
+        overview.extend(meta.name for meta in plugins)
+        details.extend(
+            "\n".join(
+                text
+                for text in (
+                    f"【{category}】",
+                    f"·{meta.name}",
+                    meta.description,
+                    meta.usage,
+                )
+                if text
+            )
+            for meta in plugins
+        )
+
+    prefixes = "、".join(
+        repr(prefix) for prefix in sorted(get_driver().config.command_start)
     )
-    return (
-        "基础功能：注册、签到、Ping、戳一戳\n"
-        + "\n".join(prefix + command for command in commands)
-        + "\n扩展插件：RSS、解析、CS、Steam、制图（命令使用相同起始符）"
-    )
+    overview.append(f"\n指令起始符：{prefixes}（完整匹配关键词除外）")
+    return ["\n".join(overview), *details]
 
 
 @help_message.handle()
 @help_command.handle()
-async def handle_help(matcher: Matcher) -> None:
-    """帮助命令处理方法。"""
-    await matcher.finish(build_help_text())
+async def handle_help(bot: Bot, event: MessageEvent, matcher: Matcher) -> None:
+    """将帮助总览和插件详情以合并转发发送至当前群聊或私聊。"""
+    nodes = [
+        MessageSegment.node_custom(
+            user_id=int(bot.self_id),
+            nickname="MadokaBot帮助",
+            content=Message(MessageSegment.text(text)),
+        )
+        for text in build_help_messages()
+    ]
+    try:
+        if isinstance(event, GroupMessageEvent):
+            await bot.send_group_forward_msg(group_id=event.group_id, messages=nodes)
+        else:
+            await bot.send_private_forward_msg(user_id=event.user_id, messages=nodes)
+    except OneBotV11AdapterException:
+        logger.exception("帮助合并转发发送失败")
+        await matcher.finish("帮助消息发送失败，请稍后重试")
+    await matcher.finish()

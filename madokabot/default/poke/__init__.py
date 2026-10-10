@@ -7,9 +7,10 @@ from madokabot.core.resources import ResourceType, ResourceFolder
 
 __plugin_meta__ = PluginMetadata(
     name="戳一戳",
-    description="戳一戳插件",
-    usage="戳一戳机器人，可以返回一句円香语音",
+    description="戳一戳机器人，可触发随机円香语音。",
+    usage="",
     type="application",
+    extra={"help_category": "响应内容", "help_order": 10},
 )
 
 

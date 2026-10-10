@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        @font-face { font-family: 'NotoSansSC'; src: url('{{ body_font_path }}'); font-weight: 100 900; }
+        @font-face { font-family: 'SarasaUI'; src: url('{{ number_font_path }}'); }
+        @font-face { font-family: 'ArknightsTitle'; src: url('{{ title_font_path }}'); font-weight: 900; }
+        :root { --ink: #313131; --blue: #22bbff; --yellow: #ffee22; --orange: #ff5e19; }
+        * { box-sizing: border-box; }
+        body { margin: 0; width: 900px; height: 600px; overflow: hidden; color: white; background: #454c50; font-family: 'NotoSansSC', sans-serif; }
+        h1, h2, p { margin: 0; }
+        .stage { position: relative; isolation: isolate; width: 900px; height: 600px; overflow: hidden; }
+        .environment { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: -3; }
+        .stage::before { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(14,20,24,.12), transparent 45%, rgba(14,20,24,.54)); box-shadow: inset 0 0 65px rgba(0,0,0,.22); z-index: -2; }
+        .sprite { background-image: url('{{ icons_path }}'); background-repeat: no-repeat; }
+        .masthead { position: absolute; top: 24px; left: 27px; display: flex; align-items: center; gap: 12px; text-shadow: 0 2px 7px #202b32; z-index: 4; }
+        .masthead-mark { width: 22px; height: 22px; border: 2px solid white; transform: rotate(45deg); display: grid; place-items: center; }
+        .masthead-mark::after { content: ''; width: 9px; height: 9px; background: white; }
+        .masthead strong { font: 700 18px 'NotoSansSC', sans-serif; letter-spacing: 2px; }
+        .masthead small { display: block; margin-top: 4px; font: 10px 'SarasaUI', sans-serif; letter-spacing: .5px; }
+        /* 按原首页将立绘放大，保留超出画面的下半身裁切。 */
+        .portrait { position: absolute; left: 112px; top: 39px; width: 370px; height: 810px; display: flex; justify-content: center; align-items: flex-start; z-index: 1; }
+        .portrait img { max-width: 100%; max-height: 100%; filter: drop-shadow(0 6px 10px rgba(17,27,33,.18)); }
+        .portrait-empty { position: absolute; left: 180px; top: 280px; width: 200px; padding: 25px; color: #dae2e7; border: 1px solid #dae2e7; text-align: center; font-size: 13px; }
+        .identity { position: absolute; left: 0; top: 223px; width: 150px; z-index: 3; text-shadow: 0 2px 5px #17232b; }
+        .identity-emblem { position: absolute; right: -6px; top: -78px; width: 229px; height: 195px; background-position: 0 -400px; transform: scale(.62); transform-origin: right top; filter: brightness(.4); z-index: -1; opacity: .8; }
+        .identity-bar { position: relative; height: 29px; background: #313233; box-shadow: 0 2px 5px rgba(0,0,0,.6); }
+        .identity-ring { position: absolute; right: 9px; bottom: 5px; width: 87px; height: 87px; }
+        .identity-ring svg { width: 87px; height: 87px; }
+        .identity-ring strong { position: absolute; inset: 15px 0 0; text-align: center; font: 40px 'SarasaUI', sans-serif; text-shadow: 2px 2px #606162; }
+        .identity-ring small { position: absolute; bottom: 14px; left: 0; right: 0; text-align: center; font: 8px 'SarasaUI', sans-serif; letter-spacing: 1px; }
+        .user-name { display: block; padding: 9px 13px 0 5px; text-align: right; font-size: 27px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .user-name.compact { font-size: 18px; }
+        .user-id { display: block; padding-right: 13px; margin-top: 4px; text-align: right; font: 13px 'SarasaUI', sans-serif; }
+        /* 沿用 HomeSide 的整体透视及四行错位，而非规则卡片网格。 */
+        .menu { position: absolute; top: 30px; right: -9px; width: 410px; color: var(--ink); transform: perspective(400px) rotateY(-6deg); transform-origin: right center; z-index: 5; }
+        .time { display: flex; align-items: center; justify-content: center; gap: 9px; height: 27px; margin: 0 18px 0 38px; color: white; font: 13px 'SarasaUI', sans-serif; white-space: nowrap; text-shadow: 2px 2px #606162; }
+        .time::before, .time::after { content: ''; flex: 1; height: 2px; background: #e5e9e9; }
+        .currencies { display: flex; align-items: center; justify-content: center; gap: 18px; height: 27px; margin: 5px 18px 9px 38px; color: white; background: rgba(0,0,0,.2); }
+        .currency { display: flex; align-items: center; gap: 5px; white-space: nowrap; font: 18px 'SarasaUI', sans-serif; text-shadow: 1px 1px 2px #313131; }
+        .currency-icon { width: 27px; height: 27px; flex-shrink: 0; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linejoin: round; }
+        .currency.points .currency-icon { color: #37c8ff; }
+        .currency.favor .currency-icon { color: #ff8998; }
+        .currency.total-count .currency-icon { color: #ffe16a; }
+        .row { position: relative; display: flex; gap: 6px; }
+        .tile { position: relative; background: rgba(255,255,255,.93); box-shadow: 2px 2px 5px rgba(25,29,32,.65); overflow: hidden; }
+        .icon-definitions { position: absolute; width: 0; height: 0; overflow: hidden; }
+        .tile-icon { position: absolute; right: 4px; top: 50%; width: 78px; height: 78px; color: var(--ink); opacity: .14; transform: translateY(-50%); pointer-events: none; }
+        .tile h2, .heading h1 { position: relative; font-family: 'ArknightsTitle', 'NotoSansSC', serif; font-weight: 900; z-index: 2; }
+        .heading-row { margin-left: 38px; width: 400px; }
+        .heading-row::after { content: ''; position: absolute; left: 40%; right: 0; bottom: -3px; height: 3px; background: var(--orange); }
+        .heading { display: flex; align-items: center; width: 100%; height: 112px; padding: 7px 13px; }
+        .heading .tile-icon { right: 9px; width: 120px; height: 120px; opacity: .12; }
+        .sign-info { position: relative; width: 136px; height: 89px; flex-shrink: 0; }
+        .sign-info .sprite { position: absolute; width: 243px; height: 159px; transform: scale(.56); transform-origin: top left; }
+        .gain-number { position: absolute; top: 4px; left: 38px; max-width: 95px; font: 47px/53px 'SarasaUI', sans-serif; text-shadow: 3px 3px #8b8b8b; }
+        .gain-number.compact { font-size: 30px; }
+        .gain-label { position: absolute; left: 35px; bottom: 6px; font-size: 12px; color: white; }
+        .heading-copy { position: relative; margin-left: 9px; z-index: 2; }
+        .heading h1 { font-size: 43px; line-height: 57px; letter-spacing: -1px; white-space: nowrap; }
+        .heading-copy span { display: inline-block; margin-top: 5px; padding: 2px 5px; background: #3c3c3c; color: white; font-size: 9px; }
+        .stats-row { margin: 12px 0 0 -10px; width: 438px; height: 81px; }
+        .stat { width: 159px; padding: 8px 11px; }
+        .stat h2 { font-size: 25px; }
+        .stat.continuous { width: 170px; }
+        .stat-value { position: relative; display: flex; align-items: baseline; gap: 4px; margin-top: 0; z-index: 2; }
+        .stat-value strong { font: 29px/32px 'SarasaUI', sans-serif; }
+        .stat-value strong.compact { font-size: 23px; }
+        .unit { font-size: 10px; }
+        .delta { margin-left: auto; font: 13px 'SarasaUI', sans-serif; }
+        .black-gap { flex: 1; background: rgba(0,0,0,.68); }
+        .credit-row { margin: 12px 0 0 58px; width: 350px; height: 78px; }
+        .blue { background: rgba(34,187,255,.95); color: white; }
+        .blue .tile-icon { color: white; opacity: .28; }
+        .credit { width: 220px; padding: 7px 11px; }
+        .credit h2 { font-size: 19px; }
+        .credit .tile-icon { right: 9px; }
+        .credit-value { position: relative; display: flex; align-items: baseline; gap: 8px; z-index: 2; }
+        .credit-number { font: 34px/37px 'SarasaUI', sans-serif; }
+        .credit-number.compact { font-size: 25px; }
+        .credit-number.dense { font-size: 18px; }
+        .reward { margin-left: auto; font: 15px 'SarasaUI', sans-serif; }
+        .total { flex: 1; padding: 7px 9px; }
+        .total h2 { font-size: 18px; }
+        .total .stat-value { margin-top: 3px; }
+        .ranking-row-group { margin: 12px 0 0 10px; width: 400px; height: 139px; }
+        .ranking { width: 350px; padding: 7px 11px 5px; }
+        .ranking::before { content: ''; position: absolute; top: 0; left: 23%; width: 52%; height: 3px; background: var(--orange); }
+        .ranking .tile-icon { right: 42px; width: 112px; height: 112px; opacity: .06; }
+        .ranking-header { position: relative; display: flex; align-items: baseline; justify-content: space-between; height: 26px; border-bottom: 1px solid rgba(49,49,49,.3); z-index: 2; }
+        .ranking-header h2 { font-size: 18px; }
+        .ranking-header small { font: 8px 'SarasaUI', sans-serif; letter-spacing: .8px; }
+        .ranking-row { position: relative; display: grid; grid-template-columns: 22px minmax(0,1fr) 63px 44px; align-items: center; gap: 5px; height: 19px; padding: 0 3px; border-bottom: 1px solid rgba(49,49,49,.1); z-index: 2; }
+        .rank-position { font: 13px 'SarasaUI', sans-serif; }
+        .rank-user { display: flex; gap: 5px; align-items: baseline; min-width: 0; }
+        .rank-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 11px; font-weight: 500; }
+        .rank-id { margin-left: auto; flex-shrink: 0; font: 8px 'SarasaUI', sans-serif; color: #73797d; }
+        .rank-value { text-align: right; font-size: 8px; white-space: nowrap; color: #666d72; }
+        .rank-value b { font: 12px 'SarasaUI', sans-serif; color: var(--ink); }
+        .ranking-row.current { color: white; background: var(--ink); }
+        .ranking-row.current .rank-id, .ranking-row.current .rank-value { color: #bdcbd1; }
+        .ranking-row.current b { color: white; }
+        .ranking-empty { position: relative; padding: 30px; text-align: center; font-size: 12px; }
+        .archive-side { flex: 1; padding: 10px 8px; background: rgba(30,31,32,.94); color: white; text-align: right; }
+        /* 对白按示例使用向右上方倾斜的长条底板和细 VOICE 标签。 */
+        .assistant { position: absolute; left: 10px; bottom: 130px; width: 320px; transform: perspective(500px) rotateY(10deg) rotateZ(-3deg); transform-origin: left center; z-index: 6; }
+        .voice { position: relative; min-height: 65px; padding: 17px 14px 11px; background: rgba(0,0,0,.73); }
+        .voice-label { position: absolute; left: -2px; top: -3px; width: 80px; height: 12px; padding: 0 8px; background: rgba(255,255,255,.82); color: var(--ink); font: 9px/12px 'SarasaUI', sans-serif; }
+        .voice-text { font-size: 13px; line-height: 1.55; }
+        .voice.long .voice-text { font-size: 12px; }
+        .footer { position: absolute; left: 22px; right: 24px; bottom: 14px; display: flex; align-items: center; justify-content: space-between; color: #d4dde2; z-index: 7; }
+        .skin-note { max-width: 430px; font-size: 8px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+    </style>
+</head>
+<body>
+    <!-- 原创几何图标：签到徽记、好感心徽、陪伴双环、积分储匣、累签日历和排名阶梯。 -->
+    <svg class="icon-definitions" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><defs>
+        <symbol id="icon-sign" viewBox="0 0 96 96" fill="none" stroke="currentColor" stroke-width="4" stroke-linejoin="miter">
+            <path d="m48 8 31 18v36L48 80 17 62V26Z" fill="currentColor" fill-opacity=".15"/>
+            <path d="m48 18 22 13v26L48 70 26 57V31Z M33 44l11 11 20-22"/>
+            <path d="m9 20 9-9h13 M65 11h13l9 9 M9 70l9 9h13 M65 79h13l9-9 M48 80v10"/>
+        </symbol>
+        <symbol id="icon-favor" viewBox="0 0 96 96" fill="none" stroke="currentColor" stroke-width="4" stroke-linejoin="round">
+            <path d="M48 30C35 10 16 19 18 35c2 15 20 31 30 40 10-9 28-25 30-40 2-16-17-25-30-5Z" fill="currentColor" fill-opacity=".22"/>
+        </symbol>
+        <symbol id="icon-continuous" viewBox="0 0 96 96" fill="none" stroke="currentColor" stroke-width="5" stroke-linejoin="miter">
+            <path d="m40 8 20 12v23L40 55 20 43V20Z M56 41l20 12v23L56 88 36 76V53Z" fill="currentColor" fill-opacity=".15"/>
+            <path d="m40 20 10 6v11l-10 6-10-6V26Z M56 53l10 6v11l-10 6-10-6V59Z M40 39l16 18"/>
+            <path d="M10 54v20l14 8 M72 14l14 8v20" stroke-width="3"/>
+        </symbol>
+        <symbol id="icon-points" viewBox="0 0 96 96" fill="none" stroke="currentColor" stroke-width="4" stroke-linejoin="miter">
+            <path d="m48 8 26 14v27L48 63 22 49V22Z" fill="currentColor" fill-opacity=".18"/>
+            <path d="m22 22 26 14 26-14 M48 36v27 M35 15l26 14 M12 43v20l36 20 36-20V43 M12 72l36 20 36-20"/>
+            <path d="m40 21 8-4 8 4-8 4Z" fill="currentColor" stroke="none"/>
+        </symbol>
+        <symbol id="icon-total" viewBox="0 0 96 96" fill="none" stroke="currentColor" stroke-width="4" stroke-linejoin="miter">
+            <path d="M20 16h56l8 8v56H12V24Z" fill="currentColor" fill-opacity=".15"/>
+            <path d="M12 32h72 M30 7v19 M66 7v19 M23 44h8 M39 44h8 M23 57h8 M23 70h8 M41 60l12 12 22-26"/>
+            <path d="M20 87h56"/>
+        </symbol>
+        <symbol id="icon-ranking" viewBox="0 0 96 96" fill="none" stroke="currentColor" stroke-width="4" stroke-linejoin="miter">
+            <path d="M12 79V55h22V35h28v16h22v28Z" fill="currentColor" fill-opacity=".2"/>
+            <path d="M34 55v24 M62 51v28 M7 87h82 M48 6l5 10 12 2-9 9 2 12-10-6-10 6 2-12-9-9 12-2Z"/>
+        </symbol>
+    </defs></svg>
+    {% macro tile_icon(name) -%}
+    <svg class="tile-icon" viewBox="0 0 96 96" aria-hidden="true"><use href="#icon-{{ name }}"/></svg>
+    {%- endmacro %}
+    <div class="stage">
+        <img class="environment" src="{{ background_path }}" alt="">
+        <header class="masthead"><span class="masthead-mark"></span><div><strong>每日签到</strong><small>MadokaBot.Ver.{{ bot_version }}</small></div></header>
+        {% if chara_b64 %}<div class="portrait"><img src="{{ chara_b64 }}" alt=""></div>{% else %}<div class="portrait-empty">未选择立绘</div>{% endif %}
+        <div class="identity">
+            <div class="identity-emblem sprite"></div>
+            <div class="identity-bar"><div class="identity-ring"><svg viewBox="0 0 90 90" aria-hidden="true"><circle cx="45" cy="45" r="41" fill="none" stroke="rgba(255,255,255,.25)" stroke-width="3"/><circle cx="45" cy="45" r="41" fill="none" stroke="#ffee22" stroke-width="3" stroke-dasharray="185 258" transform="rotate(-90 45 45)"/></svg><strong>{{ daily_sign_order or '--' }}</strong><small>今日排名</small></div></div>
+            <span class="user-name{{ ' compact' if user_name | length > 6 else '' }}">{{ user_name }}</span><span class="user-id">ID: {{ user_id }}</span>
+        </div>
+        <main class="menu">
+            <div class="time">{{ current_time }}</div>
+            <!-- 原创 SVG：积分凭证、好感徽记、累计签到记录。 -->
+            <div class="currencies">
+                <div class="currency points"><svg class="currency-icon" viewBox="0 0 32 32" role="img" aria-label="积分"><path d="M5 5h18l5 5v17H5Z" fill="currentColor" fill-opacity=".18"/><path d="M5 5h18l5 5v17H5Z M23 5v5h5 M10 12h9 M10 17h12 M10 22h7"/><path d="M2 10v19h20" opacity=".65"/></svg><span>{{ '{:,}'.format(points) }}</span></div>
+                <div class="currency favor"><svg class="currency-icon" viewBox="0 0 32 32" role="img" aria-label="好感"><path d="m16 2 14 14-14 14L2 16Z" fill="currentColor" fill-opacity=".18"/><path d="m16 2 14 14-14 14L2 16Z M16 25 8 17v-6l4-3 4 4 4-4 4 3v6Z"/><path d="m4 4 3 3 M25 25l3 3 M25 7l3-3 M4 28l3-3" opacity=".65"/></svg><span>{{ favorability }}</span></div>
+                <div class="currency total-count"><svg class="currency-icon" viewBox="0 0 32 32" role="img" aria-label="累签次数"><path d="m16 2 12 7v14l-12 7L4 23V9Z" fill="currentColor" fill-opacity=".18"/><path d="m16 2 12 7v14l-12 7L4 23V9Z M10 10h12v13H10Z M10 14h12 M13 8v4 M19 8v4 M13 18l2 2 4-4"/></svg><span>{{ total_count }}</span></div>
+            </div>
+            <div class="row heading-row"><section class="tile heading">{{ tile_icon('sign') }}
+                <div class="sign-info"><div class="sprite"></div><strong class="gain-number{{ ' compact' if points_gain is not none and points_gain | string | length > 3 else '' }}">{{ points_gain if points_gain is not none else 0 }}</strong><span class="gain-label">积分增加</span></div>
+                <div class="heading-copy"><h1>{{ '签到' if points_gain is not none else title }}</h1><span>数据</span></div>
+            </section></div>
+            <div class="row stats-row">
+                {% for label, value, delta in items if label in ('好感度', '连续陪伴', '连续签到') %}
+                {% set parts = value.split(' ', 1) %}
+                <section class="tile stat{{ ' continuous' if label != '好感度' else '' }}">{{ tile_icon('favor' if label == '好感度' else 'continuous') }}<h2>{{ label }}</h2><div class="stat-value"><strong class="{{ 'compact' if parts[0] | length > 4 else '' }}">{{ parts[0] }}</strong>{% if parts | length > 1 %}<span class="unit">{{ parts[1] }}</span>{% endif %}{% if delta %}<span class="delta">{{ delta }}</span>{% endif %}</div></section>
+                {% endfor %}
+                <div class="black-gap"></div>
+            </div>
+            <div class="row credit-row">
+                {% for label, value, delta in items if label == '总积分' %}
+                <section class="tile blue credit">{{ tile_icon('points') }}<h2>{{ label }}</h2><div class="credit-value"><strong class="credit-number{{ ' dense' if value | length > 11 else ' compact' if value | length > 6 else '' }}">{{ value }}</strong>{% if delta %}<span class="reward">{{ delta }}</span>{% endif %}</div></section>
+                {% endfor %}
+                {% for label, value, delta in items if label == '累计签到' %}
+                {% set parts = value.split(' ', 1) %}
+                <section class="tile blue total">{{ tile_icon('total') }}<h2>{{ label }}</h2><div class="stat-value"><strong class="{{ 'compact' if parts[0] | length > 4 else '' }}">{{ parts[0] }}</strong>{% if parts | length > 1 %}<span class="unit">{{ parts[1] }}</span>{% endif %}</div></section>
+                {% endfor %}
+            </div>
+            <div class="row ranking-row-group"><section class="tile ranking">{{ tile_icon('ranking') }}<div class="ranking-header"><h2>积分排名</h2><small>TOP 05 / CREDIT RECORD</small></div>
+                {% for nickname, uid, points, total_count in ranking %}
+                <div class="ranking-row{{ ' current' if loop.index == current_ranking_index else '' }}"><span class="rank-position">{{ '%02d' | format(loop.index) }}</span><div class="rank-user"><span class="rank-name">{{ nickname }}</span><span class="rank-id">{{ uid }}</span></div><span class="rank-value"><b>{{ points }}</b> 积分</span><span class="rank-value"><b>{{ total_count }}</b> 次</span></div>
+                {% else %}<div class="ranking-empty">暂无排名</div>{% endfor %}
+            </section><div class="archive-side"></div></div>
+        </main>
+        <div class="assistant"><div class="voice{{ ' long' if quote | length > 28 else '' }}"><span class="voice-label">VOICE</span><div class="voice-text">「{{ quote }}」</div></div></div>
+        <footer class="footer"><span class="skin-note">{% if chara_name %}立绘 / {{ chara_name.replace('_', ' / ') }}{% else %}RHODES ISLAND / ASSISTANT ARCHIVE{% endif %}</span></footer>
+    </div>
+</body>
+</html>

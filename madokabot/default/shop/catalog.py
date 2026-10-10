@@ -1,7 +1,12 @@
 from dataclasses import dataclass
 from pathlib import Path
 
-from madokabot.core.resources import ResourceType, ResourceFolder, assets, get_indexed_files
+from madokabot.core.resources import (
+    ResourceFolder,
+    ResourceType,
+    assets,
+    get_indexed_files,
+)
 
 
 @dataclass(frozen=True)
@@ -25,8 +30,9 @@ SIGN_SHOP = ShopDefinition(ResourceType.IMAGE, ResourceFolder.SIGN, 500, "sign")
 DEFAULT_SIGN_ASSET = "daily_sign_01.png"
 SIGN_TEMPLATES = {
     "sign01": ("daily_sign_01.html", "默认模板", 0),
-    "sign02": ("daily_sign_02.html", "P3 水色模板", SIGN_SHOP.price),
+    "sign02": ("daily_sign_02.html", "Persona3模板", SIGN_SHOP.price),
     "sign03": ("daily_sign_03.html", "尼尔档案模板", SIGN_SHOP.price),
+    "sign04": ("daily_sign_04.html", "明日方舟模板", SIGN_SHOP.price),
 }
 TEMPLATE_DIR = Path(__file__).resolve().parents[1] / "account" / "templates"
 

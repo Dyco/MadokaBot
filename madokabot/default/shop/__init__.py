@@ -10,6 +10,7 @@ __plugin_meta__ = PluginMetadata(
     usage="商店 列表\n商店 立绘\n商店 签到模板\n商店 购买 <skin01 / sign02>",
     type="application",
     config=ShopConfig,
+    extra={"help_category": "基础功能", "help_order": 30},
 )
 
 from . import handlers as handlers  # noqa: E402,F401

@@ -6,13 +6,14 @@ from .config import SteamConfig
 from .matchers import STEAM_USAGE
 
 __plugin_meta__ = PluginMetadata(
-    name="Steam Info",
-    description="Steam 好友状态查询与播报，主指令为steam",
+    name="Steam插件",
+    description="Steam好友状态查询与播报，主指令为steam",
     usage=STEAM_USAGE,
     type="application",
     homepage="https://github.com/zhaomaoniu/nonebot-plugin-steam-info",
     config=SteamConfig,
     supported_adapters=inherit_supported_adapters("nonebot_plugin_alconna"),
+    extra={"help_category": "拓展功能", "help_order": 50},
 )
 
 from . import commands as commands  # noqa: E402,F401

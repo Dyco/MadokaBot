@@ -2,8 +2,8 @@ from nonebot.plugin import PluginMetadata
 from .config import Config
 
 __plugin_meta__ = PluginMetadata(
-    name="Madoka 链接分享解析器",
-    description="MadokaBot 内置的链接分享解析器，支持视频、图片和音乐链接，主指令为解析。",
+    name="解析插件",
+    description="MadokaBot内置的链接分享解析器，支持视频、图片和音乐链接，主指令为解析。",
     usage= (
     "用法：\n"
     "解析 <B站/抖音/TikTok/ACFun/X/小红书/YouTube/网易云/酷狗/微博链接>\n"
@@ -19,6 +19,8 @@ __plugin_meta__ = PluginMetadata(
     config=Config,
     supported_adapters={"~onebot.v11"},
     extra={
+        "help_category": "拓展功能",
+        "help_order": 30,
         "source": "https://github.com/zhiyu1998/nonebot-plugin-resolver",
         "source_version": "1.2.32",
     },

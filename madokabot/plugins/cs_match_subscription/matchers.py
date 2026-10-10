@@ -50,27 +50,30 @@ CS_PREDICTION_USAGE = (
 
 
 CS_USAGE = """用法：
-CS help
-CS event  列出当前及未来三个月的高奖金国际 LAN 和 Major 赛事
-CS list <比赛ID> 查看竞猜情况
-CS sub <赛事ID>  订阅赛事并推送其中的比赛结果
-CS event <all|single|notif|predict> 设置本群推送方式、开赛提醒和竞猜
-CS unsub <赛事ID>  本群退订指定赛事推送
-CS nosub  本群退订全部赛事推送
-CS removesub <赛事ID>  超级用户全局移除赛事订阅
-CS check <比赛链接>  查询一场比赛的 Rating
-CS prediction <队伍名|竞猜编号> <积分> 参与当前比赛竞猜（如 teamA、team1）
-CS prediction rank <本群|全部|个人|本人> 查看竞猜排行榜或个人记录
-CS login <手机号> <验证码>  登录完美平台并保存 Session（验证码请自行获取）
-CS bind <5E|5e|5eplay> <玩家昵称>  绑定 5E 玩家
-CS bind <wm|pw|完美> [Steam 32 位或 64 位 ID]  使用 Steam/CS 共用绑定
-CS unbind <5E|5e|5eplay|wm|pw|完美>  解绑 5E 或 Steam/CS 共用账号
-CS result <5E|5e|5eplay> [玩家昵称]  查询 5E 绑定账号或指定玩家的战绩
-CS result <wm|pw|完美> [Steam 32 位或 64 位 ID]  查询完美平台绑定账号或指定 Steam ID 的战绩
+/cs help
+/cs event  列出当前及未来三个月的高奖金国际 LAN 和 Major 赛事
+/cs list <比赛ID> 查看竞猜情况
+/cs sub <赛事ID>  订阅赛事并推送其中的比赛结果
+/cs check <比赛链接>  查询一场比赛的 Rating
+/cs prediction <队伍名|竞猜编号> <积分> 参与当前比赛竞猜（如 teamA、team1）
+/cs prediction rank <本群|全部|个人|本人> 查看竞猜排行榜或个人记录
+/cs login <手机号> <验证码>  登录完美平台并保存 Session（验证码请自行获取）
+/cs bind <5E|5e|5eplay> <玩家昵称>  绑定 5E 玩家
+/cs bind <wm|pw|完美> [Steam 32 位或 64 位 ID]  使用 Steam/CS 共用绑定
+/cs unbind <5E|5e|5eplay|wm|pw|完美>  解绑 5E 或 Steam/CS 共用账号
+/cs result <5E|5e|5eplay> [玩家昵称]  查询 5E 绑定账号或指定玩家的战绩
+/cs result <wm|pw|完美> [Steam 32 位或 64 位 ID]  查询完美平台绑定账号或指定 Steam ID 的战绩
 
+*以下指令仅限管理员使用（群主、群管理员、超级用户），仅支持群聊
+/cs event <all|single|notif|predict> 设置本群推送方式、开赛提醒和竞猜
+/cs unsub <赛事ID>  本群退订指定赛事推送
+/cs nosub  本群退订全部赛事推送
 
-订阅后的推送方式和赛事开始通知，按本群的CS event设置生效。
-本群竞猜默认开启，可使用CS event predict切换；竞猜通知通过合并转发推送。"""
+*以下指令仅限超级用户使用
+/cs removesub <赛事ID>  全局移除赛事订阅
+
+订阅后的推送方式和赛事开始通知，按本群的 /cs event 设置生效。
+本群竞猜默认开启，可使用 /cs event predict 切换；竞猜通知通过合并转发推送。"""
 
 
 cs_command = Alconna(

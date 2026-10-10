@@ -19,14 +19,19 @@ from .uploads.recovery import restore_upload_records
 VERSION = "0.1.0"
 
 __plugin_meta__ = PluginMetadata(
-    name="MadokaRSS",
+    name="订阅插件",
     description="Madoka机器人RSS订阅插件，主指令为RSS",
     usage=RSS_USAGE,
     type="application",
     homepage="https://github.com/Dyco/MadokaBot",
     config=RSSConfig,
     supported_adapters={"~onebot.v11"},
-    extra={"author": "Dyco", "version": VERSION},
+    extra={
+        "author": "Dyco",
+        "version": VERSION,
+        "help_category": "拓展功能",
+        "help_order": 40,
+    },
 )
 
 
