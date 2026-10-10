@@ -55,11 +55,10 @@ async def render_reborn_card(result: dict, name: str) -> MessageSegment:
     return MessageSegment.image(picture)
 
 
-def result_text(result: dict, *, created: bool) -> str:
-    """图片不可用时返回完整文字结果，重试仍可重新生成同一张卡片。"""
+def result_text(result: dict, *, prefix: str) -> str:
+    """图片不可用时返回完整文字结果及本次操作提示，包括重开的扣款信息。"""
     country = result["country"]
     attributes = " / ".join(f"{name} {value}" for name, value in result["attributes"].items())
-    prefix = "新的人生已开启。" if created else "今天已经投胎过啦，以下是今天的结果。"
     return (
         f"{prefix}\n每日投胎 · {result['date']}\n"
         f"出生地：{country['name']}\n性别：{result['gender']}\n"
@@ -67,5 +66,5 @@ def result_text(result: dict, *, created: bool) -> str:
         f"{attributes}\n综合评分：{result['score']}/100 · {result['label']}\n"
         f"{result['comment']}\n"
         f"人口数据：{result['source']} / {result['data_year']} 年中方案预测\n"
-        "属性与评分为随机游戏设定。上海时间明日零点可再次投胎。"
+        "属性与评分为随机游戏设定。上海时间明日零点可再次免费投胎。"
     )
