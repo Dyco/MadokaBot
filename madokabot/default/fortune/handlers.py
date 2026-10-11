@@ -1,7 +1,9 @@
 """运势关键词处理与结果回复。"""
 
 from nonebot import logger
-from nonebot.adapters.onebot.v11 import MessageEvent, MessageSegment
+from nonebot.adapters.onebot.v11 import Bot, MessageEvent, MessageSegment
+
+from madokabot.core.messaging.response import respond
 
 from .matchers import fortune_matcher
 from .render import render_fortune_card
@@ -9,8 +11,9 @@ from .service import format_reward_message, get_today_fortune
 
 
 @fortune_matcher.handle()
-async def handle_fortune(event: MessageEvent) -> None:
-    """展示已注册用户的运势，仅每日首次附加积分台词，图片不可用时退回文字。"""
+async def handle_fortune(bot: Bot, event: MessageEvent) -> None:
+    """先添加签到同款表情回应，再展示运势及每日首次奖励，图片不可用时退回文字。"""
+    await respond(bot, event)
     uid = event.get_user_id()
     try:
         result, points = await get_today_fortune(uid)
