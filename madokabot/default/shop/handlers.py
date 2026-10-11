@@ -50,7 +50,7 @@ async def _build_shop_page(
 
 def _build_shop_page_text(current_page: int, total_pages: int) -> str:
     """生成商店分页操作提示。"""
-    return f"当前页码：{current_page}/{total_pages}，回复上一页/下一页 或 数字 进行翻页"
+    return f"当前页码：{current_page}/{total_pages}。请回复这条商店消息，发送“上一页”“下一页”或页码翻页。"
 
 
 @shop_cmd.handle()
@@ -84,8 +84,11 @@ async def _shop_list(event: MessageEvent):
     starts = get_driver().config.command_start
     prefix = "/" if "/" in starts else next(iter(sorted(starts)), "")
     await shop_cmd.finish(
-        "当前事务所正在出售以下内容：\n角色立绘\n签到模板\n"
-        f"使用{prefix}shop 内容，可获得详细列表\n例如{prefix}商店 立绘"
+        "当前可购买：角色立绘、签到模板。\n"
+        f"查看立绘：{prefix}商店 立绘\n"
+        f"查看签到模板：{prefix}商店 签到模板\n"
+        f"购买商品：{prefix}商店 购买 <商品编号>\n"
+        f"例如：{prefix}商店 购买 sign02，商品编号以商店展示为准。"
     )
 
 
@@ -97,8 +100,13 @@ async def _send_shop(event: MessageEvent, category: str):
 
     message, current_page, total_pages = await _build_shop_page(uid, 1, category)
     purchase_hint = (
-        "购买方式：商店 购买 <模板ID，如 sign03>；切换方式：设置 签到模板 <模板ID>\n"
-        if category == "sign" else "购买方式：商店 购买 skin01（使用图中的商品编号）\n"
+        "购买模板：/商店 购买 <商品编号，如sign02>\n"
+        "切换模板：/设置 签到模板 <商品编号，如sign02>\n"
+        "赠送模板：/积分 赠礼 <@用户|QQ号> <商品编号>\n"
+        if category == "sign" else
+        "购买立绘：/商店 购买 <商品编号，如skin01>\n"
+        "切换立绘：/设置 立绘 <商品编号，如skin01>\n"
+        "赠送立绘：/积分 赠礼 <@用户|QQ号> <商品编号>\n"
     )
     send_result = await shop_cmd.send(
         message + purchase_hint + _build_shop_page_text(current_page, total_pages),
@@ -137,7 +145,7 @@ async def _send_shop(event: MessageEvent, category: str):
 
         reply_event, target_page, invalid_page = result
         if invalid_page:
-            await UniMessage(f"页码无效，当前共 {total_pages} 页").send(
+            await UniMessage(f"页码无效，请回复商店消息并输入1～{total_pages}之间的页码。").send(
                 target=reply_event, reply_to=True
             )
             continue
@@ -173,5 +181,5 @@ async def _shop_buy_item(event: MessageEvent, number: Match[str]):
     elif raw_number.startswith("skin"):
         ok, message = await SkinService.buy_shop_skin(uid, raw_number)
     else:
-        await shop_cmd.finish("参数无效，请输入商品编号，例如 skin01 或 sign02")
+        await shop_cmd.finish("商品编号无效，请发送“/商店 立绘”或“/商店 签到模板”查看编号。购买示例：/商店 购买 skin01、/商店 购买 sign02")
     await shop_cmd.finish(message if ok else f"购买失败：{message}")

@@ -11,10 +11,14 @@
     h1 { font-size: 46px; margin: 10px 0 4px; letter-spacing: 5px; }
     .date { color: #a5b9bf; text-align: right; line-height: 1.9; font-size: 18px; }
     .identity { margin-top: 28px; padding-top: 26px; border-top: 1px solid #29424b; }
-    .name { color: #afc5c7; font-size: 20px; overflow-wrap: anywhere; }
+    .name { color: #afc5c7; font-size: 20px; line-height: 2; overflow-wrap: anywhere; }
+    .nickname { color: #e0f2c9; font-size: 24px; font-weight: bold; background: #1d3b35; border-bottom: 2px solid #9bcfa1; border-radius: 6px; padding: 2px 8px; box-decoration-break: clone; -webkit-box-decoration-break: clone; }
     .destination { display: flex; justify-content: space-between; align-items: center; gap: 20px; margin: 6px 0 18px; }
     h2 { font-size: 48px; margin: 0; line-height: 1.5; max-width: 760px; overflow-wrap: anywhere; }
-    .gender { border: 1px solid #527d77; color: #b6e8d5; padding: 8px 20px; border-radius: 40px; white-space: nowrap; font-size: 20px; }
+    .male { --gender-color: #9adaff; --gender-border: #4e9fd0; --gender-bg: #15384b; }
+    .female { --gender-color: #ffb5d4; --gender-border: #c6719a; --gender-bg: #432737; }
+    .gender { display: flex; align-items: center; justify-content: center; gap: 12px; flex: none; min-width: 150px; border: 2px solid var(--gender-border); color: var(--gender-color); background: var(--gender-bg); padding: 12px 20px; border-radius: 14px; white-space: nowrap; font-size: 28px; font-weight: bold; }
+    .gender svg { width: 30px; height: 30px; flex: none; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
     .map { background: #102b37; border: 1px solid #284652; border-radius: 18px; overflow: hidden; padding: 18px 12px 8px; }
     svg { display: block; width: 100%; height: auto; }
     .grid { fill: none; stroke: #20424e; stroke-width: .6; }
@@ -65,6 +69,18 @@
     .score small { font-size: 20px; color: #87a697; font-weight: normal; }
     .grade { font-size: 21px; margin: 8px 0; color: #d5e9ca; }
     .star-defs { position: absolute; width: 0; height: 0; overflow: hidden; }
+    .history { border-top: 1px solid #29424b; padding: 16px 0; }
+    .history-heading { margin-bottom: 10px; }
+    .history-heading .section-title { margin: 0; font-size: 14px; }
+    .history-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); grid-template-rows: repeat(2, 1fr); gap: 8px; }
+    .history-item { min-height: 80px; padding: 8px 10px; border: 1px solid #294651; border-radius: 8px; background: #102630; }
+    .history-item.latest { border-color: #527d67; background: #14332f; }
+    .history-meta { display: flex; justify-content: space-between; color: #8eafb3; font-size: 11px; line-height: 1.35; }
+    .history-country { margin: 4px 0; font-size: 14px; line-height: 1.35; color: #d8e9e4; overflow-wrap: anywhere; }
+    .history-result { font-size: 12px; line-height: 1.35; color: #9cbdba; }
+    .history-result b { color: #d8edb8; font-weight: normal; }
+    .history-gender { color: var(--gender-color); font-weight: bold; }
+    .history-item.empty { display: flex; align-items: center; justify-content: center; background: transparent; border-style: dashed; color: #3e5a65; }
     footer { border-top: 1px solid #29424b; padding-top: 18px; font-size: 13px; color: #819fa9; line-height: 1.9; text-align: right; }
   </style>
 </head>
@@ -79,8 +95,13 @@
     <div class="date">{{ result.date }}<br>人生模拟</div>
   </header>
   <section class="identity">
-    <div class="name">{{ name }}，这一次，你出生在</div>
-    <div class="destination"><h2>{{ result.country.name }}</h2><div class="gender">{{ result.gender }}婴</div></div>
+    <div class="name"><strong class="nickname">{{ name }}</strong>，这是你的第{{ reborn_count }}次投胎，这次你出生在</div>
+    <div class="destination"><h2>{{ result.country.name }}</h2>
+      <div class="gender {% if result.gender == '男' %}male{% else %}female{% endif %}" aria-label="{{ result.gender }}婴">
+        <svg viewBox="0 0 24 24" aria-hidden="true">{% if result.gender == '男' %}<circle cx="9" cy="15" r="6"/><path d="M13.3 10.7L21 3M15 3h6v6"/>{% else %}<circle cx="12" cy="8" r="5"/><path d="M12 13v9M8 18h8"/>{% endif %}</svg>
+        <span>{{ result.gender }}婴</span>
+      </div>
+    </div>
   </section>
   <div class="map">
     {% if china %}
@@ -155,6 +176,20 @@
     <div class="rating"><div class="score">{{ result.score }}<small> / 100</small></div><div class="grade">{{ result.label }}</div></div>
   </div>
   </div>
+  <section class="history">
+    <div class="history-heading"><div class="section-title">最近十次投胎</div></div>
+    <div class="history-grid">
+      {% for entry in history_slots %}
+      {% if entry %}
+      <div class="history-item{% if loop.first %} latest{% endif %}">
+        <div class="history-meta"><span>第{{ entry.count }}次</span><span>{{ entry.date[5:] }}</span></div>
+        <div class="history-country">{{ entry.country }}</div>
+        <div class="history-result"><span class="history-gender {% if entry.gender == '男' %}male{% else %}female{% endif %}">{% if entry.gender == '男' %}♂{% else %}♀{% endif %} {{ entry.gender }}</span> · <b>{{ entry.score }} 分</b> · {{ entry.label.split(' · ')[0] }}</div>
+      </div>
+      {% else %}<div class="history-item empty">—</div>{% endif %}
+      {% endfor %}
+    </div>
+  </section>
   <footer>MadokBot Ver.0.3.1</footer>
 </body>
 </html>

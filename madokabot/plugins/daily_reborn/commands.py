@@ -50,5 +50,5 @@ async def send_reborn(bot: Bot, event: MessageEvent, command: Arparma, *, china:
         picture = await render_reborn_card(result, name)
     except Exception:
         logger.exception("每日投胎图片生成失败")
-        await matcher.finish(result_text(result, prefix=prefix))
+        await matcher.finish(result_text(result, prefix=prefix, name=name))
     await matcher.finish(MessageSegment.text(prefix + "\n") + picture)

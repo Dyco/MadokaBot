@@ -88,7 +88,7 @@ async def _switch_item(
     label = "签到模板" if shop == SIGN_SHOP else "立绘"
     path = entries.get(key)
     if path is None:
-        return False, f"该{label}不存在"
+        return False, f"该{label}不存在，请发送“/商店 {label}”查看可用商品编号"
     async with create_session() as session:
         user = await session.get(UserStats, uid)
         if user is None:
@@ -97,11 +97,11 @@ async def _switch_item(
             *_inventory_conditions(uid, shop), UserInventory.file_name == path.name,
         ))
         if owned is None:
-            return False, f"你还没有这个{label}，请先在商店购买"
+            return False, f"你还没有这个{label}，请先发送“/商店 购买 {key}”购买"
         attribute = "sign_template" if shop == SIGN_SHOP else "skin_asset"
         selection = path.with_suffix(".html").name if shop == SIGN_SHOP else path.name
         if getattr(user, attribute) == selection:
-            return True, f"当前已经在使用 {key}"
+            return True, f"当前已在使用{label}{key}，无需重复切换"
         setattr(user, attribute, selection)
         await session.commit()
         return True, f"{label}切换成功：{key}（{path.stem}）"
@@ -115,11 +115,11 @@ async def _buy_item(
     key = key.strip().lower()
     path = entries.get(key)
     if path is None:
-        return False, "该商品不存在或当前不可购买"
+        return False, "该商品不存在或当前不可购买，请发送“/商店 立绘”或“/商店 签到模板”查看可用商品编号"
     label = "签到模板" if shop == SIGN_SHOP else "立绘"
     price = SIGN_TEMPLATES[key][2] if shop == SIGN_SHOP else shop.price
     owner_id = recipient_id if recipient_id is not None else uid
-    owned_message = f"对方已经拥有这个{label}了" if recipient_id is not None else f"你已经拥有这个{label}了"
+    owned_message = f"对方已经拥有这个{label}了，无需重复赠礼" if recipient_id is not None else f"你已经拥有这个{label}了，请发送“/设置 {label} {key}”切换使用"
     async with create_session() as session:
         points = await session.scalar(
             select(UserStats.points).where(UserStats.user_id == uid)
@@ -139,13 +139,13 @@ async def _buy_item(
         if owned is not None:
             return False, owned_message
         if points < price:
-            return False, f"积分不足，购买 {key} 需要 {price} 积分，你当前只有 {points} 积分"
+            return False, f"积分不足，购买{key}需要{price}积分，你当前持有{points}积分"
         deduction = await session.execute(update(UserStats).where(
             UserStats.user_id == uid, UserStats.points >= price,
         ).values(points=UserStats.points - price))
         if deduction.rowcount != 1:
             await session.rollback()
-            return False, "积分余额发生变化，请重新购买"
+            return False, f"积分余额发生变化，请重新发送“/商店 购买 {key}”；赠礼请重新发送“/积分 赠礼 <@用户|QQ号> {key}”"
         try:
             inventory = await session.get(
                 UserInventory, (owner_id, shop.type.name, shop.content.name, path.name)
@@ -178,11 +178,12 @@ async def _buy_item(
             name = SIGN_TEMPLATES[key][1] if shop == SIGN_SHOP else path.stem
             return True, (
                 f"赠礼成功：向{recipient_name}赠送{key}（{name}），"
-                f"消耗{price}积分，剩余{remaining}积分。"
+                f"消耗{price}积分，剩余{remaining}积分。\n"
+                f"对方可发送“/设置 {label} {key}”使用礼物。"
             )
         return True, (
-            f"购买成功：{path.name}（{key}），消耗 {price} 积分，剩余 {remaining} 积分。"
-            f"使用“设置 {label} {key}”即可切换"
+            f"购买成功：{path.name}（{key}），消耗{price}积分，剩余{remaining}积分。\n"
+            f"商品已收入库存，请发送“/设置 {label} {key}”切换使用。"
         )
 
 
@@ -196,7 +197,7 @@ async def gift_shop_item(
     elif key.startswith("skin"):
         shop, entries = SKIN_SHOP, get_skin_map()
     else:
-        return False, "参数无效，请输入商品编号，例如skin01或sign02"
+        return False, "商品编号无效，请发送“/商店 立绘”或“/商店 签到模板”查看编号。赠礼示例：/积分 赠礼 @用户 sign02"
     return await _buy_item(sender_id, key, shop, entries, recipient_id, recipient_name)
 
 

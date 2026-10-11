@@ -3,7 +3,7 @@
 from datetime import date
 from typing import Any
 
-from sqlalchemy import Date, JSON, String
+from sqlalchemy import Date, Integer, JSON, String
 from sqlalchemy.orm import Mapped, mapped_column
 
 from madokabot.core.db.base import data
@@ -27,3 +27,14 @@ class ChinaRebornRecord(data.Model):
     user_id: Mapped[str] = mapped_column(String, primary_key=True)
     reborn_date: Mapped[date] = mapped_column(Date, primary_key=True)
     result: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=False)
+
+
+class RebornProgress(data.Model):
+    """按用户与模式保存累计次数及最近十次结果，不覆盖已有每日记录表。"""
+
+    __tablename__ = "madoka_daily_reborn_progress"
+
+    user_id: Mapped[str] = mapped_column(String, primary_key=True)
+    mode: Mapped[str] = mapped_column(String, primary_key=True)
+    count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    history: Mapped[list[dict[str, Any]]] = mapped_column(JSON, nullable=False, default=list)

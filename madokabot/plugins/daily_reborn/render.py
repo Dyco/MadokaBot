@@ -34,8 +34,21 @@ def load_china_map() -> dict:
     return json.loads((DATA_DIR / "china_map.json").read_text(encoding="utf-8"))
 
 
+def recent_history(result: dict) -> list[dict]:
+    """按最近一次在前整理历史；独立预览或旧结果至少展示当前一次。"""
+    history = result.get("reborn_history") or [{
+        "count": result.get("reborn_count", 1),
+        "date": result["date"],
+        "country": result["country"]["name"],
+        "gender": result["gender"],
+        "score": result["score"],
+        "label": result["label"],
+    }]
+    return list(reversed(history[-10:]))
+
+
 def render_reborn_html(result: dict, name: str) -> str:
-    """生成无需外部网络资源的星级卡片，并兼容旧百分制记录。"""
+    """生成包含投胎次数与两行历史的离线星级卡片，兼容旧记录。"""
     result = display_result(result)
     font = get_file(ResourceType.FONT, ResourceFolder.SIGN, "font.ttf")
     country = result["country"]
@@ -43,10 +56,13 @@ def render_reborn_html(result: dict, name: str) -> str:
     china_map = load_china_map() if china else {}
     region = next(row for row in china_map["regions"] if row["code"] == country["code"]) if china else None
     rows = attribute_rows(result["attributes"])
+    history = recent_history(result)
     return _environment.get_template("reborn.html").render(
         result=result,
         attribute_rows=rows,
         name=name,
+        reborn_count=result.get("reborn_count", 1),
+        history_slots=history + [None] * (10 - len(history)),
         china=china,
         china_map=china_map,
         regions=[] if china else load_world_map(),
@@ -70,8 +86,8 @@ async def render_reborn_card(result: dict, name: str) -> MessageSegment:
     return MessageSegment.image(picture)
 
 
-def result_text(result: dict, *, prefix: str) -> str:
-    """图片不可用时返回出生信息、星级、潜力评分及本次扣款信息。"""
+def result_text(result: dict, *, prefix: str, name: str = "") -> str:
+    """图片不可用时返回次数、出生信息、星级评分及最近十次历史。"""
     result = display_result(result)
     country = result["country"]
     attributes = "\n".join(
@@ -80,11 +96,20 @@ def result_text(result: dict, *, prefix: str) -> str:
     )
     title = "投胎中国" if result.get("mode") == "china" else "每日投胎"
     note = result.get("data_note", "中方案预测")
+    history = recent_history(result)
+    history_lines = [
+        f"第{row['count']}次 {row['date'][5:]} {row['country']} · {row['gender']} · {row['score']}分 · {row['label'].split(' · ')[0]}"
+        for row in history
+    ]
+    history_text = "\n".join(" ｜ ".join(history_lines[index:index + 5]) for index in range(0, len(history_lines), 5))
+    introduction = f"{name}，" if name else ""
     return (
         f"{prefix}\n{title} · {result['date']}\n"
+        f"{introduction}这是你的第{result.get('reborn_count', 1)}次投胎，这次你出生在\n"
         f"出生地：{country['name']}\n性别：{result['gender']}\n"
         f"抽中概率：{result['probability']:.4%}\n"
         f"{attributes}\n综合潜力：{result['score']}/100 · {result['label']}\n"
         f"人口数据：{result['source']} / {result['data_year']} 年，{note}\n"
-        "星级与潜力均为游戏设定。上海时间明日零点可再次免费投胎。"
+        "星级与潜力均为游戏设定。上海时间明日零点可再次免费投胎。\n"
+        f"最近十次投胎：\n{history_text}"
     )
