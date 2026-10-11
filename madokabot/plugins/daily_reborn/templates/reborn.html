@@ -17,35 +17,65 @@
     .gender { border: 1px solid #527d77; color: #b6e8d5; padding: 8px 20px; border-radius: 40px; white-space: nowrap; font-size: 20px; }
     .map { background: #102b37; border: 1px solid #284652; border-radius: 18px; overflow: hidden; padding: 18px 12px 8px; }
     svg { display: block; width: 100%; height: auto; }
-    .grid { stroke: #20424e; stroke-width: .6; }
+    .grid { fill: none; stroke: #20424e; stroke-width: .6; }
     .land { fill: #345360; stroke: #102b37; stroke-width: .45; stroke-linejoin: round; }
     .selected { fill: #a7e8ba; stroke: #d9f7d8; stroke-width: .6; }
     .map-footer { display: flex; justify-content: space-between; padding: 8px 18px; color: #92b1b8; font-size: 14px; }
     .map-footer b { color: #b5ebcc; font-weight: normal; }
+    .china-land { stroke-width: .85; }
+    .china-land.selected { stroke-width: 1.2; }
+    .sea-lines { fill: #648996; stroke: #648996; stroke-width: .3; }
+    .inset-frame { fill: #102b37; stroke: #3a5c68; stroke-width: 1; }
+    .inset-label { fill: #a8c6cb; font-size: 13px; }
     .facts { display: grid; grid-template-columns: 1fr 1fr 1fr; padding: 24px 0; gap: 20px; }
     .fact { border-right: 1px solid #29424b; }
     .fact:last-child { border: 0; }
     .fact-label { font-size: 16px; color: #91aeb7; margin-bottom: 7px; }
     .fact-value { font-family: Reborn, sans-serif; font-size: 27px; color: #e1f3eb; }
     .fact-value small { font-size: 16px; color: #91aeb7; }
-    .bottom { display: grid; grid-template-columns: 1fr 310px; gap: 32px; padding: 26px 0; border-top: 1px solid #29424b; }
+    .bottom { display: grid; grid-template-columns: 1fr 280px; gap: 18px 24px; padding: 26px 0; border-top: 1px solid #29424b; }
     .section-title { font-size: 16px; color: #a5c0c1; letter-spacing: 3px; margin-bottom: 18px; }
-    .attribute { display: grid; grid-template-columns: 54px 1fr 36px; align-items: center; gap: 15px; margin: 14px 0; font-size: 18px; }
-    .track { height: 8px; background: #223d47; border-radius: 20px; overflow: hidden; }
-    .bar { height: 100%; background: linear-gradient(90deg, #468d88, #c8edb0); border-radius: 20px; }
-    .attribute span:last-child { text-align: right; font-family: sans-serif; color: #d2ebdd; }
-    .rating { background: #14332f; border: 1px solid #3a6050; border-radius: 18px; text-align: center; padding: 20px 14px; }
-    .score { font-family: sans-serif; font-size: 88px; line-height: 1.2; font-weight: bold; color: #d8edb8; }
+    .bottom > .section-title { grid-column: 1 / -1; margin-bottom: 0; }
+    .attribute { --star-color: #9cc5cc; position: relative; overflow: hidden; margin-top: 10px; padding: 13px 16px; border: 1px solid #2b4853; border-radius: 12px; background: #102b37; }
+    .attribute:first-child { margin-top: 0; }
+    .attribute-head { position: relative; z-index: 1; display: grid; grid-template-columns: 52px 1fr 60px 48px; gap: 12px; align-items: center; }
+    .attribute-name { font-size: 20px; color: #dbeae9; }
+    .stars { display: flex; gap: 8px; }
+    .star { width: 28px; height: 28px; flex: none; overflow: visible; }
+    .star-outline { fill: none; stroke: var(--star-color); stroke-width: 1.2; stroke-linejoin: round; }
+    .star.empty .star-outline { stroke: #48616e; }
+    .star-filled { fill: var(--star-color); }
+    .star-value { color: var(--star-color); font-family: sans-serif; font-size: 25px; text-align: right; }
+    .star-value small { margin-left: 4px; font-family: Reborn, sans-serif; font-size: 13px; font-weight: normal; }
+    .rarity-badge { color: var(--star-color); border: 1px solid currentColor; border-radius: 5px; padding: 3px 4px; text-align: center; font-size: 12px; }
+    .rarity-fine { --star-color: #8ed0ea; }
+    .attribute.rarity-rare { --star-color: #c49aff; border-color: #725193; background: linear-gradient(110deg, #242c43, #172c3d); box-shadow: inset 0 0 20px #ae74ef12, 0 0 13px #a46bea15; }
+    .attribute.rarity-epic { --star-color: #ffd37e; border-color: #aa8345; background: linear-gradient(110deg, #3c3326, #1b3037); box-shadow: inset 0 0 22px #ffcf7020, 0 0 16px #ffcf7018; }
+    .attribute.rarity-legendary { --star-color: #ffd3ee; border-color: transparent; background: linear-gradient(110deg, #362d42, #20393d) padding-box, linear-gradient(110deg, #ff9ed2, #ffe7a0, #88e6d7, #bda3ff) border-box; box-shadow: 0 0 20px #ff9ed229, inset 0 0 22px #a6f3e216; }
+    .rarity-rare .star-filled { filter: drop-shadow(0 0 4px #b47aff88); }
+    .rarity-epic .star-filled { filter: drop-shadow(0 0 5px #ffc35e99); }
+    .rarity-legendary .star-filled { fill: url(#reborn-rainbow); filter: drop-shadow(0 0 5px #ffb8eab0); }
+    .rarity-effects { position: absolute; inset: 0; pointer-events: none; background: linear-gradient(115deg, transparent 40%, #ffffff08 48%, transparent 57%); color: var(--star-color); }
+    .rarity-effects i { position: absolute; font-style: normal; opacity: .55; font-size: 12px; }
+    .rarity-effects i:nth-child(1) { right: 12px; top: 3px; font-size: 15px; }
+    .rarity-effects i:nth-child(2) { right: 74px; bottom: 5px; }
+    .rarity-effects i:nth-child(3) { left: 8px; bottom: 2px; font-size: 10px; }
+    .rating { display: flex; flex-direction: column; justify-content: center; background: #14332f; border: 1px solid #3a6050; border-radius: 18px; text-align: center; padding: 20px 16px; }
+    .score { font-family: sans-serif; font-size: 96px; line-height: 1.2; font-weight: bold; color: #d8edb8; }
     .score small { font-size: 20px; color: #87a697; font-weight: normal; }
     .grade { font-size: 21px; margin: 8px 0; color: #d5e9ca; }
-    .caption { font-size: 14px; color: #91b0a3; }
-    .comment { margin: 0 0 25px; padding: 18px 22px; background: #102b37; border-radius: 12px; color: #b4cec9; font-size: 19px; line-height: 1.6; }
+    .star-defs { position: absolute; width: 0; height: 0; overflow: hidden; }
     footer { border-top: 1px solid #29424b; padding-top: 18px; font-size: 13px; color: #819fa9; line-height: 1.9; text-align: right; }
   </style>
 </head>
 <body>
+  <svg class="star-defs" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><defs>
+    <path id="reborn-star" d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26Z"/>
+    <clipPath id="reborn-half"><rect width="12" height="24"/></clipPath>
+    <linearGradient id="reborn-rainbow" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#ff9ed2"/><stop offset=".35" stop-color="#ffe7a0"/><stop offset=".7" stop-color="#88e6d7"/><stop offset="1" stop-color="#bda3ff"/></linearGradient>
+  </defs></svg>
   <header>
-    <div><div class="eyebrow">DAILY REBORN / NEW LIFE ARCHIVE</div><h1>每日投胎</h1></div>
+    <div><div class="eyebrow">DAILY REBORN / {% if china %}CHINA{% else %}NEW LIFE{% endif %} ARCHIVE</div><h1>{% if china %}投胎中国{% else %}每日投胎{% endif %}</h1></div>
     <div class="date">{{ result.date }}<br>人生模拟</div>
   </header>
   <section class="identity">
@@ -53,6 +83,36 @@
     <div class="destination"><h2>{{ result.country.name }}</h2><div class="gender">{{ result.gender }}婴</div></div>
   </section>
   <div class="map">
+    {% if china %}
+    <svg viewBox="{{ china_map.view_box }}" xmlns="http://www.w3.org/2000/svg" aria-label="中国省级出生地图，含台湾、南海诸岛">
+      <defs>
+        <clipPath id="china-main"><rect width="1000" height="700"/></clipPath>
+        <clipPath id="china-sea"><rect x="808" y="454" width="158" height="208"/></clipPath>
+        <clipPath id="china-detail"><rect x="42" y="544" width="236" height="108"/></clipPath>
+      </defs>
+      <g clip-path="url(#china-main)">
+        <g class="grid">{% for path in china_map.grid %}<path d="{{ path }}"/>{% endfor %}</g>
+        {% for region in china_map.regions %}<path data-region="{{ region.code }}" class="land china-land{% if region.code == result.country.code %} selected{% endif %}" fill-rule="evenodd" d="{{ region.path }}"/>{% endfor %}
+        <path class="sea-lines" d="{{ china_map.sea_lines }}"/>
+        <circle cx="{{ marker_x }}" cy="{{ marker_y }}" r="14" fill="#eaf7c8" opacity=".15"/>
+        <circle cx="{{ marker_x }}" cy="{{ marker_y }}" r="6" fill="#edf7ca" stroke="#143832" stroke-width="2"/>
+        <circle cx="{{ marker_x }}" cy="{{ marker_y }}" r="2" fill="#205442"/>
+      </g>
+      <rect class="inset-frame" x="798" y="422" width="178" height="250" rx="8"/>
+      <text class="inset-label" x="812" y="444">南海诸岛</text>
+      <g clip-path="url(#china-sea)">
+        {% for region in china_map.regions if region.sea_path %}<path data-inset-region="{{ region.code }}" class="land china-land{% if region.code == result.country.code %} selected{% endif %}" fill-rule="evenodd" d="{{ region.sea_path }}"/>{% endfor %}
+        <path class="sea-lines" d="{{ china_map.inset_sea_lines }}"/>
+      </g>
+      {% if result.country.code in ('CN-HK', 'CN-MO') %}
+      <rect class="inset-frame" x="30" y="512" width="260" height="150" rx="8"/>
+      <text class="inset-label" x="44" y="534">港澳局部放大</text>
+      <g clip-path="url(#china-detail)">
+        {% for region in china_map.regions if region.detail_path %}<path data-detail-region="{{ region.code }}" class="land china-land{% if region.code == result.country.code %} selected{% endif %}" fill-rule="evenodd" d="{{ region.detail_path }}"/>{% endfor %}
+      </g>
+      {% endif %}
+    </svg>
+    {% else %}
     <svg viewBox="0 0 1000 440" xmlns="http://www.w3.org/2000/svg" aria-label="出生地世界地图">
       <g class="grid">
         {% for x in range(0, 1001, 125) %}<path d="M{{ x }} 0V440"/>{% endfor %}
@@ -63,20 +123,38 @@
       <circle cx="{{ marker_x }}" cy="{{ marker_y }}" r="7" fill="#edf7ca" stroke="#143832" stroke-width="2"/>
       <circle cx="{{ marker_x }}" cy="{{ marker_y }}" r="2" fill="#205442"/>
     </svg>
-    <div class="map-footer"><b>● 本次出生地</b><span>世界出生地图 · 示意图</span></div>
+    {% endif %}
+    <div class="map-footer"><b>● 本次出生地</b><span>{% if china %}中国出生地图{% else %}世界出生地图{% endif %} · 示意图</span></div>
   </div>
   <div class="facts">
     <div class="fact"><div class="fact-label">抽中该地区的概率</div><div class="fact-value">{{ probability }}</div></div>
-    <div class="fact"><div class="fact-label">该地区年度出生人数</div><div class="fact-value">{{ births }} <small>人</small></div></div>
-    <div class="fact"><div class="fact-label">该地区粗出生率</div><div class="fact-value">{{ '%.2f'|format(result.country.birth_rate) }} <small>‰</small></div></div>
+    <div class="fact"><div class="fact-label">该地区年度出生人数{% if china %} · {{ result.data_year }}{% endif %}</div><div class="fact-value">{{ births }} <small>人</small></div></div>
+    <div class="fact"><div class="fact-label">该地区粗出生率{% if result.country.get('birth_rate_estimated') %}（估算）{% endif %}</div><div class="fact-value">{{ '%.2f'|format(result.country.birth_rate) }} <small>‰</small></div></div>
   </div>
+  <div class="life-analysis">
   <div class="bottom">
-    <div><div class="section-title">初始人生属性</div>
-      {% for label, value in result.attributes.items() %}<div class="attribute"><span>{{ label }}</span><div class="track"><div class="bar" style="width: {{ value }}%"></div></div><span>{{ value }}</span></div>{% endfor %}
+    <div class="section-title">初始人生属性 · 星级</div>
+    <div class="attributes">
+      {% for row in attribute_rows %}
+      <div class="attribute rarity-{{ row.rarity }}" data-stars="{{ row.value_text }}">
+        {% if row.value >= 4 %}<div class="rarity-effects" aria-hidden="true"><i>✦</i><i>✧</i><i>✦</i></div>{% endif %}
+        <div class="attribute-head">
+          <span class="attribute-name">{{ row.name }}</span>
+          <div class="stars" role="img" aria-label="{{ row.name }} {{ row.value_text }} 星，满星 5 星">
+            {% for slot in row.slots %}<svg class="star {{ slot }}" viewBox="0 0 24 24" aria-hidden="true">
+              {% if slot != 'empty' %}<use href="#reborn-star" class="star-filled"{% if slot == 'half' %} clip-path="url(#reborn-half)"{% endif %}/>{% endif %}
+              <use href="#reborn-star" class="star-outline"/>
+            </svg>{% endfor %}
+          </div>
+          <strong class="star-value">{{ row.value_text }}<small>星</small></strong>
+          <span class="rarity-badge">{{ row.title }}</span>
+        </div>
+      </div>
+      {% endfor %}
     </div>
-    <div class="rating"><div class="section-title">综合开局评分</div><div class="score">{{ result.score }}<small> / 100</small></div><div class="grade">{{ result.label }}</div><div class="caption">五项属性的平均分</div></div>
+    <div class="rating"><div class="score">{{ result.score }}<small> / 100</small></div><div class="grade">{{ result.label }}</div></div>
   </div>
-  <p class="comment">{{ result.comment }}</p>
+  </div>
   <footer>MadokBot Ver.0.3.1</footer>
 </body>
 </html>

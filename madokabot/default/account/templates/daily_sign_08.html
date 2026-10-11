@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        @font-face { font-family: 'Noto'; src: url('{{ body_font_path }}'); font-weight: 100 900; }
+        @font-face { font-family: 'Barlow'; src: url('{{ latin_italic_font_path }}'); font-weight: 900; font-style: italic; }
+        * { box-sizing: border-box; }
+        :root { --ink: #18191c; --paper: #f7f6ed; --yellow: #eaff20; --purple: #8330f0; }
+        body { margin: 0; width: 900px; height: 600px; overflow: hidden; color: var(--paper); font-family: 'Noto', sans-serif; background: var(--ink); }
+        .stage { position: relative; isolation: isolate; width: 900px; height: 600px; overflow: hidden; }
+        .backdrop { position: absolute; inset: 0; width: 900px; height: 600px; z-index: -3; }
+        .topline { position: absolute; top: 22px; left: 34px; display: flex; align-items: center; gap: 9px; font: italic 900 14px 'Barlow', sans-serif; letter-spacing: 1px; }
+        .brand-chip { padding: 4px 9px; background: var(--paper); color: var(--ink); transform: rotate(-3deg); }
+        .heading { position: absolute; top: 51px; left: 37px; width: 370px; transform: rotate(-7deg); }
+        .title-main { display: inline-block; position: relative; margin: 0; padding-right: 8px; color: var(--ink); font-size: 65px; line-height: 1.4; font-weight: 950; letter-spacing: -5px; transform: skew(-10deg); -webkit-text-stroke: 1.5px var(--ink); }
+        .title-main span { display: inline-block; }
+        .title-main span:nth-child(2) { transform: translateY(4px) rotate(5deg); }
+        .title-main span:nth-child(3) { transform: translateY(-2px) rotate(-4deg) scaleY(1.07); }
+        .title-main span:nth-child(4) { transform: rotate(3deg); }
+        .title-main::after { content: ''; position: absolute; left: 2px; right: -13px; bottom: 1px; height: 7px; background: var(--ink); transform: rotate(-2deg); }
+        .daily-sign-order { width: max-content; max-width: 338px; margin: 9px 0 0 4px; padding: 1px 17px 3px; background: var(--paper); color: var(--ink); border: 3px solid var(--ink); border-radius: 8px 15px 7px 12px; font-size: 14px; font-weight: 800; font-style: italic; line-height: 30px; box-shadow: 4px 5px 0 var(--ink); transform: rotate(3deg); }
+        .daily-sign-order strong { display: inline-block; padding: 0 6px; color: var(--purple); font: italic 900 36px/1 'Barlow', sans-serif; vertical-align: -4px; }
+        .order-squid { display: inline-block; width: 22px; height: 25px; margin-right: 5px; color: var(--ink); vertical-align: -6px; transform: rotate(-10deg); }
+        .date-tag { position: absolute; right: 36px; top: 30px; min-width: 123px; padding: 6px 14px 9px; border: 4px solid var(--ink); border-radius: 15px 7px 18px 8px; background: var(--paper); color: var(--ink); transform: rotate(7deg); box-shadow: 5px 6px 0 #0008; text-align: center; }
+        .date-tag b { display: block; font: italic 900 43px/.95 'Barlow', sans-serif; }
+        .date-tag span { display: block; margin-top: 5px; font: italic 900 12px 'Barlow', sans-serif; letter-spacing: 1px; }
+        .identity { position: absolute; left: 38px; top: 222px; width: 258px; padding: 8px 15px 12px 22px; color: var(--ink); background: var(--paper); border: 4px solid var(--ink); border-radius: 8px 17px 10px 7px; box-shadow: 5px 5px 0 #08090b; transform: rotate(-3deg); }
+        .identity::before { content: ''; position: absolute; left: -9px; top: 12px; width: 17px; height: 39px; border: 3px solid var(--ink); background: var(--purple); border-radius: 5px; transform: rotate(-7deg); }
+        .user-name { display: block; font-size: 23px; font-weight: 950; line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .user-id { margin-top: 2px; font: italic 900 13px 'Barlow', sans-serif; letter-spacing: 1px; opacity: .65; }
+        .gear-slots { position: absolute; right: 12px; bottom: 8px; display: flex; gap: 3px; align-items: center; }
+        .gear-slots svg { width: 14px; height: 14px; padding: 3px; border-radius: 50%; color: var(--paper); background: var(--ink); }
+        .gear-slots svg:first-child { width: 20px; height: 20px; padding: 3px; color: var(--ink); background: var(--purple); border: 2px solid var(--ink); }
+        .data-card { position: absolute; left: 40px; top: 314px; width: 254px; }
+        .score { position: relative; isolation: isolate; height: 94px; color: var(--ink); padding: 6px 10px 0; margin-bottom: 10px; transform: rotate(-4deg); }
+        .score::before { content: ''; position: absolute; inset: -4px -5px -2px; z-index: -1; background: var(--yellow); border: 4px solid var(--ink); border-radius: 12px 8px 20px 7px; transform: skew(-5deg); box-shadow: 5px 5px 0 #08090b; }
+        .score-label { font-size: 11px; font-weight: 900; letter-spacing: 1px; color: var(--ink); }
+        .score-label::after { content: ' / TOTAL POINTS'; margin-left: 5px; font: italic 900 11px 'Barlow', sans-serif; opacity: .65; letter-spacing: 0; }
+        .score-value { display: flex; gap: 10px; align-items: baseline; }
+        .score-number { font: italic 900 76px/.9 'Barlow', sans-serif; letter-spacing: -1px; -webkit-text-stroke: 1px var(--ink); }
+        .score-number.compact { font-size: 49px; letter-spacing: -1px; }
+        .score-number.dense { font-size: 34px; letter-spacing: -1px; }
+        .reward { padding: 1px 5px; color: var(--paper); background: var(--ink); border-radius: 4px; font: italic 900 19px 'Barlow', sans-serif; }
+        .stats-row { display: flex; align-items: center; gap: 6px; height: 39px; padding: 0 11px; margin-bottom: 7px; border: 3px solid var(--ink); border-radius: 10px 16px 8px 13px; background: #3a3a41; box-shadow: 3px 3px 0 #08090b; transform: rotate(-1deg); }
+        .stats-row:nth-child(3) { transform: rotate(1deg); }
+        .stats-label { display: flex; gap: 8px; align-items: center; font-size: 12px; font-weight: 750; white-space: nowrap; }
+        .stat-icon { width: 19px; height: 19px; color: var(--yellow); flex-shrink: 0; }
+        .stats-value { margin-left: auto; display: flex; gap: 4px; align-items: baseline; white-space: nowrap; }
+        .stats-value strong { font: italic 900 29px 'Barlow', sans-serif; }
+        .unit { font-size: 9px; color: #b4b5ba; }
+        .delta { font: italic 900 12px 'Barlow', sans-serif; color: var(--yellow); }
+        .ranking-card { position: absolute; right: 33px; top: 188px; width: 246px; padding: 12px 9px 11px; background: var(--ink); border: 4px solid var(--paper); border-radius: 18px 10px 24px 12px; box-shadow: 7px 8px 0 #08090b; transform: rotate(3deg); }
+        .ranking-card::after { content: ''; position: absolute; left: 85px; top: -9px; width: 58px; height: 12px; background: #e1dfe5; opacity: .65; transform: rotate(-7deg); z-index: 2; }
+        .ranking-header { position: relative; height: 42px; display: flex; align-items: center; justify-content: space-between; padding: 0 10px; margin: -28px -6px 10px; color: var(--ink); background: var(--yellow); border: 3px solid var(--ink); border-radius: 7px 12px 6px 10px; transform: rotate(-7deg); box-shadow: 3px 3px 0 #08090b; }
+        .ranking-title { margin: 0; font-size: 21px; font-weight: 950; letter-spacing: -1px; transform: skew(-8deg); }
+        .ranking-header span { font: italic 900 14px 'Barlow', sans-serif; }
+        .ranking-row { display: grid; grid-template-columns: 34px minmax(0, 1fr); gap: 1px 6px; align-content: center; height: 52px; margin-bottom: 4px; padding: 5px 7px; border-radius: 7px 10px 6px 11px; background: #303037; }
+        .ranking-position { position: relative; isolation: isolate; grid-row: span 2; align-self: center; font: italic 900 31px 'Barlow', sans-serif; color: #b795ff; -webkit-text-stroke: .5px currentColor; }
+        .ranking-row:nth-child(2) .ranking-position::before { content: ''; position: absolute; inset: -1px -3px -2px -4px; z-index: -1; background: var(--yellow); clip-path: polygon(12% 5%, 43% 15%, 70% 0, 83% 24%, 100% 29%, 89% 56%, 100% 79%, 72% 88%, 63% 100%, 38% 87%, 10% 99%, 13% 67%, 0 46%, 13% 31%); }
+        .ranking-row:nth-child(2) .ranking-position { color: var(--ink); }
+        .ranking-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; font-weight: 800; }
+        .ranking-value { display: flex; justify-content: space-between; align-items: baseline; color: #9fa0a8; font-size: 8px; }
+        .ranking-value b { color: var(--paper); margin-right: 3px; font: italic 900 15px 'Barlow', sans-serif; }
+        .ranking-row.current { border: 0; margin-top: 3px; margin-bottom: 0; color: var(--ink); background: var(--yellow); border-radius: 8px 13px 7px 10px; box-shadow: 2px 3px 0 #0009; }
+        .ranking-row.current .ranking-position, .ranking-row.current .ranking-name, .ranking-row.current b { color: var(--ink); }
+        .ranking-row.current .ranking-value { color: #535522; }
+        .ranking-empty { min-height: 275px; display: grid; place-items: center; color: #9fa0a8; font-size: 14px; }
+        .chara-container { position: absolute; left: 336px; top: 145px; width: 246px; height: 389px; z-index: 2; display: flex; align-items: flex-end; justify-content: center; }
+        .chara-img { max-width: 100%; max-height: 100%; object-fit: contain; filter: drop-shadow(4px 0 0 #f7f6ed) drop-shadow(-4px 0 0 #f7f6ed) drop-shadow(0 -4px 0 #f7f6ed) drop-shadow(7px 9px 0 #18191c); }
+        .empty-portrait { position: absolute; left: 340px; top: 315px; width: 240px; text-align: center; color: var(--paper); font-weight: 900; font-size: 22px; transform: rotate(-8deg); }
+        .bubble { position: absolute; left: 316px; bottom: 53px; width: 292px; min-height: 83px; padding: 11px 16px 12px; z-index: 4; background: var(--paper); color: var(--ink); border: 4px solid var(--ink); border-radius: 17px 9px 22px 10px; box-shadow: 6px 6px 0 #08090b; transform: rotate(-4deg); }
+        .bubble::before { content: ''; position: absolute; top: -16px; left: 35px; width: 22px; height: 22px; background: var(--paper); border-top: 4px solid var(--ink); border-left: 4px solid var(--ink); transform: skew(15deg) rotate(45deg); }
+        .speaker { position: relative; width: max-content; max-width: 100%; padding: 2px 8px; margin: -23px 0 10px auto; color: var(--paper); background: var(--purple); border: 3px solid var(--ink); border-radius: 5px 9px 4px 6px; font-size: 10px; font-weight: 900; transform: rotate(5deg); }
+        .bubble-text { position: relative; text-align: center; font-size: 12px; font-weight: 750; line-height: 1.7; }
+        .bubble.long .bubble-text { font-size: 11px; }
+        .footer { position: absolute; left: 34px; right: 34px; bottom: 19px; display: flex; justify-content: space-between; font: italic 900 11px 'Barlow', sans-serif; color: #aaa9ad; letter-spacing: 1px; }
+        .footer span { padding: 3px 6px; background: var(--ink); transform: rotate(-2deg); }
+        .footer span:last-child { color: var(--yellow); }
+    </style>
+</head>
+<body>
+    <main class="stage">
+        <svg class="backdrop" viewBox="0 0 900 600" fill="none" aria-hidden="true">
+            <defs>
+                <pattern id="dots" width="12" height="12" patternUnits="userSpaceOnUse"><circle cx="2" cy="2" r="1.3" fill="#ffffff" opacity=".09"/></pattern>
+                <pattern id="ink-dots" width="9" height="9" patternUnits="userSpaceOnUse" patternTransform="rotate(-15)"><circle cx="2" cy="2" r="1.6" fill="#18191c" opacity=".19"/></pattern>
+                <pattern id="stripes" width="18" height="18" patternUnits="userSpaceOnUse" patternTransform="rotate(35)"><path d="M0 0V18" stroke="#18191c" stroke-width="8"/></pattern>
+                <g id="splat">
+                    <path d="M-75-41C-95-74-73-94-54-68L-32-37C-13-48-19-68-9-70 8-73 1-39 20-38L61-73C86-91 97-70 75-49L44-22C53-10 69-22 76-10 82 4 55 9 51 22L79 56C96 81 70 93 52 68L27 43C12 54 25 78 9 81-10 84-9 53-22 47L-59 76C-87 97-103 71-73 54L-46 28C-56 12-83 34-91 20-101 3-58-4-56-19Z" fill="currentColor"/>
+                    <circle cx="-100" cy="-65" r="10" fill="currentColor"/><circle cx="96" cy="40" r="7" fill="currentColor"/><ellipse cx="42" cy="-96" rx="6" ry="12" transform="rotate(30 42 -96)" fill="currentColor"/>
+                </g>
+                <g id="heart"><path d="M10 17 2 9C-3 2 5-2 10 4 15-2 23 2 18 9Z" fill="currentColor"/></g>
+                <g id="chain"><path d="m8 12 5-5M7 14l-2 2a4 4 0 0 1-6-6l4-4a4 4 0 0 1 6 0m3 0 2-2a4 4 0 0 1 6 6l-4 4a4 4 0 0 1-6 0" transform="translate(2 0)" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></g>
+                <g id="check"><path d="M3 9 8 14 18 3" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></g>
+                <g id="squid-mark">
+                    <path d="M0-34C-5-31-24-15-35 4-39 13-29 20-19 15L-20 30Q-19 37-13 32L-7 20-5 36Q0 43 5 36L7 20 13 32Q19 37 20 30L19 15C29 20 39 13 35 4 24-15 5-31 0-34Z" fill="currentColor"/>
+                    <path d="M-18-3Q0-13 18-3L16 13Q0 22-16 13Z" fill="#18191c"/>
+                    <ellipse cx="-8" cy="4" rx="6" ry="9" fill="#f7f6ed"/><ellipse cx="8" cy="4" rx="6" ry="9" fill="#f7f6ed"/>
+                    <ellipse cx="-6" cy="5" rx="2.8" ry="5" fill="#18191c"/><ellipse cx="6" cy="5" rx="2.8" ry="5" fill="#18191c"/>
+                </g>
+                <g id="shoe"><path d="m2 14 4-11 7 1 1 7 6 3v4H1v-3ZM5 10l8 2M7 7l6 2" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/></g>
+                <g id="drop"><path d="M10 0C8 5 2 9 2 14a8 8 0 0 0 16 0C18 9 12 5 10 0Z" fill="currentColor"/></g>
+                <g id="ability-squid"><path d="M10 0 0 12l5-1v8l5-5 5 5v-8l5 1Z" fill="currentColor"/></g>
+            </defs>
+            <path d="M0 0h900v600H0Z" fill="#222328"/>
+            <path d="M0 0h900v600H0Z" fill="url(#dots)"/>
+            <path d="M502-30C478 26 535 45 491 98 449 148 379 148 385 195 390 232 338 219 321 251 297 295 361 313 340 351 313 401 349 428 323 464 283 521 346 540 305 611H930V-30Z" fill="#8330f0"/>
+            <path d="M711-20h220v640H422Z" fill="url(#ink-dots)"/>
+            <path d="M502 2c-20 32 17 65-12 94-22 24-59 38-77 53M341 357c-13 27 16 47-1 76" stroke="#a766ff" stroke-width="5" stroke-linecap="round"/>
+            <path d="M365 226C337 217 320 234 338 253L369 282C349 302 319 309 334 329 349 349 369 326 387 345L361 406C347 445 382 460 402 427L433 388C453 391 448 430 471 432 496 435 487 399 504 389L552 411C592 427 608 394 571 376L533 350C535 330 573 343 578 324 584 302 554 298 541 288L564 250C586 217 559 190 537 220L504 256C486 250 503 218 480 211 455 202 456 243 441 244L414 211C395 183 371 196 385 221L399 250Z" fill="#eaff20"/>
+            <path d="M337 247c8 12 17 14 28 28m182 118 21 10" stroke="#f5ff97" stroke-width="5" stroke-linecap="round"/>
+            <ellipse cx="584" cy="261" rx="8" ry="16" transform="rotate(30 584 261)" fill="#eaff20"/><circle cx="317" cy="342" r="7" fill="#eaff20"/><circle cx="572" cy="439" r="10" fill="#eaff20"/>
+            <path d="M-12 88C13 67 54 76 91 65L337 29C365 26 380 39 365 54 398 42 423 61 395 79L414 84C442 94 426 117 402 119L378 151C369 166 353 156 334 162L42 200C14 204-4 188 13 172-17 173-29 150-5 134-25 120-25 101-12 88Z" fill="#eaff20"/>
+            <path d="M27 189v24c0 12 15 12 15-1v-24M327 159v24c0 10 12 10 12-2v-25" fill="#eaff20"/>
+            <ellipse cx="407" cy="32" rx="7" ry="13" transform="rotate(44 407 32)" fill="#eaff20"/>
+            <use href="#splat" transform="translate(885 15) rotate(21) scale(1.45 .88)" color="#eaff20"/>
+            <use href="#splat" transform="translate(8 612) rotate(-17) scale(1.23 .76)" color="#8330f0"/>
+            <path d="m301 398 15 16m-18-1 19-17" stroke="#f7f6ed" stroke-width="5" stroke-linecap="round"/>
+            <g transform="translate(554 36) rotate(13)" stroke="#18191c" stroke-width="4" stroke-linejoin="round">
+                <path d="M7 3h24v10H7Z" fill="#f7f6ed"/>
+                <path d="M4 13h30l4 9v68H0V22Z" fill="#f7f6ed"/>
+                <path d="M6 27h26v56H6Z" fill="#18191c" stroke="none"/>
+                <path d="M7 44h24v38H7Z" fill="#eaff20" stroke="none"/>
+                <path d="M25 35h8m-8 12h8m-8 12h8m-8 12h8" stroke="#f7f6ed" stroke-width="2"/>
+                <path d="M38 25h8v53h-8" fill="#18191c"/>
+            </g>
+            <g transform="translate(641 140) rotate(-13)" stroke="#18191c" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M-34-13h66v20h-66Z" fill="#f7f6ed" stroke="#f7f6ed" stroke-width="12"/>
+                <path d="M32-4h13v22H9v15" stroke="#f7f6ed" stroke-width="12"/>
+                <rect x="-34" y="-13" width="66" height="20" rx="7" fill="#eaff20"/>
+                <path d="M-27-9v12M-20-9v12M-13-9v12M-6-9v12M1-9v12M8-9v12M15-9v12M22-9v12" stroke="#18191c" stroke-width="2"/>
+                <path d="M32-4h13v22H9v15"/>
+                <path d="M3 28h12v16H3Z" fill="#8330f0"/>
+            </g>
+            <path d="m789 540 80 7-5 15-79-7Z" fill="#eaff20"/><path d="m789 540 80 7-5 15-79-7Z" fill="url(#stripes)"/>
+            <g transform="translate(666 69) rotate(-17) scale(1.05)">
+                <path d="M0-34C-5-31-24-15-35 4-39 13-29 20-19 15L-20 30Q-19 37-13 32L-7 20-5 36Q0 43 5 36L7 20 13 32Q19 37 20 30L19 15C29 20 39 13 35 4 24-15 5-31 0-34Z" stroke="#f7f6ed" stroke-width="12" fill="#eaff20"/>
+                <use href="#squid-mark" color="#eaff20"/>
+            </g>
+            <g opacity=".18" stroke="#18191c" stroke-width="4" stroke-linecap="round" transform="translate(876 132) rotate(18) scale(1.5)">
+                <path d="M0-33-33 5l16-3-2 27 12-13L0 33 7 16l12 13-2-27 16 3Z"/>
+                <path d="M-11-2v10M11-2v10" stroke-width="8"/>
+            </g>
+            <path d="M426 100c10-23 34-25 41-10m-42 21c12-24 35-22 42-8" stroke="#b994ff" stroke-width="4" stroke-linecap="round"/>
+            <circle cx="603" cy="443" r="6" fill="#eaff20"/><circle cx="312" cy="287" r="4" fill="#eaff20"/>
+        </svg>
+        <div class="topline"><span class="brand-chip">283 PRODUCTION</span></div>
+        <header class="heading"><h1 class="title-main">{% for letter in title %}<span>{{ letter }}</span>{% endfor %}</h1>{% if daily_sign_order %}<div class="daily-sign-order"><svg class="order-squid" viewBox="-40 -40 80 80" aria-hidden="true"><use href="#squid-mark"/></svg>今日第 <strong>{{ daily_sign_order }}</strong> 位签到！</div>{% endif %}</header>
+        <div class="date-tag"><b>{{ current_time[5:7] }}/{{ current_time[8:10] }}</b><span>{{ current_time[:4] }} · {{ current_time[11:16] }}</span></div>
+        <section class="identity"><span class="user-name">{{ user_name }}</span><div class="user-id">QQ / {{ user_id }}</div><div class="gear-slots" aria-hidden="true"><svg viewBox="0 0 20 20"><use href="#ability-squid"/></svg><svg viewBox="0 0 20 20"><use href="#shoe"/></svg><svg viewBox="0 0 20 20"><use href="#drop"/></svg><svg viewBox="0 0 20 20"><use href="#heart"/></svg></div></section>
+        <section class="data-card">
+            {% for label, value, delta in items %}{% set parts = value.split(' ', 1) %}
+            {% if label == '总积分' %}<div class="score"><div class="score-label">{{ label }}</div><div class="score-value"><span class="score-number{{ ' dense' if parts[0] | length > 11 else ' compact' if parts[0] | length > 6 else '' }}">{{ parts[0] }}</span>{% if delta %}<span class="reward">{{ delta }}</span>{% endif %}</div></div>
+            {% else %}<div class="stats-row"><span class="stats-label"><svg class="stat-icon" viewBox="0 0 22 20" aria-hidden="true"><use href="#{{ 'heart' if loop.index == 2 else 'chain' if loop.index == 3 else 'check' }}"/></svg>{{ label }}</span><div class="stats-value"><strong>{{ parts[0] }}</strong>{% if parts | length > 1 %}<span class="unit">{{ parts[1] }}</span>{% endif %}{% if delta %}<span class="delta">{{ delta }}</span>{% endif %}</div></div>{% endif %}
+            {% endfor %}
+        </section>
+        {% if chara_b64 %}<div class="chara-container"><img class="chara-img" src="{{ chara_b64 }}" alt="角色立绘"></div>{% else %}<div class="empty-portrait">NO CHARACTER</div>{% endif %}
+        <div class="bubble{{ ' long' if quote | length > 28 else '' }}"><div class="speaker">{{ chara_name.split('_')[0] if chara_b64 and chara_name else '今日寄语' }}</div><div class="bubble-text">「{{ quote }}」</div></div>
+        <section class="ranking-card"><div class="ranking-header"><h2 class="ranking-title">排名</h2><span>TOP / 05</span></div>
+            {% for nickname, uid, points, total_count in ranking %}<div class="ranking-row{{ ' current' if loop.index == (current_ranking_index | default(none)) else '' }}"><span class="ranking-position">{{ '%02d' | format(loop.index) }}</span><span class="ranking-name">{{ nickname }}</span><div class="ranking-value"><span><b>{{ points }}</b>积分</span><span><b>{{ total_count }}</b>次</span></div></div>{% else %}<div class="ranking-empty">暂无排名</div>{% endfor %}
+        </section>
+        <footer class="footer"><span>MADOKABOT VER.3.1.0</span><span>SHINY COLORS / NOCTCHILL</span></footer>
+    </main>
+</body>
+</html>

@@ -9,6 +9,7 @@ from madokabot.core.resources import ResourceFolder
 
 from ...assets import local_image_uri
 from ..constants import (
+    CHINA_TIMEZONE,
     PW_MATCH_FIELDS,
     PW_RANK_LIMITS,
     PW_TOP_RANK_MAX,
@@ -289,7 +290,7 @@ def _pw_recent_match_views(
     stats: dict[str, Any],
     matches: list[Any],
 ) -> list[dict[str, str]]:
-    """完美近期比赛视图生成方法。"""
+    """生成完美近期比赛视图，优先用开始时间，缺失时按北京时间转换开始时间戳。"""
     score_changes: dict[str, int] = {}
     score_list = [as_dict(item) for item in as_list(stats.get("scoreList"))]
     for current, previous in zip(score_list, score_list[1:]):
@@ -302,9 +303,13 @@ def _pw_recent_match_views(
     recent: list[dict[str, str]] = []
     for item in matches[:RECENT_MATCH_LIMIT]:
         match = as_dict(item).copy()
+        if match.get(PW_MATCH_FIELDS.time) in (None, ""):
+            match[PW_MATCH_FIELDS.time] = match.get("pageTimeStamp")
         match_id = str(match.get("matchId") or "").rsplit("@", 1)[-1]
         score_change = match.get("pvpScoreChange")
         if score_change in (None, "", 0, "0") and match_id in score_changes:
             match["pvpScoreChange"] = score_changes[match_id]
-        recent.append(build_match_view(match, PW_MATCH_FIELDS))
+        recent.append(build_match_view(
+            match, PW_MATCH_FIELDS, target_timezone=CHINA_TIMEZONE,
+        ))
     return recent

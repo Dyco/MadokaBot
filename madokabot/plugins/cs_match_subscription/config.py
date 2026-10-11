@@ -16,6 +16,7 @@ from madokabot.core.resources import ResourceFolder, ResourceType, assets
 PLUGIN_NAME = "madokabot_cs_match_subscribe"
 CACHE_DIR = store.get_cache_dir(PLUGIN_NAME)
 HLTV_SUB_PATH = assets.get_dir(ResourceType.JSON, ResourceFolder.CS) / "hltv_sub.json"
+HLTV_CHECK_PATH = assets.get_dir(ResourceType.JSON, ResourceFolder.CS) / "hltv_check.json"
 ASSET_DIR = CACHE_DIR / "assets"
 PW_SESSION_PATH = store.get_data_file(PLUGIN_NAME, "pw_session.json")
 

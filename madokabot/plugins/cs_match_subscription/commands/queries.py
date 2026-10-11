@@ -13,7 +13,7 @@ from ..client import HltvError, fetch_events, fetch_match, match_id_from_url
 from ..matchers import CS_USAGE, UNSUPPORTED_LINK_MESSAGE, cs_cmd
 from ..prediction import get_prediction_detail, prediction_odds
 from ..render import render_event_list_card
-from ..storage import target_from_event
+from ..storage import save_checked_match, target_from_event
 from ..subscriptions.delivery import send_rating_forward
 from ..subscriptions.rating import render_check_rating_messages
 
@@ -112,7 +112,7 @@ async def handle_cs_check(
     event: MessageEvent,
     match_url: Match[str],
 ) -> None:
-    """解析比赛链接并发送单图或合并转发 Rating。"""
+    """解析并存档比赛数据，再发送单图或合并转发 Rating。"""
     await respond(bot, event)
     raw_url = match_url.result.strip() if match_url.available else ""
     match_id = match_id_from_url(raw_url) if len(raw_url.split()) == 1 else None
@@ -122,6 +122,10 @@ async def handle_cs_check(
 
     try:
         match = await fetch_match(match_id, page_url=raw_url)
+        try:
+            await save_checked_match(match)
+        except Exception:
+            logger.exception("CS 比赛查询存档失败：match_id=%s", match_id)
         messages = await render_check_rating_messages(match)
     except HltvError as exc:
         logger.warning("CS 比赛链接解析失败：%s (%s)", raw_url, exc)

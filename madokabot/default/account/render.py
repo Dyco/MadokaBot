@@ -28,6 +28,11 @@ def get_template_font_context(template_name: str) -> dict[str, str]:
             "number_font_path": "font.ttf",
             "title_font_path": "NotoSerifSC-Black.otf",
         }
+    elif template_name == "daily_sign_08.html":
+        fonts = {
+            "body_font_path": "NotoSansSC[wght].ttf",
+            "latin_italic_font_path": "BarlowCondensed-BlackItalic.ttf",
+        }
     elif template_name in ("daily_sign_06.html", "daily_sign_07.html"):
         fonts = {
             "body_font_path": "NotoSansSC[wght].ttf",

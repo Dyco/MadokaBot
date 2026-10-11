@@ -10,7 +10,7 @@ from typing import Any
 
 from madokabot.core.group.settings import group_settings
 from madokabot.core.storage.json_store import JsonDataStore
-from .config import HLTV_SUB_PATH, config
+from .config import HLTV_CHECK_PATH, HLTV_SUB_PATH, config
 from .prediction_labels import (
     allocate_prediction_team_labels,
     prediction_team_labels,
@@ -22,6 +22,7 @@ from .models import (
     EVENT_STATUS_WAITING,
     EVENT_STATUSES,
     EventData,
+    MatchData,
     MATCH_SECTION_FINISHED,
     normalize_match_section,
 )
@@ -30,6 +31,21 @@ _lock = asyncio.Lock()
 HLTV_SUB_GROUP_TAG = "hltv_sub"
 HLTV_EVENT_SETTINGS_NAME = "hltv_event_settings"
 _hltv_sub_store = JsonDataStore(HLTV_SUB_PATH, {})
+_hltv_check_store = JsonDataStore(HLTV_CHECK_PATH, {})
+_check_lock = asyncio.Lock()
+
+
+async def save_checked_match(match: MatchData) -> None:
+    """将手动查询的完整比赛快照按编号存档，同场再次查询时更新。"""
+    snapshot = asdict(match)
+    if match.scheduled_at is not None:
+        snapshot["scheduled_at"] = match.scheduled_at.isoformat()
+    async with _check_lock:
+        _hltv_check_store.reload()
+        content = _hltv_check_store.content
+        data = dict(content) if isinstance(content, dict) else {}
+        data[str(match.match_id)] = snapshot
+        _hltv_check_store.write(data)
 
 
 def _setting_bool(value: Any, default: bool) -> bool:

@@ -1,4 +1,4 @@
-"""积分查询、转账与排名功能。"""
+"""积分查询、转账、赠礼与排名功能。"""
 
 from nonebot.plugin import PluginMetadata
 
@@ -6,7 +6,7 @@ from .matchers import POINT_USAGE
 
 __plugin_meta__ = PluginMetadata(
     name="积分",
-    description="查询个人积分、向已注册用户转账，查询本群与全部用户积分排名",
+    description="查询个人积分、向已注册用户转账或购买礼物，查询本群与全部用户积分排名",
     usage=POINT_USAGE,
     type="application",
     extra={"help_category": "基础功能", "help_order": 20},

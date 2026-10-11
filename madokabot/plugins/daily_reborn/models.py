@@ -17,3 +17,13 @@ class RebornRecord(data.Model):
     user_id: Mapped[str] = mapped_column(String, primary_key=True)
     reborn_date: Mapped[date] = mapped_column(Date, primary_key=True)
     result: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=False)
+
+
+class ChinaRebornRecord(data.Model):
+    """中国投胎的每日记录，与世界投胎分别计次并保留各自结果。"""
+
+    __tablename__ = "madoka_daily_reborn_china_record"
+
+    user_id: Mapped[str] = mapped_column(String, primary_key=True)
+    reborn_date: Mapped[date] = mapped_column(Date, primary_key=True)
+    result: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=False)

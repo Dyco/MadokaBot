@@ -13,6 +13,7 @@ from nonebot_plugin_alconna import Arparma, At, Check, Match, assign
 
 from madokabot.core.user.accounts import UserAccount
 from madokabot.default.account.matchers import query_cmd
+from madokabot.default.shop.service import gift_shop_item
 
 from .matchers import POINT_USAGE, point_cmd
 from .service import get_points_ranking, transfer_points
@@ -126,8 +127,40 @@ async def handle_transfer(
     await point_cmd.finish(MessageSegment.text(message if ok else f"转账失败：{message}"))
 
 
+@point_cmd.assign("gift")
+async def handle_gift(
+    bot: Bot, event: MessageEvent, target: Match[At | str], item: Match[str]
+) -> None:
+    """赠礼命令处理方法。"""
+    if not target.available or not item.available:
+        await point_cmd.finish(f"请补充接收人和商品编号。用法：\n{POINT_USAGE}")
+    recipient = target.result
+    if isinstance(recipient, At):
+        if recipient.flag != "user":
+            await point_cmd.finish("请艾特一位用户或输入有效的QQ号")
+        recipient_id = str(recipient.target)
+    else:
+        recipient_id = recipient.strip()
+    if (
+        not recipient_id.isascii()
+        or not recipient_id.isdecimal()
+        or int(recipient_id) <= 0
+    ):
+        await point_cmd.finish("请艾特一位用户或输入有效的QQ号")
+    recipient_id = str(int(recipient_id))
+    recipient_name = await get_recipient_name(bot, event, recipient_id)
+    try:
+        ok, message = await gift_shop_item(
+            event.get_user_id(), recipient_id, item.result, recipient_name
+        )
+    except Exception:
+        logger.exception("积分赠礼失败")
+        await point_cmd.finish("赠礼暂时无法处理，请稍后重试")
+    await point_cmd.finish(MessageSegment.text(message if ok else f"赠礼失败：{message}"))
+
+
 async def get_recipient_name(bot: Bot, event: MessageEvent, recipient_id: str) -> str:
-    """收款人昵称查询方法。"""
+    """目标用户昵称查询方法。"""
     if isinstance(event, GroupMessageEvent):
         try:
             member = await bot.get_group_member_info(
@@ -137,11 +170,11 @@ async def get_recipient_name(bot: Bot, event: MessageEvent, recipient_id: str) -
             if name:
                 return name
         except Exception as exc:
-            logger.debug(f"获取转账收款人群昵称失败：{exc}")
+            logger.debug(f"获取目标用户群昵称失败：{exc}")
 
     try:
         user = await bot.get_stranger_info(user_id=int(recipient_id))
         return (user.get("nickname") or "").strip()
     except Exception as exc:
-        logger.debug(f"获取转账收款人 QQ 昵称失败：{exc}")
+        logger.debug(f"获取目标用户QQ昵称失败：{exc}")
         return ""
