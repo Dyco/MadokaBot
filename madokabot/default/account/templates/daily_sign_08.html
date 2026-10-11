@@ -160,7 +160,7 @@
         <section class="ranking-card"><div class="ranking-header"><h2 class="ranking-title">排名</h2><span>TOP / 05</span></div>
             {% for nickname, uid, points, total_count in ranking %}<div class="ranking-row{{ ' current' if loop.index == (current_ranking_index | default(none)) else '' }}"><span class="ranking-position">{{ '%02d' | format(loop.index) }}</span><span class="ranking-name">{{ nickname }}</span><div class="ranking-value"><span><b>{{ points }}</b>积分</span><span><b>{{ total_count }}</b>次</span></div></div>{% else %}<div class="ranking-empty">暂无排名</div>{% endfor %}
         </section>
-        <footer class="footer"><span>MADOKABOT VER.3.1.0</span><span>SHINY COLORS / NOCTCHILL</span></footer>
+        <footer class="footer"><span>MADOKABOT VER.{{ bot_version }}</span><span>SHINY COLORS / NOCTCHILL</span></footer>
     </main>
 </body>
 </html>

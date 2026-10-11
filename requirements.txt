@@ -106,3 +106,4 @@ ImageHash==4.3.2
 pyquery==2.1.0
 tenacity==8.5.0
 tinydb==4.9.0
+lunar-python==1.4.8

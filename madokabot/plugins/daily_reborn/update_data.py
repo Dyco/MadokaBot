@@ -134,7 +134,7 @@ def prepare_map(world: dict) -> tuple[list[dict], dict]:
                 if len(points) < 4:
                     points = ring
                 paths.append("M" + "L".join(
-                    f"{(lon + 180) * 1000 / 360:.2f},{(85 - lat) * 1000 / 360:.2f}" for lon, lat in points
+                    f"{(lon + 180) * 1000 / 360:.5f},{(85 - lat) * 1000 / 360:.5f}" for lon, lat in points
                 ) + "Z")
         regions.append({"code": map_code, "path": "".join(paths)})
     return regions, locations

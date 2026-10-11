@@ -22,6 +22,7 @@
     .map { background: #102b37; border: 1px solid #284652; border-radius: 18px; overflow: hidden; padding: 18px 12px 8px; }
     svg { display: block; width: 100%; height: auto; }
     .grid { fill: none; stroke: #20424e; stroke-width: .6; }
+    .grid path, .land, .sea-lines { vector-effect: non-scaling-stroke; }
     .land { fill: #345360; stroke: #102b37; stroke-width: .45; stroke-linejoin: round; }
     .selected { fill: #a7e8ba; stroke: #d9f7d8; stroke-width: .6; }
     .map-footer { display: flex; justify-content: space-between; padding: 8px 18px; color: #92b1b8; font-size: 14px; }
@@ -29,8 +30,6 @@
     .china-land { stroke-width: .85; }
     .china-land.selected { stroke-width: 1.2; }
     .sea-lines { fill: #648996; stroke: #648996; stroke-width: .3; }
-    .inset-frame { fill: #102b37; stroke: #3a5c68; stroke-width: 1; }
-    .inset-label { fill: #a8c6cb; font-size: 13px; }
     .facts { display: grid; grid-template-columns: 1fr 1fr 1fr; padding: 24px 0; gap: 20px; }
     .fact { border-right: 1px solid #29424b; }
     .fact:last-child { border: 0; }
@@ -104,48 +103,27 @@
     </div>
   </section>
   <div class="map">
+    <svg viewBox="{{ map_view_box }}" xmlns="http://www.w3.org/2000/svg" aria-label="{{ result.country.name }}及周边出生地图">
     {% if china %}
-    <svg viewBox="{{ china_map.view_box }}" xmlns="http://www.w3.org/2000/svg" aria-label="中国省级出生地图，含台湾、南海诸岛">
-      <defs>
-        <clipPath id="china-main"><rect width="1000" height="700"/></clipPath>
-        <clipPath id="china-sea"><rect x="808" y="454" width="158" height="208"/></clipPath>
-        <clipPath id="china-detail"><rect x="42" y="544" width="236" height="108"/></clipPath>
-      </defs>
-      <g clip-path="url(#china-main)">
-        <g class="grid">{% for path in china_map.grid %}<path d="{{ path }}"/>{% endfor %}</g>
-        {% for region in china_map.regions %}<path data-region="{{ region.code }}" class="land china-land{% if region.code == result.country.code %} selected{% endif %}" fill-rule="evenodd" d="{{ region.path }}"/>{% endfor %}
-        <path class="sea-lines" d="{{ china_map.sea_lines }}"/>
-        <circle cx="{{ marker_x }}" cy="{{ marker_y }}" r="14" fill="#eaf7c8" opacity=".15"/>
-        <circle cx="{{ marker_x }}" cy="{{ marker_y }}" r="6" fill="#edf7ca" stroke="#143832" stroke-width="2"/>
-        <circle cx="{{ marker_x }}" cy="{{ marker_y }}" r="2" fill="#205442"/>
-      </g>
-      <rect class="inset-frame" x="798" y="422" width="178" height="250" rx="8"/>
-      <text class="inset-label" x="812" y="444">南海诸岛</text>
-      <g clip-path="url(#china-sea)">
-        {% for region in china_map.regions if region.sea_path %}<path data-inset-region="{{ region.code }}" class="land china-land{% if region.code == result.country.code %} selected{% endif %}" fill-rule="evenodd" d="{{ region.sea_path }}"/>{% endfor %}
-        <path class="sea-lines" d="{{ china_map.inset_sea_lines }}"/>
-      </g>
-      {% if result.country.code in ('CN-HK', 'CN-MO') %}
-      <rect class="inset-frame" x="30" y="512" width="260" height="150" rx="8"/>
-      <text class="inset-label" x="44" y="534">港澳局部放大</text>
-      <g clip-path="url(#china-detail)">
-        {% for region in china_map.regions if region.detail_path %}<path data-detail-region="{{ region.code }}" class="land china-land{% if region.code == result.country.code %} selected{% endif %}" fill-rule="evenodd" d="{{ region.detail_path }}"/>{% endfor %}
-      </g>
-      {% endif %}
-    </svg>
+      <g class="grid">{% for path in china_map.grid %}<path d="{{ path }}"/>{% endfor %}</g>
+      {% for region in regions %}<path data-region="{{ region.code }}" class="land china-land{% if region.code == result.country.code %} selected{% endif %}" fill-rule="evenodd" d="{{ region.path }}"/>{% endfor %}
+      <path class="sea-lines" d="{{ china_map.sea_lines }}"/>
     {% else %}
-    <svg viewBox="0 0 1000 440" xmlns="http://www.w3.org/2000/svg" aria-label="出生地世界地图">
+      {% for offset in map_offsets %}
+      <g transform="translate({{ offset }}, 0)">
       <g class="grid">
         {% for x in range(0, 1001, 125) %}<path d="M{{ x }} 0V440"/>{% endfor %}
         {% for y in range(69, 440, 83) %}<path d="M0 {{ y }}H1000"/>{% endfor %}
       </g>
       {% for region in regions %}<path class="land{% if region.code == result.country.map_code %} selected{% endif %}" fill-rule="evenodd" d="{{ region.path }}"/>{% endfor %}
-      <circle cx="{{ marker_x }}" cy="{{ marker_y }}" r="14" fill="#eaf7c8" opacity=".15"/>
-      <circle cx="{{ marker_x }}" cy="{{ marker_y }}" r="7" fill="#edf7ca" stroke="#143832" stroke-width="2"/>
-      <circle cx="{{ marker_x }}" cy="{{ marker_y }}" r="2" fill="#205442"/>
-    </svg>
+      </g>
+      {% endfor %}
     {% endif %}
-    <div class="map-footer"><b>● 本次出生地</b><span>{% if china %}中国出生地图{% else %}世界出生地图{% endif %} · 示意图</span></div>
+      <circle cx="{{ marker_x }}" cy="{{ marker_y }}" r="{{ 14 * map_scale }}" fill="#eaf7c8" opacity=".15"/>
+      <circle cx="{{ marker_x }}" cy="{{ marker_y }}" r="{{ 6 * map_scale }}" fill="#edf7ca" stroke="#143832" stroke-width="{{ 2 * map_scale }}"/>
+      <circle cx="{{ marker_x }}" cy="{{ marker_y }}" r="{{ 2 * map_scale }}" fill="#205442"/>
+    </svg>
+    <div class="map-footer"><b>● 本次出生地</b><span>{% if china %}中国{% else %}世界{% endif %} · 出生地周边示意图</span></div>
   </div>
   <div class="facts">
     <div class="fact"><div class="fact-label">抽中该地区的概率</div><div class="fact-value">{{ probability }}</div></div>
@@ -190,6 +168,6 @@
       {% endfor %}
     </div>
   </section>
-  <footer>MadokBot Ver.0.3.1</footer>
+  <footer>MadokaBot VER.{{ bot_version }}</footer>
 </body>
 </html>

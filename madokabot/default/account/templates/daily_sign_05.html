@@ -125,7 +125,7 @@
             <div class="identity"><span class="user-name{{ ' compact' if user_name | length > 6 else '' }}">{{ user_name }}</span><span class="user-id">QQ / {{ user_id }}</span></div>
             <div class="bubble{{ ' long' if quote | length > 28 else '' }}"><div class="bubble-text">「{{ quote }}」</div>{% if chara_name %}<div class="skin-note">立绘 / {{ chara_name.replace('_', ' / ') }}</div>{% endif %}</div>
         </div>
-        <div class="version-watermark">MadokaBot Ver.3.1.0</div>
+        <div class="version-watermark">MadokaBot VER.{{ bot_version }}</div>
     </div>
 </body>
 </html>

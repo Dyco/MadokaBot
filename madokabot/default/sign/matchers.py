@@ -3,7 +3,7 @@
 from nonebot import on_message
 from nonebot.rule import fullmatch
 
-sign_keywords: list[str] = ["打卡", "签到", "sign"]
+sign_keywords: list[str] = ["打卡", "签到", "sign", "/打卡", "/签到", "/sign"]
 sign_matcher = on_message(
     rule=fullmatch(sign_keywords),
     priority=10,

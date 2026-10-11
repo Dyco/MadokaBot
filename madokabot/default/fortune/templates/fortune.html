@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>今日运势</title>
+    <style>
+        {% if font_uri %}
+        @font-face { font-family: Fortune; src: url('{{ font_uri }}'); }
+        {% endif %}
+        {% if title_font_uri %}
+        @font-face { font-family: FortuneTitle; src: url('{{ title_font_uri }}'); }
+        {% endif %}
+        * { box-sizing: border-box; }
+        html, body { width: 640px; height: 360px; margin: 0; overflow: hidden; }
+        body { font-family: Fortune, 'Noto Sans CJK SC', 'Microsoft YaHei', sans-serif; color: #34465b; }
+        .card { position: relative; width: 640px; height: 360px; overflow: hidden; background: #eef3f8; }
+        .card::before { content: ''; position: absolute; inset: 12px; border: 1px solid #fff; border-radius: 20px; }
+        .content { position: relative; z-index: 2; width: 346px; padding: 26px 0 0 30px; }
+        .heading { display: flex; align-items: center; gap: 10px; }
+        .heading h1 { margin: 0; font-size: 18px; font-weight: 700; letter-spacing: 3px; }
+        .heading::before { content: '✦'; color: #829bb8; font-size: 22px; }
+        .dates { display: flex; align-items: center; gap: 12px; margin-top: 9px; font-size: 12px; color: #7b8b9d; }
+        .lunar { color: #4e657f; }
+        .fortune { display: flex; align-items: center; gap: 18px; margin: 8px 0 10px; }
+        .level { font-family: FortuneTitle, Fortune, serif; font-size: 58px; line-height: 1.1; letter-spacing: 5px; color: #566f91; }
+        .recipient { max-width: 140px; border-left: 1px solid #c8d4e1; padding-left: 14px; }
+        .name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 14px; }
+        .recipient small { display: block; margin-top: 5px; color: #8a99a9; font-size: 9px; letter-spacing: 0.1px; white-space: nowrap; }
+        .activities { display: grid; grid-template-columns: 1fr; gap: 8px; }
+        .activity { display: flex; align-items: center; gap: 8px; min-width: 0; font-size: 13px; white-space: nowrap; }
+        .activity > span:last-child { overflow: hidden; text-overflow: ellipsis; }
+        .tag { display: grid; place-items: center; flex-shrink: 0; width: 26px; height: 26px; border-radius: 8px; background: #e0ebe5; color: #628374; font-size: 13px; }
+        .avoid .tag { background: #f1e3e3; color: #ae7f82; }
+        .lucky { display: flex; gap: 24px; margin-top: 12px; padding: 10px 0; border-top: 1px solid #dbe3ec; border-bottom: 1px solid #dbe3ec; font-size: 12px; color: #8a99a9; }
+        .lucky strong { margin-left: 8px; font-size: 14px; font-weight: 500; color: #4e657f; }
+        .quote { margin: 10px 0 0; font-size: 12px; line-height: 1.7; color: #718195; }
+        .portrait { position: absolute; right: 12px; top: 12px; width: 254px; height: 336px; border-radius: 16px; overflow: hidden; background: linear-gradient(155deg, #dce7f1, #e9e5ed); }
+        .portrait::before { content: ''; position: absolute; width: 240px; height: 240px; top: 28px; left: 30px; border: 1px solid #ffffffa6; border-radius: 50%; }
+        /* 固定全身图的显示高度，用容器截取顶部至腰部，避免压缩成全身缩略图。 */
+        .skin { position: absolute; height: 680px; width: auto; max-width: none; top: 8px; left: 50%; transform: translateX(-50%); filter: drop-shadow(0 5px 12px #586b7e24); }
+        .portrait::after { content: ''; position: absolute; inset: 0; background: linear-gradient(0deg, #e8e9ef 0%, transparent 18%); }
+        .empty-skin { position: absolute; inset: 0; display: grid; place-items: center; color: #b4c4d3; font-family: FortuneTitle, serif; font-size: 120px; }
+    </style>
+</head>
+<body>
+    <main class="card">
+        <section class="content">
+            <header class="heading"><h1>今日运势</h1></header>
+            <div class="dates"><span>{{ result.date }}</span><span class="lunar">农历 {{ result.lunar_date }}</span></div>
+            <div class="fortune">
+                <div class="level">{{ result.level }}</div>
+                <div class="recipient"><div class="name">{{ name }}</div><small>MadokaBot VER.{{ bot_version }}</small></div>
+            </div>
+            <div class="activities">
+                <div class="activity"><span class="tag">宜</span><span>{{ result.suitable }}</span></div>
+                <div class="activity avoid"><span class="tag">忌</span><span>{{ result.unsuitable }}</span></div>
+            </div>
+            <div class="lucky"><span>幸运色<strong>{{ result.color }}</strong></span><span>幸运数字<strong>{{ result.number }}</strong></span></div>
+            <p class="quote">「{{ result.message }}」</p>
+        </section>
+        <aside class="portrait">
+            {% if skin_uri %}<img class="skin" src="{{ skin_uri }}" alt="上半身立绘">{% else %}<div class="empty-skin">签</div>{% endif %}
+        </aside>
+    </main>
+</body>
+</html>

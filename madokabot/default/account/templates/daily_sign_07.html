@@ -103,7 +103,7 @@
         </section>
         {% if chara_b64 %}<div class="chara-container"><img class="chara-img" src="{{ chara_b64 }}" alt="角色立绘"></div>{% else %}<div class="empty-portrait">未选择立绘</div>{% endif %}
         <div class="bubble{{ ' long' if quote | length > 28 else '' }}"><div class="speaker">{{ chara_name.split('_')[0] if chara_b64 and chara_name else '今日寄语' }}</div><div class="bubble-text">「{{ quote }}」</div></div>
-        <footer class="footer"><span>MADOKABOT VER.3.1.0</span><span>{{ current_time[:10].replace('-', '.') }} · {{ current_time[11:16] }}</span></footer>
+        <footer class="footer"><span>MADOKABOT VER.{{ bot_version }}</span><span>{{ current_time[:10].replace('-', '.') }} · {{ current_time[11:16] }}</span></footer>
     </main>
 </body>
 </html>

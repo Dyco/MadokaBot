@@ -1,6 +1,6 @@
 [project]
 name = "MadokaBot"
-version = "0.3.1"
+version = "0.4.1"
 description = "MadokaBot"
 readme = "README.md"
 requires-python = ">=3.10, <4.0"
@@ -36,6 +36,7 @@ dependencies = [
     "pyquery>=2.1.0",
     "tenacity>=8.5.0",
     "tinydb>=4.9.0",
+    "lunar-python>=1.4.8,<2.0.0",
 ]
 
 [project.optional-dependencies]

@@ -41,4 +41,4 @@ query_cmd = on_alconna(
     block=True,
 )
 
-register_cmd = on_message(rule=fullmatch(["注册", "register"]))
+register_cmd = on_message(rule=fullmatch(["注册", "register", "/注册", "/register"]))

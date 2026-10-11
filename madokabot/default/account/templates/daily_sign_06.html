@@ -144,7 +144,7 @@
             <svg class="cartouche-crest" viewBox="0 0 58 25" fill="none" aria-hidden="true"><path d="M0 17C15 17 14 8 29 8s14 9 29 9" fill="var(--paper)" stroke="currentColor"/><path d="M29 20C13 16 13 4 19 2C26 5 27 11 29 20ZM29 20C45 16 45 4 39 2C32 5 31 11 29 20Z M29 20C21 13 22 3 29 0C36 3 37 13 29 20Z" fill="var(--paper)" stroke="currentColor" stroke-width=".8"/><path d="M29 4v17" stroke="currentColor" stroke-width=".6"/></svg>
             <div class="speaker">{{ chara_name.split('_')[0] if chara_b64 and chara_name else '今日寄语' }}</div><div class="bubble-text">「{{ quote }}」</div>
         </div>
-        <footer class="footer"><span>MADOKABOT VER.3.1.0</span><span>{{ current_time[:10].replace('-', '.') }} · {{ current_time[11:16] }}</span></footer>
+        <footer class="footer"><span>MADOKABOT VER.{{ bot_version }}</span><span>{{ current_time[:10].replace('-', '.') }} · {{ current_time[11:16] }}</span></footer>
     </main>
 </body>
 </html>

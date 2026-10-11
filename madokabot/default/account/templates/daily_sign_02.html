@@ -150,7 +150,7 @@
         {% if chara_b64 %}<div class="chara-container"><img class="chara-shadow" src="{{ chara_b64 }}"><img class="chara-img" src="{{ chara_b64 }}"></div>{% endif %}
         <div class="bubble{{ ' long' if quote | length > 28 else '' }}"><div class="bubble-text">「{{ quote }}」</div></div>
         <div class="side-type">SHINY COLORS / NOCTCHILL</div>
-        <div class="signature">MADOKABOT <span>VER.3.1.0</span></div>
+        <div class="signature">MADOKABOT <span>VER.{{ bot_version }}</span></div>
     </div>
 </body>
 </html>

@@ -7,6 +7,7 @@ from functools import lru_cache
 from pathlib import Path
 
 from .attributes import ATTRIBUTES, STAR_SYSTEM, attribute_stars, draw_star
+from .geography import random_location
 from .potential import EVALUATION_SYSTEM, evaluate_life, score_label as score_label
 
 DATA_DIR = Path(__file__).parent / "data"
@@ -37,7 +38,7 @@ def display_result(result: dict) -> dict:
 
 
 def simulate_rebirth(*, china: bool = False) -> dict:
-    """以出生人数及出生性别比抽样，五项星级独立抽取并生成潜力剧本。"""
+    """按出生人数与性别比抽样，生成星级潜力并保存地区内的随机定位。"""
     dataset = load_population(True) if china else load_population()
     countries = dataset["countries"]
     country = random.choices(countries, weights=[row["births"] for row in countries])[0]
@@ -53,6 +54,7 @@ def simulate_rebirth(*, china: bool = False) -> dict:
         "data_note": country.get("births_note", "") if china else "中方案预测",
         "probability": country["births"] / sum(row["births"] for row in countries),
         "gender": gender,
+        "map_point": random_location(country, china=china),
         "attributes": attributes,
         "attribute_system": STAR_SYSTEM,
         **evaluate_life(attributes),

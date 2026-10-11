@@ -1,8 +1,6 @@
 """每日投胎卡片与世界地图渲染。"""
 
 import asyncio
-import json
-from functools import lru_cache
 from pathlib import Path
 
 from jinja2 import Environment, FileSystemLoader, StrictUndefined, select_autoescape
@@ -10,8 +8,10 @@ from nonebot.adapters.onebot.v11 import MessageSegment
 from nonebot_plugin_htmlrender import html_to_pic
 
 from madokabot.core.resources import ResourceFolder, ResourceType, get_file
+from madokabot.core.version import get_bot_version
 from .attributes import attribute_rows
-from .simulation import DATA_DIR, display_result
+from .geography import focused_map, load_china_map, load_world_map, result_location
+from .simulation import display_result
 
 TEMPLATE_DIR = Path(__file__).parent / "templates"
 _environment = Environment(
@@ -20,18 +20,6 @@ _environment = Environment(
     undefined=StrictUndefined,
 )
 _render_limit = asyncio.Semaphore(2)
-
-
-@lru_cache(maxsize=1)
-def load_world_map() -> list[dict]:
-    """读取离线地图路径，台湾、香港、澳门与中国共用高亮编号。"""
-    return json.loads((DATA_DIR / "world_map.json").read_text(encoding="utf-8"))["regions"]
-
-
-@lru_cache(maxsize=1)
-def load_china_map() -> dict:
-    """读取省级 SVG 路径、南海诸岛附图及港澳局部放大图。"""
-    return json.loads((DATA_DIR / "china_map.json").read_text(encoding="utf-8"))
 
 
 def recent_history(result: dict) -> list[dict]:
@@ -48,26 +36,32 @@ def recent_history(result: dict) -> list[dict]:
 
 
 def render_reborn_html(result: dict, name: str) -> str:
-    """生成包含投胎次数与两行历史的离线星级卡片，兼容旧记录。"""
+    """生成包含投胎次数、历史与项目版本的离线星级卡片，兼容旧记录。"""
     result = display_result(result)
     font = get_file(ResourceType.FONT, ResourceFolder.SIGN, "font.ttf")
     country = result["country"]
     china = result.get("mode") == "china"
     china_map = load_china_map() if china else {}
-    region = next(row for row in china_map["regions"] if row["code"] == country["code"]) if china else None
+    regions = china_map["regions"] if china else load_world_map()
+    region, marker_x, marker_y = result_location(result)
+    view_box, map_scale, map_offsets = focused_map(region, marker_x, marker_y, china=china)
     rows = attribute_rows(result["attributes"])
     history = recent_history(result)
     return _environment.get_template("reborn.html").render(
         result=result,
         attribute_rows=rows,
         name=name,
+        bot_version=get_bot_version(),
         reborn_count=result.get("reborn_count", 1),
         history_slots=history + [None] * (10 - len(history)),
         china=china,
         china_map=china_map,
-        regions=[] if china else load_world_map(),
-        marker_x=region["marker_x"] if china else (country["longitude"] + 180) * 1000 / 360,
-        marker_y=region["marker_y"] if china else (85 - country["latitude"]) * 1000 / 360,
+        regions=regions,
+        marker_x=marker_x,
+        marker_y=marker_y,
+        map_view_box=view_box,
+        map_scale=map_scale,
+        map_offsets=map_offsets,
         font_uri=font.resolve().as_uri() if font else "",
         probability=f"{result['probability'] * 100:.4f}%",
         births=("约 " if country.get("births_estimated") else "") + f"{country['births']:,.0f}",

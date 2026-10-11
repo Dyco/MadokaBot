@@ -49,7 +49,7 @@ def build_help_messages() -> list[str]:
         if category in groups:
             groups[category].append(metadata)
 
-    overview = [f"以下是MadokaBot Ver{get_bot_version()}的全部插件内容"]
+    overview = [f"以下是MadokaBot VER.{get_bot_version()}的全部插件内容"]
     details = []
     for category, plugins in groups.items():
         if not plugins:

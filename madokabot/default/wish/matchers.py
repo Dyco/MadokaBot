@@ -3,4 +3,4 @@
 from nonebot import on_message
 from nonebot.rule import fullmatch
 
-wish_matcher = on_message(rule=fullmatch("许愿"), priority=10, block=True)
+wish_matcher = on_message(rule=fullmatch(("许愿", "/许愿")), priority=10, block=True)
