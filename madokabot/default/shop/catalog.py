@@ -38,6 +38,7 @@ SIGN_TEMPLATES = {
     "sign07": ("daily_sign_07.html", "装饰艺术模板", 100),
     "sign08": ("daily_sign_08.html", "斯普拉遁模板", 500),
     "sign09": ("daily_sign_09.html", "蔚蓝档案模板", 500),
+    "sign10": ("daily_sign_10.html", "异度之刃2模板", 500),
 }
 TEMPLATE_DIR = Path(__file__).resolve().parents[1] / "account" / "templates"
 

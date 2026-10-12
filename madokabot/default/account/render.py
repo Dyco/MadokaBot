@@ -35,6 +35,12 @@ def get_template_font_context(template_name: str) -> dict[str, str]:
         }
     elif template_name == "daily_sign_09.html":
         fonts = {"body_font_path": "NotoSansSC[wght].ttf"}
+    elif template_name == "daily_sign_10.html":
+        fonts = {
+            "body_font_path": "NotoSansSC[wght].ttf",
+            "title_font_path": "SmileySans-Oblique.ttf",
+            "number_font_path": "BarlowCondensed-Medium.ttf",
+        }
     elif template_name in ("daily_sign_06.html", "daily_sign_07.html"):
         fonts = {
             "body_font_path": "NotoSansSC[wght].ttf",
@@ -90,6 +96,44 @@ def get_template_image_context(template_name: str) -> dict[str, str]:
             ("cube_path", "bluearchive/cube.png"),
             ("schale_path", "bluearchive/schale-nav.png"),
             ("folder_path", "bluearchive/folder.png"),
+        )
+    elif template_name == "daily_sign_10.html":
+        images = (
+            ("background_path", "xenoblade2/background-sky.png"),
+            ("titan_path", "xenoblade2/background-titan.png"),
+            ("world_tree_path", "xenoblade2/background-world-tree.png"),
+            ("clouds_path", "xenoblade2/background-clouds.png"),
+            ("ether_lights_path", "xenoblade2/ether-sparkles.png"),
+            ("pyra_path", "xenoblade2/character-pyra.png"),
+            ("mythra_path", "xenoblade2/character-mythra.png"),
+            ("header_bevel_path", "xenoblade2/header-bevel.png"),
+            ("header_outline_path", "xenoblade2/header-outline.png"),
+            ("header_fill_path", "xenoblade2/header-fill.png"),
+            ("header_texture_path", "xenoblade2/header-texture.png"),
+            ("menu_frame_path", "xenoblade2/menu-diamond-frame.png"),
+            ("menu_icons_path", "xenoblade2/menu-icons.png"),
+            ("identity_panel_path", "xenoblade2/identity-panel.png"),
+            ("ranking_title_path", "xenoblade2/ranking-title.png"),
+            ("ranking_panel_path", "xenoblade2/ranking-name-panel.png"),
+            ("ranking_facet_path", "xenoblade2/ranking-diamond-details.png"),
+            ("ranking_detail_path", "xenoblade2/ranking-detail-panel.png"),
+            ("ranking_detail_frame_path", "xenoblade2/ranking-detail-frame.png"),
+            ("ranking_selection_path", "xenoblade2/ranking-selection.png"),
+            ("coin_clock_icons_path", "xenoblade2/coin-clock-icons.png"),
+            ("stat_icons_path", "xenoblade2/stat-icons.png"),
+            ("dialogue_tail_path", "xenoblade2/dialogue-tail.png"),
+            ("dialogue_marker_path", "xenoblade2/dialogue-next-marker.png"),
+            ("speaker_left_path", "xenoblade2/dialogue-name-left.png"),
+            ("speaker_right_path", "xenoblade2/dialogue-name-right.png"),
+            ("dialogue_top_path", "xenoblade2/dialogue-top.png"),
+            ("dialogue_bottom_path", "xenoblade2/dialogue-bottom.png"),
+            ("dialogue_left_path", "xenoblade2/dialogue-left.png"),
+            ("dialogue_right_path", "xenoblade2/dialogue-right.png"),
+            ("dialogue_center_path", "xenoblade2/dialogue-center.png"),
+            ("dialogue_top_left_path", "xenoblade2/dialogue-top-left.png"),
+            ("dialogue_bottom_left_path", "xenoblade2/dialogue-bottom-left.png"),
+            ("dialogue_top_right_path", "xenoblade2/dialogue-top-right.png"),
+            ("dialogue_bottom_right_path", "xenoblade2/dialogue-bottom-right.png"),
         )
     else:
         return {}

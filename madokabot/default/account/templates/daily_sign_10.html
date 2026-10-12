@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<style>
+@font-face { font-family: Noto; src: url('{{ body_font_path }}'); font-weight: 100 900; }
+@font-face { font-family: Menu; src: url('{{ title_font_path }}'); }
+@font-face { font-family: Barlow; src: url('{{ number_font_path }}'); font-weight: 500; }
+* { box-sizing: border-box; }
+body { margin: 0; width: 900px; height: 600px; overflow: hidden; background: #a6b9f4; color: white; font-family: Noto, sans-serif; }
+.stage { position: relative; isolation: isolate; width: 900px; height: 600px; overflow: hidden; }
+.sky { position: absolute; inset: 0; z-index: -6; background: url('{{ background_path }}') center / cover; }
+.sky::after { content: ''; position: absolute; inset: 0; background: linear-gradient(110deg, #5076d05c, transparent 60%), linear-gradient(0deg, #a9e5ed5c, transparent 70%); }
+.titan { position: absolute; right: -70px; top: 22px; width: 525px; height: 450px; object-fit: contain; z-index: -5; opacity: .65; }
+.tree { position: absolute; left: 85px; top: 101px; width: 329px; height: 391px; z-index: -5; opacity: .37; }
+.clouds { position: absolute; left: -160px; bottom: -20px; width: 1200px; height: 200px; opacity: .6; z-index: -4; }
+.grid { position: absolute; inset: 0; z-index: -3; opacity: .56; background: repeating-linear-gradient(45deg, transparent 0 62px, #efffff38 63px, transparent 64px), repeating-linear-gradient(-45deg, transparent 0 62px, #efffff38 63px, transparent 64px); }
+.ether-lights { position: absolute; left: 0; top: 73px; width: 900px; height: 113px; z-index: -2; background: url('{{ ether_lights_path }}') center / 100% 100%; opacity: .65; }
+.blade-art { position: absolute; z-index: -1; top: 147px; width: 320px; height: auto; opacity: .84; filter: saturate(.82) brightness(.91) drop-shadow(0 3px 5px #26305a5c); mask-image: linear-gradient(to bottom, #000 0 77%, transparent 100%); }
+.blade-art.pyra { left: -20px; }
+.blade-art.mythra { right: -80px; }
+.heading { position: absolute; left: -12px; top: 27px; width: 456px; height: 52px; background: url('{{ header_bevel_path }}') 0 -20px / 456px 98px, url('{{ header_outline_path }}') 0 -20px / 456px 98px, url('{{ header_fill_path }}') 0 -20px / 456px 98px; filter: drop-shadow(1px 3px 3px #263963a6); }
+.heading::before { content: ''; position: absolute; inset: 0; background: url('{{ header_texture_path }}') 0 -20px / 456px 98px; opacity: .3; }
+.heading::after { content: ''; position: absolute; left: 36px; top: 51px; width: 373px; height: 26px; background: linear-gradient(90deg, #1932b5c4, #435cc3bf); clip-path: polygon(20px 0, 100% 0, calc(100% - 22px) 100%, 0 100%); }
+h1 { position: absolute; left: 128px; top: -4px; margin: 0; font: 43px/1.25 Menu, sans-serif; letter-spacing: 3px; text-shadow: 1px 2px 0 #1a4878, 0 0 5px #40c3e9; }
+.daily-sign-order { position: absolute; left: 104px; top: 51px; z-index: 1; font-size: 12px; font-style: italic; line-height: 25px; letter-spacing: 1px; }
+.daily-sign-order strong { margin: 0 4px; color: #fff4a9; font: italic 700 21px Barlow, sans-serif; }
+.header-icon { position: absolute; left: 36px; top: -14px; width: 78px; height: 78px; background: url('{{ menu_frame_path }}') center / contain; }
+.sprite { background-image: url('{{ menu_icons_path }}'); background-size: 384px 48px; width: 48px; height: 48px; background-repeat: no-repeat; }
+.header-icon .sprite { margin: 15px; background-position: 0 0; }
+.navigation { position: absolute; left: 463px; top: 19px; display: flex; gap: 3px; }
+.nav-icon { position: relative; width: 59px; height: 65px; background: url('{{ menu_frame_path }}') center / 65px 65px no-repeat; filter: drop-shadow(0 2px 2px #26345f); }
+.nav-icon .sprite { transform: scale(.9); transform-origin: center; position: absolute; left: 5px; top: 8px; }
+.nav-icon::after { content: ''; position: absolute; right: -3px; top: 32px; width: 4px; height: 4px; background: #3c3161; }
+.nav-icon:last-child::after { display: none; }
+.chara-container { position: absolute; left: 267px; top: 97px; width: 400px; height: 660px; display: flex; justify-content: center; align-items: flex-end; clip-path: inset(0 0 256px 0); }
+.chara-img { max-width: 100%; max-height: 100%; object-fit: contain; filter: drop-shadow(0 1px 2px #152e5a) drop-shadow(0 0 5px #f5f9ff9c); }
+.empty-portrait { position: absolute; left: 350px; top: 280px; font-size: 18px; color: #324b83; }
+.identity { position: absolute; left: -2px; top: 108px; width: 358px; height: 85px; background: url('{{ identity_panel_path }}') center / 100% 100%; filter: drop-shadow(1px 3px 2px #213c754f); }
+.identity .user-id { position: absolute; top: 14px; left: 71px; right: 62px; height: 24px; font: italic 500 16px/24px Barlow, sans-serif; letter-spacing: 2px; text-align: center; }
+.user-name { position: absolute; top: 40px; left: 84px; right: 32px; height: 40px; font: 28px/40px Menu, sans-serif; text-align: center; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; text-shadow: 1px 2px 0 #182f8f; }
+.identity-diamond { position: absolute; left: 19px; top: 42px; width: 32px; height: 32px; border: 2px solid #ffe9fd; background: linear-gradient(135deg, #e775d1, #b73cbd); transform: rotate(45deg); box-shadow: 0 0 0 3px #9e60b8, inset 0 0 0 3px #f5c0ee82; }
+.identity-diamond span { display: block; transform: rotate(-45deg); text-align: center; font: 24px/27px Barlow, sans-serif; }
+.ranking { position: absolute; top: 205px; left: 13px; width: 300px; }
+.ranking h2 { position: absolute; left: 16px; top: -14px; width: 277px; height: 24px; margin: 0; padding-left: 17px; background: url('{{ ranking_title_path }}') center / 100% 100%; font: 15px/24px Menu, sans-serif; text-shadow: 1px 1px 2px #1f3777; }
+.ranking h2 span { float: right; padding-right: 15px; color: #d7e7ff; font: italic 500 12px/24px Barlow, sans-serif; letter-spacing: 1px; }
+.ranking-list { padding-top: 12px; }
+.ranking-row { position: relative; isolation: isolate; height: 69px; filter: drop-shadow(0 2px 2px #48205842); }
+.ranking-row::before { content: ''; position: absolute; inset: 0; z-index: -1; background: url('{{ ranking_panel_path }}') left top / 300px auto no-repeat; opacity: .85; }
+.ranking-row::after { content: ''; position: absolute; right: 13px; top: 18px; width: 27px; height: 27px; background: url('{{ ranking_facet_path }}') 0 0 / 81px 27px; opacity: .8; }
+.ranking-position { position: absolute; top: 15px; left: 9px; width: 46px; text-align: center; font: italic 500 29px Barlow, sans-serif; text-shadow: 1px 1px 1px #7b2696; }
+.ranking-name { position: absolute; left: 63px; top: 18px; width: 124px; font: italic 500 18px/28px Noto, sans-serif; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ranking-id { position: absolute; top: 28px; right: 43px; color: #fff0fc; font: italic 500 13px Barlow, sans-serif; letter-spacing: .5px; }
+.ranking-detail { position: absolute; left: 34px; right: 15px; top: 48px; height: 24px; display: flex; align-items: center; justify-content: space-between; padding: 0 16px; font-size: 10px; font-style: italic; color: #fff6ff; z-index: -2; }
+.ranking-detail::before { content: ''; position: absolute; inset: 0; z-index: -2; background: url('{{ ranking_detail_path }}') center / 100% 100%; transform: scaleX(-1); opacity: .6; }
+.ranking-detail::after { content: ''; position: absolute; inset: 0; z-index: -1; border: 0 solid transparent; border-left-width: 13px; border-right-width: 13px; border-image: url('{{ ranking_detail_frame_path }}') 0 26 fill stretch; opacity: .4; }
+.ranking-detail b { margin: 0 3px; font: italic 500 16px Barlow, sans-serif; }
+.ranking-row.current .ranking-detail { color: #fff6b4; }
+.ranking-row.current .ranking-position { color: #fff9bb; }
+.ranking-selector { position: absolute; left: -3px; top: -3px; width: 69px; height: 69px; background: url('{{ ranking_selection_path }}') center / contain; filter: drop-shadow(0 0 4px #ffe1fe); }
+.ranking-empty { padding: 40px; background: #7055ba80; font-size: 14px; }
+.stats { position: absolute; top: 140px; left: 627px; width: 255px; }
+.stat { position: relative; height: 87px; text-shadow: 1px 2px 1px #2752a2; }
+.stat-bar { position: absolute; left: -9px; right: 12px; top: 3px; height: 29px; background: linear-gradient(180deg, #65a8ed, #4788df); clip-path: polygon(14px 0, 100% 0, calc(100% - 14px) 100%, 0 100%); border-top: 1px solid #b0d4ff; }
+.stat-label { position: absolute; left: 12px; top: 4px; font: italic 500 20px Noto, sans-serif; letter-spacing: 1px; }
+.stat-value { position: absolute; right: 81px; top: 32px; font: italic 500 39px/1 Barlow, sans-serif; }
+.stat-value.compact { font-size: 28px; }
+.coin { display: inline-block; width: 20px; height: 20px; margin-right: 9px; vertical-align: 3px; background: url('{{ coin_clock_icons_path }}') 0 0 / 40px 20px no-repeat; }
+.unit { margin-left: 5px; font: italic 15px Noto, sans-serif; }
+.delta { margin-left: 7px; color: #fff6a7; font-size: 17px; }
+.stat-icon { position: absolute; top: 7px; right: 0; width: 68px; height: 68px; background: url('{{ stat_icons_path }}') 0 0 / 340px 204px no-repeat; filter: drop-shadow(0 0 5px #d2fffd); }
+.stat:nth-child(2) .stat-icon { background-position: -136px 0; }
+.stat:nth-child(3) .stat-icon { background-position: -68px 0; }
+.stat:nth-child(4) .stat-icon { background-position: -204px 0; }
+.bubble { position: absolute; isolation: isolate; left: 329px; right: 18px; bottom: 32px; min-height: 84px; padding: 24px 35px 22px; }
+.bubble-skin { position: absolute; inset: 0; display: grid; grid-template-columns: 28px 1fr 28px; grid-template-rows: 22px 1fr 22px; z-index: -1; filter: drop-shadow(0 3px 3px #22356669); }
+.bubble-skin span { background-size: 100% 100%; background-repeat: no-repeat; }
+.bubble-tail { position: absolute; left: 180px; top: -13px; width: 48px; height: 24px; background: url('{{ dialogue_tail_path }}') center / contain; z-index: -1; }
+.speaker { position: absolute; left: 22px; top: -24px; width: 178px; height: 35px; font: italic 500 17px/35px Noto, sans-serif; text-align: center; text-shadow: 1px 1px 1px #153127; }
+.speaker-skin { position: absolute; inset: 0; z-index: -1; display: grid; grid-template-columns: 50px 1fr 50px; filter: hue-rotate(240deg) saturate(1.5) brightness(.77) drop-shadow(0 2px 1px #183f4752); }
+.speaker-skin span { background-size: 100% 100%; }
+.speaker-skin span:nth-child(2) { margin: 5px 0; background-color: #4a599c; border-top: 1px solid #8c96bd; border-bottom: 1px solid #31416b; }
+.bubble-text { color: #33364d; font-size: 17px; font-weight: 500; font-style: italic; line-height: 1.65; overflow-wrap: anywhere; }
+.bubble.long .bubble-text { font-size: 13px; }
+.dialogue-next { position: absolute; left: calc(50% - 7px); bottom: 14px; width: 14px; height: 14px; background: url('{{ dialogue_marker_path }}') center / contain; }
+.footer { position: absolute; left: 0; bottom: 0; width: 900px; height: 28px; background: linear-gradient(0deg, #1f47abc7, #3d85dfb3); border-top: 1px solid #d4eeffbf; display: flex; justify-content: space-between; align-items: center; padding: 0 21px; font: italic 500 12px Barlow, sans-serif; letter-spacing: 1px; }
+.footer .date { margin-left: auto; margin-right: 36px; font-size: 14px; }
+.footer .date::before { content: ''; display: inline-block; width: 16px; height: 16px; margin-right: 7px; vertical-align: -3px; background: url('{{ coin_clock_icons_path }}') -16px 0 / 32px 16px no-repeat; }
+</style>
+</head>
+<body>
+<main class="stage">
+<div class="sky"></div>
+<img class="titan" src="{{ titan_path }}" alt="">
+<img class="tree" src="{{ world_tree_path }}" alt="">
+<img class="clouds" src="{{ clouds_path }}" alt="">
+<div class="grid"></div>
+<div class="ether-lights" aria-hidden="true"></div>
+<img class="blade-art pyra" src="{{ pyra_path }}" alt="" aria-hidden="true">
+<img class="blade-art mythra" src="{{ mythra_path }}" alt="" aria-hidden="true">
+<header class="heading"><div class="header-icon"><div class="sprite"></div></div><h1>{{ title }}</h1>{% if daily_sign_order %}<div class="daily-sign-order">今日第 <strong>{{ daily_sign_order }}</strong> 位签到</div>{% endif %}</header>
+<div class="navigation" aria-hidden="true">{% for index in range(1, 8) %}<div class="nav-icon"><div class="sprite" style="background-position: {{ -48 * index }}px 0"></div></div>{% endfor %}</div>
+{% if chara_b64 %}<div class="chara-container"><img class="chara-img" src="{{ chara_b64 }}" alt="角色立绘"></div>{% else %}<div class="empty-portrait">未选择立绘</div>{% endif %}
+<section class="identity"><div class="user-id">QQ / {{ user_id }}</div><div class="identity-diamond" aria-hidden="true"><span>◇</span></div><div class="user-name">{{ user_name }}</div></section>
+<section class="ranking"><h2>排名<span>TOP {{ '%02d' | format(ranking | length) }}</span></h2><div class="ranking-list">{% for nickname, uid, points, total_count in ranking %}<div class="ranking-row{{ ' current' if loop.index == (current_ranking_index | default(none)) else '' }}">{% if loop.index == (current_ranking_index | default(none)) %}<span class="ranking-selector" aria-hidden="true"></span>{% endif %}<span class="ranking-position">{{ loop.index }}</span><span class="ranking-name">{{ nickname }}</span><span class="ranking-id">QQ {{ uid }}</span><div class="ranking-detail"><span>积分 <b>{{ points }}</b></span><span>累计签到 <b>{{ total_count }}</b> 次</span></div></div>{% else %}<div class="ranking-empty">暂无排名</div>{% endfor %}</div></section>
+<section class="stats">{% for label, value, delta in items %}{% set parts = value.split(' ', 1) %}<div class="stat"><div class="stat-bar"></div><div class="stat-label">{{ label }}</div><div class="stat-value{{ ' compact' if parts[0] | length > 6 else '' }}">{% if label == '总积分' %}<i class="coin" aria-hidden="true"></i>{% endif %}{{ parts[0] }}{% if parts | length > 1 %}<span class="unit">{{ parts[1] }}</span>{% endif %}{% if delta %}<span class="delta">{{ delta }}</span>{% endif %}</div><div class="stat-icon" aria-hidden="true"></div></div>{% endfor %}</section>
+<div class="bubble{{ ' long' if quote | length > 28 else '' }}"><div class="bubble-tail" aria-hidden="true"></div><div class="bubble-skin" aria-hidden="true">{% for path in [dialogue_top_left_path, dialogue_top_path, dialogue_top_right_path, dialogue_left_path, dialogue_center_path, dialogue_right_path, dialogue_bottom_left_path, dialogue_bottom_path, dialogue_bottom_right_path] %}<span style="background-image: url('{{ path }}')"></span>{% endfor %}</div><div class="speaker"><div class="speaker-skin" aria-hidden="true">{% for path in [speaker_left_path, none, speaker_right_path] %}<span{% if path is not none %} style="background-image: url('{{ path }}')"{% endif %}></span>{% endfor %}</div>{{ chara_name.split('_')[0] if chara_b64 and chara_name else '今日寄语' }}</div><div class="bubble-text">{{ quote }}</div><div class="dialogue-next" aria-hidden="true"></div></div>
+<footer class="footer"><span>MADOKABOT VER.{{ bot_version }}</span><span class="date">{{ current_time[:10].replace('-', '.') }} / {{ current_time[11:16] }}</span><span>SHINY COLORS / NOCTCHILL</span></footer>
+</main>
+</body>
+</html>
