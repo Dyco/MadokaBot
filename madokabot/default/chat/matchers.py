@@ -2,8 +2,10 @@
 
 from nonebot_plugin_alconna import Alconna, Args, on_alconna
 
-ASK_USAGE = "/ask <问题>\n/问答 <问题>"
-CHAT_USAGE = "/chat <内容>\n/聊天 <内容>"
+from madokabot.core.config import command_start
+
+ASK_USAGE = f"{command_start}ask <问题>\n{command_start}问答 <问题>"
+CHAT_USAGE = f"{command_start}chat <内容>\n{command_start}聊天 <内容>"
 
 ask_cmd = Alconna("ask", Args["question?", str])
 chat_cmd = Alconna("chat", Args["question?", str])

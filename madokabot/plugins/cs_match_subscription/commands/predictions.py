@@ -6,6 +6,7 @@ from nonebot import logger
 from nonebot.adapters.onebot.v11 import Bot, GroupMessageEvent, Message, MessageEvent
 from nonebot_plugin_alconna import Match
 
+from madokabot.core.config import command_start
 from madokabot.core.messaging.response import respond
 
 from ..matchers import CS_PREDICTION_USAGE, cs_cmd
@@ -34,7 +35,7 @@ async def handle_cs_prediction(
     """竞猜命令处理方法。"""
     raw_params = params.result.strip() if params.available else ""
     prediction_args = raw_params.split()
-    is_ranking = bool(prediction_args and prediction_args[0].casefold() in {"rank", "排名"})
+    is_ranking = bool(prediction_args and prediction_args[0].casefold() in {"rank", "排名", "排行"})
     if not isinstance(event, GroupMessageEvent):
         if is_ranking:
             await cs_cmd.finish("竞猜功能仅支持群聊。")
@@ -44,7 +45,7 @@ async def handle_cs_prediction(
 
     if is_ranking:
         if len(prediction_args) != 2:
-            await cs_cmd.finish("用法：CS prediction rank <本群|全部|个人|本人>")
+            await cs_cmd.finish(f"用法：{command_start}CS prediction rank <本群|全部|个人>")
             return
         scope_value = prediction_args[1].casefold()
         if scope_value in {"个人", "本人"}:
@@ -64,7 +65,7 @@ async def handle_cs_prediction(
             scope = "all"
             scope_label = "全部赛事"
         else:
-            await cs_cmd.finish("用法：CS prediction rank <本群|全部|个人|本人>")
+            await cs_cmd.finish(f"用法：{command_start}CS prediction rank <本群|全部|个人>")
             return
         try:
             entries = await get_prediction_ranking(scope, str(event.group_id))

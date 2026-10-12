@@ -1,10 +1,11 @@
 """聊天参数校验、失败提示和回答发送。"""
 
 from nonebot import logger
-from nonebot.adapters.onebot.v11 import GroupMessageEvent, MessageEvent
+from nonebot.adapters.onebot.v11 import Bot, GroupMessageEvent, MessageEvent
 from nonebot_plugin_alconna import Match
 
 from madokabot.core.group.access import is_group_whitelisted
+from madokabot.core.messaging.response import respond
 from madokabot.core.user.accounts import UserAccount
 
 from .client import chat_completion
@@ -18,9 +19,9 @@ async def finish_reply(matcher, message: str):
 
 
 async def _handle_chat(
-    event: MessageEvent, question: Match[str], matcher, mode: str, usage: str
+    bot: Bot, event: MessageEvent, question: Match[str], matcher, mode: str, usage: str
 ):
-    """校验群权限和积分，调用模型后收取费用并发送回答。"""
+    """校验群权限和积分，添加表情回应后调用模型并结算。"""
     if not isinstance(event, GroupMessageEvent):
         await finish_reply(matcher, "该指令只能在白名单群中使用。")
     if not is_group_whitelisted(event.group_id):
@@ -37,6 +38,7 @@ async def _handle_chat(
     if not question.available or not question.result.strip():
         await finish_reply(matcher, f"用法：{usage}")
 
+    await respond(bot, event)
     try:
         answer, total_tokens, elapsed, model = await chat_completion(
             question.result.strip(), mode
@@ -56,12 +58,12 @@ async def _handle_chat(
 
 
 @ask_matcher.handle()
-async def handle_ask(event: MessageEvent, question: Match[str]):
+async def handle_ask(bot: Bot, event: MessageEvent, question: Match[str]):
     """处理问答命令。"""
-    await _handle_chat(event, question, ask_matcher, "ask", ASK_USAGE)
+    await _handle_chat(bot, event, question, ask_matcher, "ask", ASK_USAGE)
 
 
 @chat_matcher.handle()
-async def handle_chat(event: MessageEvent, question: Match[str]):
+async def handle_chat(bot: Bot, event: MessageEvent, question: Match[str]):
     """处理闲聊命令。"""
-    await _handle_chat(event, question, chat_matcher, "chat", CHAT_USAGE)
+    await _handle_chat(bot, event, question, chat_matcher, "chat", CHAT_USAGE)

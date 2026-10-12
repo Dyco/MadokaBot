@@ -4,6 +4,7 @@ import hashlib
 import re
 from io import BytesIO
 from urllib.parse import urljoin
+from uuid import uuid4
 
 import httpx
 from pathlib import Path
@@ -97,11 +98,13 @@ async def get_steam_users_info_cached(
     proxy: Optional[str],
     ttl: int,
 ) -> dict:
+    """读取玩家状态缓存，未命中时请求官方接口。"""
     steam_ids_sorted = sorted(steam_ids)
     cache_key = f"{api_key}:{','.join(steam_ids_sorted)}"
 
     cached = _cache_get(cache_key, ttl)
     if cached is not None:
+        logger.debug(f"Steam 状态查询命中缓存：查询人数={len(steam_ids_sorted)}")
         return cached
 
     data = await get_steam_users_info(
@@ -122,15 +125,35 @@ def get_steam_id(steam_id_or_steam_friends_code: str) -> Optional[str]:
         return None
 
 
+def _steam_log_detail(value: str, api_key: str, proxy: Optional[str]) -> str:
+    """隐藏日志中的密钥及网络地址，并限制单行详情长度。"""
+    if api_key:
+        value = value.replace(api_key, "[密钥已隐藏]")
+    if proxy:
+        value = value.replace(proxy, "[代理地址已隐藏]")
+    value = re.sub(r"(?:https?|socks5h?)://[^\s\"'<>]+", "[地址已隐藏]", value)
+    return " ".join(value.split())[:300] or "无异常说明"
+
+
 async def get_steam_users_info(
     steam_ids: List[str],
     api_key: str,
     proxy: Optional[str] = None,
 ) -> dict:
+    """分批查询玩家状态，在后台记录请求、重试和失败详情。"""
     if not steam_ids:
         return {"response": {"players": []}}
 
     all_players: List[dict] = []
+    request_id = uuid4().hex[:8]
+    started_at = time.monotonic()
+    batch_count = (len(steam_ids) + config.steam_batch_size - 1) // config.steam_batch_size
+    failed_batches = 0
+    context = f"Steam 状态查询[{request_id}]"
+    network = "代理" if proxy else "直连"
+    logger.debug(
+        f"{context} 开始：查询人数={len(steam_ids)}，批次数={batch_count}，网络={network}"
+    )
 
     url = "https://api.steampowered.com/ISteamUser/GetPlayerSummaries/v2/"
     timeout = httpx.Timeout(15.0)
@@ -151,14 +174,28 @@ async def get_steam_users_info(
                 "steamids": ",".join(batch),
             }
 
-            async def _fetch_once() -> bool:
+            batch_number = i // config.steam_batch_size + 1
+
+            async def _fetch_once(attempt: int) -> bool:
+                """执行当前批次请求，记录不含敏感信息的诊断日志。"""
+                attempt_started_at = time.monotonic()
+                resp = None
+                stage = "HTTP请求"
+                batch_context = (
+                    f"{context} 批次={batch_number}/{batch_count}，"
+                    f"尝试={attempt}/2，人数={len(batch)}，网络={network}"
+                )
                 try:
                     resp = await client.get(url, params=params)
+                    stage = "HTTP状态检查"
                     resp.raise_for_status()
+                    stage = "JSON解析"
                     raw = resp.json()
-                    players = raw.get("response", {}).get("players", [])
+                    stage = "玩家数据整理"
+                    players = raw["response"]["players"]
+                    batch_players = []
                     for p in players:
-                        all_players.append(
+                        batch_players.append(
                             {
                                 "steamid": p.get("steamid"),
                                 "personaname": p.get("personaname"),
@@ -173,26 +210,62 @@ async def get_steam_users_info(
                                 ),
                             }
                         )
+                    all_players.extend(batch_players)
+                    elapsed = time.monotonic() - attempt_started_at
+                    message = (
+                        f"{batch_context} {'重试恢复' if attempt > 1 else '成功'}："
+                        f"HTTP={resp.status_code}，返回人数={len(players)}，耗时={elapsed:.2f}秒"
+                    )
+                    if attempt > 1:
+                        logger.info(message)
+                    else:
+                        logger.debug(message)
                     return True
-                except (
-                    httpx.ConnectError,
-                    httpx.ReadTimeout,
-                    httpx.RemoteProtocolError,
-                ) as e:
-                    logger.warning(f"Steam API 请求失败: {e}")
-                    return False
                 except Exception as e:
-                    logger.error(f"Steam API 请求异常: {e}")
+                    elapsed = time.monotonic() - attempt_started_at
+                    detail = _steam_log_detail(str(e), api_key, proxy)
+                    if e.__cause__ is not None:
+                        cause = e.__cause__
+                        detail += (
+                            f"；底层异常={type(cause).__name__}: "
+                            f"{_steam_log_detail(str(cause), api_key, proxy)}"
+                        )
+                    response_detail = ""
+                    if resp is not None:
+                        response_detail = (
+                            f"，HTTP={resp.status_code}，"
+                            f"响应类型={resp.headers.get('content-type', '未知')}，"
+                            f"Retry-After={resp.headers.get('retry-after', '未提供')}"
+                        )
+                        if isinstance(e, httpx.HTTPStatusError) or stage == "JSON解析":
+                            response_detail += (
+                                f"，响应摘要={_steam_log_detail(resp.text, api_key, proxy)}"
+                            )
+                    logger.warning(
+                        f"{batch_context} 失败：阶段={stage}，异常={type(e).__name__}，"
+                        f"耗时={elapsed:.2f}秒{response_detail}，详情={detail}，"
+                        f"后续={'立即重试一次' if attempt == 1 else '本批次结束'}"
+                    )
                     return False
 
-            ok = await _fetch_once()
+            ok = await _fetch_once(1)
             if not ok:
-                logger.warning("Steam API 重试一次")
-                await _fetch_once()
+                ok = await _fetch_once(2)
+            if not ok:
+                failed_batches += 1
 
             if i + config.steam_batch_size < len(steam_ids):
                 await asyncio.sleep(0.1)
 
+    summary = (
+        f"{context} 结束：查询人数={len(steam_ids)}，返回人数={len(all_players)}，"
+        f"失败批次={failed_batches}/{batch_count}，网络={network}，"
+        f"总耗时={time.monotonic() - started_at:.2f}秒"
+    )
+    if failed_batches:
+        logger.warning(f"{summary}，本次结果不完整")
+    else:
+        logger.debug(summary)
     return {"response": {"players": all_players}}
 
 

@@ -21,7 +21,7 @@ _monitored_targets: dict[tuple[str, str, str], tuple[int, int]] = {}
 
 
 async def update_steam_info():
-    """Steam玩家状态轮询方法。"""
+    """轮询玩家状态，并在后台汇总刷新结果及缺失人数。"""
     global _monitored_targets
 
     bind_map = {
@@ -55,6 +55,7 @@ async def update_steam_info():
         }
         old[group_id] = player_status.get_players(sorted(stable_ids))
 
+    query_started_at = time.monotonic()
     try:
         steam_info = await get_steam_users_info_cached(
             sorted(steam_ids),
@@ -68,6 +69,16 @@ async def update_steam_info():
         players = []
     player_status.update_by_players(players, steam_ids)
     _monitored_targets = target_versions
+    returned_ids = {player["steamid"] for player in players}
+    missing_count = len(steam_ids - returned_ids)
+    summary = (
+        f"Steam 状态轮询：群数={len(bind_map)}，查询人数={len(steam_ids)}，"
+        f"缺失人数={missing_count}，耗时={time.monotonic() - query_started_at:.2f}秒"
+    )
+    if missing_count:
+        logger.warning(f"{summary}，缺失玩家保留旧状态并标记过期，跳过相关动态播报")
+    else:
+        logger.debug(f"{summary}，状态刷新完成")
 
     return {
         group_id: (

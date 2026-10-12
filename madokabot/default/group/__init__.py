@@ -2,12 +2,14 @@
 
 from nonebot.plugin import PluginMetadata
 
+from madokabot.core.config import command_start
+
 from .config import GroupConfig
 
 __plugin_meta__ = PluginMetadata(
     name="群管理",
     description="管理群访问名单、按需补齐群资料并根据人数执行自动退群",
-    usage="群白名单 添加/删除/列表 [群号]\n群黑名单 添加/删除/列表 [群号]",
+    usage=f"{command_start}群白名单 添加/删除/列表 [群号]\n{command_start}群黑名单 添加/删除/列表 [群号]",
     type="application",
     config=GroupConfig,
 )

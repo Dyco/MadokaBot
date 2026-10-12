@@ -2,11 +2,13 @@
 
 from nonebot_plugin_alconna import Alconna, Args, At, Subcommand, on_alconna
 
+from madokabot.core.config import command_start
+
 POINT_USAGE = (
-    "积分 查询（查询自己的积分与总排名，也可使用“查询 积分”）\n"
-    "积分 转账 <@用户|QQ号> <积分数量>\n"
-    "积分 赠礼 <@用户|QQ号> <商品编号，如sign02或skin01>\n"
-    "积分 排名（本群与全部用户积分前20名）"
+    f"{command_start}积分 查询（查询自己的积分与总排名，也可使用“{command_start}查询 积分”）\n"
+    f"{command_start}积分 转账 <@用户|QQ号> <积分数量>\n"
+    f"{command_start}积分 赠礼 <@用户|QQ号> <商品编号，如sign02或skin01>\n"
+    f"{command_start}积分 排名（本群与全部用户积分前20名）"
 )
 
 point_cmd_alc = Alconna(

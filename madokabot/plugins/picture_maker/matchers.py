@@ -13,11 +13,12 @@ from nonebot_plugin_alconna import (
     on_alconna,
 )
 
+from madokabot.core.config import command_start
 from .render import normalize_template_id, render_music_card
 from .service import cleanup_image, prepare_image
 from madokabot.core.messaging.response import respond
 
-PIC_USAGE = "用法：/制图 音乐 <图片> [模板 1-4] [标题] [子标题]"
+PIC_USAGE = f"用法：{command_start}制图 音乐 <图片> [模板 1-4] [标题] [子标题]"
 
 picture_command = Alconna(
     "pic",

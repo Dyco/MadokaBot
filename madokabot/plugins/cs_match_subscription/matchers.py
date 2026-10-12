@@ -5,6 +5,8 @@ from __future__ import annotations
 from arclet.alconna import StrMulti
 from nonebot_plugin_alconna import Alconna, Args, Subcommand, on_alconna
 
+from madokabot.core.config import command_start
+
 from .players.constants import SUPPORTED_PLATFORM_TEXT
 
 BOT_NAME = "圆香"
@@ -15,65 +17,65 @@ UNSUPPORTED_LINK_MESSAGE = f"{BOT_NAME}暂不支持此链接"
 
 CS_BIND_USAGE = (
     "用法：\n"
-    "CS bind <5E|5e|5eplay> <玩家昵称>\n"
-    "CS bind <wm|pw|完美> [Steam 32 位或 64 位 ID]"
+    f"{command_start}CS bind <5E|5e|5eplay> <玩家昵称>\n"
+    f"{command_start}CS bind <wm|pw|完美> [Steam 32 位或 64 位 ID]"
 )
 
 
-CS_UNBIND_USAGE = f"用法：CS unbind <{SUPPORTED_PLATFORM_TEXT}>"
+CS_UNBIND_USAGE = f"用法：{command_start}CS unbind <{SUPPORTED_PLATFORM_TEXT}>"
 
 
-CS_LOGIN_USAGE = "用法：CS login <手机号> <验证码>"
+CS_LOGIN_USAGE = f"用法：{command_start}CS login <手机号> <验证码>"
 
 
 CS_STATS_USAGE = (
     "【查询指令】\n"
-    "CS 战绩 <5E | 5e | 5eplay> [玩家昵称]\n"
-    "CS 战绩 <wm | pw | 完美> [Steam 32 位或 64 位 ID]"
+    f"{command_start}CS 战绩 <5E | 5e | 5eplay> [玩家昵称]\n"
+    f"{command_start}CS 战绩 <wm | pw | 完美> [Steam 32 位或 64 位 ID]"
 )
 
 
-CS_UNSUB_USAGE = "用法：CS unsub <赛事ID>"
+CS_UNSUB_USAGE = f"用法：{command_start}CS unsub <赛事ID>"
 
 
-CS_REMOVESUB_USAGE = "用法：CS removesub <赛事ID>"
+CS_REMOVESUB_USAGE = f"用法：{command_start}CS removesub <赛事ID>"
 
 
-CS_EVENT_USAGE = "用法：CS event [all|single|notif|predict]（不带参数时查看赛事列表）"
+CS_EVENT_USAGE = f"用法：{command_start}CS event [all|single|notif|predict]（不带参数时查看赛事列表）"
 
 
 CS_PREDICTION_USAGE = (
-    "用法：\nCS prediction <队伍名|竞猜编号> <积分>\n"
-    "例如：CS prediction teamA 100（以当前通知编号为准）\n"
-    "CS prediction rank <本群|全部|个人|本人>"
+    f"用法：\n{command_start}CS prediction <队伍名|竞猜编号> <积分>\n"
+    f"例如：{command_start}CS prediction teamA 100（以当前通知编号为准）\n"
+    f"{command_start}CS prediction rank <本群|全部|个人>"
 )
 
 
-CS_USAGE = """用法：
-/cs help
-/cs event  列出当前及未来三个月的高奖金国际 LAN 和 Major 赛事
-/cs list <比赛ID> 查看竞猜情况
-/cs sub <赛事ID>  订阅赛事并推送其中的比赛结果
-/cs check <比赛链接>  查询一场比赛的 Rating
-/cs prediction <队伍名|竞猜编号> <积分> 参与当前比赛竞猜（如 teamA、team1）
-/cs prediction rank <本群|全部|个人|本人> 查看竞猜排行榜或个人记录
-/cs login <手机号> <验证码>  登录完美平台并保存 Session（验证码请自行获取）
-/cs bind <5E|5e|5eplay> <玩家昵称>  绑定 5E 玩家
-/cs bind <wm|pw|完美> [Steam 32 位或 64 位 ID]  使用 Steam/CS 共用绑定
-/cs unbind <5E|5e|5eplay|wm|pw|完美>  解绑 5E 或 Steam/CS 共用账号
-/cs result <5E|5e|5eplay> [玩家昵称]  查询 5E 绑定账号或指定玩家的战绩
-/cs result <wm|pw|完美> [Steam 32 位或 64 位 ID]  查询完美平台绑定账号或指定 Steam ID 的战绩
+CS_USAGE = f"""用法：
+{command_start}cs help
+{command_start}cs event  列出当前及未来三个月的高奖金国际 LAN 和 Major 赛事
+{command_start}cs list <比赛ID> 查看竞猜情况
+{command_start}cs sub <赛事ID>  订阅赛事并推送其中的比赛结果
+{command_start}cs check <比赛链接>  查询一场比赛的 Rating
+{command_start}cs prediction <队伍名|竞猜编号> <积分> 参与当前比赛竞猜（如 teamA、team1）
+{command_start}cs prediction rank <本群|全部|个人|本人> 查看竞猜排行榜或个人记录
+{command_start}cs login <手机号> <验证码>  登录完美平台并保存 Session（验证码请自行获取）
+{command_start}cs bind <5E|5e|5eplay> <玩家昵称>  绑定 5E 玩家
+{command_start}cs bind <wm|pw|完美> [Steam 32 位或 64 位 ID]  使用 Steam/CS 共用绑定
+{command_start}cs unbind <5E|5e|5eplay|wm|pw|完美>  解绑 5E 或 Steam/CS 共用账号
+{command_start}cs result <5E|5e|5eplay> [玩家昵称]  查询 5E 绑定账号或指定玩家的战绩
+{command_start}cs result <wm|pw|完美> [Steam 32 位或 64 位 ID]  查询完美平台绑定账号或指定 Steam ID 的战绩
 
 *以下指令仅限管理员使用（群主、群管理员、超级用户），仅支持群聊
-/cs event <all|single|notif|predict> 设置本群推送方式、开赛提醒和竞猜
-/cs unsub <赛事ID>  本群退订指定赛事推送
-/cs nosub  本群退订全部赛事推送
+{command_start}cs event <all|single|notif|predict> 设置本群推送方式、开赛提醒和竞猜
+{command_start}cs unsub <赛事ID>  本群退订指定赛事推送
+{command_start}cs nosub  本群退订全部赛事推送
 
 *以下指令仅限超级用户使用
-/cs removesub <赛事ID>  全局移除赛事订阅
+{command_start}cs removesub <赛事ID>  全局移除赛事订阅
 
-订阅后的推送方式和赛事开始通知，按本群的 /cs event 设置生效。
-本群竞猜默认开启，可使用 /cs event predict 切换；竞猜通知通过合并转发推送。"""
+订阅后的推送方式和赛事开始通知，按本群的 {command_start}cs event 设置生效。
+本群竞猜默认开启，可使用 {command_start}cs event predict 切换；竞猜通知通过合并转发推送。"""
 
 
 cs_command = Alconna(

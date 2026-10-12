@@ -3,7 +3,9 @@
 from nonebot.permission import SUPERUSER
 from nonebot_plugin_alconna import Alconna, Args, At, Subcommand, on_alconna
 
-MODIFY_USAGE = "修改 <好感|积分> <@用户|QQ号> <数值>"
+from madokabot.core.config import command_start
+
+MODIFY_USAGE = f"{command_start}修改 <好感|积分> <@用户|QQ号> <数值>"
 
 modify_cmd_alc = Alconna(
     "修改",

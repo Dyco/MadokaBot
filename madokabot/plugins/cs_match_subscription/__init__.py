@@ -8,27 +8,29 @@ require("nonebot_plugin_htmlrender")
 
 from .config import Config
 
+from madokabot.core.config import command_start
+
 __plugin_meta__ = PluginMetadata(
     name="CS插件",
     description="查询HLTV CS赛事数据，渲染Rating 3.0统计卡片并订阅赛事比赛更新。",
     usage=(
-        "CS help\n"
-        "CS event\n"
-        "CS event <all|single|notif|predict>\n"
-        "CS sub <赛事ID>\n"
-        "CS unsub <赛事ID>\n"
-        "CS nosub\n"
-        "CS removesub <赛事ID>\n"
-        "CS check <比赛链接>\n"
-        "CS list <比赛ID>\n"
-        "CS prediction <队伍名|竞猜编号> <积分>\n"
-        "CS prediction rank <本群|全部|个人>\n"
-        "CS login <手机号> <验证码>\n"
-        "CS bind <5E|5e|5eplay> <玩家昵称>\n"
-        "CS bind <wm|pw|完美> [Steam32位或64位ID]\n"
-        "CS unbind <5E|5e|5eplay|wm|pw|完美>\n"
-        "CS 战绩 <5E|5e|5eplay> [玩家昵称]\n"
-        "CS 战绩 <wm|pw|完美> [Steam32位或64位ID]\n"
+        f"{command_start}CS help\n"
+        f"{command_start}CS event\n"
+        f"{command_start}CS event <all|single|notif|predict>\n"
+        f"{command_start}CS sub <赛事ID>\n"
+        f"{command_start}CS unsub <赛事ID>\n"
+        f"{command_start}CS nosub\n"
+        f"{command_start}CS removesub <赛事ID>\n"
+        f"{command_start}CS check <比赛链接>\n"
+        f"{command_start}CS list <比赛ID>\n"
+        f"{command_start}CS prediction <队伍名|竞猜编号> <积分>\n"
+        f"{command_start}CS prediction rank <本群|全部|个人>\n"
+        f"{command_start}CS login <手机号> <验证码>\n"
+        f"{command_start}CS bind <5E|5e|5eplay> <玩家昵称>\n"
+        f"{command_start}CS bind <wm|pw|完美> [Steam32位或64位ID]\n"
+        f"{command_start}CS unbind <5E|5e|5eplay|wm|pw|完美>\n"
+        f"{command_start}CS 战绩 <5E|5e|5eplay> [玩家昵称]\n"
+        f"{command_start}CS 战绩 <wm|pw|完美> [Steam32位或64位ID]\n"
     ),
     type="application",
     homepage="https://github.com/Dyco/MadokaBot",

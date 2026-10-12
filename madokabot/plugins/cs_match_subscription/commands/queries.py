@@ -6,6 +6,7 @@ from nonebot import logger
 from nonebot.adapters.onebot.v11 import Bot, GroupMessageEvent, Message, MessageEvent
 from nonebot_plugin_alconna import Arparma, Match
 
+from madokabot.core.config import command_start
 from madokabot.core.messaging.response import respond
 
 from ..assets import enrich_event_assets
@@ -87,7 +88,7 @@ async def handle_cs_list(
         await cs_cmd.finish("\n".join(lines))
         return
 
-    await cs_cmd.finish("用法：CS list <比赛ID>")
+    await cs_cmd.finish(f"用法：{command_start}CS list <比赛ID>")
 
 
 async def show_cs_events() -> None:

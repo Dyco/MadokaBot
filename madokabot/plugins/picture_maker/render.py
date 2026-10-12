@@ -75,7 +75,7 @@ async def render_music_card(
         subtitle=subtitle,
         author=author,
         user_id=user_id,
-        signature=f"MadokaBot VER.{get_bot_version()}",
+        signature=f"MADOKABOT VER.{get_bot_version()}",
         font_path=_font_uri(),
         theme_class=f"theme-{template_id}",
     )

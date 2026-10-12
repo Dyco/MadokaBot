@@ -5,10 +5,12 @@ from nonebot.rule import fullmatch
 from arclet.alconna import StrMulti
 from nonebot_plugin_alconna import Alconna, Args, Subcommand, on_alconna
 
-RENAME_USAGE = "设置 改名 <名字>（1～10 个字符或汉字，每次消耗 10 积分）"
-SET_USAGE = "设置 立绘 <立绘编号>\n设置 签到模板 <模板编号，如 sign02>\n" + RENAME_USAGE
+from madokabot.core.config import command_start
 
-QUERY_USAGE = "查询 立绘/签到模板/资料/积分"
+RENAME_USAGE = f"{command_start}设置 改名 <名字>（1～10 个字符或汉字，每次消耗 10 积分）"
+SET_USAGE = f"{command_start}设置 立绘 <立绘编号>\n{command_start}设置 签到模板 <模板编号，如 sign02>\n" + RENAME_USAGE
+
+QUERY_USAGE = f"{command_start}查询 立绘/签到模板/资料/积分"
 
 set_cmd_alc = Alconna(
     "set",

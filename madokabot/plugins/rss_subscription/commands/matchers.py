@@ -13,27 +13,28 @@ from nonebot_plugin_alconna import (
     on_alconna,
 )
 
+from madokabot.core.config import command_start
 from madokabot.core.group.access import is_group_whitelisted
 
 
-RSS_USAGE = """用法：
-RSS 添加 <名称> <RSS地址>
-RSS 加入 <订阅名>
-RSS rsshub_add <路由名>
-RSS 删除 <名称 ...>
-RSS 查看 [名称]
-RSS 查看全部 [关键词]
-RSS 修改 <名称 ...> 属性=值
-RSS cookies <名称> <cookies>
-RSS 上传文件 <磁力或torrent地址>
-RSS 选择文件 <GID> <编号，如 1,3-5>
-RSS 重试 <GID>
-RSS 删除文件 <GID>
-RSS 文件记录
-RSS 终止 <GID>
-RSS 帮助
+RSS_USAGE = f"""用法：
+{command_start}RSS 添加 <名称> <RSS地址>
+{command_start}RSS 加入 <订阅名>
+{command_start}RSS rsshub_add <路由名>
+{command_start}RSS 删除 <名称 ...>
+{command_start}RSS 查看 [名称]
+{command_start}RSS 查看全部 [关键词]
+{command_start}RSS 修改 <名称 ...> 属性=值
+{command_start}RSS cookies <名称> <cookies>
+{command_start}RSS 上传文件 <磁力或torrent地址>
+{command_start}RSS 选择文件 <GID> <编号，如 1,3-5>
+{command_start}RSS 重试 <GID>
+{command_start}RSS 删除文件 <GID>
+{command_start}RSS 文件记录
+{command_start}RSS 终止 <GID>
+{command_start}RSS 帮助
 
-也可以使用“订阅”作为RSS的别名。"""
+也可以使用“{command_start}订阅”作为RSS的别名。"""
 
 RSS_MANAGE_PERMISSION = GROUP_ADMIN | GROUP_OWNER | SUPERUSER
 RSS_GROUP_WHITELIST_MESSAGE = "本群未加入 RSS白名单，无法使用 RSS 功能。"

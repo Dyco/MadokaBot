@@ -15,6 +15,7 @@ from nonebot_plugin_alconna import (
     on_alconna,
 )
 
+from madokabot.core.config import command_start
 from madokabot.core.group.access import is_group_whitelisted
 from madokabot.core.group.settings import group_settings
 from .config import config
@@ -219,7 +220,7 @@ async def handle_copying_switch(event: Event, result: Arparma):
         )
 
     await copying_switch_matcher.finish(
-        "用法：复读 开/开启、复读 关/关闭，或复读 设置 <数量>。"
+        f"用法：{command_start}复读 开/开启、{command_start}复读 关/关闭，或{command_start}复读 设置 <数量>。"
     )
 
 

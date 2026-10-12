@@ -1,8 +1,6 @@
 import math
 import time
 
-from nonebot import get_driver
-
 from nonebot.adapters.onebot.v11 import MessageEvent
 from nonebot_plugin_alconna import (
     Arparma,
@@ -12,6 +10,7 @@ from nonebot_plugin_alconna import (
 )
 from nonebot_plugin_waiter import waiter
 
+from madokabot.core.config import command_start
 from madokabot.core.user.accounts import UserAccount
 from .service import SignTemplateService, SkinService
 from .render import SIGN_PAGE_SIZE, render_shop_list_card
@@ -81,14 +80,12 @@ async def _shop_sign(event: MessageEvent):
 @shop_cmd.assign("list")
 async def _shop_list(event: MessageEvent):
     """展示商店商品列表。"""
-    starts = get_driver().config.command_start
-    prefix = "/" if "/" in starts else next(iter(sorted(starts)), "")
     await shop_cmd.finish(
         "当前可购买：角色立绘、签到模板。\n"
-        f"查看立绘：{prefix}商店 立绘\n"
-        f"查看签到模板：{prefix}商店 签到模板\n"
-        f"购买商品：{prefix}商店 购买 <商品编号>\n"
-        f"例如：{prefix}商店 购买 sign02，商品编号以商店展示为准。"
+        f"查看立绘：{command_start}商店 立绘\n"
+        f"查看签到模板：{command_start}商店 签到模板\n"
+        f"购买商品：{command_start}商店 购买 <商品编号>\n"
+        f"例如：{command_start}商店 购买 sign02，商品编号以商店展示为准。"
     )
 
 
@@ -100,13 +97,13 @@ async def _send_shop(event: MessageEvent, category: str):
 
     message, current_page, total_pages = await _build_shop_page(uid, 1, category)
     purchase_hint = (
-        "购买模板：/商店 购买 <商品编号，如sign02>\n"
-        "切换模板：/设置 签到模板 <商品编号，如sign02>\n"
-        "赠送模板：/积分 赠礼 <@用户|QQ号> <商品编号>\n"
+        f"购买模板：{command_start}商店 购买 <商品编号，如sign02>\n"
+        f"切换模板：{command_start}设置 签到模板 <商品编号，如sign02>\n"
+        f"赠送模板：{command_start}积分 赠礼 <@用户|QQ号> <商品编号>\n"
         if category == "sign" else
-        "购买立绘：/商店 购买 <商品编号，如skin01>\n"
-        "切换立绘：/设置 立绘 <商品编号，如skin01>\n"
-        "赠送立绘：/积分 赠礼 <@用户|QQ号> <商品编号>\n"
+        f"购买立绘：{command_start}商店 购买 <商品编号，如skin01>\n"
+        f"切换立绘：{command_start}设置 立绘 <商品编号，如skin01>\n"
+        f"赠送立绘：{command_start}积分 赠礼 <@用户|QQ号> <商品编号>\n"
     )
     send_result = await shop_cmd.send(
         message + purchase_hint + _build_shop_page_text(current_page, total_pages),
@@ -181,5 +178,5 @@ async def _shop_buy_item(event: MessageEvent, number: Match[str]):
     elif raw_number.startswith("skin"):
         ok, message = await SkinService.buy_shop_skin(uid, raw_number)
     else:
-        await shop_cmd.finish("商品编号无效，请发送“/商店 立绘”或“/商店 签到模板”查看编号。购买示例：/商店 购买 skin01、/商店 购买 sign02")
+        await shop_cmd.finish(f"商品编号无效，请发送“{command_start}商店 立绘”或“{command_start}商店 签到模板”查看编号。购买示例：{command_start}商店 购买 skin01、{command_start}商店 购买 sign02")
     await shop_cmd.finish(message if ok else f"购买失败：{message}")

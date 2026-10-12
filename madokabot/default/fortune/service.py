@@ -30,7 +30,11 @@ FORTUNE_LINES = {
     "小凶": "签上这么写，也不代表什么。……别太在意。",
     "大凶": "别盯着那两个字看了。……今天对自己好一点吧。",
 }
-LUCKY_COLORS = ("天蓝", "樱粉", "草绿", "暖黄", "浅紫", "米白", "橙色", "银灰")
+LUCKY_COLORS = (
+    "天蓝", "樱粉", "草绿", "暖黄", "浅紫", "米白", "橙色", "银灰",
+    "朱红", "珊瑚", "桃粉", "玫红", "金黄", "薄荷", "翠绿", "青碧",
+    "湖蓝", "靛蓝", "藕紫", "浅棕",
+)
 
 
 @dataclass(frozen=True)
@@ -61,7 +65,7 @@ class FortuneResult:
 
 
 def generate_fortune(uid: str, today_date: date) -> FortuneResult:
-    """使用上海日期读取农历宜忌，按账号生成个人运势，不夹带积分信息。"""
+    """使用上海日期读取农历宜忌，按账号生成个人运势与0至50的幸运数字，不夹带积分信息。"""
     today = today_date.isoformat()
     seed = sha256(f"fortune:{today}:{uid}".encode("utf-8")).digest()
     rng = Random(seed)
@@ -69,7 +73,7 @@ def generate_fortune(uid: str, today_date: date) -> FortuneResult:
     _, level, message = next(item for item in FORTUNE_LEVELS if roll >= item[0])
     lunar_date, suitable, unsuitable = get_almanac(today_date)
     color = rng.choice(LUCKY_COLORS)
-    number = rng.randint(0, 9)
+    number = rng.randint(0, 50)
     return FortuneResult(
         date=today,
         lunar_date=lunar_date,

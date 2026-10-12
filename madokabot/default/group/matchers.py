@@ -2,9 +2,11 @@
 
 from nonebot_plugin_alconna import Alconna, Args, Subcommand, on_alconna
 
-WHITELIST_USAGE = "群白名单 添加 [群号]\n群白名单 删除 [群号]\n群白名单 列表"
+from madokabot.core.config import command_start
 
-BLACKLIST_USAGE = "群黑名单 添加 [群号]\n群黑名单 删除 [群号]\n群黑名单 列表"
+WHITELIST_USAGE = f"{command_start}群白名单 添加 [群号]\n{command_start}群白名单 删除 [群号]\n{command_start}群白名单 列表"
+
+BLACKLIST_USAGE = f"{command_start}群黑名单 添加 [群号]\n{command_start}群黑名单 删除 [群号]\n{command_start}群黑名单 列表"
 
 group_whitelist_cmd_alc = Alconna(
     "groupWhitelist",

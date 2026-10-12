@@ -5,10 +5,12 @@ require("nonebot_plugin_alconna")
 require("nonebot_plugin_htmlrender")
 require("nonebot_plugin_localstore")
 
+from madokabot.core.config import command_start
+
 __plugin_meta__ = PluginMetadata(
     name="制图插件",
     description="接收图片并按音乐模板生成图片",
-    usage="/制图 音乐 <图片> [模板] [标题] [子标题]",
+    usage=f"{command_start}制图 音乐 <图片> [模板] [标题] [子标题]",
     type="application",
     supported_adapters=inherit_supported_adapters("nonebot_plugin_alconna"),
     extra={"help_category": "拓展功能", "help_order": 20},

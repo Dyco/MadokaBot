@@ -6,23 +6,25 @@ from nonebot.adapters.onebot.v11 import GROUP_ADMIN, GROUP_OWNER
 from nonebot.permission import SUPERUSER
 from nonebot_plugin_alconna import Alconna, Args, At, CommandMeta, Option, on_alconna
 
+from madokabot.core.config import command_start
+
 from .config import config
 
 BIND_PERMISSION = GROUP_ADMIN | GROUP_OWNER | SUPERUSER
 STEAM_USAGE = (
-    "steam help 获取帮助菜单\n"
-    "steam bind [SteamID|好友码] 绑定个人steam\n"
-    "steam unbind 解绑个人steam\n"
-    "steam hide 在本群隐藏推送\n"
-    "steam online 在本群开启推送\n"
-    "steam add <@用户|QQ号> <SteamID|好友码> 添加用户\n"
-    "steam remove <@用户|QQ号> 删除用户\n"
-    "steam info <@用户|QQ号> 查看用户信息\n"
-    "steam check 查看本群玩家在线状态\n"
-    "steam list 查看本群玩家绑定情况\n"
-    "steam enable [管理员] 启用Steam播报\n"
-    "steam disable [管理员] 禁用Steam播报\n"
-    "steam nickname <昵称|删除> 设置昵称备注"
+    f"{command_start}steam help 获取帮助菜单\n"
+    f"{command_start}steam bind [SteamID|好友码] 绑定个人steam\n"
+    f"{command_start}steam unbind 解绑个人steam\n"
+    f"{command_start}steam hide 在本群隐藏推送\n"
+    f"{command_start}steam online 在本群开启推送\n"
+    f"{command_start}steam add <@用户|QQ号> <SteamID|好友码> 添加用户\n"
+    f"{command_start}steam remove <@用户|QQ号> 删除用户\n"
+    f"{command_start}steam info <@用户|QQ号> 查看用户信息\n"
+    f"{command_start}steam check 查看本群玩家在线状态\n"
+    f"{command_start}steam list 查看本群玩家绑定情况\n"
+    f"{command_start}steam enable [管理员] 启用Steam播报\n"
+    f"{command_start}steam disable [管理员] 禁用Steam播报\n"
+    f"{command_start}steam nickname <昵称|删除> 设置昵称备注"
 )
 
 steam_command = Alconna(

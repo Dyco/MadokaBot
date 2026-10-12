@@ -7,6 +7,7 @@ from typing import Any
 
 from nonebot.adapters.onebot.v11 import Message, MessageSegment
 
+from madokabot.core.config import command_start
 from ..config import config
 from ..models import MapScore, MatchData
 from ..prediction import prediction_odds
@@ -68,11 +69,11 @@ def prediction_open_message(
         MessageSegment.text(
             f"【已开放竞猜，{first}对阵{second}，{format_code}，编号{match.match_id}】\n"
             "【每场比赛仅可参与一次，无法修改！】\n"
-            "发送/cs <竞猜> <队伍名> <积分>参与，使用空格分隔\n"
+            f"发送{command_start}cs <竞猜> <队伍名> <积分>参与，使用空格分隔\n"
             f"team{labels[0]}：{first}\n"
             f"team{labels[1]}：{second}\n"
             "示例：\n"
-            f"/cs 竞猜 team{labels[0]} 100"
+            f"{command_start}cs 竞猜 team{labels[0]} 100"
         )
     )
 

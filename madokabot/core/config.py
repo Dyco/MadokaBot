@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from nonebot import get_plugin_config
+from nonebot import get_driver, get_plugin_config
 from pydantic import BaseModel
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
@@ -23,3 +23,6 @@ class CoreConfig(BaseModel):
 
 
 config = get_plugin_config(CoreConfig)
+
+# 用法文本统一展示配置中的第一个命令起始符。
+command_start = next(iter(get_driver().config.command_start))

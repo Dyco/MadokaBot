@@ -11,6 +11,7 @@ from nonebot.adapters.onebot.v11 import (
 )
 from nonebot_plugin_alconna import Arparma, At, Check, Match, assign
 
+from madokabot.core.config import command_start
 from madokabot.core.user.accounts import UserAccount
 from madokabot.default.account.matchers import query_cmd
 from madokabot.default.shop.service import gift_shop_item
@@ -99,7 +100,7 @@ async def handle_transfer(
 ) -> None:
     """转账命令处理方法。"""
     if not target.available or not amount.available:
-        await point_cmd.finish(f"请补充收款人和积分数量，使用空格分隔。用法：\n{POINT_USAGE}\n示例：积分 转账 @用户 100")
+        await point_cmd.finish(f"请补充收款人和积分数量，使用空格分隔。用法：\n{POINT_USAGE}\n示例：{command_start}积分 转账 @用户 100")
 
     recipient = target.result
     if isinstance(recipient, At):

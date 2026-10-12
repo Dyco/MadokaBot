@@ -14,6 +14,8 @@ from nonebot.adapters.onebot.v11 import (
 )
 from nonebot_plugin_alconna import Match
 
+from madokabot.core.messaging.response import respond
+
 from ..matchers import (
     CS_BIND_USAGE,
     CS_LOGIN_USAGE,
@@ -191,14 +193,14 @@ async def handle_cs_unbind(event: MessageEvent, params: Match[str]) -> None:
 
 
 async def _handle_cs_player_stats(
+    bot: Bot,
     event: MessageEvent,
     platform: str,
     nickname: str = "",
 ) -> None:
-    """CS玩家战绩命令处理方法。"""
+    """添加表情回应后查询玩家战绩并发送卡片。"""
     target = nickname.strip()
-    target_text = f"玩家 {target}" if target else "已绑定玩家"
-    await cs_cmd.send(f"正在查询{platform_label(platform)}{target_text}的战绩…")
+    await respond(bot, event)
     try:
         data = await fetch_player_stats(str(event.user_id), platform, target)
         image = await render_player_stats_card(data)
@@ -214,6 +216,7 @@ async def _handle_cs_player_stats(
 
 @cs_cmd.assign("subcommands.result")
 async def handle_cs_stats(
+    bot: Bot,
     event: MessageEvent,
     platform: Match[str],
     nickname: Match[str],
@@ -225,4 +228,4 @@ async def handle_cs_stats(
         await cs_cmd.finish(CS_STATS_USAGE)
         return
     target = nickname.result.strip() if nickname.available else ""
-    await _handle_cs_player_stats(event, selected_platform, target)
+    await _handle_cs_player_stats(bot, event, selected_platform, target)
