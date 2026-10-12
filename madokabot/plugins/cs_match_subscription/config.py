@@ -68,7 +68,7 @@ class Config(NoneBotConfig):
     hltv_poll_interval: int = Field(
         default=300,
         ge=30,
-        description="订阅比赛轮询间隔（秒）",
+        description="开赛前5分钟、比赛进行及收尾期间的轮询间隔（秒），休赛期按赛程降频",
     )
     hltv_subscribe_push_each_map: bool = Field(
         default=True,

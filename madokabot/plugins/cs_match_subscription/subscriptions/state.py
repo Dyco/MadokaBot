@@ -5,11 +5,14 @@ from __future__ import annotations
 from datetime import datetime, timedelta, timezone
 from typing import Any
 
+from ..config import config
 from ..models import (
     EVENT_STATUS_FINISHED,
+    EVENT_STATUS_ONGOING,
     EVENT_STATUS_WAITING,
     EVENT_STATUSES,
     MATCH_SECTION_FINISHED,
+    MATCH_SECTION_UPCOMING,
     MatchData,
     normalize_match_section,
 )
@@ -122,6 +125,40 @@ def event_start_at(entry: dict[str, Any]) -> datetime | None:
     if not isinstance(event_data, dict):
         return None
     return parse_datetime(event_data.get("start_at"))
+
+
+def event_poll_interval(entry: dict[str, Any], now: datetime) -> int | None:
+    """按最近赛程分档轮询，已开赛赛事在休赛时每两小时刷新。"""
+    matches = entry.get("matches", {})
+    pending = [
+        state for state in matches.values()
+        if isinstance(state, dict) and not state.get("completed", False)
+    ]
+    if any(
+        normalize_match_section(state.get("source")) == MATCH_SECTION_UPCOMING
+        or state.get("started_sent", False)
+        or state.get("rating_final_text")
+        or state.get("finalization_requested", False)
+        for state in pending
+    ):
+        return config.hltv_poll_interval
+
+    starts = [
+        start for state in pending
+        if (start := parse_datetime(state.get("scheduled_at"))) is not None
+    ]
+    ongoing = event_status(entry) == EVENT_STATUS_ONGOING
+    next_start = min(starts) if starts else (None if ongoing else event_start_at(entry))
+    if next_start is None or (not starts and next_start <= now):
+        return 2 * 60 * 60
+    remaining = (next_start - now).total_seconds()
+    if remaining <= 5 * 60:
+        return config.hltv_poll_interval
+    if remaining <= 60 * 60:
+        return 15 * 60
+    if remaining <= 6 * 60 * 60 or ongoing:
+        return 2 * 60 * 60
+    return None
 
 
 def match_has_actual_start(match: MatchData) -> bool:

@@ -33,6 +33,8 @@ def get_template_font_context(template_name: str) -> dict[str, str]:
             "body_font_path": "NotoSansSC[wght].ttf",
             "latin_italic_font_path": "BarlowCondensed-BlackItalic.ttf",
         }
+    elif template_name == "daily_sign_09.html":
+        fonts = {"body_font_path": "NotoSansSC[wght].ttf"}
     elif template_name in ("daily_sign_06.html", "daily_sign_07.html"):
         fonts = {
             "body_font_path": "NotoSansSC[wght].ttf",
@@ -67,18 +69,41 @@ def get_template_font_context(template_name: str) -> dict[str, str]:
 
 
 def get_template_image_context(template_name: str) -> dict[str, str]:
-    """加载明日方舟模板的背景与图标图集。"""
-    if template_name != "daily_sign_04.html":
+    """加载所选模板的背景与图标，蔚蓝档案图集内嵌以支持遮罩渲染。"""
+    if template_name == "daily_sign_04.html":
+        images = (
+            ("background_path", "arknights/bg.png"),
+            ("icons_path", "arknights/icon.png"),
+        )
+    elif template_name == "daily_sign_09.html":
+        images = (
+            ("background_path", "bluearchive/arona-room.jpg"),
+            ("texture_path", "bluearchive/texture.png"),
+            ("bottom_path", "bluearchive/bottom.png"),
+            ("gold_path", "bluearchive/gold.png"),
+            ("favor_path", "bluearchive/favor.png"),
+            ("diamond_path", "bluearchive/diamond.png"),
+            ("complete_path", "bluearchive/complete.png"),
+            ("momotalk_path", "bluearchive/momotalk.png"),
+            ("phone_path", "bluearchive/phone.png"),
+            ("tasks_path", "bluearchive/tasks.png"),
+            ("cube_path", "bluearchive/cube.png"),
+            ("schale_path", "bluearchive/schale-nav.png"),
+            ("folder_path", "bluearchive/folder.png"),
+        )
+    else:
         return {}
     context = {}
-    for variable, filename in (
-        ("background_path", "arknights/bg.png"),
-        ("icons_path", "arknights/icon.png"),
-    ):
+    for variable, filename in images:
         path = get_file(ResourceType.IMAGE, ResourceFolder.SIGN, filename)
         if path is None:
             raise FileNotFoundError(f"签到图片资源不存在：image/sign/{filename}")
-        context[variable] = path.resolve().as_uri()
+        if template_name == "daily_sign_09.html":
+            media_type = "image/jpeg" if path.suffix == ".jpg" else "image/png"
+            content = base64.b64encode(path.read_bytes()).decode("ascii")
+            context[variable] = f"data:{media_type};base64,{content}"
+        else:
+            context[variable] = path.resolve().as_uri()
     return context
 
 

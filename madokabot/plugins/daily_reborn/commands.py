@@ -36,7 +36,7 @@ async def send_reborn(bot: Bot, event: MessageEvent, command: Arparma, *, china:
             result, created = await reborn_today(event.get_user_id(), china=china)
             prefix = "新的人生已开启" if created else (
                 f"今天已经投胎过啦，这是结果。\n"
-                f"可使用“{command_start}{command_name}重开”消耗{REROLL_COST}积分重新投胎。"
+                f"可使用“{command_start}{command_name} 重开”消耗{REROLL_COST}积分重新投胎。"
             )
     except ValueError as exc:
         await matcher.finish(str(exc))

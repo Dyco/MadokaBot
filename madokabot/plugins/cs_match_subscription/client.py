@@ -495,23 +495,27 @@ async def fetch_event(event_id: str, *, page_url: str | None = None) -> EventDat
     raise HltvError("没有从 HLTV 页面解析到赛事信息，可能是页面结构发生变化。")
 
 
-async def fetch_event_match_refs(event_id: str) -> list[EventMatchRef]:
-    """获取赛事的 live、等待中比赛和历史结果链接。"""
+async def fetch_event_match_refs(
+    event_id: str,
+    *,
+    include_results: bool = True,
+) -> list[EventMatchRef]:
+    """获取赛事赛程，仅在订阅或恢复时按需读取历史结果。"""
     normalized_id = str(event_id).strip()
     if not normalized_id.isdigit():
         raise HltvError("赛事 ID 必须是纯数字。")
 
+    sections = [MATCH_SECTION_UPCOMING]
+    urls = [event_url(normalized_id, "matches")]
+    if include_results:
+        sections.append(MATCH_SECTION_FINISHED)
+        urls.append(event_results_url(normalized_id))
     pages = await asyncio.gather(
-        _fetch_html(event_url(normalized_id, "matches")),
-        _fetch_html(event_results_url(normalized_id)),
-        return_exceptions=True,
+        *(_fetch_html(url) for url in urls), return_exceptions=True,
     )
     refs: dict[str, EventMatchRef] = {}
     errors: list[BaseException] = []
-    for section, page in zip(
-        (MATCH_SECTION_UPCOMING, MATCH_SECTION_FINISHED),
-        pages,
-    ):
+    for section, page in zip(sections, pages):
         if isinstance(page, BaseException):
             errors.append(page)
             continue
@@ -535,7 +539,7 @@ async def fetch_event_match_refs(event_id: str) -> list[EventMatchRef]:
                 0,
             ):
                 refs[ref.match_id] = ref
-    if not refs and errors:
+    if errors:
         error = errors[0]
         if isinstance(error, HltvError):
             raise error

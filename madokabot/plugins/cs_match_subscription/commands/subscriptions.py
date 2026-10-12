@@ -185,7 +185,8 @@ async def handle_cs_sub(
     )
     await cs_cmd.finish(
         f"{prefix} {event_data.name}，赛程时间为{_event_schedule_text(event_data)}\n"
-        f"已记录 {len(refs)} 场比赛，轮询间隔为{config.hltv_poll_interval}秒；"
+        f"已记录 {len(refs)} 场比赛，按赛程自动休眠或降频，"
+        f"开赛前5分钟及比赛期间每{config.hltv_poll_interval}秒查询；"
         f"{push_mode}；{prediction_text}。"
         f"{unsubscribe_hint}"
     )

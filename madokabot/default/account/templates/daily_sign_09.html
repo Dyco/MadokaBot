@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        @font-face { font-family:Noto; src:url('{{ body_font_path }}'); font-weight:100 900}
+        * { box-sizing:border-box}
+        body { margin:0; width:900px; height:600px; overflow:hidden; background:#a6dfff; color:#203c5d; font-family:Noto,sans-serif}
+        h1,h2,p { margin:0}
+        .scene { position:relative; width:900px; height:600px; overflow:hidden; isolation:isolate}
+        .background { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; z-index:-3}
+        .light { position:absolute; inset:0; background:linear-gradient(90deg,#9fddff16,#d6f7ff0c 60%,#8dd7ff15); z-index:-2}
+        .portrait { position:absolute; left:262px; top:88px; width:350px; height:790px; display:flex; justify-content:center; align-items:flex-start; z-index:1}
+        .character { max-width:100%; max-height:100%; filter:drop-shadow(0 4px 3px #17496722)}
+        .player { position:absolute; left:20px; top:20px; width:248px; height:70px; transform:skewX(-10deg); border-radius:4px; overflow:hidden; background:#063654f2; box-shadow:0 3px 3px #0c4a7e33; z-index:5}
+        .player-texture { position:absolute; inset:0; background:url('{{ texture_path }}') center/cover; opacity:.22}
+        .player-inner { transform:skewX(10deg); display:flex; padding:5px 14px; gap:14px; position:relative}
+        .rank { width:55px; text-align:center; color:white}
+        .rank small { display:block; font-size:10px; font-style:italic; font-weight:900; color:#ffe52a; line-height:18px}
+        .rank strong { display:block; font:italic 700 36px/37px Noto}
+        .name { padding-top:4px; flex:1; color:white}
+        .name b { font-size:21px; font-weight:800; line-height:28px}
+        .name .line { height:3px; background:#35617a; margin-top:3px}
+        .name .line:after { content:''; display:block; width:80%; height:3px; background:#36e0f8}
+        .name small { display:block; font:11px Noto; color:#46d8ef; margin-top:4px}
+        .resources { position:absolute; top:22px; left:365px; right:24px; display:flex; gap:8px; z-index:5}
+        .resource { height:35px; flex:1; display:flex; align-items:center; gap:5px; background:#ffffffe8; border:1px solid #dceaf1; box-shadow:2px 3px 0 #47658238; border-radius:2px; transform:skewX(-10deg); padding:0 10px}
+        .resource>* { transform:skewX(10deg)}
+        .resource img { width:28px; height:28px; object-fit:contain}
+        .resource b { font:700 18px Noto}
+        .resource small { font-size:9px; margin-left:auto; color:#708ca0}
+        .resource:first-child { flex:1.2}
+        .resource:first-child b { font-size:17px}
+        .side { position:absolute; left:28px; top:125px; display:flex; gap:16px; z-index:5}
+        .side-item { width:81px; text-align:center}
+        .sprite { --size:58px; position:relative; width:var(--size); height:var(--size); display:inline-block; filter:drop-shadow(1px 2px 1px #32526866)}
+        .sprite span { position:absolute; inset:0; background:var(--tone); mask-image:var(--sheet); mask-repeat:no-repeat; mask-size:calc(var(--count)*var(--size)) var(--size); mask-position:calc(var(--layer)*var(--size)*-1) 0}
+        .phone-mark { position:absolute; width:18px; height:18px; left:29px; top:17px; transform:rotate(15deg); filter:brightness(0) invert(1)}
+        .side-item h2 { font-size:13px; line-height:17px; color:#203c5d; text-shadow:1px 1px white,-1px -1px white,1px -1px white,-1px 1px white}
+        .side-value { background:#ffffffd9; border-radius:3px; margin-top:4px; padding:2px 4px; font-size:12px; font-weight:700; box-shadow:0 2px 2px #277a9f19}
+        .side-value em { font-style:normal; font-size:10px; color:#f085a8; margin-left:5px}
+        .side-item:last-child em { color:#169ed5}
+        .ranking { position:absolute; left:28px; top:333px; width:248px; z-index:5; padding:7px 9px 6px; background:#fffffff0; border:1px solid white; border-radius:4px; box-shadow:1px 3px 2px #254f7130; transform:skewX(-10deg); overflow:hidden}
+        .ranking-title { height:25px; display:flex; align-items:center; gap:7px; padding:0 2px 5px; color:#203c5d; border-bottom:1px solid #bcdfea; transform:skewX(10deg)}
+        .ranking-title h2 { font-size:13px; font-weight:800}
+        .ranking-title small { font:700 9px Noto; letter-spacing:.4px; color:#203c5d; background:#fff43a; margin-left:auto; padding:2px 7px; transform:skewX(-10deg); border-radius:2px}
+        .ranking-body { display:flex; flex-direction:column; padding-top:3px}
+        .rank-row { display:grid; grid-template-columns:27px minmax(0,1fr) 51px 35px; align-items:center; gap:3px; height:25px; padding:0 3px; border-bottom:1px solid #dcecf3; font-size:10px}
+        .rank-row .index { font:italic 800 14px Noto; color:#238cb7; line-height:17px}
+        .rank-row .points { text-align:right; font:700 11px Noto; color:#234d68}
+        .rank-row .count { text-align:right; color:#7992a6; font-size:9px}
+        .rank-row.current { color:#037cad; background:linear-gradient(90deg,#c4f1ff,#e7faff); border-left:2px solid #35c9f5; padding-left:1px}
+        .reward-banner { position:absolute; right:39px; top:72px; width:224px; height:106px; z-index:5; transform:skewX(-10deg); background:#ffffffec; border:2px solid white; border-radius:3px; box-shadow:0 3px 0 #45637b33; overflow:visible}
+        .reward-banner .texture { position:absolute; inset:0; overflow:hidden; background:#d5f4ff url('{{ texture_path }}') center/cover}
+        .reward-banner .event { position:absolute; left:8px; top:-13px; font:italic 900 17px Noto; color:#fff; text-shadow:2px 2px #f26565,-1px -1px #f26565,1px -1px #f26565,-1px 1px #f26565; transform:skewX(10deg)}
+        .reward-banner img { position:absolute; right:10px; top:12px; width:82px; height:82px; transform:skewX(10deg) rotate(-10deg)}
+        .reward-banner .copy { position:relative; padding:16px 12px; transform:skewX(10deg)}
+        .reward-banner small { font:700 9px Noto; color:#3489b1}
+        .reward-banner h2 { font-size:24px; line-height:33px; letter-spacing:-1px; font-weight:900}
+        .reward-banner p { display:inline-block; padding:2px 7px; background:#fff234; font-size:10px; font-weight:700; margin-top:2px}
+        .dialogue { position:absolute; left:542px; top:231px; width:172px; z-index:4; background:#edf6ffef; padding:9px 12px; border-radius:8px; color:#3f4653; filter:drop-shadow(1px 3px 2px #23456726)}
+        .dialogue p { font-size:12px; line-height:1.45; font-weight:400}
+        .campaign { position:absolute; right:24px; top:351px; width:224px; height:157px; z-index:6}
+        .bubble { position:absolute; left:29px; top:-17px; transform:skewX(-9deg); background:#fff221; border-radius:3px; padding:4px 12px; color:#122f4d; font-size:13px; font-weight:900; box-shadow:1px 2px 0 #715f2344}
+        .bubble:after { content:''; position:absolute; right:18px; bottom:-7px; border-top:8px solid #fff221; border-left:7px solid transparent}
+        .folder { position:absolute; left:60px; top:18px; --size:126px; --count:6; width:var(--size); height:calc(var(--size)*234/280); filter:drop-shadow(1px 2px 2px #144a7455)}
+        .folder span { position:absolute; inset:0; background:var(--tone); mask:url('{{ folder_path }}') no-repeat; mask-size:calc(var(--size)*6) calc(var(--size)*234/280); mask-position:calc(var(--layer)*var(--size)*-1) 0}
+        .folder-center { position:absolute; left:88px; top:43px; --size:70px; z-index:2}
+        .campaign-title { position:absolute; left:4px; right:0; bottom:13px; height:44px; padding:0 20px; transform:skewX(-10deg); background:#133453; color:white; border-radius:3px; overflow:hidden; display:flex; align-items:center; gap:10px; box-shadow:1px 3px 1px #123c5a33}
+        .campaign-title:before { content:''; position:absolute; inset:0 auto 0 0; width:50px; background:#ffffff15; transform:skewX(35deg)}
+        .campaign-title h1 { font-size:26px; font-weight:900; transform:skewX(10deg); line-height:40px}
+        .campaign-title small { font:700 10px Noto; color:#8ae7ff; transform:skewX(10deg); margin-left:auto}
+        .campaign-title .chevron { font:700 25px Noto; color:#fff; transform:skewX(10deg)}
+        .bottom { position:absolute; left:29px; right:25px; bottom:23px; height:43px; z-index:7; transform:skewX(-10deg); background:#ffffffe8; border-radius:3px; box-shadow:1px 3px 0 #38567333}
+        .bottom:before,.bottom:after { content:''; position:absolute; inset:0 auto 0 0; width:249px; background:url('{{ bottom_path }}') left center/249px 43px no-repeat; opacity:.6}
+        .bottom:after { left:auto; right:0; transform:rotate(180deg)}
+        .bottom-inner { position:relative; transform:skewX(10deg); height:100%; display:flex; align-items:center; padding:0 16px}
+        .nav-item { position:relative; flex:1; text-align:center; height:70px; margin-top:-28px}
+        .nav-item .sprite { --size:39px; display:block; margin:0 auto}
+        .nav-item h2 { font-size:11px; line-height:18px; text-shadow:0 1px white}
+        .nav-item small { font:700 10px Noto; color:#1a86b6}
+        .tiny-id { position:absolute; left:30px; bottom:5px; font:700 7px Noto; color:#315a76; z-index:7; text-shadow:0 1px white}
+        .nav-item h2 { display:inline}
+        .nav-item small { margin-left:5px}
+        .campaign-title { z-index:3}
+        .dialogue::before { content:""; position:absolute; left:-7px; top:17px; width:12px; height:12px; background:#edf6ff; clip-path:polygon(0 50%,100% 0,100% 100%)}
+        .time-box { flex:1.1; text-align:center; color:#28475e; line-height:1}
+        .time-box small { display:block; font-size:9px; line-height:10px; letter-spacing:3px; color:#9bb7ca}
+        .time-box p { font:700 13px/15px Noto; margin:1px 0 0}
+        .time-box span { display:block; font:700 8px/9px Noto; margin:0}
+        .rank-row>span { transform:skewX(10deg)}
+        .rank-row:nth-child(1) .index { color:#d59d2d}
+        .rank-row:nth-child(2) .index { color:#7896b3}
+        .rank-row:nth-child(3) .index { color:#bf9067}
+        .ranking-title svg { width:17px; height:17px; fill:#fdf2a0; stroke:#287fa9; stroke-width:1.8; filter:drop-shadow(0 1px 0 white)}
+        .rank-row:last-child { border-bottom:0}
+        .name { min-width:0}
+        .name b { display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+        .name b.compact { font-size:15px}
+        .rank strong.compact { font-size:27px}
+        .rank-row .nickname { white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+        .resource b.compact { font-size:13px}
+        .resource b.dense { font-size:10px}
+        .resource:first-child b.compact { font-size:13px}
+        .resource:first-child b.dense { font-size:10px}
+        .ranking-empty { padding:18px 0; text-align:center; font-size:11px; color:#7992a6}
+        .portrait-empty { position:absolute; left:350px; top:275px; padding:18px; background:#ffffffb8; border-radius:4px; color:#587f98; font-size:12px}
+    </style>
+</head>
+<body>
+
+    {% set signed = daily_sign_order is not none %}
+    {% set palettes = {
+        'phone': ['#f7a8bb','#32c9ff','#ffffff','#1693de','#2f506d'],
+        'tasks': ['#2f506d','#2f506d','#2f506d','#ffffff','#1693de','#2f506d'],
+        'cube': ['#1693de','#a7f8ff','#32c9ff','#ffffff','#2f506d','#ffffff','#2f506d'],
+        'schale': ['#32c9ff','#a7f8ff','#32c9ff','#1693de','#ffffff','#ffffff','#2f506d'],
+        'total': ['#32c9ff','#ffffff','#1693de','#ffffff','#2f506d','#ffffff','#2f506d']
+    } %}
+    {% macro sprite(source, colors, size=58) -%}
+    <div class="sprite" style="--size:{{ size }}px;--count:{{ colors | length }};--sheet:url('{{ source }}')">
+        {% for color in colors | reverse %}<span style="--layer:{{ colors | length - loop.index }};--tone:{{ color }}"></span>{% endfor %}
+    </div>
+    {%- endmacro %}
+    <main class="scene">
+        <img class="background" src="{{ background_path }}" alt="">
+        <div class="light"></div>
+        {% if chara_b64 %}
+        <div class="portrait"><img class="character" src="{{ chara_b64 }}" alt="角色立绘"></div>
+        {% else %}<div class="portrait-empty">未选择立绘</div>{% endif %}
+        <header class="player">
+            <div class="player-texture"></div>
+            <div class="player-inner">
+                <div class="rank"><small>今日排名</small><strong class="{{ 'compact' if daily_sign_order and daily_sign_order | string | length > 2 else '' }}">{{ daily_sign_order or '--' }}</strong></div>
+                <div class="name"><b class="{{ 'compact' if user_name | length > 6 else '' }}">{{ user_name }}</b><div class="line"></div><small>ID: {{ user_id }}</small></div>
+            </div>
+        </header>
+        <div class="resources">
+            {% set points_text = '{:,}'.format(points) %}
+            <div class="resource"><img src="{{ gold_path }}" alt="积分"><b class="{{ 'dense' if points_text | length > 11 else 'compact' if points_text | length > 6 else '' }}">{{ points_text }}</b><small>积分</small></div>
+            <div class="resource"><img src="{{ favor_path }}" alt="好感度"><b>{{ favorability }}</b><small>好感 / 点</small></div>
+            <div class="resource"><img src="{{ diamond_path }}" alt="累签次数"><b>{{ total_count }}</b><small>累签 / 次</small></div>
+        </div>
+        <section class="side">
+            {% for label, value, delta in items if label in ('好感度', '连续陪伴') %}
+            <div class="side-item">
+                {% if label == '好感度' %}
+                <div style="position:relative;display:inline-block">{{ sprite(phone_path, palettes.phone) }}<img class="phone-mark" src="{{ momotalk_path }}" alt=""></div>
+                {% else %}{{ sprite(tasks_path, palettes.tasks) }}{% endif %}
+                <h2>{{ label }}</h2><div class="side-value">{{ value }}{% if delta %}<em>{{ delta }}</em>{% endif %}</div>
+            </div>
+            {% endfor %}
+        </section>
+        <section class="ranking">
+            <div class="ranking-title">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3h10v7c0 7-10 7-10 0Z M7 5H3v3c0 3 2 5 5 5 M17 5h4v3c0 3-2 5-5 5 M12 15v5 M7 21h10"/></svg>
+                <h2>积分排名</h2><small>TOP 05</small>
+            </div>
+            <div class="ranking-body">
+                {% for nickname, uid, rank_points, count in ranking %}
+                <div class="rank-row{{ ' current' if loop.index == current_ranking_index else '' }}">
+                    <span class="index">{{ '%02d' | format(loop.index) }}</span><span class="nickname">{{ nickname }}</span><span class="points">{{ rank_points }}</span><span class="count">{{ count }}次</span>
+                </div>
+                {% else %}<div class="ranking-empty">暂无排名</div>{% endfor %}
+            </div>
+        </section>
+        <section class="reward-banner">
+            <div class="texture"></div><span class="event">DAILY!</span>
+            <div class="copy"><small>ATTENDANCE RECORD</small><h2>{{ '签到完成' if signed else '今日未签到' }}</h2><p>今天也请多关照！</p></div>
+            {% if signed %}<img src="{{ complete_path }}" alt="签到完成">{% endif %}
+        </section>
+        <section class="dialogue"><p>{{ quote }}</p></section>
+        <section class="campaign">
+            <div class="bubble">今日奖励　{{ '+%d' | format(points_gain) if points_gain is not none else '0' }} 积分</div>
+            <div class="folder">
+                {% for color in ['#ffffff','#2f506d','#ffffff','#27cbfc','#08a7df','#2f506d'] | reverse %}<span style="--layer:{{ 6 - loop.index }};--tone:{{ color }}"></span>{% endfor %}
+            </div>
+            <div class="folder-center">{{ sprite(schale_path, ['#ffffff','#ffffff','#ffffff','transparent','transparent','transparent','transparent'], 70) }}</div>
+            <div class="campaign-title"><h1>{{ '签到' if title == '每日签到' else title }}</h1><small>DAILY</small><span class="chevron">›</span></div>
+        </section>
+        <footer class="bottom"><div class="bottom-inner">
+            <div class="nav-item">{{ sprite(schale_path, palettes.schale, 39) }}<h2>每日签到</h2><small>{{ '已完成' if signed else '未签到' }}</small></div>
+            {% for label, value, delta in items %}
+            <div class="nav-item">
+                {% if label == '好感度' %}{{ sprite(phone_path, palettes.phone, 39) }}
+                {% elif label == '连续陪伴' %}{{ sprite(tasks_path, palettes.tasks, 39) }}
+                {% else %}{{ sprite(cube_path, palettes.total if label == '累计签到' else palettes.cube, 39) }}{% endif %}
+                <h2>{{ label }}</h2><small>{{ value }}</small>
+            </div>
+            {% endfor %}
+            <div class="time-box"><small>△×＋○</small><p>{{ current_time[11:16] }}</p><span>{{ current_time[:10] }}</span></div>
+        </div></footer>
+        <div class="tiny-id">MadokaBot.Ver.{{ bot_version }}</div>
+    </main>
+</body>
+</html>

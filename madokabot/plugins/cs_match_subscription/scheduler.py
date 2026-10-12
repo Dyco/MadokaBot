@@ -25,7 +25,7 @@ from .subscriptions.settlement import (
     next_run_time=datetime.now(timezone.utc),
 )
 async def poll_cs_match_subscriptions() -> None:
-    """按配置间隔执行赛事订阅轮询。"""
+    """按配置间隔检查本地赛程，仅请求已到刷新时间的赛事。"""
     await poll_subscriptions()
 
 

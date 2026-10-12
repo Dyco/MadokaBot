@@ -8,11 +8,10 @@ from typing import Any
 
 from nonebot import logger
 
-from ..client import HltvError, fetch_event, fetch_event_match_refs, fetch_match
+from ..client import HltvError, fetch_event_match_refs, fetch_match
 from ..models import (
     EVENT_STATUS_FINISHED,
     EVENT_STATUS_ONGOING,
-    EVENT_STATUS_WAITING,
     MATCH_SECTION_FINISHED,
     MATCH_SECTION_UPCOMING,
     MATCH_SECTION_WAITING,
@@ -44,6 +43,7 @@ from ..subscriptions.settlement import (
 )
 from ..subscriptions.state import (
     event_ended,
+    event_poll_interval,
     event_start_at,
     event_status,
     historical_match_state,
@@ -53,6 +53,11 @@ from ..subscriptions.state import (
     parse_datetime,
     prediction_due,
 )
+
+
+_last_polled_at: dict[str, datetime] = {}
+_tracked_events: set[str] = set()
+_recovery_events: set[str] | None = None
 
 
 async def load_event_matches(
@@ -79,80 +84,14 @@ async def load_event_matches(
     return [result for result in results if result is not None]
 
 
-def event_prediction_due(entry: dict[str, Any]) -> bool:
-    """判断等待中的赛事是否已有比赛进入竞猜开放窗口。"""
-    targets = [
-        target for target in entry.get("targets", []) if isinstance(target, dict)
-    ]
-    if not any(
-        event_target_settings(target).get("prediction_enabled", False)
-        for target in targets
-    ):
-        return False
-    matches = entry.get("matches")
-    if not isinstance(matches, dict):
-        return False
-    now = datetime.now(timezone.utc)
-    return any(
-        isinstance(state, dict)
-        and not state.get("completed", False)
-        and not state.get("prediction_closed", False)
-        and (not state.get("scheduled_at") or prediction_due(state, now))
-        for state in matches.values()
-    )
-
-
-async def activate_waiting_event(
-    event_id: str,
-    entry: dict[str, Any],
-) -> bool:
-    """检查等待赛事是否进入进行状态。"""
-    if event_status(entry) != EVENT_STATUS_WAITING:
-        return True
-
-    now = datetime.now(timezone.utc)
-    first_started_at = parse_datetime(entry.get("first_match_started_at"))
-    if first_started_at is not None:
-        if first_started_at <= now:
-            entry["status"] = EVENT_STATUS_ONGOING
-            await update_event_state(event_id, status=EVENT_STATUS_ONGOING)
-            return True
-        return False
-
-    scheduled_start = event_start_at(entry)
-    if scheduled_start is not None and scheduled_start > now:
-        return False
-
-    event = await fetch_event(event_id)
-    if event.is_finished:
-        entry["status"] = EVENT_STATUS_FINISHED
-        entry["completed"] = True
-        await update_event_state(
-            event_id,
-            status=EVENT_STATUS_FINISHED,
-            completed=True,
-        )
-        return False
-    status_is_live = event.event_status == "live"
-    status_is_unknown_after_start = (
-        event.event_status == "unknown"
-        and event.start_at is not None
-        and event.start_at <= now
-    )
-    if not (status_is_live or status_is_unknown_after_start):
-        return False
-
-    entry["status"] = EVENT_STATUS_ONGOING
-    await update_event_state(event_id, status=EVENT_STATUS_ONGOING)
-    return True
-
-
 async def poll_event_subscription(
     event_id: str,
     entry: dict[str, Any],
+    *,
+    include_results: bool = False,
 ) -> None:
-    """轮询一个赛事并合并发送本轮新增节点。"""
-    refs = await fetch_event_match_refs(event_id)
+    """按需同步赛程和历史结果，并通过比赛详情跟踪结算与通知。"""
+    refs = await fetch_event_match_refs(event_id, include_results=include_results)
     stored_matches = entry.get("matches")
     matches = stored_matches if isinstance(stored_matches, dict) else {}
     pending_refs: list[EventMatchRef] = []
@@ -168,7 +107,6 @@ async def poll_event_subscription(
 
     def queue_match(ref: EventMatchRef) -> None:
         """按比赛编号去重并加入本轮抓取队列。"""
-        """加入本轮抓取列表并去重。"""
         if ref.match_id not in pending_match_ids:
             pending_refs.append(ref)
             pending_match_ids.add(ref.match_id)
@@ -202,9 +140,12 @@ async def poll_event_subscription(
         if section == MATCH_SECTION_WAITING:
             # 等待中的比赛仅在竞猜需要详情时抓取。
             state["source"] = MATCH_SECTION_WAITING
-            if has_prediction_target and (
-                not state.get("scheduled_at")
-                or prediction_due(state, datetime.now(timezone.utc))
+            if state.get("started_sent", False) or (
+                has_prediction_target
+                and (
+                    not state.get("scheduled_at")
+                    or prediction_due(state, datetime.now(timezone.utc))
+                )
             ):
                 queue_match(ref)
             continue
@@ -241,18 +182,29 @@ async def poll_event_subscription(
             state["source"] = MATCH_SECTION_FINISHED
             state["completed"] = True
 
-    # 比赛从列表消失后仍需完成结束通知的有限重试。
+    # 已跟踪比赛即使从赛程消失，也通过详情页继续确认结束和补发通知。
+    listed_ids = {ref.match_id for ref in refs}
+    now = datetime.now(timezone.utc)
     for match_id, state in matches.items():
         if (
             isinstance(state, dict)
-            and state.get("rating_final_text")
             and not state.get("completed", False)
+            and (state.get("rating_final_text") or str(match_id) not in listed_ids)
         ):
+            scheduled_at = parse_datetime(state.get("scheduled_at"))
+            if not (
+                state.get("started_sent", False)
+                or state.get("rating_final_text")
+                or state.get("finalization_requested", False)
+                or normalize_match_section(state.get("source")) == MATCH_SECTION_UPCOMING
+                or (scheduled_at is not None and scheduled_at <= now)
+            ):
+                continue
             queue_match(
                 EventMatchRef(
                     match_id=str(match_id),
                     url=str(state.get("url", "")),
-                    section=MATCH_SECTION_FINISHED,
+                    section=normalize_match_section(state.get("source")),
                 )
             )
 
@@ -360,6 +312,8 @@ async def poll_event_subscription(
             return
 
     first_started_at = entry.get("first_match_started_at")
+    if any(ref.section == MATCH_SECTION_UPCOMING for ref in refs):
+        entry["status"] = EVENT_STATUS_ONGOING
     if observed_first_start is not None and not parse_datetime(first_started_at):
         first_started_at = observed_first_start.isoformat()
         entry["first_match_started_at"] = first_started_at
@@ -377,22 +331,57 @@ async def poll_event_subscription(
         ),
         completed=event_finished,
     )
+    # 从赛前持续跟踪的赛事无需在正常开赛时重新读取结果页。
+    _tracked_events.add(event_id)
     for match_id, state in matches.items():
         if isinstance(state, dict) and state.get("completed", False):
             clear_notification_memory(match_id)
 
 
 async def poll_subscriptions() -> None:
-    """轮询赛事订阅并推送状态变化。"""
+    """按赛程分档请求赛事，接管已开赛赛事与启动恢复时同步结果页。"""
+    global _recovery_events
     cleanup_notification_memory()
     entries = await list_active_events()
+    now = datetime.now(timezone.utc)
+    if _recovery_events is None:
+        _recovery_events = {
+            event_id for event_id, entry in entries.items()
+            if event_status(entry) == EVENT_STATUS_ONGOING
+            or (
+                (start := event_start_at(entry)) is not None and start <= now
+            )
+            or any(
+                isinstance(state, dict)
+                and not state.get("completed", False)
+                and (start := parse_datetime(state.get("scheduled_at"))) is not None
+                and start <= now
+                for state in entry.get("matches", {}).values()
+            )
+        }
+    _tracked_events.intersection_update(entries)
+    _recovery_events.intersection_update(entries)
+    for event_id in set(_last_polled_at).difference(entries):
+        del _last_polled_at[event_id]
     for event_id, entry in entries.items():
         try:
-            if event_status(entry) == EVENT_STATUS_WAITING:
-                activated = await activate_waiting_event(event_id, entry)
-                if not activated and not event_prediction_due(entry):
-                    continue
-            await poll_event_subscription(event_id, entry)
+            interval = event_poll_interval(entry, now)
+            if interval is None:
+                continue
+            include_results = event_id in _recovery_events or (
+                event_status(entry) == EVENT_STATUS_ONGOING
+                and event_id not in _tracked_events
+            )
+            last_polled_at = _last_polled_at.get(event_id)
+            if (
+                not include_results
+                and last_polled_at is not None
+                and (now - last_polled_at).total_seconds() < interval
+            ):
+                continue
+            await poll_event_subscription(event_id, entry, include_results=include_results)
+            _last_polled_at[event_id] = datetime.now(timezone.utc)
+            _recovery_events.discard(event_id)
         except HltvError as exc:
             logger.warning("轮询 HLTV 赛事 %s 失败：%s", event_id, exc)
         except Exception:

@@ -5,6 +5,8 @@ from __future__ import annotations
 from nonebot.adapters.onebot.v11 import Bot, MessageEvent
 from nonebot_plugin_alconna import Match
 
+from madokabot.core.messaging.response import respond
+
 from ..commands.permissions import group_subscription_target
 from ..matchers import CS_EVENT_USAGE, cs_cmd
 from ..storage import (
@@ -21,10 +23,11 @@ async def handle_cs_event(
     event: MessageEvent,
     params: Match[str],
 ) -> None:
-    """赛事设置命令处理方法。"""
+    """处理赛事设置，无参数查询时先添加表情回应。"""
     raw_params = params.result.strip() if params.available else ""
     event_args = raw_params.split()
     if not event_args:
+        await respond(bot, event)
         await show_cs_events()
         return
     if len(event_args) != 1:
