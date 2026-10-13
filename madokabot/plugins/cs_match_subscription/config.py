@@ -17,6 +17,7 @@ PLUGIN_NAME = "madokabot_cs_match_subscribe"
 CACHE_DIR = store.get_cache_dir(PLUGIN_NAME)
 HLTV_SUB_PATH = assets.get_dir(ResourceType.JSON, ResourceFolder.CS) / "hltv_sub.json"
 HLTV_CHECK_PATH = assets.get_dir(ResourceType.JSON, ResourceFolder.CS) / "hltv_check.json"
+HLTV_EVENTS_PATH = assets.get_dir(ResourceType.JSON, ResourceFolder.CS) / "hltv_events.json"
 ASSET_DIR = CACHE_DIR / "assets"
 PW_SESSION_PATH = store.get_data_file(PLUGIN_NAME, "pw_session.json")
 
@@ -69,6 +70,11 @@ class Config(NoneBotConfig):
         default=300,
         ge=30,
         description="开赛前5分钟、比赛进行及收尾期间的轮询间隔（秒），休赛期按赛程降频",
+    )
+    hltv_events_cache_ttl: int = Field(
+        default=7 * 24 * 60 * 60,
+        ge=60,
+        description="本地赛事库的同步间隔（秒），默认一周，沿用原配置键名",
     )
     hltv_subscribe_push_each_map: bool = Field(
         default=True,

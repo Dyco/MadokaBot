@@ -9,11 +9,11 @@ from nonebot.adapters.onebot.v11 import Bot, MessageEvent
 from nonebot.permission import SUPERUSER
 from nonebot_plugin_alconna import Match
 
+from madokabot.core.config import command_start
 from madokabot.core.messaging.response import respond
 
 from ..client import HltvError, fetch_event, fetch_event_match_refs
 from ..commands.permissions import group_subscription_target
-from ..config import config
 from ..matchers import CS_REMOVESUB_USAGE, CS_UNSUB_USAGE, cs_cmd
 from ..models import (
     EVENT_STATUS_FINISHED,
@@ -64,6 +64,19 @@ def _event_is_finished(event: EventData, refs: list[EventMatchRef]) -> bool:
     return end_at <= datetime.now(timezone.utc)
 
 
+def _subscription_hint(target: dict[str, str], event_id: str) -> str:
+    """生成群订阅回复中的竞猜状态、推送模式和退订提示。"""
+    if target["kind"] != "group":
+        return ""
+    settings = get_hltv_event_settings(target["id"])
+    prediction_state = "已打开" if settings["prediction_enabled"] else "已关闭"
+    push_mode = "每图" if settings["push_each_map"] else "整场"
+    return (
+        f"本群竞猜{prediction_state}，采用{push_mode}推送，"
+        f"使用{command_start}CS unsub {event_id} 可退订本群赛事推送。"
+    )
+
+
 @cs_cmd.assign("subcommands.sub")
 async def handle_cs_sub(
     bot: Bot,
@@ -78,12 +91,6 @@ async def handle_cs_sub(
     target = target_from_event(event)
     if target is None:
         await cs_cmd.finish("无法识别当前会话，暂时不能建立赛事订阅。")
-
-    unsubscribe_hint = (
-        f"使用 CS unsub {raw_id} 可退订本群赛事推送。"
-        if target["kind"] == "group"
-        else ""
-    )
 
     try:
         local_subscription = await add_event_target_if_exists(raw_id, target)
@@ -109,11 +116,12 @@ async def handle_cs_sub(
 
         if added:
             await cs_cmd.finish(
-                f"已订阅此赛事：{stored_name}，已为当前会话加入推送。{unsubscribe_hint}"
+                f"已成功订阅赛事【{stored_name}】。{_subscription_hint(target, raw_id)}"
             )
             return
         await cs_cmd.finish(
-            f"当前会话已订阅赛事{stored_name}，已在推送列表中。{unsubscribe_hint}"
+            f"当前会话已订阅赛事【{stored_name}】，已在推送列表中。"
+            f"{_subscription_hint(target, raw_id)}"
         )
         return
 
@@ -172,23 +180,9 @@ async def handle_cs_sub(
         return
 
     prefix = "已成功订阅赛事" if added else "已刷新赛事订阅"
-    event_settings = get_hltv_event_settings(target["id"])
-    push_mode = (
-        "每张地图开始、结束时推送；最后一张图结束时合并完整 Rating 汇总"
-        if event_settings["push_each_map"]
-        else "按系列赛级别推送开始和结束，整场结束时补发完整 Rating 汇总"
-    )
-    prediction_text = (
-        "已打开本群赛事竞猜"
-        if event_settings["prediction_enabled"]
-        else "本群赛事竞猜未打开"
-    )
     await cs_cmd.finish(
-        f"{prefix} {event_data.name}，赛程时间为{_event_schedule_text(event_data)}\n"
-        f"已记录 {len(refs)} 场比赛，按赛程自动休眠或降频，"
-        f"开赛前5分钟及比赛期间每{config.hltv_poll_interval}秒查询；"
-        f"{push_mode}；{prediction_text}。"
-        f"{unsubscribe_hint}"
+        f"{prefix}【{event_data.name}】，时间为{_event_schedule_text(event_data)}。"
+        f"{_subscription_hint(target, raw_id)}"
     )
 
 

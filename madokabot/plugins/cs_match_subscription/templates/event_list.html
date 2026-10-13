@@ -158,8 +158,8 @@
             {% for event in section.events %}
               <article class="event-card">
                 <div class="event-banner">
-                  {% if event.banner_src or event.banner_url %}
-                    <img src="{{ event.banner_src or event.banner_url }}" alt="{{ event.name }}">
+                  {% if event.banner_src %}
+                    <img src="{{ event.banner_src }}" alt="{{ event.name }}">
                   {% else %}
                     <div class="banner-fallback">{{ event.name }}</div>
                   {% endif %}
@@ -169,8 +169,8 @@
                     {{ event.name }}<span class="event-id">&lt;id: {{ event.event_id }}&gt;</span>
                   </div>
                   <div class="event-location">
-                    {% if event.flag_src or event.flag_url %}
-                      <img src="{{ event.flag_src or event.flag_url }}" alt="">
+                    {% if event.flag_src %}
+                      <img src="{{ event.flag_src }}" alt="">
                     {% endif %}
                     <span>{{ event.location or "地点待定" }}</span>
                   </div>

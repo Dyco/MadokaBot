@@ -10,7 +10,8 @@ from madokabot.core.config import command_start
 from madokabot.core.messaging.response import respond
 
 from ..assets import enrich_event_assets
-from ..client import HltvError, fetch_events, fetch_match, match_id_from_url
+from ..client import HltvError, fetch_match, filter_events, match_id_from_url
+from ..event_catalog import get_local_events
 from ..matchers import CS_USAGE, UNSUPPORTED_LINK_MESSAGE, cs_cmd
 from ..prediction import get_prediction_detail, prediction_odds
 from ..render import render_event_list_card
@@ -92,10 +93,10 @@ async def handle_cs_list(
 
 
 async def show_cs_events() -> None:
-    """查询并发送当前及未来三个月的赛事列表卡片。"""
+    """从本地赛事库筛选进行中及未来三个月赛事，再生成列表卡片。"""
     try:
-        events = await fetch_events()
-        await enrich_event_assets(events)
+        events = filter_events(await get_local_events())
+        enrich_event_assets(events)
         image = await render_event_list_card(events)
     except HltvError as exc:
         await cs_cmd.finish(f"HLTV赛事列表查询失败，请之后重试：{exc}")

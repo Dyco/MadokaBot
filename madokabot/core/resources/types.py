@@ -20,5 +20,6 @@ class ResourceFolder(Enum):
     GROUP = "group"
     POKE = "poke"
     SIGN = "sign"
+    FORTUNE = "fortune"  # 运势静态资源。
     CHAR = "madoka"
     STEAM = "steam"

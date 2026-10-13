@@ -1,4 +1,4 @@
-"""每日运势、农历日期与首次祈福积分奖励。"""
+"""每日运势、本地农历与宜忌事项、首次祈福积分奖励。"""
 
 from dataclasses import asdict, dataclass
 from datetime import date
@@ -10,7 +10,8 @@ from sqlalchemy import update
 
 from madokabot.core.db.base import shanghai_now
 from madokabot.core.user.models import UserStats
-from .almanac import get_almanac
+from .activities import ACTIVITY_POOL
+from .lunar import get_lunar_date
 from .models import FortuneRecord
 
 FORTUNE_LEVELS = (
@@ -65,21 +66,23 @@ class FortuneResult:
 
 
 def generate_fortune(uid: str, today_date: date) -> FortuneResult:
-    """使用上海日期读取农历宜忌，按账号生成个人运势与0至50的幸运数字，不夹带积分信息。"""
+    """按账号和上海日期生成运势，宜忌各抽3至5项且互不重复，农历离线换算。"""
     today = today_date.isoformat()
     seed = sha256(f"fortune:{today}:{uid}".encode("utf-8")).digest()
     rng = Random(seed)
     roll = rng.randint(1, 100)
     _, level, message = next(item for item in FORTUNE_LEVELS if roll >= item[0])
-    lunar_date, suitable, unsuitable = get_almanac(today_date)
     color = rng.choice(LUCKY_COLORS)
     number = rng.randint(0, 50)
+    suitable_count = rng.randint(3, 5)
+    unsuitable_count = rng.randint(3, 5)
+    activities = rng.sample(ACTIVITY_POOL, suitable_count + unsuitable_count)
     return FortuneResult(
         date=today,
-        lunar_date=lunar_date,
+        lunar_date=get_lunar_date(today_date),
         level=level,
-        suitable=suitable,
-        unsuitable=unsuitable,
+        suitable="、".join(activities[:suitable_count]),
+        unsuitable="、".join(activities[suitable_count:]),
         color=color,
         number=number,
         message=message,
@@ -99,7 +102,10 @@ async def get_today_fortune(uid: str) -> tuple[FortuneResult, int]:
             raise LookupError("用户未注册")
         record = await session.get(FortuneRecord, (uid, today))
         if record is not None:
-            return FortuneResult(**record.result), 0
+            # 保留已存运势和奖励，仅为缺少农历字段的记录补齐显示日期。
+            stored_result = dict(record.result)
+            stored_result.setdefault("lunar_date", get_lunar_date(today))
+            return FortuneResult(**stored_result), 0
 
         result = generate_fortune(uid, today)
         points = FORTUNE_REWARDS[result.level]

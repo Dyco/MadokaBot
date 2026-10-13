@@ -382,8 +382,8 @@ async def enrich_match_assets(match: MatchData) -> MatchData:
     return match
 
 
-async def enrich_event_assets(events: list[EventData]) -> list[EventData]:
-    """赛事图片资源补齐方法。"""
+async def sync_event_assets(events: list[EventData]) -> None:
+    """同步赛事库时下载缺失图片，供后续本地渲染复用。"""
     refs: dict[str, tuple[str, str]] = {}
     for event in events:
         if event.banner_url:
@@ -392,19 +392,22 @@ async def enrich_event_assets(events: list[EventData]) -> list[EventData]:
             refs.setdefault(event.flag_url, ("flag", event.location))
 
     if not refs:
-        return events
+        return
 
     referer = next((event.url for event in events if event.url), "")
-    results = await _download_assets(
+    await _download_assets(
         refs,
         referer=referer or str(config.hltv_base_url).rstrip("/") + "/",
     )
 
+
+def enrich_event_assets(events: list[EventData]) -> list[EventData]:
+    """仅从本地文件补齐赛事图片，查询时不触发远程下载。"""
     for event in events:
         if event.banner_url:
-            path = results.get(event.banner_url)
+            path = _find_cached_asset(event.banner_url, "event")
             event.banner_src = _data_url(path) if path else _placeholder_data_url(event.name, "event")
         if event.flag_url:
-            path = results.get(event.flag_url)
+            path = _find_cached_asset(event.flag_url, "flag")
             event.flag_src = _data_url(path) if path else None
     return events

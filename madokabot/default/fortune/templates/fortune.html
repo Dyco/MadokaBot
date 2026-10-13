@@ -33,12 +33,14 @@
         .recipient { max-width: 140px; border-left: 1px solid #c8d4e1; padding-left: 14px; }
         .name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 14px; }
         .recipient small { display: block; margin-top: 5px; color: #8a99a9; font-size: 9px; letter-spacing: 0.1px; white-space: nowrap; }
-        .activities { display: grid; grid-template-columns: 1fr; gap: 8px; }
-        .activity { display: flex; align-items: center; gap: 8px; min-width: 0; font-size: 13px; white-space: nowrap; }
-        .activity > span:last-child { overflow: hidden; text-overflow: ellipsis; }
+        .activities { display: grid; grid-template-columns: 1fr; gap: 6px; }
+        .activity { display: flex; align-items: center; gap: 8px; min-width: 0; font-size: 12px; line-height: 16px; }
+        /* 宜忌最多五项，按完整词条换行并保持两行区域高度稳定。 */
+        .activity-list { flex: 1; min-width: 0; min-height: 32px; }
+        .activity-item { display: inline-block; white-space: nowrap; }
         .tag { display: grid; place-items: center; flex-shrink: 0; width: 26px; height: 26px; border-radius: 8px; background: #e0ebe5; color: #628374; font-size: 13px; }
         .avoid .tag { background: #f1e3e3; color: #ae7f82; }
-        .lucky { display: flex; gap: 24px; margin-top: 12px; padding: 10px 0; border-top: 1px solid #dbe3ec; border-bottom: 1px solid #dbe3ec; font-size: 12px; color: #8a99a9; }
+        .lucky { display: flex; gap: 24px; margin-top: 8px; padding: 8px 0; border-top: 1px solid #dbe3ec; border-bottom: 1px solid #dbe3ec; font-size: 12px; color: #8a99a9; }
         .lucky strong { margin-left: 8px; font-size: 14px; font-weight: 500; color: #4e657f; }
         /* 幸运色文字后显示对应色块，细边框使浅色也能清晰辨认。 */
         .color-swatch { display: inline-block; width: 12px; height: 12px; margin-left: 6px; border: 1px solid #34465b26; border-radius: 3px; vertical-align: -1px; }
@@ -62,7 +64,7 @@
         .color-swatch[data-color="靛蓝"] { background: #5266a8; }
         .color-swatch[data-color="藕紫"] { background: #b596b5; }
         .color-swatch[data-color="浅棕"] { background: #c5a58a; }
-        .quote { margin: 10px 0 0; font-size: 12px; line-height: 1.7; color: #718195; }
+        .quote { margin: 8px 0 0; font-size: 12px; line-height: 1.6; color: #718195; }
         .watermark { position: absolute; left: 30px; bottom: 24px; color: #8a99a9; font-size: 9px; letter-spacing: 0.1px; }
         .portrait { position: absolute; right: 12px; top: 12px; width: 254px; height: 336px; border-radius: 16px; overflow: hidden; background: linear-gradient(155deg, #dce7f1, #e9e5ed); }
         .portrait::before { content: ''; position: absolute; width: 240px; height: 240px; top: 28px; left: 30px; border: 1px solid #ffffffa6; border-radius: 50%; }
@@ -82,8 +84,8 @@
                 <div class="recipient"><div class="name">{{ name }}</div><small>283 Production</small></div>
             </div>
             <div class="activities">
-                <div class="activity"><span class="tag">宜</span><span>{{ result.suitable }}</span></div>
-                <div class="activity avoid"><span class="tag">忌</span><span>{{ result.unsuitable }}</span></div>
+                <div class="activity"><span class="tag">宜</span><span class="activity-list">{% for item in result.suitable.split("、") %}<span class="activity-item">{{ item }}{% if not loop.last %}、{% endif %}</span>{% endfor %}</span></div>
+                <div class="activity avoid"><span class="tag">忌</span><span class="activity-list">{% for item in result.unsuitable.split("、") %}<span class="activity-item">{{ item }}{% if not loop.last %}、{% endif %}</span>{% endfor %}</span></div>
             </div>
             <div class="lucky"><span>幸运色<strong>{{ result.color }}</strong><span class="color-swatch" data-color="{{ result.color }}" aria-hidden="true"></span></span><span>幸运数字<strong>{{ result.number }}</strong></span></div>
             <p class="quote">「{{ result.message }}」</p>

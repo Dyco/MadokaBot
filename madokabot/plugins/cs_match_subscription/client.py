@@ -421,10 +421,12 @@ def filter_events(
 
 
 async def fetch_events() -> list[EventData]:
-    """读取赛事列表，补全精选赛事详情后按日期和奖金筛选。"""
+    """抓取列表页已公布的全部赛事并补全精选详情，不限制未来月份。"""
     page_url = events_url()
     html, response_url = await _fetch_html(page_url)
     events = parse_events_html(html, page_url=response_url)
+    if not events:
+        raise HltvError("没有从 HLTV 页面解析到赛事列表。")
     for index, event in enumerate(events):
         if not event.is_featured:
             continue
@@ -445,7 +447,7 @@ async def fetch_events() -> list[EventData]:
             detail.prize_pool = event.prize_pool
             detail.prize_display = event.prize_display
         events[index] = detail
-    return filter_events(events)
+    return events
 
 
 async def fetch_event(event_id: str, *, page_url: str | None = None) -> EventData:
