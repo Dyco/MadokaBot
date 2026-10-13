@@ -17,11 +17,12 @@ HISTORY_LIMIT = 10
 
 
 def history_entry(result: dict, count: int) -> dict:
-    """提取一次成功投胎的简要记录，不重复存储地图和人口快照。"""
+    """提取投胎简要记录并保留地区代码，避免仅凭名称无法区分旧历史。"""
     return {
         "count": count,
         "date": result["date"],
         "country": result["country"]["name"],
+        "country_code": result["country"]["code"],
         "gender": result["gender"],
         "score": result["score"],
         "label": result["label"],

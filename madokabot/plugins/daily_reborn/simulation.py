@@ -30,7 +30,14 @@ def load_population(china: bool = False) -> dict:
 
 
 def display_result(result: dict) -> dict:
-    """按当前潜力规则补全旧结果的展示，不修改数据库记录或重新抽样。"""
+    """补全旧潜力评价并纠正误标为非军事区的朝韩结果，不修改原记录或重抽。"""
+    country = result.get("country", {})
+    if country.get("code") in ("PRK", "KOR") and country.get("name") == "朝韩非军事区":
+        current = next(row for row in load_population()["countries"] if row["code"] == country["code"])
+        result = result | {
+            "country": country | {key: current[key] for key in ("name", "longitude", "latitude", "map_code")},
+            "map_point": None,
+        }
     if result.get("attribute_system") == STAR_SYSTEM and result.get("evaluation_system") == EVALUATION_SYSTEM:
         return result
     stars = attribute_stars(result)

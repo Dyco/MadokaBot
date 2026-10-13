@@ -27,7 +27,7 @@ MAP_ALIASES = {
 }
 CHINESE_NAMES = {
     "CHN": "中国内地", "TWN": "中国台湾", "HKG": "中国香港",
-    "MAC": "中国澳门", "GBR": "英国",
+    "MAC": "中国澳门", "GBR": "英国", "PRK": "朝鲜", "KOR": "韩国",
 }
 
 
@@ -103,7 +103,7 @@ def simplify_ring(points: list, tolerance: float = 0.06) -> list:
 
 
 def prepare_map(world: dict) -> tuple[list[dict], dict]:
-    """将公开地图转换为 SVG 路径，统一中国各地区的高亮范围。"""
+    """生成 SVG 与出生地定位，叠加区域只绘制、不作为出生地理单元。"""
     regions = []
     locations = {}
     for feature in world["features"]:
@@ -121,10 +121,12 @@ def prepare_map(world: dict) -> tuple[list[dict], dict]:
             "latitude": props["LABEL_Y"],
         }
         location_code = map_code if code == "KOS" else code
-        # 同一国家可能拆成多个地理单元，避免离岛覆盖主区域的名称与定位。
-        locations.setdefault(location_code, location)
-        if props["GU_A3"] == "ENG":
-            locations[location_code] = location
+        overlay = props.get("TYPE") == "Overlay"
+        # 非军事区等叠加图层不可覆盖国家名称、定位；本土地理单元优先。
+        if not overlay:
+            locations.setdefault(location_code, location)
+            if props["GU_A3"] in (location_code, "ENG"):
+                locations[location_code] = location
         geometry = feature["geometry"]
         polygons = [geometry["coordinates"]] if geometry["type"] == "Polygon" else geometry["coordinates"]
         paths = []
@@ -136,7 +138,10 @@ def prepare_map(world: dict) -> tuple[list[dict], dict]:
                 paths.append("M" + "L".join(
                     f"{(lon + 180) * 1000 / 360:.5f},{(85 - lat) * 1000 / 360:.5f}" for lon, lat in points
                 ) + "Z")
-        regions.append({"code": map_code, "path": "".join(paths)})
+        region = {"code": map_code, "path": "".join(paths)}
+        if overlay:
+            region["birth_area"] = False
+        regions.append(region)
     return regions, locations
 
 

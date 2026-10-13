@@ -77,4 +77,4 @@ async def execute_wish(uid: str) -> str:
             f"许愿成功！已扣除1积分，恭喜触发大奖，获得许愿池全部{pool_points}积分！"
             "\n当前许愿池总积分：0"
         )
-    return f"许愿未中奖，已扣除1积分，幸运+1！\n当前许愿池总积分：{pool_points}"
+    return f"许愿未中奖，已扣除1积分，似乎获得了一点运气。\n当前许愿池总积分：{pool_points}"

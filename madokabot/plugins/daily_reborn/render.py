@@ -23,7 +23,7 @@ _render_limit = asyncio.Semaphore(2)
 
 
 def recent_history(result: dict) -> list[dict]:
-    """按最近一次在前整理历史；独立预览或旧结果至少展示当前一次。"""
+    """整理最近历史并纠正朝韩误标，旧记录无法区分时如实显示两种可能。"""
     history = result.get("reborn_history") or [{
         "count": result.get("reborn_count", 1),
         "date": result["date"],
@@ -32,7 +32,15 @@ def recent_history(result: dict) -> list[dict]:
         "score": result["score"],
         "label": result["label"],
     }]
-    return list(reversed(history[-10:]))
+    rows = []
+    for entry in reversed(history[-10:]):
+        if entry["country"] == "朝韩非军事区":
+            code = entry.get("country_code")
+            if not code and entry["count"] == result.get("reborn_count"):
+                code = result["country"]["code"]
+            entry = entry | {"country": {"PRK": "朝鲜", "KOR": "韩国"}.get(code, "朝鲜／韩国")}
+        rows.append(entry)
+    return rows
 
 
 def render_reborn_html(result: dict, name: str) -> str:

@@ -35,8 +35,8 @@
         .recipient small { display: block; margin-top: 5px; color: #8a99a9; font-size: 9px; letter-spacing: 0.1px; white-space: nowrap; }
         .activities { display: grid; grid-template-columns: 1fr; gap: 6px; }
         .activity { display: flex; align-items: center; gap: 8px; min-width: 0; font-size: 12px; line-height: 16px; }
-        /* 宜忌最多五项，按完整词条换行并保持两行区域高度稳定。 */
-        .activity-list { flex: 1; min-width: 0; min-height: 32px; }
+        /* 宜忌按完整词条换行，在预留的两行区域内居中，与标签对齐。 */
+        .activity-list { display: flex; flex-wrap: wrap; align-content: center; flex: 1; min-width: 0; min-height: 32px; }
         .activity-item { display: inline-block; white-space: nowrap; }
         .tag { display: grid; place-items: center; flex-shrink: 0; width: 26px; height: 26px; border-radius: 8px; background: #e0ebe5; color: #628374; font-size: 13px; }
         .avoid .tag { background: #f1e3e3; color: #ae7f82; }

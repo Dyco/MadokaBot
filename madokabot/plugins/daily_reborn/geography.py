@@ -101,12 +101,15 @@ def interior_anchor(path: str, x: float, y: float, *, china: bool) -> tuple[floa
 
 
 def birth_region(country: dict, *, china: bool) -> tuple[dict, float, float]:
-    """定位出生统计分区，世界版共用高亮编号时仍选择其实际地理单元。"""
+    """定位实际出生地理单元，排除非军事区等只供绘制的叠加区域。"""
     if china:
         region = next(row for row in load_china_map()["regions"] if row["code"] == country["code"])
         return region, region["marker_x"], region["marker_y"]
     x, y = (country["longitude"] + 180) * 1000 / 360, (85 - country["latitude"]) * 1000 / 360
-    candidates = [row for row in load_world_map() if row["code"] == country["map_code"] and map_polygons(row["path"])]
+    candidates = [
+        row for row in load_world_map()
+        if row["code"] == country["map_code"] and row.get("birth_area", True) and map_polygons(row["path"])
+    ]
     if len(candidates) == 1:
         return candidates[0], x, y
     region = min(candidates, key=lambda row: min(
