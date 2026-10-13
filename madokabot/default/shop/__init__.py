@@ -10,7 +10,7 @@ __plugin_meta__ = PluginMetadata(
     name="商店",
     description="使用积分购买立绘和签到模板，购买后需发送/设置指令切换使用",
     usage=(
-        f"{command_start}商店 列表：查看商品分类\n"
+        f"{command_start}商店 列表：合并查看全部立绘和签到模板\n"
         f"{command_start}商店 立绘：查看立绘与商品编号\n"
         f"{command_start}商店 签到模板：查看签到模板与商品编号\n"
         f"{command_start}商店 购买 <商品编号>：消耗积分购买，例如{command_start}商店 购买 sign02\n"

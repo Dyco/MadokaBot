@@ -1,55 +1,57 @@
 import math
-import time
 
-from nonebot.adapters.onebot.v11 import MessageEvent
-from nonebot_plugin_alconna import (
-    Arparma,
-    Image,
-    Match,
-    UniMessage,
+from nonebot import logger
+from nonebot.adapters.onebot.v11 import (
+    Bot,
+    GroupMessageEvent,
+    Message,
+    MessageEvent,
+    MessageSegment,
+    OneBotV11AdapterException,
 )
-from nonebot_plugin_waiter import waiter
+from nonebot_plugin_alconna import Arparma, Match
 
 from madokabot.core.config import command_start
+from madokabot.core.messaging.response import respond
 from madokabot.core.user.accounts import UserAccount
-from .service import SignTemplateService, SkinService
-from .render import SIGN_PAGE_SIZE, render_shop_list_card
+
 from .config import config
 from .matchers import SHOP_USAGE, shop_cmd
-from madokabot.core.messaging.pagination import extract_message_id, parse_page_command
+from .render import SIGN_PAGE_SIZE, render_shop_list_card
+from .service import SignTemplateService, SkinService
 
 
-def _calc_total_pages(item_count: int, page_size: int | None = None) -> int:
-    """按指定每页数量计算总页数，未指定时使用立绘商店配置。"""
-    return max(1, math.ceil(item_count / (config.shop_page_size if page_size is None else page_size)))
-
-
-async def _build_shop_page(
-    uid: str, page: int, category: str = "skin",
-) -> tuple[UniMessage, int, int]:
-    """读取用户积分与商品信息并渲染指定页。"""
-    points = await UserAccount.get_points(uid)
+async def _build_shop_messages(uid: str, points: int, category: str) -> list[Message]:
+    """生成分类操作说明与全部商品页，供合并转发使用。"""
     items = (
         await SignTemplateService.get_shop_template_list(uid)
         if category == "sign" else await SkinService.get_shop_skin_list(uid)
     )
     page_size = SIGN_PAGE_SIZE if category == "sign" else config.shop_page_size
-    total_pages = _calc_total_pages(len(items), page_size)
-    current_page = max(1, min(page, total_pages))
-    image_data = render_shop_list_card(
-        items,
-        points,
-        page=current_page,
-        page_size=page_size,
-        total_pages=total_pages,
-        category=category,
+    total_pages = max(1, math.ceil(len(items) / page_size))
+    title = "签到模板" if category == "sign" else "角色立绘"
+    setting = "签到模板" if category == "sign" else "立绘"
+    example = "sign02" if category == "sign" else "skin01"
+    hint = (
+        f"——{title}——\n"
+        f"{command_start}商店 购买 <编号，如{example}>\n"
+        f"{command_start}设置 {setting} <编号，如{example}>\n"
+        f"{command_start}积分 赠礼 <@用户|QQ号> <编号>"
     )
-    return UniMessage(Image(raw=image_data)), current_page, total_pages
-
-
-def _build_shop_page_text(current_page: int, total_pages: int) -> str:
-    """生成商店分页操作提示。"""
-    return f"当前页码：{current_page}/{total_pages}。请回复这条商店消息，发送“上一页”“下一页”或页码翻页。"
+    messages = [Message(MessageSegment.text(hint))]
+    for page in range(1, total_pages + 1):
+        image_data = render_shop_list_card(
+            items,
+            points,
+            page=page,
+            page_size=page_size,
+            total_pages=total_pages,
+            category=category,
+        )
+        messages.append(
+            MessageSegment.text(f"第 {page} 页\n") + MessageSegment.image(image_data)
+        )
+    return messages
 
 
 @shop_cmd.handle()
@@ -66,100 +68,56 @@ async def _shop_help():
 
 
 @shop_cmd.assign("chara")
-async def _shop_chara(event: MessageEvent):
+async def _shop_chara(bot: Bot, event: MessageEvent):
     """展示立绘商店。"""
-    await _send_shop(event, "skin")
+    await _send_shop(bot, event, ("skin",))
 
 
 @shop_cmd.assign("sign")
-async def _shop_sign(event: MessageEvent):
+async def _shop_sign(bot: Bot, event: MessageEvent):
     """展示签到模板商品与预览图。"""
-    await _send_shop(event, "sign")
+    await _send_shop(bot, event, ("sign",))
 
 
 @shop_cmd.assign("list")
-async def _shop_list(event: MessageEvent):
-    """展示商店商品列表。"""
-    await shop_cmd.finish(
-        "当前可购买：角色立绘、签到模板。\n"
-        f"查看立绘：{command_start}商店 立绘\n"
-        f"查看签到模板：{command_start}商店 签到模板\n"
-        f"购买商品：{command_start}商店 购买 <商品编号>\n"
-        f"例如：{command_start}商店 购买 sign02，商品编号以商店展示为准。"
-    )
+async def _shop_list(bot: Bot, event: MessageEvent):
+    """依次展示立绘与签到模板的全部商品页。"""
+    await _send_shop(bot, event, ("skin", "sign"))
 
 
-async def _send_shop(event: MessageEvent, category: str):
-    """商店分页会话方法。"""
+async def _send_shop(bot: Bot, event: MessageEvent, categories: tuple[str, ...]) -> None:
+    """添加表情回应，将指定分类的说明和图片合并转发到当前会话。"""
+    await respond(bot, event)
     uid = event.get_user_id()
     if not await UserAccount.is_registered(uid):
         await shop_cmd.finish("请先发送“注册”完成用户注册")
 
-    message, current_page, total_pages = await _build_shop_page(uid, 1, category)
-    purchase_hint = (
-        f"购买模板：{command_start}商店 购买 <商品编号，如sign02>\n"
-        f"切换模板：{command_start}设置 签到模板 <商品编号，如sign02>\n"
-        f"赠送模板：{command_start}积分 赠礼 <@用户|QQ号> <商品编号>\n"
-        if category == "sign" else
-        f"购买立绘：{command_start}商店 购买 <商品编号，如skin01>\n"
-        f"切换立绘：{command_start}设置 立绘 <商品编号，如skin01>\n"
-        f"赠送立绘：{command_start}积分 赠礼 <@用户|QQ号> <商品编号>\n"
-    )
-    send_result = await shop_cmd.send(
-        message + purchase_hint + _build_shop_page_text(current_page, total_pages),
-        reply_message=True,
-    )
-    reply_message_id = extract_message_id(send_result)
-    if reply_message_id is None:
-        return
+    try:
+        points = await UserAccount.get_points(uid)
+        messages = []
+        for category in categories:
+            messages.extend(await _build_shop_messages(uid, points, category))
+    except (OSError, ValueError):
+        logger.exception("商店图片生成失败")
+        await shop_cmd.finish("商店图片生成失败，请稍后重试")
 
-    @waiter(waits=["message"], keep_session=True, block=True)
-    async def wait_shop_page(reply_event: MessageEvent):
-        """商店翻页回复检查方法。"""
-        if not reply_event.reply:
-            return None
-        try:
-            replied_message_id = int(reply_event.reply.message_id)
-        except (TypeError, ValueError):
-            return None
-        if replied_message_id != reply_message_id:
-            return None
-
-        target_page, invalid_page = parse_page_command(
-            reply_event.get_plaintext(),
-            current_page,
-            total_pages,
+    nodes = [
+        MessageSegment.node_custom(
+            user_id=int(bot.self_id),
+            nickname="MadokaBot商店",
+            content=message,
         )
-        if target_page is None and not invalid_page:
-            return None
-        return reply_event, target_page, invalid_page
-
-    deadline = time.monotonic() + config.shop_session_timeout
-    while (remaining := deadline - time.monotonic()) > 0:
-        result = await wait_shop_page.wait(timeout=remaining)
-        if result is None:
-            return
-
-        reply_event, target_page, invalid_page = result
-        if invalid_page:
-            await UniMessage(f"页码无效，请回复商店消息并输入1～{total_pages}之间的页码。").send(
-                target=reply_event, reply_to=True
-            )
-            continue
-
-        if target_page is None:
-            continue
-        message, current_page, total_pages = await _build_shop_page(uid, target_page, category)
-        send_result = await (
-            message + "\n" + _build_shop_page_text(current_page, total_pages)
-        ).send(
-            target=reply_event,
-            reply_to=True,
-        )
-        next_message_id = extract_message_id(send_result)
-        if next_message_id is None:
-            return
-        reply_message_id = next_message_id
+        for message in messages
+    ]
+    try:
+        if isinstance(event, GroupMessageEvent):
+            await bot.send_group_forward_msg(group_id=event.group_id, messages=nodes)
+        else:
+            await bot.send_private_forward_msg(user_id=event.user_id, messages=nodes)
+    except OneBotV11AdapterException:
+        logger.exception("商店合并转发发送失败")
+        await shop_cmd.finish("商店消息发送失败，请稍后重试")
+    await shop_cmd.finish()
 
 
 @shop_cmd.assign("buy")
