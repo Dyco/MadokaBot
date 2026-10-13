@@ -66,8 +66,8 @@
         .watermark { position: absolute; left: 30px; bottom: 24px; color: #8a99a9; font-size: 9px; letter-spacing: 0.1px; }
         .portrait { position: absolute; right: 12px; top: 12px; width: 254px; height: 336px; border-radius: 16px; overflow: hidden; background: linear-gradient(155deg, #dce7f1, #e9e5ed); }
         .portrait::before { content: ''; position: absolute; width: 240px; height: 240px; top: 28px; left: 30px; border: 1px solid #ffffffa6; border-radius: 50%; }
-        /* 固定全身图的显示高度，用容器截取顶部至腰部，避免压缩成全身缩略图。 */
-        .skin { position: absolute; height: 680px; width: auto; max-width: none; top: 8px; left: 50%; transform: translateX(-50%); filter: drop-shadow(0 5px 12px #586b7e24); }
+        /* 按可见角色高度缩放并对齐头顶，抵消统一画布的透明留白。 */
+        .skin { position: absolute; height: {{ skin_height }}px; width: auto; max-width: none; top: {{ skin_top }}px; left: 50%; transform: translateX(-50%); filter: drop-shadow(0 5px 12px #586b7e24); }
         .portrait::after { content: ''; position: absolute; inset: 0; background: linear-gradient(0deg, #e8e9ef 0%, transparent 18%); }
         .empty-skin { position: absolute; inset: 0; display: grid; place-items: center; color: #b4c4d3; font-family: FortuneTitle, serif; font-size: 120px; }
     </style>
