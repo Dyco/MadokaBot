@@ -5,12 +5,14 @@ from secrets import randbelow
 from uuid import uuid4
 
 from nonebot_plugin_datastore import create_session
-from sqlalchemy import select, update
+from sqlalchemy import func, select, update
 from sqlalchemy.exc import IntegrityError
 
 from madokabot.core.user.models import UserStats
 
 from .models import RedPacket, RedPacketClaim
+
+MAX_RED_PACKET_COUNT = 20
 
 
 def utc_now() -> datetime:
@@ -22,6 +24,7 @@ async def create_red_packet(
     sender_id: str, bot_id: str, group_id: str, points: int, count: int,
 ) -> str:
     """红包创建方法。"""
+    count = min(count, MAX_RED_PACKET_COUNT)
     if count <= 0 or points < count:
         raise ValueError("积分和人数必须是正整数，且总积分不能少于人数")
     if points > 2**63 - 1:
@@ -86,7 +89,7 @@ async def is_active_red_packet(bot_id: str, group_id: str, message_id: int) -> b
 
 async def claim_red_packet(
     bot_id: str, group_id: str, message_id: int, uid: str,
-) -> tuple[int, bool] | None:
+) -> tuple[int, int, str] | None:
     """红包领取方法。"""
     async with create_session() as session:
         # 更新红包行取得锁，领取和退款共用该行以避免并发重复结算。
@@ -123,12 +126,43 @@ async def claim_red_packet(
         finished = packet.remaining_count == 0
         if finished:
             packet.state = "finished"
+        remaining_count, packet_id = packet.remaining_count, packet.id
         try:
             await session.commit()
         except IntegrityError:
             await session.rollback()
             return None
-        return points, finished
+        return points, remaining_count, packet_id
+
+
+async def get_red_packet_summary(packet_id: str) -> tuple[str, str, int, str] | None:
+    """红包领取汇总方法。"""
+    async with create_session() as session:
+        packet = await session.get(RedPacket, packet_id)
+        if packet is None or packet.state not in {"finished", "refunded"} or packet.message_id is None:
+            return None
+        result = await session.execute(
+            select(
+                RedPacketClaim.user_id,
+                func.coalesce(func.nullif(UserStats.display_name, ""), UserStats.qq_nickname, ""),
+                RedPacketClaim.points,
+            )
+            .outerjoin(UserStats, UserStats.user_id == RedPacketClaim.user_id)
+            .where(RedPacketClaim.packet_id == packet_id)
+            .order_by(RedPacketClaim.points.desc(), RedPacketClaim.claimed_at, RedPacketClaim.user_id)
+        )
+        claims = result.all()
+        received = sum(points for _, _, points in claims)
+        title = "红包已抢完" if packet.state == "finished" else f"红包已到期，剩余{packet.total_points - received}积分已退回"
+        lines = [title, "领取汇总（按积分从高到低）："]
+        for index, (uid, nickname, points) in enumerate(claims, start=1):
+            name = " ".join(nickname.split()) or "未设置昵称"
+            masked_id = f"{uid[:2]}**{uid[-2:]}" if len(uid) > 4 else "**"
+            lines.append(f"{index}. {name}（{masked_id}）  {points}积分")
+        if not claims:
+            lines.append("暂无人领取")
+        lines.append(f"共{len(claims)}人领取，总计{received}积分")
+        return packet.bot_id, packet.group_id, packet.message_id, "\n".join(lines)
 
 
 async def refund_red_packet(packet_id: str, *, expired_only: bool = True) -> bool:

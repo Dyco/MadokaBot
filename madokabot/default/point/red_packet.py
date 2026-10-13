@@ -2,7 +2,7 @@
 
 from datetime import datetime, timezone
 
-from nonebot import logger, on_message
+from nonebot import get_bot, logger, on_message
 from nonebot.adapters.onebot.v11 import (
     Bot, GroupMessageEvent, MessageEvent, MessageSegment,
 )
@@ -19,22 +19,42 @@ from madokabot.default.account.service import register_user
 
 from .matchers import point_cmd
 from .packet_service import (
+    MAX_RED_PACKET_COUNT,
     activate_red_packet,
     claim_red_packet,
     create_red_packet,
     get_open_red_packets,
+    get_red_packet_summary,
     is_active_red_packet,
     refund_red_packet,
     utc_now,
 )
 
 
+async def send_red_packet_summary(packet_id: str) -> None:
+    """红包汇总发送方法。"""
+    try:
+        summary = await get_red_packet_summary(packet_id)
+        if summary is None:
+            return
+        bot_id, group_id, message_id, text = summary
+        await get_bot(bot_id).send_group_msg(
+            group_id=int(group_id),
+            message=MessageSegment.reply(message_id) + MessageSegment.text(text),
+        )
+    except Exception:
+        logger.exception(f"红包领取汇总发送失败：{packet_id}")
+
+
 async def refund_expired_red_packet(packet_id: str) -> None:
     """到期红包退款方法。"""
     try:
-        await refund_red_packet(packet_id)
+        refunded = await refund_red_packet(packet_id)
     except Exception:
         logger.exception(f"红包退款失败，等待重试：{packet_id}")
+        return
+    if refunded:
+        await send_red_packet_summary(packet_id)
 
 
 def schedule_red_packet_refund(packet_id: str, expires_at: datetime) -> None:
@@ -101,6 +121,7 @@ async def handle_red_packet(
         total_points, people = int(raw_points), int(raw_count)
     except ValueError:
         await point_cmd.finish("红包数值过大")
+    people = min(people, MAX_RED_PACKET_COUNT)
     try:
         packet_id = await create_red_packet(
             event.get_user_id(), bot.self_id, str(event.group_id), total_points, people
@@ -114,7 +135,9 @@ async def handle_red_packet(
     message_id = None
     name = event.sender.card or event.sender.nickname or f"QQ{event.user_id}"
     try:
-        sent = await point_cmd.send(MessageSegment.text(f"{name}发了一个红包！\n回复此消息即可抢红包"))
+        sent = await point_cmd.send(MessageSegment.text(
+            f"{name}发了一个红包！\n{people}人可抢，总计{total_points}积分！\n回复此消息即可抢红包"
+        ))
         message_id = extract_message_id(sent)
         if message_id is None:
             raise RuntimeError("红包消息编号缺失")
@@ -171,11 +194,15 @@ async def handle_red_packet_reply(bot: Bot, event: GroupMessageEvent) -> None:
     if claimed is None:
         return
     await respond(bot, event, emoji_id=478)
-    if claimed[1]:
-        try:
-            await bot.send_group_msg(
-                group_id=event.group_id,
-                message=MessageSegment.reply(event.reply.message_id) + MessageSegment.text("红包已抢完"),
-            )
-        except Exception:
-            logger.exception("红包已抢完提示发送失败")
+    points, remaining_count, packet_id = claimed
+    name = event.sender.card or event.sender.nickname or f"QQ{event.user_id}"
+    try:
+        await bot.send_group_msg(
+            group_id=event.group_id,
+            message=MessageSegment.reply(event.message_id)
+            + MessageSegment.text(f"{name}抢到了{points}积分，剩余{remaining_count}个"),
+        )
+    except Exception:
+        logger.exception("红包领取积分播报失败")
+    if remaining_count == 0:
+        await send_red_packet_summary(packet_id)

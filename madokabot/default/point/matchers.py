@@ -8,7 +8,7 @@ POINT_USAGE = (
     f"{command_start}积分 查询（查询自己的积分与总排名，也可使用“{command_start}查询 积分”）\n"
     f"{command_start}积分 转账 <@用户|QQ号> <积分数量>\n"
     f"{command_start}积分 赠礼 <@用户|QQ号> <商品编号，如sign02或skin01>\n"
-    f"{command_start}积分 红包 <总积分> <人数>（群内回复随机领取，每人一次，1小时后退回剩余积分）\n"
+    f"{command_start}积分 红包 <总积分> <人数>（最多20人，超出按20人发放；每人一次，1小时后退回剩余积分）\n"
     f"{command_start}积分 排名（本群与全部用户积分前20名）"
 )
 
