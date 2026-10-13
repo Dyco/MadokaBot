@@ -56,7 +56,9 @@ COPY --from=requirements_stage /wheel /wheel
 RUN pip install --no-cache-dir gunicorn uvicorn[standard] nonebot2 \
   && pip install --no-cache-dir --no-index --force-reinstall --find-links=/wheel -r /wheel/requirements.txt && rm -rf /wheel
 
-RUN python -m playwright install --with-deps chromium \
+# 使用国内镜像，仅安装 Chromium 无头浏览器及系统依赖
+RUN PLAYWRIGHT_DOWNLOAD_HOST=https://cdn.npmmirror.com/binaries/playwright \
+    python -m playwright install --with-deps --only-shell chromium \
   && rm -rf /var/lib/apt/lists/*
 
 COPY . /app/

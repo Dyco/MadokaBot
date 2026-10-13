@@ -3,6 +3,8 @@ version: "3"
 services:
   nonebot:
     build: .
+    image: madokabot:latest
+    container_name: MadokaBot
     ports:
       - "8080:8080"
 
