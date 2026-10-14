@@ -89,8 +89,8 @@ async def is_active_red_packet(bot_id: str, group_id: str, message_id: int) -> b
 
 async def claim_red_packet(
     bot_id: str, group_id: str, message_id: int, uid: str,
-) -> tuple[int, int, str] | None:
-    """红包领取方法。"""
+) -> tuple[int, int, int, str] | None:
+    """领取红包并返回本次积分、剩余个数、剩余积分和红包编号。"""
     async with create_session() as session:
         # 更新红包行取得锁，领取和退款共用该行以避免并发重复结算。
         packet = await session.scalar(
@@ -126,13 +126,14 @@ async def claim_red_packet(
         finished = packet.remaining_count == 0
         if finished:
             packet.state = "finished"
-        remaining_count, packet_id = packet.remaining_count, packet.id
+        remaining_count, remaining_points = packet.remaining_count, packet.remaining_points
+        packet_id = packet.id
         try:
             await session.commit()
         except IntegrityError:
             await session.rollback()
             return None
-        return points, remaining_count, packet_id
+        return points, remaining_count, remaining_points, packet_id
 
 
 async def get_red_packet_summary(packet_id: str) -> tuple[str, str, int, str] | None:

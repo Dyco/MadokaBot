@@ -136,7 +136,7 @@ async def handle_red_packet(
     name = event.sender.card or event.sender.nickname or f"QQ{event.user_id}"
     try:
         sent = await point_cmd.send(MessageSegment.text(
-            f"{name}发了一个红包！\n{people}人可抢，总计{total_points}积分！\n回复此消息即可抢红包"
+            f"{name}发了红包！\n{people}人可抢，总计{total_points}积分！\n回复此消息即可抢红包"
         ))
         message_id = extract_message_id(sent)
         if message_id is None:
@@ -178,7 +178,7 @@ red_packet_reply = on_message(rule=is_red_packet_reply, priority=8, block=False)
 
 @red_packet_reply.handle()
 async def handle_red_packet_reply(bot: Bot, event: GroupMessageEvent) -> None:
-    """红包领取回复处理方法。"""
+    """处理红包领取回复，播报本次积分与红包剩余数量、积分。"""
     if event.reply is None:
         return
     try:
@@ -194,13 +194,15 @@ async def handle_red_packet_reply(bot: Bot, event: GroupMessageEvent) -> None:
     if claimed is None:
         return
     await respond(bot, event, emoji_id=478)
-    points, remaining_count, packet_id = claimed
+    points, remaining_count, remaining_points, packet_id = claimed
     name = event.sender.card or event.sender.nickname or f"QQ{event.user_id}"
     try:
         await bot.send_group_msg(
             group_id=event.group_id,
             message=MessageSegment.reply(event.message_id)
-            + MessageSegment.text(f"{name}抢到了{points}积分，剩余{remaining_count}个"),
+            + MessageSegment.text(
+                f"{name}抢到{points}积分，还剩{remaining_count}个红包，{remaining_points}积分！"
+            ),
         )
     except Exception:
         logger.exception("红包领取积分播报失败")
