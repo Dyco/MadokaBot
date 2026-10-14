@@ -2,7 +2,6 @@ import asyncio
 import io
 import json
 import os
-import random
 import re
 import time
 import urllib.parse
@@ -24,7 +23,7 @@ except ImportError:
     HTML_RENDER_AVAILABLE = False
     logger.warning("[Comment] 未检测到 nonebot_plugin_htmlrender，图片模式将失效并自动降级为文字模式")
 
-from .sources.tiktok import generate_x_bogus_url
+from .sources.tiktok import build_douyin_request
 
 TEMPLATE_DIR = os.path.join(get_cache_dir(PLUGIN_NAME), "templates")
 TEMPLATE_PATH = os.path.join(TEMPLATE_DIR, "douyin-comment.html")
@@ -316,8 +315,8 @@ async def download_and_convert_comment_img(session: aiohttp.ClientSession, url: 
 
 async def get_douyin_comments(session: aiohttp.ClientSession, aweme_id: str, headers: dict,
                               author_sec_uid: str = None) -> List[Dict[str, Any]]:
+    """复用作品会话的设备信息和请求头，签名获取抖音评论。"""
     try:
-        msToken = ''.join(random.choices("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789=_", k=107))
         params = {
             "device_platform": "webapp",
             "aid": "6383",
@@ -329,14 +328,16 @@ async def get_douyin_comments(session: aiohttp.ClientSession, aweme_id: str, hea
             "pc_client_type": "1",
             "version_code": "170400",
             "version_name": "17.4.0",
-            "msToken": msToken
         }
         query_str = urllib.parse.urlencode(params)
-        final_api_url = generate_x_bogus_url(f"https://www.douyin.com/aweme/v1/web/comment/list/?{query_str}", headers)
-        if not final_api_url:
-            return []
+        final_api_url, request_headers = build_douyin_request(
+            f"https://www.douyin.com/aweme/v1/web/comment/list/?{query_str}",
+            headers["cookie"],
+            headers["referer"],
+        )
 
-        async with session.get(final_api_url, headers=headers) as resp:
+        async with session.get(final_api_url, headers=request_headers) as resp:
+            resp.raise_for_status()
             text_data = await resp.text()
             if not text_data.strip():
                 return []
@@ -464,7 +465,7 @@ async def get_douyin_comments(session: aiohttp.ClientSession, aweme_id: str, hea
 
             return parsed_comments
     except Exception as e:
-        logger.error(f"[Comment] 获取评论 API 失败: {e}")
+        logger.error(f"[Comment] 获取抖音评论 API 失败: {type(e).__name__}")
         return []
 
 

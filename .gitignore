@@ -16,3 +16,4 @@ __pycache__/
 /ytb_cookies.txt
 /assets/ytb_cookies.txt
 env.prod
+docker/diagnose_douyin.py

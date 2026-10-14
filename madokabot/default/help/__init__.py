@@ -19,7 +19,7 @@ from madokabot.core.version import get_bot_version
 __plugin_meta__ = PluginMetadata(
     name="帮助",
     description="通过合并转发展示插件分类、功能说明和使用方法",
-    usage="发送"help"即可查看本机器人的全部内容",
+    usage="发送“help”即可查看本机器人的全部内容",
     type="application",
     supported_adapters={"~onebot.v11"},
 )

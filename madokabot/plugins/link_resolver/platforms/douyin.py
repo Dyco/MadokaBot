@@ -25,7 +25,7 @@ from ..messages import (
     make_forward_nodes,
     send_forward,
 )
-from ..sources.tiktok import dou_transfer_other, generate_x_bogus_url
+from ..sources.tiktok import build_douyin_request, dou_transfer_other
 from ..state import is_content_enabled
 from .runtime import (
     DOUYIN_PROXY,
@@ -42,7 +42,7 @@ from .video import (
 @resolve_handler
 @resolve_controller
 async def dy(bot: Bot, event: GroupMessageEvent) -> None:
-    """抖音解析方法。"""
+    """携带同一会话的设备标识和签名解析抖音作品。"""
     msg = get_resolver_message(event)
     logger.info(msg)
     reg = (
@@ -95,9 +95,9 @@ async def dy(bot: Bot, event: GroupMessageEvent) -> None:
     if not id_match:
         await douyin.finish("无法从抖音链接中提取作品 ID。")
     dou_id = id_match.group(1)
-    douyin_ck = getattr(global_config, "douyin_ck", "")
+    douyin_ck = global_config.douyin_ck.strip()
     if douyin_ck == "":
-        logger.error(global_config)
+        logger.warning("[抖音] 未配置 douyin_ck")
         await send_forward(
             bot,
             event,
@@ -109,16 +109,14 @@ async def dy(bot: Bot, event: GroupMessageEvent) -> None:
             ),
         )
         return
-    headers = {
-        "Accept-Language": "zh-CN,zh;q=0.8,zh-TW;q=0.7,zh-HK;q=0.5,en-US;q=0.3,en;q=0.2",
-        "referer": f"https://www.douyin.com/video/{dou_id}",
-        "cookie": douyin_ck,
-    } | COMMON_HEADER
-    api_url = DOUYIN_VIDEO.replace("{}", dou_id)
     try:
-        api_url = generate_x_bogus_url(api_url, headers)
-    except RuntimeError as exc:
-        logger.error(str(exc))
+        api_url, headers = build_douyin_request(
+            DOUYIN_VIDEO.replace("{}", dou_id),
+            douyin_ck,
+            f"https://www.douyin.com/video/{dou_id}",
+        )
+    except (RuntimeError, ValueError) as exc:
+        logger.warning(f"[抖音] {exc}")
         return
     async with aiohttp.ClientSession(
         proxy=DOUYIN_PROXY,
@@ -126,10 +124,27 @@ async def dy(bot: Bot, event: GroupMessageEvent) -> None:
     ) as session:
         async with session.get(api_url, headers=headers, timeout=10) as response:
             try:
+                if response.status == 403:
+                    reason = (await response.text()).strip()
+                    message = {
+                        "Blocked by ArgusSecurityPlugin Uifid Not Found": (
+                            "网关未识别设备标识，请检查 Cookie 中的 UIFID/UIFID_TEMP 和 s_v_web_id"
+                        ),
+                        "Blocked by ArgusSecurityPlugin Signature Not Found": (
+                            "网关签名校验未通过，需要进一步核实设备会话及接口签名要求"
+                        ),
+                    }.get(reason, "请求被拒绝")
+                    logger.warning(f"[抖音] 作品接口请求失败：HTTP 403，{message}")
+                    return
                 response.raise_for_status()
                 response_data = await response.json()
+            except aiohttp.ClientResponseError as exc:
+                logger.warning(
+                    f"[抖音] 作品接口请求失败：HTTP {exc.status}（{type(exc).__name__}）"
+                )
+                return
             except (aiohttp.ClientError, ValueError) as exc:
-                logger.warning(f"[抖音] 作品接口请求失败：{exc}")
+                logger.warning(f"[抖音] 作品接口请求失败：{type(exc).__name__}")
                 return
 
             if not isinstance(response_data, dict):
@@ -159,19 +174,11 @@ async def dy(bot: Bot, event: GroupMessageEvent) -> None:
                         render_comments_image,
                     )
 
-                    c_headers = {
-                        "User-Agent": (
-                            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-                            "AppleWebKit/537.36"
-                        ),
-                        "referer": f"https://www.douyin.com/video/{dou_id}",
-                        "cookie": douyin_ck,
-                    } | COMMON_HEADER
                     author_sec_uid = detail.get("author", {}).get("sec_uid")
                     comments = await get_douyin_comments(
                         session,
                         dou_id,
-                        c_headers,
+                        headers,
                         author_sec_uid,
                     )
                     if comments:
