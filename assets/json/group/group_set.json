@@ -5,25 +5,7 @@
         ],
         "group_set": {
             "copying_enabled": true,
-            "threshold": 4
-        },
-        "hltv_event_settings": {
-            "push_each_map": true,
-            "notify_start": true,
-            "prediction_enabled": true
-        },
-        "steam": {
-            "bindings": [
-                {
-                    "user_id": "1683550817",
-                    "steam_id": "76561198109101697",
-                    "nickname": null
-                }
-            ],
-            "group_name": "测试群"
-        },
-        "group_info": {
-            "group_name": "测试群"
+            "threshold": 3
         }
     },
     "463835135": {
@@ -33,6 +15,84 @@
         },
         "hltv_sub": [
             "8057"
+        ],
+        "hltv_event_settings": {
+            "push_each_map": true,
+            "notify_start": true
+        },
+        "group_info": {
+            "group_name": "Madoka Fan Club"
+        }
+    },
+    "1098472556": {
+        "group_set": {
+            "copying_enabled": true,
+            "threshold": 5
+        },
+        "madoka_link_resolver": {
+            "resolver_control": {
+                "resolver_enabled": true,
+                "resolver_overrides": {},
+                "content_enabled": {
+                    "image": true,
+                    "video": false,
+                    "comment": true
+                },
+                "content_overrides": {
+                    "douyin": {
+                        "video": true
+                    }
+                }
+            }
+        },
+        "hltv_sub": [
+            "8057",
+            "8244",
+            "8932"
+        ],
+        "hltv_event_settings": {
+            "push_each_map": true,
+            "notify_start": true,
+            "prediction_enabled": true
+        },
+        "group_info": {
+            "group_name": "和韩国出生谈恋爱是否搞错了什么"
+        }
+    },
+    "548312550": {
+        "hltv_sub": [
+            "8057",
+            "8244",
+            "8932"
+        ],
+        "group_set": {
+            "copying_enabled": true,
+            "threshold": 5
+        },
+        "hltv_event_settings": {
+            "push_each_map": true,
+            "notify_start": false
+        },
+        "group_info": {
+            "group_name": "- 7th - 第七天堂"
+        }
+    },
+    "338125848": {
+        "group_info": {
+            "group_name": "- 第七天堂 - 7th Heaven"
+        }
+    },
+    "560362441": {
+        "group_info": {
+            "group_name": "狂暴入K门"
+        },
+        "group_set": {
+            "copying_enabled": true,
+            "threshold": 3
+        },
+        "hltv_sub": [
+            "8244",
+            "8932"
         ]
     }
 }

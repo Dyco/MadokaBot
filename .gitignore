@@ -1,5 +1,5 @@
 __pycache__/
-
+.env
 .env.prod
 .env.dev
 .venv/
@@ -16,4 +16,10 @@ __pycache__/
 /assets/cookies
 /assets/cache/
 /assets/data/
-.env
+
+
+/assets/json
+/assets/image/csteam
+/assets/image/group
+/assets/image/maimai
+/assets/image/chunithm
