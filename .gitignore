@@ -1,10 +1,9 @@
-.env
-.env.*
-.venv/
 __pycache__/
+
+.env.prod
+.env.dev
+.venv/
 *.py[cod]
-/assets/cache/
-/assets/data/
 *.rar
 /.vs/MadokaBot
 .vs/ProjectSettings.json
@@ -13,7 +12,7 @@ __pycache__/
 /docs
 /tests
 
-/ytb_cookies.txt
 /assets/ytb_cookies.txt
-env.prod
-docker/diagnose_douyin.py
+/assets/cookies
+/assets/cache/
+/assets/data/

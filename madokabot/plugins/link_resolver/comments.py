@@ -315,7 +315,7 @@ async def download_and_convert_comment_img(session: aiohttp.ClientSession, url: 
 
 async def get_douyin_comments(session: aiohttp.ClientSession, aweme_id: str, headers: dict,
                               author_sec_uid: str = None) -> List[Dict[str, Any]]:
-    """复用作品会话的设备信息和请求头，签名获取抖音评论。"""
+    """使用统一 Netscape Cookie 资源中的设备信息签名获取抖音评论。"""
     try:
         params = {
             "device_platform": "webapp",
@@ -332,7 +332,6 @@ async def get_douyin_comments(session: aiohttp.ClientSession, aweme_id: str, hea
         query_str = urllib.parse.urlencode(params)
         final_api_url, request_headers = build_douyin_request(
             f"https://www.douyin.com/aweme/v1/web/comment/list/?{query_str}",
-            headers["cookie"],
             headers["referer"],
         )
 
@@ -467,6 +466,43 @@ async def get_douyin_comments(session: aiohttp.ClientSession, aweme_id: str, hea
     except Exception as e:
         logger.error(f"[Comment] 获取抖音评论 API 失败: {type(e).__name__}")
         return []
+
+
+def parse_xiaohongshu_comments(comments: list[dict], author_id: str) -> list[dict]:
+    """将小红书评论和内嵌回复转换为通用评论展示结构。"""
+
+    def parse_comment(comment: dict) -> dict:
+        """转义用户内容并提取作者标识、点赞、时间及评论图片。"""
+        user = comment.get("user_info", {})
+        pictures = comment.get("pictures") or []
+        image = ""
+        if pictures:
+            image = pictures[0].get("url_default", "")
+            if not image:
+                image = next(
+                    (
+                        item["url"]
+                        for item in pictures[0].get("info_list", [])
+                        if item.get("url")
+                    ),
+                    "",
+                )
+        return {
+            "username": escape_html(user.get("nickname", "未知")),
+            "avatar": escape_html(user.get("image", "")),
+            "content": escape_html(comment.get("content", "")).replace("\n", "<br>"),
+            "like": int(comment.get("like_count") or 0),
+            "time": format_comment_time(int(comment.get("create_time") or 0) // 1000),
+            "location": escape_html(comment.get("ip_location", "")),
+            "is_author": bool(author_id and user.get("user_id") == author_id),
+            "image": escape_html(image),
+            "replies": [
+                parse_comment(reply)
+                for reply in (comment.get("sub_comments") or [])[:3]
+            ],
+        }
+
+    return [parse_comment(comment) for comment in comments]
 
 
 def build_comments_html(comments: list) -> str:

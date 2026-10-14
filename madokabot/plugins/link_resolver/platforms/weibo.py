@@ -1,178 +1,118 @@
-"""weibo 链接解析事件处理器。"""
+"""微博图文与视频分享解析。"""
 
-import asyncio
-import json
 import re
+from html import unescape
 from pathlib import Path
 
+import aiohttp
 import httpx
 from nonebot import logger
-from nonebot.adapters.onebot.v11 import Bot, GroupMessageEvent, Message, MessageSegment
+from nonebot.adapters.onebot.v11 import Bot, GroupMessageEvent, MessageSegment
 
 from madokabot.core.messaging.media import MediaSizeLimitExceeded
 
 from ..commands import resolve_controller, resolve_handler
-from ..constants import (
-    COMMON_HEADER,
-    WEIBO_SINGLE_INFO,
-)
 from ..delivery import media_delivery, send_resolved_video
-from ..downloads import (
-    download_image,
-    download_video,
-)
-from ..matchers import (
-    weibo_matcher as weibo,
-)
+from ..downloads import download_image, download_video
+from ..matchers import WEIBO_PATTERN
+from ..matchers import weibo_matcher as weibo
 from ..messages import (
     get_resolver_message,
+    get_target_id,
     make_forward_nodes,
     send_forward,
 )
-from ..sources.weibo import mid2id
-from .runtime import (
-    GLOBAL_NICKNAME,
-    WEIBO_PROXY,
+from ..sources.weibo import (
+    WEIBO_HEADERS,
+    create_weibo_client,
+    get_weibo_images,
+    get_weibo_post,
+    get_weibo_video_url,
 )
-from .video import (
-    _find_video_duration_seconds,
-    _skip_video_for_duration,
-)
+from ..state import is_content_enabled
+from .runtime import GLOBAL_NICKNAME, WEIBO_PROXY
+from .video import _find_video_duration_seconds, _skip_video_for_duration
 
 
 @weibo.handle()
 @resolve_handler
 @resolve_controller
-async def wb(bot: Bot, event: GroupMessageEvent):
-    """解析微博分享链接。"""
-    message = get_resolver_message(event)
-    weibo_id = None
-    reg = r'(jumpUrl|qqdocurl)": ?"(.*?)"'
+async def wb(bot: Bot, event: GroupMessageEvent) -> None:
+    """使用统一 Cookie 读取网页或卡片分享，按群开关发送图文及视频。"""
+    message = get_resolver_message(event).replace("&amp;", "&")
+    url_match = re.search(WEIBO_PATTERN, message, re.IGNORECASE)
+    if not url_match:
+        return
+    try:
+        async with create_weibo_client(WEIBO_PROXY) as client:
+            post = await get_weibo_post(client, url_match[0])
+    except FileNotFoundError:
+        logger.warning("[微博] 未找到 Cookie 资源：assets/cookies/weibo_cookies.txt")
+        return
+    except ValueError as exc:
+        logger.warning(f"[微博] 作品获取失败：{exc}")
+        return
+    except (OSError, httpx.HTTPError) as exc:
+        logger.warning(f"[微博] 作品请求失败：{type(exc).__name__}")
+        return
 
-    if "com.tencent.structmsg" in message or "com.tencent.miniapp" in message:
-        match = re.search(reg, message)
-        logger.debug(f"微博卡片链接匹配结果: {match}")
-        if match:
-            get_url = match.group(2)
-            logger.debug(f"微博卡片展开链接: {get_url}")
-            if get_url:
-                message = json.loads('"' + get_url + '"')
-    if "m.weibo.cn" in message:
-        match = re.search(r"(?<=detail/)[A-Za-z\d]+", message) or re.search(
-            r"(?<=m.weibo.cn/)[A-Za-z\d]+/[A-Za-z\d]+",
-            message,
-        )
-        weibo_id = match.group(0) if match else None
-
-    elif "weibo.com/tv/show" in message and "mid=" in message:
-        match = re.search(r"(?<=mid=)[A-Za-z\d]+", message)
-        if match:
-            weibo_id = mid2id(match.group(0))
-
-    elif "weibo.com" in message:
-        match = re.search(r"(?<=weibo.com/)[A-Za-z\d]+/[A-Za-z\d]+", message)
-        weibo_id = match.group(0) if match else None
-
-    if not weibo_id:
-        await weibo.finish(Message("解析失败：无法获取到wb的id"))
-    weibo_id = weibo_id.split("/")[1] if "/" in weibo_id else weibo_id
-    logger.info(weibo_id)
-    headers = {
-        "accept": (
-            "text/html,application/xhtml+xml,application/xml;q=0.9,"
-            "image/avif,image/webp,image/apng,*/*;q=0.8,"
-            "application/signed-exchange;v=b3;q=0.9"
-        ),
-        "cookie": (
-            "_T_WM=40835919903; WEIBOCN_FROM=1110006030; MLOGIN=0; XSRF-TOKEN=4399c8"
-        ),
-        "Referer": f"https://m.weibo.cn/detail/{weibo_id}",
-    } | COMMON_HEADER
-    resp = httpx.get(
-        WEIBO_SINGLE_INFO.format(weibo_id),
-        headers=headers,
-        proxy=WEIBO_PROXY,
-        timeout=20,
-        trust_env=False,
-    ).json()
-    weibo_data = resp["data"]
-    logger.info(weibo_data)
-    text, status_title, source, region_name, pics, page_info = (
-        weibo_data.get(key)
-        for key in [
-            "text",
-            "status_title",
-            "source",
-            "region_name",
-            "pics",
-            "page_info",
-        ]
+    target_id = get_target_id(event)
+    text = post.get("text_raw") or unescape(
+        re.sub(r"<[^>]+>", "", post.get("text") or "")
     )
-    weibo_forward_nodes = [
-        make_forward_nodes(
-            bot.self_id,
-            MessageSegment.text(
-                f"{GLOBAL_NICKNAME}识别：微博\n"
-                f"{re.sub(r'<[^>]+>', '', text or '')}\n"
-                f"{status_title or ''}\n{source or ''}\t{region_name or ''}"
-            ),
+    source = unescape(re.sub(r"<[^>]+>", "", post.get("source") or ""))
+    info = MessageSegment.text(
+        f"{GLOBAL_NICKNAME}识别：微博\n"
+        f"作者：{post.get('user', {}).get('screen_name', '未知')}\n"
+        f"{text}\n{source}\t{post.get('region_name', '')}"
+    )
+    nodes = list(make_forward_nodes(bot.self_id, [info]))
+    paths = []
+    try:
+        if is_content_enabled(target_id, "weibo", "image"):
+            async with aiohttp.ClientSession(trust_env=False) as session:
+                for url in get_weibo_images(post):
+                    try:
+                        path = await download_image(
+                            url,
+                            proxy=WEIBO_PROXY,
+                            session=session,
+                            headers=WEIBO_HEADERS,
+                        )
+                    except (aiohttp.ClientError, OSError) as exc:
+                        logger.warning(
+                            f"[微博] 图片下载失败，跳过当前图片：{type(exc).__name__}"
+                        )
+                        continue
+                    paths.append(path)
+                    nodes.append(
+                        make_forward_nodes(
+                            bot.self_id,
+                            MessageSegment.image(Path(path).resolve().as_uri()),
+                        )
+                    )
+        await send_forward(bot, event, nodes)
+    finally:
+        for path in paths:
+            Path(path).unlink(missing_ok=True)
+
+    if not is_content_enabled(target_id, "weibo", "video"):
+        return
+    video_url = get_weibo_video_url(post)
+    if not video_url or _skip_video_for_duration(
+        "微博", _find_video_duration_seconds(post.get("page_info"))
+    ):
+        return
+    try:
+        path = await download_video(
+            video_url,
+            WEIBO_PROXY,
+            ext_headers=WEIBO_HEADERS,
+            max_size=media_delivery.video_compress_limit,
         )
-    ]
-    links_path = []
-    if pics:
-        pic_urls = [item["url"] for item in pics]
-        image_headers = {"Referer": "http://blog.sina.com.cn/"} | COMMON_HEADER
-        download_image_funcs = [
-            asyncio.create_task(
-                download_image(
-                    item,
-                    "",
-                    WEIBO_PROXY,
-                    headers=image_headers,
-                )
-            )
-            for item in pic_urls
-        ]
-        links_path = await asyncio.gather(*download_image_funcs)
-        weibo_forward_nodes.extend(
-            make_forward_nodes(
-                bot.self_id,
-                [
-                    MessageSegment.image(file=Path(link).resolve().as_uri())
-                    for link in links_path
-                ],
-            )
-        )
-    await send_forward(bot, event, weibo_forward_nodes)
-    for temp in links_path:
-        Path(temp).unlink(missing_ok=True)
-    if isinstance(page_info, dict):
-        urls = page_info.get("urls") or {}
-        video_url = urls.get("mp4_720p_mp4", "") or urls.get("mp4_hd_mp4", "")
-        if video_url:
-            if _skip_video_for_duration(
-                "微博",
-                _find_video_duration_seconds(page_info),
-            ):
-                return
-            video_headers = {
-                "accept": (
-                    "text/html,application/xhtml+xml,application/xml;q=0.9,"
-                    "image/avif,image/webp,image/apng,*/*;q=0.8,"
-                    "application/signed-exchange;v=b3;q=0.9"
-                ),
-                "referer": "https://weibo.com/",
-            }
-            try:
-                path = await download_video(
-                    video_url,
-                    WEIBO_PROXY,
-                    ext_headers=video_headers,
-                    max_size=media_delivery.video_compress_limit,
-                )
-            except MediaSizeLimitExceeded as exc:
-                logger.warning(f"[微博] 视频超过大小限制，已跳过下载和发送：{exc}")
-                return
-            except ValueError as exc:
-                await weibo.finish(f"视频无法下载：{exc}")
-            await send_resolved_video(event, path, WEIBO_PROXY)
+    except MediaSizeLimitExceeded as exc:
+        logger.warning(f"[微博] 视频超过大小限制，已跳过下载和发送：{exc}")
+        return
+    except ValueError as exc:
+        await weibo.finish(f"视频无法下载：{exc}")
+    await send_resolved_video(event, path, WEIBO_PROXY)

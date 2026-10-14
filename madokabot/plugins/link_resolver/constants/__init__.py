@@ -15,8 +15,6 @@ from .tiktok import (
     URL_TYPE_CODE_DICT,
 )
 from .twitter import FXTWITTER_STATUS_API
-from .weibo import WEIBO_SINGLE_INFO
-from .xiaohongshu import XHS_REQ_LINK
 
 __all__ = [
     "BILIBILI_HEADER",
@@ -32,6 +30,4 @@ __all__ = [
     "PLUGIN_NAME",
     "TIKTOK_VIDEO",
     "URL_TYPE_CODE_DICT",
-    "WEIBO_SINGLE_INFO",
-    "XHS_REQ_LINK",
 ]

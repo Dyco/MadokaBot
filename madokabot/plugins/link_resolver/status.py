@@ -33,7 +33,7 @@ RESOLVER_CAPABILITIES = {
     "tiktok": frozenset({"video", "text"}),
     "acfun": frozenset({"video", "text"}),
     "twitter": frozenset({"video", "image", "text"}),
-    "xiaohongshu": frozenset({"video", "image", "text"}),
+    "xiaohongshu": frozenset({"video", "image", "text", "comment"}),
     "youtube": frozenset({"video", "image", "text"}),
     "netease": frozenset({"audio", "image", "text"}),
     "kugou": frozenset({"audio", "image", "text"}),

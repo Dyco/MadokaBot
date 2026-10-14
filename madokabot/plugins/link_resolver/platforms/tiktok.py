@@ -2,7 +2,6 @@
 
 import re
 
-import httpx
 from nonebot import logger
 from nonebot.adapters.onebot.v11 import Bot, GroupMessageEvent, MessageSegment
 
@@ -14,10 +13,19 @@ from ..downloads import (
     CACHE_DIR,
 )
 from ..matchers import (
+    TIKTOK_PATTERN,
+)
+from ..matchers import (
     tiktok_matcher as tik,
 )
-from ..messages import get_resolver_message, make_forward_nodes, send_forward
+from ..messages import (
+    get_resolver_message,
+    get_target_id,
+    make_forward_nodes,
+    send_forward,
+)
 from ..sources.youtube import download_ytb_video, get_video_info
+from ..state import is_content_enabled
 from .runtime import (
     GLOBAL_NICKNAME,
     TIKTOK_PROXY,
@@ -31,34 +39,15 @@ from .video import (
 @resolve_handler
 @resolve_controller
 async def tiktok(bot: Bot, event: GroupMessageEvent) -> None:
-    """TikTok解析方法。"""
-    url = get_resolver_message(event)
-
-    url_reg = r"(http:|https:)\/\/www.tiktok.com\/[A-Za-z\d._?%&+\-=\/#@]*"
-    url_short_reg = r"(http:|https:)\/\/vt.tiktok.com\/[A-Za-z\d._?%&+\-=\/#]*"
-    url_short_reg2 = r"(http:|https:)\/\/vm.tiktok.com\/[A-Za-z\d._?%&+\-=\/#]*"
-
-    if "vt.tiktok" in url:
-        temp_url = re.search(url_short_reg, url)[0]
-        temp_resp = httpx.get(
-            temp_url,
-            follow_redirects=True,
-            proxy=TIKTOK_PROXY,
-            trust_env=False,
-        )
-        url = str(temp_resp.url)
-    elif "vm.tiktok" in url:
-        temp_url = re.search(url_short_reg2, url)[0]
-        temp_resp = httpx.get(
-            temp_url,
-            headers={"User-Agent": "facebookexternalhit/1.1"},
-            follow_redirects=True,
-            proxy=TIKTOK_PROXY,
-            trust_env=False,
-        )
-        url = str(temp_resp.url)
-    else:
-        url = re.search(url_reg, url)[0]
+    """使用 Netscape Cookie 解析 TikTok，视频关闭时跳过文件下载。"""
+    url_match = re.search(
+        TIKTOK_PATTERN,
+        get_resolver_message(event).replace("&amp;", "&"),
+        re.IGNORECASE,
+    )
+    if not url_match:
+        return
+    url = url_match[0]
     try:
         video_info = await get_video_info(url, TIKTOK_PROXY, "tiktok")
     except RuntimeError as exc:
@@ -74,6 +63,8 @@ async def tiktok(bot: Bot, event: GroupMessageEvent) -> None:
             ),
         ),
     )
+    if not is_content_enabled(get_target_id(event), "tiktok", "video"):
+        return
     if _skip_video_for_duration("TikTok", video_info.get("duration")):
         return
 

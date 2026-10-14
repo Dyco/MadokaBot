@@ -19,15 +19,24 @@ from ..downloads import (
     ensure_remote_total_within_limit,
 )
 from ..matchers import (
+    ACFUN_PATTERN,
+)
+from ..matchers import (
     acfun_matcher as acfun,
 )
-from ..messages import get_resolver_message, make_forward_nodes, send_forward
+from ..messages import (
+    get_resolver_message,
+    get_target_id,
+    make_forward_nodes,
+    send_forward,
+)
 from ..sources.acfun import (
     download_m3u8_videos,
     merge_ac_file_to_mp4,
     parse_m3u8,
     parse_url,
 )
+from ..state import is_content_enabled
 from .runtime import (
     ACFUN_PROXY,
     GLOBAL_NICKNAME,
@@ -42,19 +51,20 @@ from .video import (
 @resolve_handler
 @resolve_controller
 async def ac(bot: Bot, event: GroupMessageEvent) -> None:
-    """AcFun解析方法。"""
-    inputMsg = get_resolver_message(event)
+    """校验 AcFun 分享地址与作品编号，视频关闭时跳过分片下载。"""
+    url_match = re.search(ACFUN_PATTERN, get_resolver_message(event), re.IGNORECASE)
+    if not url_match:
+        return
+    ac_match = re.search(r"(?:[?&]ac=|/v/ac)([1-9]\d*)(?=[/?&#]|$)", url_match[0])
+    if not ac_match:
+        return
+    inputMsg = f"https://www.acfun.cn/v/ac{ac_match[1]}"
 
-    if "m.acfun.cn" in inputMsg:
-        inputMsg = f"https://www.acfun.cn/v/ac{re.search(r'ac=([^&?]*)', inputMsg)[1]}"
-    else:
-        acfun_match = re.search(
-            r"https?://[^\s]+acfun\.cn/[^\s]+", inputMsg, re.IGNORECASE
-        )
-        if acfun_match:
-            inputMsg = acfun_match.group(0)
-
-    url_m3u8s, video_name = parse_url(inputMsg, ACFUN_PROXY)
+    try:
+        url_m3u8s, video_name = await parse_url(inputMsg, ACFUN_PROXY)
+    except ValueError:
+        logger.warning("[ACFun] 未获取到有效视频详情，跳过解析")
+        return
     await send_forward(
         bot,
         event,
@@ -63,7 +73,9 @@ async def ac(bot: Bot, event: GroupMessageEvent) -> None:
             MessageSegment.text(f"{GLOBAL_NICKNAME}识别：猴山\n标题：{video_name}"),
         ),
     )
-    m3u8_full_urls, ts_names, _, output_file_name, video_duration = parse_m3u8(
+    if not is_content_enabled(get_target_id(event), "acfun", "video"):
+        return
+    m3u8_full_urls, ts_names, _, output_file_name, video_duration = await parse_m3u8(
         url_m3u8s,
         ACFUN_PROXY,
         include_duration=True,

@@ -1,197 +1,139 @@
-"""xiaohongshu 链接解析事件处理器。"""
+"""小红书图文、视频与评论解析事件处理器。"""
 
-import asyncio
-import json
 import re
 from pathlib import Path
-from urllib.parse import parse_qs, urlparse
 
 import aiohttp
 import httpx
 from nonebot import logger
 from nonebot.adapters.onebot.v11 import Bot, GroupMessageEvent, MessageSegment
+from playwright.async_api import Error as PlaywrightError
 
-from madokabot.core.messaging.media import MediaSizeLimitExceeded
-
-from ..commands import resolve_controller, resolve_handler
-from ..constants import (
-    COMMON_HEADER,
-    XHS_REQ_LINK,
+from ..commands import comment_mode_map, resolve_controller, resolve_handler
+from ..comments import (
+    escape_html,
+    format_comments_to_nodes,
+    parse_xiaohongshu_comments,
+    render_comments_image,
 )
-from ..delivery import media_delivery, send_resolved_video
-from ..downloads import (
-    CACHE_DIR,
-    download_image,
-    download_video,
-)
-from ..matchers import (
-    xiaohongshu_matcher as xhs,
-)
+from ..delivery import send_resolved_video
+from ..downloads import download_image
+from ..matchers import XIAOHONGSHU_PATTERN
+from ..matchers import xiaohongshu_matcher as xhs
 from ..messages import (
     get_resolver_message,
+    get_target_id,
     make_forward_nodes,
     send_forward,
 )
-from .runtime import (
-    GLOBAL_NICKNAME,
-    XIAOHONGSHU_PROXY,
-    global_config,
+from ..sources.xiaohongshu import (
+    XHS_HEADERS,
+    create_xiaohongshu_client,
+    get_xiaohongshu_comments,
+    get_xiaohongshu_note,
+    get_xiaohongshu_video_url,
 )
-from .video import (
-    _find_video_duration_seconds,
-    _skip_video_for_duration,
-)
+from ..state import is_content_enabled
+from .runtime import GLOBAL_NICKNAME, XIAOHONGSHU_PROXY
+from .video import _find_video_duration_seconds, _skip_video_for_duration
+
+
+async def _comment_nodes(
+    client: httpx.AsyncClient, note: dict, bot_id: str, target_id: int
+) -> list[MessageSegment]:
+    """按群评论开关及展示模式生成节点，评论失败不影响笔记解析。"""
+    if not is_content_enabled(target_id, "xiaohongshu", "comment"):
+        return []
+    try:
+        comments = parse_xiaohongshu_comments(
+            await get_xiaohongshu_comments(client, note),
+            note.get("user", {}).get("userId", ""),
+        )
+    except (httpx.HTTPError, ValueError) as exc:
+        logger.warning(f"[小红书] 评论获取失败，跳过评论：{type(exc).__name__}")
+        return []
+    if not comments:
+        return []
+    title = note.get("title") or "小红书笔记"
+    if comment_mode_map.get(str(target_id), "image") == "image" and is_content_enabled(
+        target_id, "xiaohongshu", "image"
+    ):
+        try:
+            image = await render_comments_image(comments, escape_html(title))
+            return [make_forward_nodes(bot_id, MessageSegment.image(image))]
+        except (ImportError, OSError, RuntimeError, PlaywrightError) as exc:
+            logger.warning(f"[小红书] 评论图片渲染失败，改用文字：{type(exc).__name__}")
+    return format_comments_to_nodes(bot_id, comments, title, GLOBAL_NICKNAME)
 
 
 @xhs.handle()
 @resolve_handler
 @resolve_controller
-async def xiaohongshu(bot: Bot, event: GroupMessageEvent):
-    """小红书解析方法。"""
+async def xiaohongshu(bot: Bot, event: GroupMessageEvent) -> None:
+    """使用 Netscape Cookie 解析笔记及评论，视频关闭时仅发送图文信息。"""
     message_text = get_resolver_message(event).replace("&amp;", "&")
     url_match = re.search(
-        r"https?://(?:xhslink|(?:www\.)?xiaohongshu)\.com/"
-        r"[A-Za-z\d._?%&+\-=/#@]*",
+        XIAOHONGSHU_PATTERN,
         message_text,
+        re.IGNORECASE,
     )
     if not url_match:
-        await xhs.finish("未识别到有效的小红书链接。")
-    msg_url = url_match.group(0)
-    xhs_ck = getattr(global_config, "xhs_ck", "")
-    if xhs_ck == "":
-        logger.error(global_config)
-        await send_forward(
-            bot,
-            event,
-            make_forward_nodes(
-                bot.self_id,
-                MessageSegment.text(
-                    f"{GLOBAL_NICKNAME}识别内容来自：【小红书】\n无法获取到管理员设置的小红书ck！"
-                ),
-            ),
-        )
         return
-    headers = {
-        "accept": (
-            "text/html,application/xhtml+xml,application/xml;q=0.9,"
-            "image/webp,image/apng,*/*;q=0.8,"
-            "application/signed-exchange;v=b3;q=0.9"
-        ),
-        "cookie": xhs_ck,
-    } | COMMON_HEADER
-    if "xhslink" in msg_url:
-        msg_url = httpx.get(
-            msg_url,
-            headers=headers,
-            follow_redirects=True,
-            proxy=XIAOHONGSHU_PROXY,
-            timeout=20,
-            trust_env=False,
-        ).url
-        msg_url = str(msg_url)
-    xhs_id = re.search(r"/explore/(\w+)", msg_url)
-    if not xhs_id:
-        xhs_id = re.search(r"/discovery/item/(\w+)", msg_url)
-    if not xhs_id:
-        xhs_id = re.search(r"source=note&noteId=(\w+)", msg_url)
-    if not xhs_id:
-        await xhs.finish("无法从小红书链接中提取笔记 ID。")
-    xhs_id = xhs_id.group(1)
-    parsed_url = urlparse(msg_url)
-    params = parse_qs(parsed_url.query)
-    xsec_source = params.get("xsec_source", [None])[0] or "pc_feed"
-    xsec_token = params.get("xsec_token", [None])[0]
-
-    html = httpx.get(
-        f"{XHS_REQ_LINK}{xhs_id}?xsec_source={xsec_source}&xsec_token={xsec_token}",
-        headers=headers,
-        proxy=XIAOHONGSHU_PROXY,
-        timeout=20,
-        trust_env=False,
-    ).text
+    target_id = get_target_id(event)
     try:
-        response_json = re.findall("window.__INITIAL_STATE__=(.*?)</script>", html)[0]
-    except IndexError:
-        await send_forward(
-            bot,
-            event,
-            make_forward_nodes(
-                bot.self_id,
-                MessageSegment.text(
-                    f"{GLOBAL_NICKNAME}识别内容来自：【小红书】\n当前ck已失效，请联系管理员重新设置的小红书ck！"
-                ),
-            ),
-        )
+        async with create_xiaohongshu_client(XIAOHONGSHU_PROXY) as client:
+            note = await get_xiaohongshu_note(client, url_match[0])
+            comment_nodes = await _comment_nodes(client, note, bot.self_id, target_id)
+    except FileNotFoundError:
+        logger.warning("[小红书] 未找到 Cookie 资源：assets/cookies/xhs_cookies.txt")
         return
-    response_json = response_json.replace("undefined", "null")
-    response_json = json.loads(response_json)
-    note_data = response_json["note"]["noteDetailMap"][xhs_id]["note"]
-    type = note_data["type"]
-    note_title = note_data["title"]
-    note_desc = note_data["desc"]
-    xhs_info_node = make_forward_nodes(
-        bot.self_id,
-        MessageSegment.text(
-            f"{GLOBAL_NICKNAME}识别：小红书\n标题：{note_title}\n{note_desc}"
-        ),
-    )
+    except (OSError, httpx.HTTPError, ValueError) as exc:
+        logger.warning(f"[小红书] 笔记获取失败：{type(exc).__name__}")
+        return
 
-    aio_task = []
-    if type == "normal":
-        image_list = note_data["imageList"]
-        async with aiohttp.ClientSession(
-            proxy=XIAOHONGSHU_PROXY,
-            trust_env=False,
-        ) as session:
-            for index, item in enumerate(image_list):
-                aio_task.append(
-                    asyncio.create_task(
-                        download_image(
-                            item["urlDefault"],
-                            str(CACHE_DIR / f"{index}.jpg"),
-                            proxy=XIAOHONGSHU_PROXY,
-                            session=session,
+    info = MessageSegment.text(
+        f"{GLOBAL_NICKNAME}识别：小红书\n标题：{note.get('title', '')}\n{note.get('desc', '')}"
+    )
+    nodes = list(make_forward_nodes(bot.self_id, [info]))
+    if note["type"] == "normal":
+        paths = []
+        try:
+            if is_content_enabled(target_id, "xiaohongshu", "image"):
+                async with aiohttp.ClientSession(trust_env=False) as session:
+                    for image in note["imageList"]:
+                        paths.append(
+                            await download_image(
+                                image["urlDefault"],
+                                proxy=XIAOHONGSHU_PROXY,
+                                session=session,
+                                headers=XHS_HEADERS,
+                            )
                         )
+                nodes.extend(
+                    make_forward_nodes(
+                        bot.self_id,
+                        [
+                            MessageSegment.image(Path(path).resolve().as_uri())
+                            for path in paths
+                        ],
                     )
                 )
-            links_path = await asyncio.gather(*aio_task)
-    elif type == "video":
-        logger.info(note_data["video"])
-
-        video_url = note_data["video"]["media"]["stream"]["h264"][0]["masterUrl"]
-
-        await send_forward(bot, event, xhs_info_node)
+            await send_forward(bot, event, [*nodes, *comment_nodes])
+        finally:
+            for path in paths:
+                Path(path).unlink(missing_ok=True)
+    elif note["type"] == "video":
+        await send_forward(bot, event, [*nodes, *comment_nodes])
+        if not is_content_enabled(target_id, "xiaohongshu", "video"):
+            return
         if _skip_video_for_duration(
-            "小红书",
-            _find_video_duration_seconds(note_data.get("video")),
+            "小红书", _find_video_duration_seconds(note.get("video"))
         ):
             return
         try:
-            path = await download_video(
-                video_url,
-                XIAOHONGSHU_PROXY,
-                max_size=media_delivery.video_compress_limit,
-            )
-        except MediaSizeLimitExceeded as exc:
-            logger.warning(f"[小红书] 视频超过大小限制，已跳过下载和发送：{exc}")
-            return
+            video_url = get_xiaohongshu_video_url(note)
         except ValueError as exc:
-            await xhs.finish(f"视频无法下载：{exc}")
-        await send_resolved_video(event, path, XIAOHONGSHU_PROXY)
-        return
+            await xhs.finish(str(exc))
+        await send_resolved_video(event, video_url, XIAOHONGSHU_PROXY)
     else:
-        await xhs.finish(f"暂不支持的小红书内容类型：{type}")
-
-    xhs_forward_nodes = [xhs_info_node]
-    xhs_forward_nodes.extend(
-        make_forward_nodes(
-            bot.self_id,
-            [
-                MessageSegment.image(file=Path(link).resolve().as_uri())
-                for link in links_path
-            ],
-        )
-    )
-    await send_forward(bot, event, xhs_forward_nodes)
-    for temp in links_path:
-        Path(temp).unlink(missing_ok=True)
+        await xhs.finish(f"暂不支持的小红书内容类型：{note['type']}")

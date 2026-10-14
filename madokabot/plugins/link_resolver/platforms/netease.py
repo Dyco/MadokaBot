@@ -17,6 +17,9 @@ from ..downloads import (
     download_audio,
 )
 from ..matchers import (
+    NETEASE_PATTERN,
+)
+from ..matchers import (
     netease_matcher as ncm,
 )
 from ..messages import (
@@ -35,13 +38,17 @@ from .runtime import (
 @resolve_handler
 @resolve_controller
 async def netease(bot: Bot, event: GroupMessageEvent):
-    """解析网易云音乐分享链接。"""
-    message = get_resolver_message(event)
+    """仅解析有效的网易云分享链接，缺少短链或歌曲编号时跳过。"""
+    url_match = re.search(NETEASE_PATTERN, get_resolver_message(event), re.IGNORECASE)
+    if not url_match:
+        return
+    message = url_match[0]
     if "163cn.tv" in message:
+        short_match = re.search(r"https?://163cn\.tv/[a-zA-Z0-9]+", message)
+        if not short_match:
+            return
         try:
-            short_url = re.search(
-                r"(http:|https:)\/\/163cn\.tv\/([a-zA-Z0-9]+)", message
-            ).group(0)
+            short_url = short_match[0]
             async with httpx.AsyncClient(
                 proxy=NETEASE_PROXY,
                 timeout=20,
@@ -53,9 +60,9 @@ async def netease(bot: Bot, event: GroupMessageEvent):
             logger.error(f"[NCM] 短链解析失败: {e}")
             await ncm.finish(Message(f"❌ {GLOBAL_NICKNAME}无法解析此网易云短链接。"))
 
-    match = re.search(r"id=(\d+)", message)
+    match = re.search(r"[?&]id=(\d+)", message)
     if not match:
-        await ncm.finish(Message(f"❌ {GLOBAL_NICKNAME}未能在链接中找到歌曲 ID。"))
+        return
 
     ncm_id = match.group(1)
     logger.info(f"[NCM] 歌曲 ID: {ncm_id}")

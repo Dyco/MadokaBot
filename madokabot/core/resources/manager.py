@@ -11,9 +11,13 @@ class AssetManager:
         """保存资源根目录。"""
         self.root = root
 
-    def get_dir(self, res_type: ResourceType, plugin: ResourceFolder) -> Path:
-        """资源目录获取方法。"""
-        path = self.root / res_type.value / plugin.value
+    def get_dir(
+        self, res_type: ResourceType, plugin: ResourceFolder | None = None
+    ) -> Path:
+        """获取资源目录，可按功能继续划分子目录。"""
+        path = self.root / res_type.value
+        if plugin is not None:
+            path /= plugin.value
         path.mkdir(parents=True, exist_ok=True)
         return path
 

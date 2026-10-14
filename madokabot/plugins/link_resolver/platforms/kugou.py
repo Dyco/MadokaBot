@@ -17,6 +17,9 @@ from ..downloads import (
     download_audio,
 )
 from ..matchers import (
+    KUGOU_PATTERN,
+)
+from ..matchers import (
     kugou_matcher as kg,
 )
 from ..messages import (
@@ -35,58 +38,45 @@ from .runtime import (
 @resolve_handler
 @resolve_controller
 async def kugou(bot: Bot, event: GroupMessageEvent):
-    """解析酷狗音乐分享链接。"""
+    """提取有效酷狗链接后异步读取歌曲信息，无效卡片直接跳过。"""
     message = get_resolver_message(event)
-    reg1 = r"https?://.*?kugou\.com.*?(?=\s|$|\n)"
-    reg2 = r'jumpUrl":\s*"(https?:\\/\\/[^"]+)"'
-    reg3 = r'jumpUrl":\s*"(https?://[^"]+)"'
     if "com.tencent.structmsg" in message:
-        match = re.search(reg2, message)
-        if match:
-            get_url = match.group(1)
-        else:
-            match = re.search(reg3, message)
-            if match:
-                get_url = match.group(1)
-            else:
-                await send_forward(
-                    bot,
-                    event,
-                    make_forward_nodes(
-                        bot.self_id,
-                        MessageSegment.text(
-                            f"{GLOBAL_NICKNAME}\n来源：【酷狗音乐】\n获取链接失败"
-                        ),
-                    ),
-                )
-                get_url = None
-                return
-        if get_url:
-            url = json.loads('"' + get_url + '"')
-    else:
-        match = re.search(reg1, message)
-        url = match.group()
+        card_match = re.search(r'jumpUrl":\s*"([^"]+)"', message)
+        if not card_match:
+            return
+        try:
+            message = json.loads('"' + card_match[1] + '"')
+        except json.JSONDecodeError:
+            return
+    url_match = re.search(KUGOU_PATTERN, message, re.IGNORECASE)
+    if not url_match:
+        return
+    url = url_match[0]
 
-    response = httpx.get(
-        url,
+    async with httpx.AsyncClient(
         follow_redirects=True,
         proxy=KUGOU_PROXY,
         timeout=20,
         trust_env=False,
-    )
+    ) as client:
+        response = await client.get(url)
     if response.status_code == 200:
         title = response.text
         get_name = r"<title>(.*?)_高音质在线试听"
         name = re.search(get_name, title)
         if name:
             kugou_title = name.group(1)
-            kugou_vip_data = httpx.get(
-                KUGOU_TEMP_API.replace("{}", kugou_title),
+            async with httpx.AsyncClient(
                 headers=COMMON_HEADER,
                 proxy=KUGOU_PROXY,
                 timeout=20,
                 trust_env=False,
-            ).json()
+            ) as client:
+                api_response = await client.get(
+                    KUGOU_TEMP_API.replace("{}", kugou_title)
+                )
+                api_response.raise_for_status()
+                kugou_vip_data = api_response.json()
             kugou_url = kugou_vip_data.get("music_url")
             kugou_cover = kugou_vip_data.get("cover")
             kugou_name = kugou_vip_data.get("title")

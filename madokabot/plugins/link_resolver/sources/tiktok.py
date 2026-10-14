@@ -1,33 +1,43 @@
+import hashlib
+import time
 import urllib.parse
-from http.cookies import CookieError, SimpleCookie
 from pathlib import Path
+from urllib.request import Request
 
 import httpx
+from yarl import URL
+
+from madokabot.core.resources import load_cookies
 
 try:
     import execjs
 except ImportError:
     execjs = None
 
+# 抖音 Web SecSDK 项目 34 的签名盐值。
+# 参考：https://github.com/Evil0ctal/Douyin_TikTok_Download_API/blob/main/src/dtk/signing/native/websign.py
+DOUYIN_WEB_SIGNATURE_SALT = "A96D855A08C0A9707F8BEF0D9A527E4E"
 
-def build_douyin_request(
-    url: str, cookie: str, referer: str
-) -> tuple[str, dict[str, str]]:
-    """从同一份 Cookie 提取真实设备字段，构造并签名抖音接口请求。"""
-    parsed_cookie = SimpleCookie()
-    try:
-        parsed_cookie.load(cookie)
-    except CookieError:
-        raise ValueError(
-            "抖音 Cookie 格式错误，请填写完整的 Cookie 请求头内容"
-        ) from None
-    cookies = {key: morsel.value for key, morsel in parsed_cookie.items()}
+
+def build_douyin_request(url: str, referer: str) -> tuple[URL, dict[str, str]]:
+    """读取 Netscape Cookie 并按接口补齐签名，原样保留已签名的查询字符串。"""
+    jar = load_cookies("dy_cookies.txt")
+    request = Request(url)
+    jar.add_cookie_header(request)
+    cookie = request.get_header("Cookie", "")
+    # 直接读取匹配当前域名和路径的条目，避免复杂 Cookie 值被字符串解析器丢弃。
+    cookies = {
+        entry.name: entry.value
+        for entry in sorted(
+            jar._cookies_for_request(request), key=lambda entry: len(entry.path)
+        )
+    }
     uifid = cookies.get("UIFID") or cookies.get("UIFID_TEMP")
     if not uifid:
-        raise ValueError("抖音 Cookie 缺少 UIFID/UIFID_TEMP，请重新获取完整网页 Cookie")
+        raise ValueError(
+            "抖音 Cookie 资源缺少有效的 UIFID/UIFID_TEMP，请重新导出网页 Cookie"
+        )
     fingerprint = cookies.get("s_v_web_id")
-    if not fingerprint:
-        raise ValueError("抖音 Cookie 缺少 s_v_web_id，请重新获取同一会话的完整 Cookie")
 
     headers = {
         "User-Agent": (
@@ -41,11 +51,35 @@ def build_douyin_request(
     }
     parts = urllib.parse.urlsplit(url)
     params = dict(urllib.parse.parse_qsl(parts.query, keep_blank_values=True))
-    params.update(uifid=uifid, verifyFp=fingerprint, fp=fingerprint)
+    params["uifid"] = uifid
+    if fingerprint:
+        params.update(verifyFp=fingerprint, fp=fingerprint)
     if cookies.get("msToken"):
         params["msToken"] = cookies["msToken"]
     url = urllib.parse.urlunsplit(parts._replace(query=urllib.parse.urlencode(params)))
-    return generate_x_bogus_url(url, headers), headers
+    url = generate_x_bogus_url(url, headers)
+    if parts.path == "/aweme/v1/web/aweme/detail/":
+        url, signature_headers = generate_douyin_web_signature(url, uifid)
+        headers.update(signature_headers)
+    return URL(url, encoded=True), headers
+
+
+def generate_douyin_web_signature(url: str, uifid: str) -> tuple[str, dict[str, str]]:
+    """对含 A-Bogus 的最终参数计算设备绑定的 SecSDK 签名及时间戳。"""
+    parts = urllib.parse.urlsplit(url)
+    timestamp = str(int(time.time()))
+    params = urllib.parse.parse_qsl(parts.query, keep_blank_values=True)
+    params.append(("timestamp", timestamp))
+    query = urllib.parse.urlencode(params, safe="*-._")
+    preimage = f"{uifid}_{timestamp}_{DOUYIN_WEB_SIGNATURE_SALT}_{query}"
+    signature = hashlib.md5(preimage.encode("utf-8"), usedforsecurity=False).hexdigest()
+    signed_url = urllib.parse.urlunsplit(
+        parts._replace(query=f"{query}&x-secsdk-web-signature={signature}")
+    )
+    return signed_url, {
+        "x-secsdk-web-signature": signature,
+        "x-secsdk-web-expire": timestamp,
+    }
 
 
 def generate_x_bogus_url(url: str, headers: dict[str, str]) -> str:

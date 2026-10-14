@@ -17,6 +17,9 @@ from ..constants import (
 )
 from ..delivery import send_resolved_video
 from ..matchers import (
+    DOUYIN_PATTERN,
+)
+from ..matchers import (
     douyin_matcher as douyin,
 )
 from ..messages import (
@@ -30,7 +33,6 @@ from ..state import is_content_enabled
 from .runtime import (
     DOUYIN_PROXY,
     GLOBAL_NICKNAME,
-    global_config,
 )
 from .video import (
     _duration_seconds,
@@ -42,26 +44,22 @@ from .video import (
 @resolve_handler
 @resolve_controller
 async def dy(bot: Bot, event: GroupMessageEvent) -> None:
-    """携带同一会话的设备标识和签名解析抖音作品。"""
+    """异步展开分享链接，使用 Netscape Cookie 和真实设备标识解析作品。"""
     msg = get_resolver_message(event)
     logger.info(msg)
-    reg = (
-        r"https?://(?:v\.douyin\.com|iesdouyin\.com|www\.douyin\.com|"
-        r"douyin\.com)/[A-Za-z\d._?%&+\-=/#]*"
-    )
-    url_match = re.search(reg, msg, re.I)
+    url_match = re.search(DOUYIN_PATTERN, msg, re.IGNORECASE)
     if not url_match:
-        await douyin.finish("未识别到有效的抖音链接。")
+        return
     dou_url = url_match.group(0)
     try:
-        response = httpx.get(
-            dou_url,
+        async with httpx.AsyncClient(
             headers=COMMON_HEADER,
             follow_redirects=True,
             timeout=20,
             proxy=DOUYIN_PROXY,
             trust_env=False,
-        )
+        ) as client:
+            response = await client.get(dou_url)
         dou_url_2 = str(response.url)
     except httpx.HTTPError as exc:
         logger.error(f"抖音短链展开失败: {exc}")
@@ -95,27 +93,15 @@ async def dy(bot: Bot, event: GroupMessageEvent) -> None:
     if not id_match:
         await douyin.finish("无法从抖音链接中提取作品 ID。")
     dou_id = id_match.group(1)
-    douyin_ck = global_config.douyin_ck.strip()
-    if douyin_ck == "":
-        logger.warning("[抖音] 未配置 douyin_ck")
-        await send_forward(
-            bot,
-            event,
-            make_forward_nodes(
-                bot.self_id,
-                MessageSegment.text(
-                    f"{GLOBAL_NICKNAME}识别：抖音，无法获取到管理员设置的抖音ck！"
-                ),
-            ),
-        )
-        return
     try:
         api_url, headers = build_douyin_request(
             DOUYIN_VIDEO.replace("{}", dou_id),
-            douyin_ck,
             f"https://www.douyin.com/video/{dou_id}",
         )
-    except (RuntimeError, ValueError) as exc:
+    except FileNotFoundError:
+        logger.warning("[抖音] 未找到 Cookie 资源：assets/cookies/dy_cookies.txt")
+        return
+    except (OSError, RuntimeError, ValueError) as exc:
         logger.warning(f"[抖音] {exc}")
         return
     async with aiohttp.ClientSession(
@@ -221,6 +207,8 @@ async def dy(bot: Bot, event: GroupMessageEvent) -> None:
                 forward_nodes.extend(comment_forward_nodes)
                 await send_forward(bot, event, forward_nodes)
 
+                if not is_content_enabled(send_id, "douyin", "video"):
+                    return
                 video_data = detail.get("video")
                 if not isinstance(video_data, dict):
                     logger.warning("[抖音] 作品响应缺少 video 字段")

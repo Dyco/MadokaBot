@@ -96,7 +96,7 @@ else:
 @resolve_handler
 @resolve_controller
 async def bilibili(bot: Bot, event: GroupMessageEvent) -> None:
-    """哔哩哔哩解析方法。"""
+    """校验 B 站内容编号后解析分享，视频关闭时跳过下载与合并。"""
     if not BILIBILI_AVAILABLE:
         await bili23.finish(
             "当前环境未安装 bilibili-api-python，暂时无法解析 B 站链接。"
@@ -104,22 +104,17 @@ async def bilibili(bot: Bot, event: GroupMessageEvent) -> None:
 
     url = get_resolver_message(event)
     url_reg = (
-        r"https?://(?:space|www|live|t)\.bilibili\.com/"
+        r"https?://(?:(?:space|www|live|t)\.)?bilibili\.com/"
         r"[A-Za-z\d._?%&+\-=/#]*"
     )
     b_short_rex = r"https?://(?:b23\.tv|bili2233\.cn)/[A-Za-z\d._?%&+\-=/#]+"
-    raw_bv_match = re.fullmatch(
-        r"(?:解析|resolver)\s+(BV[1-9a-zA-Z]{10})", url, re.IGNORECASE
-    )
-    if raw_bv_match:
-        url = "https://www.bilibili.com/video/" + raw_bv_match.group(1)
-    elif re.match(r"^BV[1-9a-zA-Z]{10}$", url):
+    if re.fullmatch(r"BV[1-9a-zA-Z]{10}", url):
         url = "https://www.bilibili.com/video/" + url
     if "b23.tv" in url or "bili2233.cn" in url or "QQ小程序" in url:
         short_match = re.search(b_short_rex, url.replace("\\", ""))
 
         if not short_match:
-            await bili23.finish("未识别到有效的 Bilibili 短链接。")
+            return
 
         b_short_url = short_match.group(0)
 
@@ -154,19 +149,21 @@ async def bilibili(bot: Bot, event: GroupMessageEvent) -> None:
             logger.warning(f"[Bilibili] 短链接响应失败：{exc}")
             return
 
-
     url = clean_bilibili_url(url)
 
     url_match = re.search(url_reg, url)
 
     if not url_match:
-        await bili23.finish("未识别到有效的 Bilibili 链接。")
+        return
 
     url = url_match.group(0)
     if ("t.bilibili.com" in url or "/opus" in url) and BILI_SESSDATA != "":
         if "?" in url:
             url = url[: url.index("?")]
-        dynamic_id = int(url.rstrip("/").split("/")[-1].split("?")[0])
+        dynamic_match = re.search(r"/(\d+)/?$", urlparse(url).path)
+        if not dynamic_match:
+            return
+        dynamic_id = int(dynamic_match[1])
         dynamic_info = await Opus(dynamic_id, credential).get_info()
         if dynamic_info is not None:
             title = dynamic_info["item"]["basic"]["title"]
@@ -192,7 +189,7 @@ async def bilibili(bot: Bot, event: GroupMessageEvent) -> None:
     if "live" in url:
         room_match = re.search(r"/(\d+)(?:\?.*)?$", url)
         if not room_match:
-            await bili23.finish("无法从 Bilibili 直播链接中提取房间号。")
+            return
         room_id = room_match.group(1)
         room = live.LiveRoom(
             room_display_id=int(room_id),
@@ -220,7 +217,10 @@ async def bilibili(bot: Bot, event: GroupMessageEvent) -> None:
         )
         return
     if "read" in url:
-        read_id = re.search(r"read\/cv(\d+)", url).group(1)
+        read_match = re.search(r"/read/cv(\d+)", url)
+        if not read_match:
+            return
+        read_id = read_match[1]
         ar = article.Article(read_id, credential=credential)
         if ar.is_note():
             ar = ar.turn_to_note()
@@ -241,7 +241,10 @@ async def bilibili(bot: Bot, event: GroupMessageEvent) -> None:
         )
         return
     if "favlist" in url and BILI_SESSDATA != "":
-        fav_id = re.search(r"favlist\?fid=(\d+)", url).group(1)
+        fav_match = re.search(r"[?&]fid=(\d+)", url)
+        if not fav_match:
+            return
+        fav_id = fav_match[1]
         fav_list = (
             await get_video_favorite_list_content(
                 fav_id,
@@ -281,12 +284,16 @@ async def bilibili(bot: Bot, event: GroupMessageEvent) -> None:
         return
     if "favlist" in url:
         await bili23.finish("Bilibili 收藏夹解析需要配置 BILI_SESSDATA。")
-    video_match = re.search(r"video/[^?\/ ]+", url)
+    video_match = re.search(r"/video/(BV[1-9A-Za-z]{10}|av\d+)(?=[/?#]|$)", url)
     if not video_match:
-        await bili23.finish("暂不支持此类 Bilibili 链接。")
-    video_id = video_match.group(0).split("/")[1]
-    v = video.Video(video_id, credential=credential)
+        return
+    video_id = video_match[1]
     try:
+        v = (
+            video.Video(aid=int(video_id[2:]), credential=credential)
+            if video_id.startswith("av")
+            else video.Video(bvid=video_id, credential=credential)
+        )
         video_info = await v.get_info()
     except Exception as exc:
         logger.warning(f"[Bilibili] 获取视频信息响应失败：{exc}")
@@ -409,6 +416,8 @@ async def bilibili(bot: Bot, event: GroupMessageEvent) -> None:
         bili_forward_nodes,
     )
 
+    if not is_content_enabled(send_id, "bilibili", "video"):
+        return
     if video_duration > VIDEO_DURATION_MAXIMUM:
         logger.warning(
             "[Bilibili] 视频时长超过限制，已跳过视频下载和发送："

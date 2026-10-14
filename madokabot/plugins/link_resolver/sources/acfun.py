@@ -16,51 +16,51 @@ headers = {
 }
 
 
-def parse_url(url: str, proxy: str | None = None):
-    """解析acfun链接。"""
+async def parse_url(url: str, proxy: str | None = None):
+    """异步读取 AcFun 视频详情，页面缺少作品数据时报告无效链接。"""
     url_suffix = "?quickViewId=videoInfo_new&ajaxpipe=1"
     url = url + url_suffix
 
-    response = httpx.get(
-        url,
+    async with httpx.AsyncClient(
         headers=headers,
         timeout=20,
         follow_redirects=True,
         proxy=proxy,
         trust_env=False,
-    )
+    ) as client:
+        response = await client.get(url)
     response.raise_for_status()
-    raw = response.text
-    strs_remove_header = raw.split("window.pageInfo = window.videoInfo =")
-    strs_remove_tail = strs_remove_header[1].split("</script>")
-    str_json = strs_remove_tail[0]
+    _, separator, raw = response.text.partition("window.pageInfo = window.videoInfo =")
+    if not separator:
+        raise ValueError("AcFun 页面未返回视频详情")
+    str_json = raw.split("</script>", 1)[0]
     str_json_escaped = escape_special_chars(str_json)
     video_info = json.loads(str_json_escaped)
     video_name = parse_video_name_fixed(video_info)
-    ks_play_json = video_info['currentVideoInfo']['ksPlayJson']
+    ks_play_json = video_info["currentVideoInfo"]["ksPlayJson"]
     ks_play = json.loads(ks_play_json)
-    representations = ks_play['adaptationSet'][0]['representation']
+    representations = ks_play["adaptationSet"][0]["representation"]
     if not representations:
         raise ValueError("ACFun 没有返回可用的视频流")
-    url_m3u8s = representations[min(3, len(representations) - 1)]['url']
+    url_m3u8s = representations[min(3, len(representations) - 1)]["url"]
     return url_m3u8s, video_name
 
 
-def parse_m3u8(
+async def parse_m3u8(
     m3u8_url: str,
     proxy: str | None = None,
     *,
     include_duration: bool = False,
 ):
-    """M3U8链接解析方法。"""
-    response = httpx.get(
-        m3u8_url,
+    """异步读取 M3U8 播放列表并提取分片及可选时长。"""
+    async with httpx.AsyncClient(
         headers=headers,
         timeout=20,
         follow_redirects=True,
         proxy=proxy,
         trust_env=False,
-    )
+    ) as client:
+        response = await client.get(m3u8_url)
     response.raise_for_status()
     m3u8_file = response.text
     raw_pieces = re.split(r"\n#EXTINF:.{8},\n", m3u8_file)
@@ -68,19 +68,21 @@ def parse_m3u8(
     if not m3u8_relative_links:
         raise ValueError("ACFun m3u8 未返回可下载的视频分片")
     duration = sum(
-        float(value)
-        for value in re.findall(r"#EXTINF:([0-9.]+)", m3u8_file)
+        float(value) for value in re.findall(r"#EXTINF:([0-9.]+)", m3u8_file)
     )
 
     m3u8_full_urls = [urljoin(m3u8_url, item) for item in m3u8_relative_links]
     ts_names = [d.split("?")[0] for d in m3u8_relative_links]
     first_segment_name = Path(ts_names[0]).name
     output_stem = first_segment_name[:-9] or Path(first_segment_name).stem
-    output_folder_name = re.sub(
-        r"[^0-9A-Za-z\u4e00-\u9fff._-]+",
-        "_",
-        output_stem,
-    ).strip("._") or "acfun_video"
+    output_folder_name = (
+        re.sub(
+            r"[^0-9A-Za-z\u4e00-\u9fff._-]+",
+            "_",
+            output_stem,
+        ).strip("._")
+        or "acfun_video"
+    )
     output_file_name = output_folder_name + ".mp4"
     result = m3u8_full_urls, ts_names, output_folder_name, output_file_name
     return (*result, duration) if include_duration else result

@@ -22,8 +22,10 @@ NICKNAME = get_plugin_config(Config).global_prefix_nickname.strip()
 
 
 def get_resolver_message(event: GroupMessageEvent) -> str:
-    """解析器消息文本提取方法。"""
-    return str(event.get_message().exclude("image", "record")).strip()
+    """提取非媒体消息文本，并还原分享卡片中转义的链接斜杠。"""
+    return (
+        str(event.get_message().exclude("image", "record")).replace("\\/", "/").strip()
+    )
 
 
 def make_forward_nodes(
@@ -56,10 +58,7 @@ def _build_forward_fallback(messages: list[MessageSegment]) -> str:
                 texts.append(text)
 
     if texts:
-        return (
-            "\n".join(texts)
-            + "\n\n⚠️ 合并转发发送失败，图片/媒体内容已省略。"
-        )
+        return "\n".join(texts) + "\n\n⚠️ 合并转发发送失败，图片/媒体内容已省略。"
     return "⚠️ 合并转发发送失败，图片/媒体内容暂时无法发送，请稍后重试。"
 
 
@@ -69,10 +68,7 @@ def _filter_disabled_images(
     """按当前群组设置移除被关闭的解析图片。"""
     resolver_key = current_resolver_key.get()
     target_id = current_resolver_target.get()
-    if (
-        resolver_key is None
-        or is_content_enabled(target_id, resolver_key, "image")
-    ):
+    if resolver_key is None or is_content_enabled(target_id, resolver_key, "image"):
         return messages
 
     filtered: list[MessageSegment] = []

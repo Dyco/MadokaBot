@@ -6,9 +6,6 @@ class Config(BaseModel):
 
     model_config = ConfigDict(extra="ignore")
 
-    xhs_ck: str = ""
-    douyin_ck: str = ""
-    ytb_ck: str = ""
     bili_sessdata: str = ""
     global_prefix_nickname: str = ""
     resolver_proxy: str | None = None

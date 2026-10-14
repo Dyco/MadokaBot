@@ -15,6 +15,9 @@ from ..downloads import (
     download_image,
 )
 from ..matchers import (
+    YOUTUBE_PATTERN,
+)
+from ..matchers import (
     youtube_matcher as y2b,
 )
 from ..messages import (
@@ -38,12 +41,11 @@ from .video import (
 @resolve_handler
 @resolve_controller
 async def youtube(bot: Bot, event: GroupMessageEvent):
-    """解析 YouTube 视频分享链接。"""
-    msg_url = re.search(
-        r"(?:https?://)?(?:www\.)?youtube\.com/[A-Za-z\d._?%&+\-=/#]*"
-        r"|(?:https?://)?youtu\.be/[A-Za-z\d._?%&+\-=/#]*",
-        get_resolver_message(event),
-    )[0]
+    """仅解析有效的 YouTube 分享链接，视频关闭时仅发送封面和简介。"""
+    url_match = re.search(YOUTUBE_PATTERN, get_resolver_message(event), re.IGNORECASE)
+    if not url_match:
+        return
+    msg_url = url_match[0]
 
     try:
         video_info = await get_video_info(msg_url, YOUTUBE_PROXY)
@@ -96,6 +98,8 @@ async def youtube(bot: Bot, event: GroupMessageEvent):
         if cover_path:
             Path(cover_path).unlink(missing_ok=True)
 
+    if not is_content_enabled(get_target_id(event), "youtube", "video"):
+        return
     if _skip_video_for_duration("YouTube", video_info.get("duration")):
         return
 

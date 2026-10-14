@@ -414,7 +414,7 @@ async def handle_resolver_command(
     content: Match[str],
     result: Arparma,
 ) -> None:
-    """解析器命令处理方法。"""
+    """处理解析器管理命令，不接受链接作为解析指令。"""
     if result.subcommands:
         return
     tokens = _split_control_tokens(content) if content.available else []
@@ -439,12 +439,6 @@ async def handle_resolver_command(
         if not await permission(bot, event):
             await resolver.finish("你没有权限执行这个解析器管理命令。")
         await handler(bot, event)
-        return
-    if re.search(
-        r"https?://|(?:^|\s)BV[0-9a-zA-Z]{10}(?:\s|$)",
-        command,
-        re.IGNORECASE,
-    ):
         return
     await resolver.finish("无法识别该解析指令，请使用“解析 帮助”查看用法。")
 

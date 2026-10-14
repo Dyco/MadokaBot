@@ -8,6 +8,7 @@ class ResourceType(Enum):
     IMAGE = "image"
     FONT = "font"
     JSON = "json"
+    COOKIES = "cookies"  # Netscape 格式的站点 Cookie 资源。
 
 
 class ResourceFolder(Enum):
