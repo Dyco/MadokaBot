@@ -22,7 +22,6 @@
     .brand { text-align: right; width: 220px; flex-shrink: 0; }
     .brand-name { font-family: numbers, sans-serif; letter-spacing: 2px; color: #e6c583; font-size: 28px; }
     .brand-title { font-family: numbers, sans-serif; font-size: 45px; line-height: 1.2; }
-    .brand-subtitle { color: #ae9672; font-size: 13px; margin-top: 10px; }
     .stats { display: flex; gap: 14px; margin: 20px 0; }
     .stat { flex: 1; background: #24262fe8; padding: 16px 22px; border: 1px solid #cfa55544; border-radius: 12px; }
     .stat.primary { background: linear-gradient(120deg, #f1d598, #c9984b); color: #2b241b; }
@@ -74,7 +73,7 @@
       {% if plate %}<img class="plate" src="{{ plate }}">{% endif %}
     </div>
     {% if character %}<img class="character" src="{{ character }}">{% endif %}
-    <div class="brand"><div class="brand-name">CHUNITHM</div><div class="brand-title">BEST 50</div><div class="brand-subtitle">RhythmGame_OCM</div></div>
+    <div class="brand"><div class="brand-name">CHUNITHM</div><div class="brand-title">BEST 50</div></div>
   </div>
   <div class="stats">
     <div class="stat primary"><div class="stat-label">B50 平均 RATING</div><div class="stat-value">{{ average }}</div><div class="stat-note">玩家资料 {{ '%.4f' | format(player.rating) }}</div></div>
@@ -105,7 +104,7 @@
     </div>
   </section>
   {% endfor %}
-  <footer>数据来源 LXNS · 成绩同步于 {{ upload_time }}（上海时间）<br>B50 = 旧曲 B30 + 新曲 B20；缺位计零，Selection 10 独立展示<br>MadokaBot {{ bot_version }} · RhythmGame_OCM</footer>
+  <footer>MADOKABOT VER {{ bot_version }}</footer>
 </main>
 </body>
 </html>

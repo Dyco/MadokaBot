@@ -10,6 +10,7 @@ class RhythmGameConfig(BaseModel):
     rhythmgame_lxns_token: SecretStr = SecretStr("")
     rhythmgame_request_timeout: float = Field(default=20, gt=0)
     rhythmgame_asset_interval: float = Field(default=1, ge=0.5)
+    rhythmgame_maimai_theme: str = Field(default="prism_plus", pattern=r"^[\w-]+$")  # 舞萌底图主题目录。
 
 
 config = get_plugin_config(RhythmGameConfig)

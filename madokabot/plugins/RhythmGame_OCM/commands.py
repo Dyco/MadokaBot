@@ -13,6 +13,8 @@ from nonebot_plugin_alconna import Arparma, At, Match
 from playwright.async_api import Error as BrowserError
 from pydantic import ValidationError
 
+from madokabot.core.messaging.response import respond
+
 from .bindings import bind_player, get_binding, unbind_player
 from .client import get_b50, get_player, get_score
 from .matchers import MAIMAI_USAGE, b50, maimai
@@ -56,28 +58,28 @@ async def handle_help() -> None:
 
 @maimai.assign("b50")
 async def handle_mai_b50(
-    event: MessageEvent, matcher: Matcher, target: Match[At | str]
+    bot: Bot, event: MessageEvent, matcher: Matcher, target: Match[At | str]
 ) -> None:
     """处理舞萌主命令下的 B50 查询。"""
-    await send_b50(event, matcher, target)
+    await send_b50(bot, event, matcher, target)
 
 
 @b50.handle()
 async def handle_b50(
-    event: MessageEvent, matcher: Matcher, target: Match[At | str]
+    bot: Bot, event: MessageEvent, matcher: Matcher, target: Match[At | str]
 ) -> None:
     """处理独立的 B50 快捷命令。"""
-    await send_b50(event, matcher, target)
+    await send_b50(bot, event, matcher, target)
 
 
 async def send_b50(
-    event: MessageEvent, matcher: Matcher, target: Match[At | str]
+    bot: Bot, event: MessageEvent, matcher: Matcher, target: Match[At | str]
 ) -> None:
-    """获取玩家 Best 50，准备本地素材后发送成绩图片。"""
+    """使用公共表情回应查询，渲染完成后引用原消息仅回复成绩图片。"""
+    await respond(bot, event)
     try:
         player = await resolve_player(event, target)
         bests = await get_b50(player.friend_code)
-        await matcher.send("正在生成 B50，首次补齐素材可能需要稍等。")
         catalog = await prepare_resources(player, bests)
         picture = await render_b50(player, bests, catalog)
     except ValidationError:
@@ -88,7 +90,7 @@ async def send_b50(
     except (OSError, RuntimeError, TemplateError, BrowserError):
         logger.exception("舞萌 B50 图片生成失败")
         await matcher.finish("B50 图片生成失败，请联系管理员检查资源与渲染环境。")
-    await matcher.finish(picture)
+    await matcher.finish(picture, reply_message=True)
 
 
 @maimai.assign("info")
@@ -182,7 +184,7 @@ async def handle_update(bot: Bot, event: MessageEvent) -> None:
     """仅允许超级用户更新公共曲目快照并增量补齐曲绘。"""
     if not await SUPERUSER(bot, event):
         await maimai.finish("资源更新仅限机器人超级用户操作。")
-    await maimai.send("开始增量更新舞萌资源，已有曲绘会保留，下载按间隔限速。")
+    await respond(bot, event)
     try:
         result = await update_all_resources()
     except httpx.HTTPStatusError as exc:

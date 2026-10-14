@@ -9,10 +9,11 @@ DIFFICULTY_KEYS = ("basic", "advanced", "expert", "master", "remaster")
 
 
 class Collection(BaseModel):
-    """玩家头像、姓名框或称号。"""
+    """玩家头像、姓名框或称号，保留称号底板颜色。"""
 
     id: int
     name: str = ""
+    color: str | None = None
 
 
 class Player(BaseModel):

@@ -11,7 +11,7 @@ from nonebot_plugin_htmlrender import html_to_pic
 from madokabot.core.version import get_bot_version
 
 from ..update_resources import local_image
-from ..utils import display_time, image_uri
+from ..utils import image_uri
 from .models import DIFFICULTIES, DIFFICULTY_KEYS, Best50, Player, Score
 from .resources import FONT_ROOT, IMAGE_ROOT
 
@@ -88,7 +88,7 @@ def render_b50_html(player: Player, bests: Best50, catalog: dict) -> str:
     )
     return _environment.get_template("b50.html").render(
         player=player, sections=sections, average=average_rating(counted_scores, 50),
-        upload_time=display_time(player.upload_time), bot_version=get_bot_version(),
+        bot_version=get_bot_version(),
         icon=image_uri(icon or IMAGE_ROOT / "pic" / "cover.svg"),
         character=image_uri(character), plate=image_uri(plate), trophy=image_uri(trophy),
         font=image_uri(FONT_ROOT / "font.ttf"), numbers_font=image_uri(FONT_ROOT / "numbers.otf"),

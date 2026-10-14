@@ -2,6 +2,8 @@
 
 支持 [舞萌 DX](https://maimai.lxns.net/docs/api/maimai) 与 [中二节奏](https://maimai.lxns.net/docs/api/chunithm)，通过 LXNS 开发者 API 查询资料、单谱成绩和 B50。
 插件由项目统一加载器自动加载，无需手动添加注册项；群聊和私聊均可使用。
+B50 查询使用项目共用的表情回应，渲染完成后引用指令消息仅回复图片，不发送额外进度文字。
+舞萌与中二图片水印统一为 `MADOKABOT VER <版本号>`，版本号通过公共 `get_bot_version()` 获取。
 
 ## 配置
 
@@ -14,9 +16,19 @@ RHYTHMGAME_LXNS_TOKEN="填写你的开发者Token"
 RHYTHMGAME_REQUEST_TIMEOUT=20
 # 缺失素材下载间隔，单位秒，最小 0.5。
 RHYTHMGAME_ASSET_INTERVAL=1
+# 舞萌 B50 底图主题，对应 image/maimai/pic 下的文件夹。
+RHYTHMGAME_MAIMAI_THEME="prism_plus"
 ```
 
 未配置 Token 时插件仍可加载，查分时会给出配置提示；公共曲目和曲绘更新不需要 Token。
+舞萌主题目前可选 `prism_plus`、`circle`，默认 `prism_plus`。
+底图和版本 Logo 分别读取该目录的 `b50.png`、`logo.png`，评级图标也随主题切换。
+单谱卡片按难度使用 `pic/b50_score_basic.png` 至 `pic/b50_score_remaster.png` 的完整底板，
+圆形 FC／AP 与 FS 图标读取公共 `pic/UI_CHR_PlayBonus_*.png`，没有对应状态时保留灰色空位。
+顶部玩家信息按名牌底图叠加头像、DX Rating、姓名、段位、阶级与称号。
+DX Rating 数字使用 `pic/UI_NUM_Drating_*.png`，底板在当前主题目录内按分段选择：
+`01`～`05` 分别从 0、2000、4000、6000、8000 起，`06` 从 10000 起，之后每 1000 升一级，`11` 对应 15000。
+主题缺少目标编号（例如 16000 对应的 `12`）时向下查找最高可用底板；顶部显示玩家资料 Rating。
 不要在聊天中发送 Token。玩家需要先在 LXNS 同步成绩，并开放第三方获取玩家资料与成绩权限。
 
 ## 命令
@@ -46,7 +58,7 @@ QQ／@目标同样优先使用机器人绑定。绑定仅是查分目标设置�
 
 B50 分组直接使用 LXNS 的旧版本 B35 与现版本 B15，**不按 SD／DX 类型分组**。
 图片展示达成率、向下取整后的单谱 Rating、定数、DX 分数与星级、FC／FS 标记。
-不足 50 条时保留空位；B50 合计与玩家资料 Rating 分别显示，便于识别同步时间差异。
+不足 50 条时保留空位；分组标题仅显示“旧曲 B35”和“新曲 B15”，不渲染分组总分或汇总卡片。
 这是 LXNS 已同步的缓存成绩，查分命令不会主动从游戏 NET 同步。
 
 ### 中二节奏

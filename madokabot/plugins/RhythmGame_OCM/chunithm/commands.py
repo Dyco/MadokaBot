@@ -12,6 +12,8 @@ from nonebot_plugin_alconna import Arparma, At, Match
 from playwright.async_api import Error as BrowserError
 from pydantic import ValidationError
 
+from madokabot.core.messaging.response import respond
+
 from ..bindings import bind_player, get_binding, unbind_player
 from ..utils import display_time
 from .client import get_b50, get_player, get_score
@@ -54,23 +56,29 @@ async def handle_help() -> None:
 
 
 @chunithm.assign("b50")
-async def handle_chu_b50(event: MessageEvent, matcher: Matcher, target: Match[At | str]) -> None:
+async def handle_chu_b50(
+    bot: Bot, event: MessageEvent, matcher: Matcher, target: Match[At | str]
+) -> None:
     """处理主命令下的中二 B50。"""
-    await send_b50(event, matcher, target)
+    await send_b50(bot, event, matcher, target)
 
 
 @cb50.handle()
-async def handle_cb50(event: MessageEvent, matcher: Matcher, target: Match[At | str]) -> None:
+async def handle_cb50(
+    bot: Bot, event: MessageEvent, matcher: Matcher, target: Match[At | str]
+) -> None:
     """处理中二 B50 快捷入口。"""
-    await send_b50(event, matcher, target)
+    await send_b50(bot, event, matcher, target)
 
 
-async def send_b50(event: MessageEvent, matcher: Matcher, target: Match[At | str]) -> None:
-    """获取中二评分构成并渲染 B30、新曲 B20 与候选成绩。"""
+async def send_b50(
+    bot: Bot, event: MessageEvent, matcher: Matcher, target: Match[At | str]
+) -> None:
+    """使用公共表情回应查询，渲染完成后引用原消息仅回复中二成绩图片。"""
+    await respond(bot, event)
     try:
         player = await resolve_player(event, target)
         bests = await get_b50(player.friend_code)
-        await matcher.send("正在生成中二 B50，首次补齐角色等素材可能需要稍等。")
         catalog = await prepare_resources(player, bests)
         picture = await render_b50(player, bests, catalog)
     except ValidationError:
@@ -81,7 +89,7 @@ async def send_b50(event: MessageEvent, matcher: Matcher, target: Match[At | str
     except (OSError, RuntimeError, TemplateError, BrowserError):
         logger.exception("中二 B50 图片生成失败")
         await matcher.finish("中二 B50 图片生成失败，请联系管理员检查资源与渲染环境。")
-    await matcher.finish(picture)
+    await matcher.finish(picture, reply_message=True)
 
 
 @chunithm.assign("info")
@@ -175,7 +183,7 @@ async def handle_update(bot: Bot, event: MessageEvent) -> None:
     """仅允许超级用户更新中二曲目快照和曲绘。"""
     if not await SUPERUSER(bot, event):
         await chunithm.finish("资源更新仅限机器人超级用户操作。")
-    await chunithm.send("开始增量更新中二资源，已有曲绘保留，缺失文件按间隔限速补齐。")
+    await respond(bot, event)
     try:
         result = await update_all_resources()
     except httpx.HTTPStatusError as exc:
