@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <style>
+    {% if font %}@font-face { font-family: chuni; src: url("{{ font }}"); }{% endif %}
+    {% if numbers_font %}@font-face { font-family: numbers; src: url("{{ numbers_font }}"); }{% endif %}
+    * { box-sizing: border-box; }
+    body { width: 1400px; margin: 0; color: #f4ead5; font-family: chuni, sans-serif;
+      background: #15171d {% if background %}url("{{ background }}") top center / 1400px 700px repeat-y{% endif %}; }
+    main { padding: 34px; }
+    .header { display: flex; align-items: center; gap: 24px; height: 210px; padding: 24px;
+      border: 1px solid #cfa55577; border-radius: 16px; background: #23252de8; overflow: hidden; }
+    .avatar { width: 110px; height: 110px; border-radius: 12px; object-fit: cover; border: 2px solid #d9b46c; }
+    .identity { flex: 1; min-width: 0; }
+    .trophy { color: #dfbc78; font-size: 17px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .trophy-image { max-width: 350px; height: 32px; object-fit: contain; object-position: left; }
+    .name { font-size: 34px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin: 6px 0; }
+    .detail { font-size: 14px; color: #aaa6a0; margin: 5px 0; }
+    .plate { width: 300px; height: 40px; object-fit: contain; object-position: left; }
+    .character { width: 150px; height: 160px; object-fit: contain; align-self: flex-end; }
+    .brand { text-align: right; width: 220px; flex-shrink: 0; }
+    .brand-name { font-family: numbers, sans-serif; letter-spacing: 2px; color: #e6c583; font-size: 28px; }
+    .brand-title { font-family: numbers, sans-serif; font-size: 45px; line-height: 1.2; }
+    .brand-subtitle { color: #ae9672; font-size: 13px; margin-top: 10px; }
+    .stats { display: flex; gap: 14px; margin: 20px 0; }
+    .stat { flex: 1; background: #24262fe8; padding: 16px 22px; border: 1px solid #cfa55544; border-radius: 12px; }
+    .stat.primary { background: linear-gradient(120deg, #f1d598, #c9984b); color: #2b241b; }
+    .stat-label { font-size: 15px; opacity: .85; }
+    .stat-value { font-family: numbers, sans-serif; font-size: 40px; margin: 4px 0; }
+    .stat-note { font-size: 13px; opacity: .7; }
+    .section-title { display: flex; align-items: baseline; gap: 14px; margin: 24px 0 12px; padding-left: 13px;
+      border-left: 5px solid #e0b96f; }
+    .section-title strong { font-family: numbers, sans-serif; color: #e9c787; font-size: 28px; }
+    .section-title span { font-size: 15px; color: #beb6a8; }
+    .section-title small { margin-left: auto; color: #a69d8b; font-size: 14px; }
+    .selection { border-top: 1px dashed #a68c5d88; margin-top: 25px; }
+    .grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; }
+    .card { height: 162px; padding: 9px 10px 7px; border-top: 5px solid var(--accent); border-radius: 10px;
+      background: #292c36; overflow: hidden; }
+    .basic { --accent: #4bb969; } .advanced { --accent: #efae32; }
+    .expert { --accent: #ed606e; } .master { --accent: #b16ee6; }
+    .ultima { --accent: #db505f; } .worldsend { --accent: #c6a9dd; }
+    .card-title { display: flex; align-items: baseline; gap: 5px; height: 24px; font-size: 14px; white-space: nowrap; }
+    .number { color: var(--accent); font-family: numbers, sans-serif; font-size: 12px; }
+    .song-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+    .song-id { color: #99969a; font-size: 10px; }
+    .card-main { display: flex; gap: 9px; align-items: center; height: 84px; }
+    .jacket { width: 74px; height: 74px; object-fit: cover; border-radius: 6px; }
+    .result { flex: 1; min-width: 0; }
+    .score { font-family: numbers, sans-serif; font-size: 26px; white-space: nowrap; }
+    .rating { display: flex; align-items: baseline; justify-content: space-between; font-size: 14px; margin: 3px 0; }
+    .rating strong { font-family: numbers, sans-serif; color: #edc979; font-size: 20px; }
+    .status { font-size: 10px; color: #c5b9a5; white-space: nowrap; }
+    .combo { color: #ffe0a1; margin-left: 4px; } .chain { color: #a8dbeb; margin-left: 4px; }
+    .card-footer { display: flex; align-items: center; justify-content: space-between; height: 26px; margin-top: 3px;
+      border-top: 1px solid #ffffff12; color: var(--accent); font-size: 11px; }
+    .constant { color: #d8c8ab; font-size: 12px; }
+    .empty { display: flex; align-items: center; justify-content: center; border: 1px dashed #a88d5655;
+      background: #25272d; color: #827664; font-size: 15px; }
+    footer { color: #a69b88; text-align: center; margin-top: 26px; padding: 14px;
+      border-top: 1px solid #cfa55533; font-size: 13px; line-height: 1.9; }
+  </style>
+</head>
+<body>
+<main>
+  <div class="header">
+    {% if icon %}<img class="avatar" src="{{ icon }}">{% endif %}
+    <div class="identity">
+      {% if trophy %}<img class="trophy-image" src="{{ trophy }}">{% else %}<div class="trophy">{{ player.trophy.name if player.trophy else 'CHUNITHM' }}</div>{% endif %}
+      <div class="name">{{ player.name }}</div>
+      <div class="detail">Lv. {{ player.level }} · 转生 {{ player.reborn_count }} · 游玩 {{ player.total_play_count }} 次</div>
+      <div class="detail">OVER POWER {{ '%.2f' | format(player.over_power) }} · {{ '%.2f' | format(player.over_power_progress) }}%</div>
+      {% if plate %}<img class="plate" src="{{ plate }}">{% endif %}
+    </div>
+    {% if character %}<img class="character" src="{{ character }}">{% endif %}
+    <div class="brand"><div class="brand-name">CHUNITHM</div><div class="brand-title">BEST 50</div><div class="brand-subtitle">RhythmGame_OCM</div></div>
+  </div>
+  <div class="stats">
+    <div class="stat primary"><div class="stat-label">B50 平均 RATING</div><div class="stat-value">{{ average }}</div><div class="stat-note">玩家资料 {{ '%.4f' | format(player.rating) }}</div></div>
+    {% for section in sections if section.included %}
+    <div class="stat"><div class="stat-label">{{ section.title }} 平均 RATING</div><div class="stat-value">{{ section.average }}</div><div class="stat-note">收录 {{ section.count }} / {{ section.size }} 张谱面</div></div>
+    {% endfor %}
+  </div>
+  {% for section in sections %}
+  <section{% if not section.included %} class="selection"{% endif %}>
+    <div class="section-title"><strong>{{ section.title }}</strong><span>{{ section.subtitle }}</span><small>{{ section.count }} / {{ section.size }} · AVG {{ section.average }}</small></div>
+    <div class="grid">
+      {% for card in section.cards %}
+      {% if card %}
+      <div class="card {{ card.difficulty }}">
+        <div class="card-title"><span class="number">#{{ card.index }}</span><span class="song-name">{{ card.name }}</span><span class="song-id">{{ card.id }}</span></div>
+        <div class="card-main">
+          {% if card.cover %}<img class="jacket" src="{{ card.cover }}">{% endif %}
+          <div class="result">
+            <div class="score">{{ card.score }}</div>
+            <div class="rating"><span>RA {{ card.rating }}</span><strong>{{ card.rate }}</strong></div>
+            <div class="status">{{ card.clear }}<span class="combo">{{ card.combo }}</span><span class="chain">{{ card.chain }}</span></div>
+          </div>
+        </div>
+        <div class="card-footer"><span>{{ card.difficulty_name }} {{ card.level }}</span><span class="constant">定数 {{ card.constant }}</span></div>
+      </div>
+      {% else %}<div class="card empty">暂无成绩</div>{% endif %}
+      {% endfor %}
+    </div>
+  </section>
+  {% endfor %}
+  <footer>数据来源 LXNS · 成绩同步于 {{ upload_time }}（上海时间）<br>B50 = 旧曲 B30 + 新曲 B20；缺位计零，Selection 10 独立展示<br>MadokaBot {{ bot_version }} · RhythmGame_OCM</footer>
+</main>
+</body>
+</html>

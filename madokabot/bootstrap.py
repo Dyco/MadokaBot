@@ -24,7 +24,7 @@ __plugin_meta__ = PluginMetadata(
     description="MadokaBot 默认功能与扩展插件的统一加载入口",
     usage=(
         "基础功能：注册、设置、查询、积分、每日签到、商店、许愿、运势、复读、戳一戳、Ping\n"
-        "扩展插件：RSS、解析、CS、Steam、制图、每日投胎"
+        "扩展插件：RSS、解析、CS、Steam、制图、每日投胎、舞萌与中二查分"
     ),
     type="application",
     config=CoreConfig,

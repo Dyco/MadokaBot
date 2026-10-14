@@ -24,3 +24,5 @@ class ResourceFolder(Enum):
     FORTUNE = "fortune"  # 运势静态资源。
     CHAR = "madoka"
     STEAM = "steam"
+    MAIMAI = "maimai"  # 舞萌曲绘、界面素材、字体与曲目数据。
+    CHUNITHM = "chunithm"  # 中二节奏曲绘、角色、字体与曲目数据。
