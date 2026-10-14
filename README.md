@@ -98,22 +98,7 @@
 ### 音游查分（RhythmGame_OCM）
 
 通过 LXNS 查询舞萌 DX 与中二节奏的玩家资料、指定谱面最佳成绩，并生成 B50 图片，支持群聊与私聊。
-
-常用入口：`/b50`、`/mai info`、`/mai score 834 白 SD`、`/mai bind <15位好友码>`。
-`mai` 可替换为 `maimai` 或 `舞萌`；查询时可附加好友码、QQ 号或 @用户。
-
-中二入口：`/cb50`、`/chu b50`、`/chu info`、`/chu score 3 紫`、`/chu bind <15位好友码>`。
-`chu` 可替换为 `chuni`、`chunithm`、`中二` 或 `中二节奏`；绑定与舞萌独立。
-中二 B50 按旧曲 B30 + 新曲 B20 展示，Selection 10 单独列出。
-
-在环境配置文件中设置 `RHYTHMGAME_LXNS_TOKEN`（LXNS **开发者** Token）后重启。
-玩家需先在 LXNS 同步成绩，并开放第三方玩家资料与成绩查询权限。
-
-优先复用 `assets/image/maimai` 与 `assets/font/maimai` 中的现有资源；查询时自动补齐所需曲绘、头像及姓名框。
-超级用户可使用 `/mai update` 更新曲目定数并增量补齐普通曲绘。
-中二资源保存于 `assets/image/chunithm`、`assets/font/chunithm` 与 `assets/json/chunithm`，
 支持按需补齐角色、地图头像和名牌版，超级用户使用 `/chu update` 更新曲绘与曲目数据。
-完整配置与离线资源更新方式见 [插件说明](madokabot/plugins/RhythmGame_OCM/README.md)。
 
 ## 群管理
 
