@@ -16,3 +16,4 @@ __pycache__/
 /assets/cookies
 /assets/cache/
 /assets/data/
+.env
