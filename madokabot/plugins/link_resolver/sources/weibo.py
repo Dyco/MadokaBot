@@ -39,7 +39,7 @@ def _post_id(url: httpx.URL) -> str | None:
 
 
 async def get_weibo_post(client: httpx.AsyncClient, url: str) -> dict[str, Any]:
-    """展开卡片后读取网页作品接口，并为长微博补齐完整正文。"""
+    """展开卡片并读取作品，为当前微博及转发原帖补齐长正文。"""
     target = httpx.URL(url)
     if target.host == "mapp.api.weibo.cn":
         response = await client.get(target)
@@ -59,14 +59,16 @@ async def get_weibo_post(client: httpx.AsyncClient, url: str) -> dict[str, Any]:
     post = response.json()
     if not isinstance(post, dict) or post.get("ok") != 1 or not post.get("idstr"):
         raise ValueError("微博接口未返回作品，请检查 Cookie 是否有效及作品是否可见")
-    if post.get("isLongText"):
-        response = await client.get(
-            "https://weibo.com/ajax/statuses/longtext", params={"id": post_id}
-        )
-        response.raise_for_status()
-        long_text = response.json()
-        if long_text.get("ok") == 1:
-            post["text_raw"] = long_text["data"]["longTextContent_raw"]
+    for content in (post, post.get("retweeted_status") or {}):
+        if content.get("isLongText"):
+            response = await client.get(
+                "https://weibo.com/ajax/statuses/longtext",
+                params={"id": content["idstr"]},
+            )
+            response.raise_for_status()
+            long_text = response.json()
+            if long_text.get("ok") == 1:
+                content["text_raw"] = long_text["data"]["longTextContent_raw"]
     return post
 
 

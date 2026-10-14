@@ -38,7 +38,7 @@ from .video import _find_video_duration_seconds, _skip_video_for_duration
 @resolve_handler
 @resolve_controller
 async def wb(bot: Bot, event: GroupMessageEvent) -> None:
-    """使用统一 Cookie 读取网页或卡片分享，按群开关发送图文及视频。"""
+    """读取微博与转发原帖的正文和媒体，按群开关发送图文及视频。"""
     message = get_resolver_message(event).replace("&amp;", "&")
     url_match = re.search(WEIBO_PATTERN, message, re.IGNORECASE)
     if not url_match:
@@ -60,6 +60,15 @@ async def wb(bot: Bot, event: GroupMessageEvent) -> None:
     text = post.get("text_raw") or unescape(
         re.sub(r"<[^>]+>", "", post.get("text") or "")
     )
+    images = get_weibo_images(post)
+    original = post.get("retweeted_status")
+    if original:
+        original_text = original.get("text_raw") or unescape(
+            re.sub(r"<[^>]+>", "", original.get("text") or "")
+        )
+        author = original.get("user", {}).get("screen_name", "未知")
+        text += f"\n\n转发自 @{author}：\n{original_text}"
+        images.extend(get_weibo_images(original))
     source = unescape(re.sub(r"<[^>]+>", "", post.get("source") or ""))
     info = MessageSegment.text(
         f"{GLOBAL_NICKNAME}识别：微博\n"
@@ -71,7 +80,7 @@ async def wb(bot: Bot, event: GroupMessageEvent) -> None:
     try:
         if is_content_enabled(target_id, "weibo", "image"):
             async with aiohttp.ClientSession(trust_env=False) as session:
-                for url in get_weibo_images(post):
+                for url in images:
                     try:
                         path = await download_image(
                             url,
@@ -98,9 +107,10 @@ async def wb(bot: Bot, event: GroupMessageEvent) -> None:
 
     if not is_content_enabled(target_id, "weibo", "video"):
         return
-    video_url = get_weibo_video_url(post)
+    video_post = original or post
+    video_url = get_weibo_video_url(video_post)
     if not video_url or _skip_video_for_duration(
-        "微博", _find_video_duration_seconds(post.get("page_info"))
+        "微博", _find_video_duration_seconds(video_post.get("page_info"))
     ):
         return
     try:
