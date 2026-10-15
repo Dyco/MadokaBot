@@ -1,9 +1,9 @@
-"""CS 竞猜参与和排行榜命令。"""
+"""CS 竞猜参与、下注详情和排行榜命令。"""
 
 from __future__ import annotations
 
 from nonebot import logger
-from nonebot.adapters.onebot.v11 import Bot, GroupMessageEvent, Message, MessageEvent
+from nonebot.adapters.onebot.v11 import Bot, GroupMessageEvent, Message, MessageEvent, MessageSegment
 from nonebot_plugin_alconna import Match
 
 from madokabot.core.config import command_start
@@ -12,12 +12,60 @@ from madokabot.core.messaging.response import respond
 from ..matchers import CS_PREDICTION_USAGE, cs_cmd
 from ..prediction import (
     PredictionError,
+    get_current_prediction_details,
     get_prediction_personal_records,
     get_prediction_ranking,
     place_prediction,
 )
 from ..render import render_prediction_personal_card, render_prediction_rank_card
 from ..storage import get_hltv_event_settings
+from ..subscriptions.delivery import send_forward_to_target
+
+
+async def _show_prediction_details(bot: Bot, event: GroupMessageEvent) -> None:
+    """按每场总览及双方名单三个节点合并转发跨群下注详情。"""
+    try:
+        details = await get_current_prediction_details(str(event.group_id))
+    except Exception:
+        logger.exception("CS 当前竞猜详情查询失败：group_id=%s", event.group_id)
+        await cs_cmd.finish("竞猜详情查询失败，请稍后重试。")
+        return
+    if not details:
+        await cs_cmd.finish("当前无竞猜比赛")
+        return
+
+    messages = []
+    for detail in details:
+        first, second = detail["teams"]
+        lines = [
+            f"【{first['name']} VS {second['name']}】下注情况",
+            "比赛已开始" if detail["started"] else "等待比赛开始",
+        ]
+        for team in detail["teams"]:
+            lines.extend((
+                f"{team['name']} - {team['odds']:.1f}",
+                f"共计{team['count']}人，合计{team['points']}积分",
+            ))
+        messages.append(Message(MessageSegment.text("\n".join(lines))))
+        for team in detail["teams"]:
+            lines = [f"——{team['name']}——"]
+            lines.extend(
+                f"{player['name']} - {player['points']}积分" for player in team["players"]
+            )
+            if not team["players"]:
+                lines.append("没有用户下注")
+            messages.append(Message(MessageSegment.text("\n".join(lines))))
+    try:
+        sent = await send_forward_to_target(
+            bot, {"kind": "group", "id": str(event.group_id)}, messages,
+        )
+    except Exception:
+        logger.exception("CS 当前竞猜详情发送失败：group_id=%s", event.group_id)
+        sent = False
+    if not sent:
+        await cs_cmd.finish("合并消息发送失败，请稍后重试。")
+        return
+    await cs_cmd.finish()
 
 
 async def _finish_prediction_failure(bot: Bot, event: MessageEvent, reason: str) -> None:
@@ -32,15 +80,25 @@ async def handle_cs_prediction(
     event: MessageEvent,
     params: Match[str],
 ) -> None:
-    """竞猜命令处理方法。"""
+    """处理竞猜参与、下注详情和排行榜查询。"""
     raw_params = params.result.strip() if params.available else ""
     prediction_args = raw_params.split()
     is_ranking = bool(prediction_args and prediction_args[0].casefold() in {"rank", "排名", "排行"})
+    is_details = bool(
+        prediction_args and prediction_args[0].casefold() in {"details", "详情", "细节", "内容", "详细"}
+    )
     if not isinstance(event, GroupMessageEvent):
-        if is_ranking:
+        if is_ranking or is_details:
             await cs_cmd.finish("竞猜功能仅支持群聊。")
         else:
             await _finish_prediction_failure(bot, event, "竞猜功能仅支持群聊。")
+        return
+
+    if is_details:
+        if len(prediction_args) != 1:
+            await cs_cmd.finish(f"用法：{command_start}CS prediction details")
+            return
+        await _show_prediction_details(bot, event)
         return
 
     if is_ranking:

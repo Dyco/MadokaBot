@@ -11,17 +11,17 @@ from zoneinfo import ZoneInfo
 
 from nonebot import logger
 from nonebot_plugin_datastore import create_session
-from sqlalchemy import case, func, select, update
+from sqlalchemy import case, func, select, tuple_, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from madokabot.core.user.models import UserStats
 
 from .config import config
-from .prediction_labels import TEAM_LETTERS, prediction_team_labels
+from .prediction_labels import TEAM_LETTERS
 from .prediction_models import CsPrediction, CsPredictionNotification
 from .storage import (
-    get_prediction_match_context,
+    list_current_prediction_matches,
     list_open_prediction_matches,
 )
 
@@ -495,56 +495,51 @@ async def refund_expired_predictions(*, now: datetime | None = None) -> int:
     return refunded_count
 
 
-async def get_prediction_detail(
-    group_id: str,
-    match_id: str,
-) -> dict[str, Any] | None:
-    """生成指定群查看竞猜详情所需的数据。"""
-    context = await get_prediction_match_context(group_id, match_id)
-    if context is None:
-        return None
+async def get_current_prediction_details(group_id: str) -> list[dict[str, Any]]:
+    """汇总本群当前竞猜比赛的跨群下注人数、积分、倍率和脱敏用户名单。"""
+    matches = await list_current_prediction_matches(group_id)
+    if not matches:
+        return []
+    match_keys = [(match["event_id"], match["match_id"]) for match in matches]
+    async with create_session() as session:
+        rows = (await session.execute(
+            select(CsPrediction, UserStats)
+            .outerjoin(UserStats, CsPrediction.user_id == UserStats.user_id)
+            .where(tuple_(CsPrediction.event_id, CsPrediction.match_id).in_(match_keys))
+            .order_by(CsPrediction.created_at, CsPrediction.user_id)
+        )).all()
 
-    state = context["state"]
-    if state.get("completed"):
-        status_text = "已结束"
-    elif state.get("started_sent"):
-        status_text = "比赛中"
-    elif state.get("prediction_open"):
-        status_text = "预测中"
-    else:
-        status_text = "未开始"
-
-    summary = await get_prediction_summary(
-        str(context["event_id"]),
-        str(match_id),
-        group_id=str(group_id),
-    )
-    global_summary = await get_prediction_summary(str(context["event_id"]), str(match_id))
-    team_names = [str(value) for value in state.get("team_names") or []]
-    odds = {}
-    for team_name in team_names:
-        team_count = sum(
-            team_summary["count"]
-            for name, team_summary in global_summary["teams"].items()
-            if _normalize_team(name) == _normalize_team(team_name)
-        )
-        odds[team_name] = prediction_odds(
-            team_count, global_summary["total_count"] - team_count,
-        )
-    return {
-        "event_id": str(context["event_id"]),
-        "match_id": str(match_id),
-        "status": status_text,
-        "team_names": team_names,
-        "team_labels": (
-            prediction_team_labels(state, str(group_id))
-            if state.get("prediction_open") and not state.get("prediction_closed")
-            else []
-        ),
-        "summary": summary,
-        "winner_name": str(state.get("winner_name") or ""),
-        "odds": odds,
-    }
+        by_match: dict[tuple[str, str], list[tuple[CsPrediction, UserStats | None]]] = {}
+        for row, user in rows:
+            by_match.setdefault((row.event_id, row.match_id), []).append((row, user))
+        details = []
+        for match in matches:
+            match_rows = by_match.get((match["event_id"], match["match_id"]), [])
+            teams = []
+            for team_name in match["state"]["team_names"][:2]:
+                team_rows = [
+                    (row, user) for row, user in match_rows
+                    if _normalize_team(row.team_name) == _normalize_team(team_name)
+                ]
+                players = []
+                for row, user in team_rows:
+                    nickname = (
+                        str(user.display_name or user.qq_nickname or "").strip() if user else ""
+                    ) or "用户"
+                    masked_id = f"{row.user_id[:2]}**{row.user_id[-2:]}"
+                    players.append({"name": f"{nickname}({masked_id})", "points": row.points})
+                teams.append({
+                    "name": team_name,
+                    "count": len(team_rows),
+                    "points": sum(row.points for row, _ in team_rows),
+                    "odds": prediction_odds(len(team_rows), len(match_rows) - len(team_rows)),
+                    "players": players,
+                })
+            details.append({
+                "started": bool(match["state"].get("started_sent")),
+                "teams": teams,
+            })
+    return details
 
 
 def _masked_user_id(user_id: str) -> str:
@@ -707,7 +702,7 @@ async def get_prediction_ranking(
 __all__ = [
     "PredictionError",
     "prediction_odds",
-    "get_prediction_detail",
+    "get_current_prediction_details",
     "get_prediction_ranking",
     "get_prediction_personal_records",
     "get_prediction_summary",

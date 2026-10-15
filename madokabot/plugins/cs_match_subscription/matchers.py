@@ -45,20 +45,23 @@ CS_EVENT_USAGE = f"用法：{command_start}CS event [all|single|notif|predict]�
 
 
 CS_PREDICTION_USAGE = (
-    f"用法：\n{command_start}CS prediction <队伍名|竞猜编号> <积分>\n"
-    f"例如：{command_start}CS prediction teamA 100（以当前通知编号为准）\n"
-    f"{command_start}CS prediction rank <本群|全部|个人>"
+    f"参与竞猜指令：\n{command_start}CS prediction <队伍名|竞猜编号> <积分>\n"
+    f"例如：{command_start}CS prediction teamA 100\n"
+    f"查看排名指令：\n{command_start}CS prediction rank <本群|全部|个人>\n"
+    f"例如：{command_start}CS prediction rank all\n"
+    f"查看下注情况：\n{command_start}CS prediction details\n"
+    f"例如：{command_start}CS prediction details\n"
 )
 
 
 CS_USAGE = f"""用法：
 {command_start}cs help
 {command_start}cs event  列出当前及未来三个月的高奖金国际 LAN 和 Major 赛事
-{command_start}cs list <比赛ID> 查看竞猜情况
 {command_start}cs sub <赛事ID>  订阅赛事并推送其中的比赛结果
 {command_start}cs check <比赛链接>  查询一场比赛的 Rating
 {command_start}cs prediction <队伍名|竞猜编号> <积分> 参与当前比赛竞猜（如 teamA、team1）
 {command_start}cs prediction rank <本群|全部|个人|本人> 查看竞猜排行榜或个人记录
+{command_start}cs prediction details 查看当前竞猜比赛的跨群下注详情
 {command_start}cs login <手机号> <验证码>  登录完美平台并保存 Session（验证码请自行获取）
 {command_start}cs bind <5E|5e|5eplay> <玩家昵称>  绑定 5E 玩家
 {command_start}cs bind <wm|pw|完美> [Steam 32 位或 64 位 ID]  使用 Steam/CS 共用绑定
@@ -84,12 +87,6 @@ cs_command = Alconna(
         "help",
         alias=["帮助"],
         help_text="查看 CS 赛事指令帮助",
-    ),
-    Subcommand(
-        "list",
-        Args["params?", StrMulti],
-        alias=["列表"],
-        help_text="查看指定比赛的竞猜情况",
     ),
     Subcommand(
         "event",

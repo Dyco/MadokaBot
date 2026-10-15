@@ -690,37 +690,36 @@ async def reserve_prediction_team_labels(
         return {group: _open_prediction_matches(snapshot, group) for group in groups}
 
 
-async def get_prediction_match_context(
-    group_id: str | int,
-    match_id: str,
-) -> dict[str, Any] | None:
-    """读取指定群可查看的赛事竞猜状态。"""
+async def list_current_prediction_matches(group_id: str | int) -> list[dict[str, Any]]:
+    """读取当前群订阅中已开放竞猜且尚未结束、结算的比赛。"""
     target = {"kind": "group", "id": str(group_id).strip()}
-    normalized_match_id = str(match_id).strip()
     async with _lock:
         data = _read()
-        if _allocate_prediction_team_labels(data):
-            _write(data)
+        current = []
         for key, entry in data.items():
             if not (
-                key.startswith("event:")
-                and isinstance(entry, dict)
-                and entry.get("kind") == "event"
+                key.startswith("event:") and isinstance(entry, dict)
+                and entry.get("kind") == "event" and not entry.get("completed")
                 and _target_in_entry(entry, target)
             ):
                 continue
             matches = entry.get("matches")
             if not isinstance(matches, dict):
                 continue
-            state = matches.get(normalized_match_id)
-            if not isinstance(state, dict):
-                continue
-            return {
-                "event_id": key.removeprefix("event:"),
-                "event_name": _event_name(entry, key.removeprefix("event:")),
-                "state": deepcopy(state),
-            }
-    return None
+            for match_id, state in matches.items():
+                if (
+                    not isinstance(state, dict)
+                    or state.get("completed") or state.get("prediction_settled")
+                    or not (state.get("prediction_open_sent") or state.get("prediction_open"))
+                    or len(state.get("team_names") or []) < 2
+                ):
+                    continue
+                current.append({
+                    "event_id": key.removeprefix("event:"),
+                    "match_id": str(match_id),
+                    "state": deepcopy(state),
+                })
+        return current
 
 
 async def get_prediction_settlement_state(event_id: str, match_id: str) -> dict[str, Any]:
