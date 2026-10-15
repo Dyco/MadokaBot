@@ -123,6 +123,7 @@ def prediction_notifications_with_labels(
 def prediction_rules_message() -> Message:
     """生成动态赔付规则节点，示例与实际倍率计算保持一致。"""
     return Message(MessageSegment.text(
+        f"【最多{config.cs_prediction_max_stake}积分】\n"
         f"初始赔付比例{config.cs_prediction_base_odds:.1f}。\n"
         "比例调整自第2人起：\n"
         f"下注队伍每增加一人，减少{config.cs_prediction_odds_decrement:.1f}赔付比例。\n"
