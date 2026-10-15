@@ -148,6 +148,16 @@ async def place_prediction(
     """为当前群唯一匹配的开放比赛记录一笔竞猜。"""
     if points <= 0:
         raise PredictionError("竞猜积分必须是大于0的整数。")
+    
+    if points < config.cs_prediction_min_stake:
+        raise PredictionError(
+        f"最低竞猜积分为 {config.cs_prediction_min_stake}。"
+    )
+
+    if points > config.cs_prediction_max_stake:
+        raise PredictionError(
+        f"最高竞猜积分为 {config.cs_prediction_max_stake}。"
+    )
 
     candidates = await list_open_prediction_matches(group_id)
     candidates = [
@@ -165,10 +175,11 @@ async def place_prediction(
         team_name = _select_team(team_input, team_names, candidate.get("team_slots") or [])
         if team_name is None:
             continue
-        if selected is not None:
-            raise PredictionError("该队伍对应多场开放竞猜，请使用通知中的竞猜编号选择比赛。")
+        
         selected = candidate
         selected_team = team_name
+        break
+        
     if selected is None:
         raise PredictionError("未找到对应队伍，请使用当前竞猜编号（如 teamA、team1）或完整队伍名。")
 
@@ -301,7 +312,7 @@ async def settle_match_predictions(
         for row in rows:
             is_winner = row in winner_rows
             payout = (
-                row.points + int(row.points * odds)
+                int(row.points * odds)
                 if is_winner
                 else 0
             )

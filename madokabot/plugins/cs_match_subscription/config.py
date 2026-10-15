@@ -90,7 +90,7 @@ class Config(NoneBotConfig):
     cs_prediction_base_odds: Decimal = Field(
         default=Decimal("2.0"),
         ge=0,
-        description="CS 竞猜的初始奖励倍率，结算时另退本金",
+        description="CS 竞猜的奖励倍率",
     )
     cs_prediction_odds_increment: Decimal = Field(
         default=Decimal("0.3"),
@@ -98,14 +98,24 @@ class Config(NoneBotConfig):
         description="对手从第二名下注者起，每增加一人增加的赔付比例",
     )
     cs_prediction_odds_decrement: Decimal = Field(
-        default=Decimal("0.2"),
+        default=Decimal("0.25"),
         ge=0,
         description="本队从第二名下注者起，每增加一人减少的赔付比例",
     )
     cs_prediction_min_odds: Decimal = Field(
-        default=Decimal("1.5"),
+        default=Decimal("1.2"),
         ge=0,
         description="CS 竞猜的最低赔付比例",
+    )
+    cs_prediction_min_stake: int = Field(
+        default=1,
+        ge=0,
+        description="CS 竞猜的最低下注金额",
+    )
+    cs_prediction_max_stake: int = Field(
+        default=500,
+        ge=0,
+        description="CS 竞猜的最高下注金额",
     )
     hltv_max_asset_size: int = Field(
         default=5 * 1024 * 1024,

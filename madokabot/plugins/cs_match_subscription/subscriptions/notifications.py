@@ -123,15 +123,15 @@ def prediction_notifications_with_labels(
 def prediction_rules_message() -> Message:
     """生成动态赔付规则节点，示例与实际倍率计算保持一致。"""
     return Message(MessageSegment.text(
-        f"赛事采用动态比例返还积分，初始比例{config.cs_prediction_base_odds:.1f}。\n"
-        "双方0人或1人均按1人计算，从第2人起：\n"
+        f"初始赔付比例{config.cs_prediction_base_odds:.1f}。\n"
+        "比例调整自第2人起：\n"
         f"下注队伍每增加一人，减少{config.cs_prediction_odds_decrement:.1f}赔付比例。\n"
         f"对手队伍每增加一人，增加{config.cs_prediction_odds_increment:.1f}赔付比例。\n"
         f"最低赔付比例{config.cs_prediction_min_odds:.1f}。\n"
         "例如队伍A被5人下注，队伍B被3人下注。\n"
         f"队伍A - {prediction_odds(5, 3):.1f}倍率，"
         f"队伍B - {prediction_odds(3, 5):.1f}倍率\n"
-        "获胜后退回本金，再按赔付比例发放奖励。"
+        "获胜后按赔付比例发放积分，不再额外回退下注积分。"
     ))
 
 
