@@ -88,24 +88,29 @@ class Config(NoneBotConfig):
         description="旧公池配置，仅保留配置兼容，竞猜结算不再使用",
     )
     cs_prediction_base_odds: Decimal = Field(
-        default=Decimal("2.0"),
+        default=Decimal("1.8"),
         ge=0,
-        description="CS 竞猜的奖励倍率",
+        description="CS 竞猜，基础奖励倍率",
     )
-    cs_prediction_odds_increment: Decimal = Field(
-        default=Decimal("0.3"),
+    cs_prediction_smooth_odds: int = Field(
+        default=300,
         ge=0,
-        description="对手从第二名下注者起，每增加一人增加的赔付比例",
+        description="基础积分K值，越大越平滑",
     )
-    cs_prediction_odds_decrement: Decimal = Field(
-        default=Decimal("0.25"),
+    cs_prediction_odds_exponent: Decimal = Field(
+        default=Decimal("0.8"),
         ge=0,
-        description="本队从第二名下注者起，每增加一人减少的赔付比例",
+        description="基准赔率指数，越小越平滑",
     )
     cs_prediction_min_odds: Decimal = Field(
         default=Decimal("1.2"),
         ge=0,
         description="CS 竞猜的最低赔付比例",
+    )
+    cs_prediction_max_odds: Decimal = Field(
+        default=Decimal("6.0"),
+        ge=0,
+        description="CS 竞猜的最高赔付比例",
     )
     cs_prediction_min_stake: int = Field(
         default=1,

@@ -13,6 +13,7 @@ from PIL import Image
 from madokabot.core.resources import ResourceFolder, ResourceType, get_file
 from madokabot.core.user.models import UserStats
 from madokabot.core.version import get_bot_version
+from madokabot.default.account.appearance import select_skin_asset
 from madokabot.default.account.config import config as account_config
 from madokabot.default.shop.catalog import get_skin_path
 
@@ -56,12 +57,12 @@ def render_fortune_html(result: FortuneResult, name: str, skin_asset: str) -> st
 
 
 async def render_fortune_card(result: FortuneResult, uid: str, name: str) -> MessageSegment:
-    """读取已注册账号的立绘及显示名，生成640×360的紧凑运势卡片。"""
+    """运势卡片渲染方法。"""
     async with create_session() as session:
         user = await session.get(UserStats, uid)
         if user is None:
             raise LookupError("用户未注册")
-        skin_asset = user.skin_asset
+        skin_asset = await select_skin_asset(user)
         name = user.display_name or name
     async with _render_limit:
         picture = await html_to_pic(

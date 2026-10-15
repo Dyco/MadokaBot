@@ -1,6 +1,6 @@
 """共享用户表的历史结构兼容。"""
 
-from sqlalchemy import DateTime, inspect
+from sqlalchemy import Boolean, DateTime, inspect
 from nonebot_plugin_datastore.db import get_engine
 
 from .models import UserStats
@@ -40,6 +40,14 @@ async def migrate_user_schema() -> None:
                 f"ALTER TABLE {UserStats.__tablename__} "
                 "ADD COLUMN sign_template VARCHAR NOT NULL DEFAULT 'daily_sign_01.html'"
             )
+
+        for name in ("random_skin", "random_template"):
+            if name not in columns:
+                column_type = Boolean().compile(dialect=conn.dialect)
+                await conn.exec_driver_sql(
+                    f"ALTER TABLE {UserStats.__tablename__} "
+                    f"ADD COLUMN {name} {column_type} NOT NULL DEFAULT FALSE"
+                )
 
         # 旧账号需补齐非空注册时间。
         await conn.exec_driver_sql(

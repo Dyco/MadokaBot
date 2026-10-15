@@ -121,18 +121,14 @@ def prediction_notifications_with_labels(
 
 
 def prediction_rules_message() -> Message:
-    """生成动态赔付规则节点，示例与实际倍率计算保持一致。"""
+    """生成按双方下注积分调整赔率的规则节点。"""
     return Message(MessageSegment.text(
-        f"【最多{config.cs_prediction_max_stake}积分】\n"
+        f"【最多下注{config.cs_prediction_max_stake}积分】\n"
         f"初始赔付比例{config.cs_prediction_base_odds:.1f}。\n"
-        "比例调整自第2人起：\n"
-        f"下注队伍每增加一人，减少{config.cs_prediction_odds_decrement:.1f}赔付比例。\n"
-        f"对手队伍每增加一人，增加{config.cs_prediction_odds_increment:.1f}赔付比例。\n"
+        "根据双方下注积分动态调整赔率：\n"
         f"最低赔付比例{config.cs_prediction_min_odds:.1f}。\n"
-        "例如队伍A被5人下注，队伍B被3人下注。\n"
-        f"队伍A - {prediction_odds(5, 3):.1f}倍率，"
-        f"队伍B - {prediction_odds(3, 5):.1f}倍率\n"
-        "获胜后按赔付比例发放积分，不再额外回退下注积分。"
+        f"最高赔付比例{config.cs_prediction_max_odds:.1f}。\n"
+        f"使用指令{command_start}cs prediction details可实时查看下注情况。"
     ))
 
 
@@ -140,7 +136,7 @@ def prediction_close_message(
     match: MatchData,
     summary: dict[str, Any],
 ) -> Message:
-    """展示截止时的跨群下注汇总和双方动态倍率。"""
+    """展示截止时的跨群下注汇总及按双方积分计算的动态倍率。"""
     first, second = team_names(match)
     teams = summary.get("teams")
     teams = teams if isinstance(teams, dict) else {}
@@ -148,15 +144,17 @@ def prediction_close_message(
     second_summary = teams.get(second, {})
     first_count = int(first_summary.get("count", 0))
     second_count = int(second_summary.get("count", 0))
+    first_points = int(first_summary.get("points", 0))
+    second_points = int(second_summary.get("points", 0))
     lines = [
         f"比赛已开始（{first} VS {second} 编号{match.match_id}），竞猜已截止。",
         (
-            f"{first} ({prediction_odds(first_count, second_count):.1f})："
-            f"{first_count}人预测，共计{int(first_summary.get('points', 0))}积分。"
+            f"{first} ({prediction_odds(first_points, second_points):.1f})："
+            f"{first_count}人预测，共计{first_points}积分。"
         ),
         (
-            f"{second} ({prediction_odds(second_count, first_count):.1f})："
-            f"{second_count}人预测，共计{int(second_summary.get('points', 0))}积分。"
+            f"{second} ({prediction_odds(second_points, first_points):.1f})："
+            f"{second_count}人预测，共计{second_points}积分。"
         ),
     ]
     return Message(MessageSegment.text("\n".join(lines)))

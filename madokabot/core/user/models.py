@@ -2,7 +2,7 @@
 
 from datetime import datetime
 
-from sqlalchemy import DateTime, Integer, String
+from sqlalchemy import Boolean, DateTime, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column
 
 from madokabot.core.db.base import data, shanghai_now
@@ -27,6 +27,8 @@ class UserStats(data.Model):
     sign_template: Mapped[str] = mapped_column(
         String, default="daily_sign_01.html", nullable=False
     )
+    random_skin: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    random_template: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
 
 
 class UserProfile(data.Model):

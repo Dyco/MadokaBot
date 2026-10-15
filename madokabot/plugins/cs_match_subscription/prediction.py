@@ -21,6 +21,7 @@ from .config import config
 from .prediction_labels import TEAM_LETTERS
 from .prediction_models import CsPrediction, CsPredictionNotification
 from .storage import (
+    get_prediction_match_states,
     list_current_prediction_matches,
     list_open_prediction_matches,
 )
@@ -30,15 +31,25 @@ _PREDICTION_TIMEOUT = timedelta(hours=12)
 _SHANGHAI_TZ = ZoneInfo("Asia/Shanghai")
 
 
-def prediction_odds(team_count: int, opponent_count: int) -> Decimal:
-    """按跨群双方人数计算奖励倍率，从第二人起调整并限制最低值。"""
-    return max(
-        config.cs_prediction_min_odds,
-        config.cs_prediction_base_odds
-        - config.cs_prediction_odds_decrement * max(0, team_count - 1)
-        + config.cs_prediction_odds_increment * max(0, opponent_count - 1),
+def prediction_odds(team_points: int, opponent_points: int) -> Decimal:
+    """按跨群双方下注积分计算动态赔率。"""
+
+    base = config.cs_prediction_base_odds
+    smoothing = Decimal(config.cs_prediction_smooth_odds)
+    exponent = config.cs_prediction_odds_exponent
+
+    min_odds = config.cs_prediction_min_odds
+    max_odds = config.cs_prediction_max_odds
+
+    ratio = (
+        Decimal(opponent_points) + smoothing
+    ) / (
+        Decimal(team_points) + smoothing
     )
 
+    odds = base * (ratio ** exponent)
+
+    return max(min_odds, min(max_odds, odds))
 
 async def _finish_prediction(
     session: AsyncSession,
@@ -284,7 +295,7 @@ async def settle_match_predictions(
     *,
     final_text: str = "",
 ) -> dict[str, Any]:
-    """按双方跨群人数结算动态奖励并退回胜者本金，小数奖励向下取整。"""
+    """按双方跨群下注积分计算含本金的赔付，最终到账积分向下取整。"""
     normalized_winner = _normalize_team(winner_name)
     async with _SETTLEMENT_LOCK, create_session() as session:
         rows = list(
@@ -303,7 +314,7 @@ async def settle_match_predictions(
             row for row in rows if _normalize_team(row.team_name) == normalized_winner
         ]
         winner_points = sum(row.points for row in winner_rows)
-        odds = prediction_odds(len(winner_rows), len(rows) - len(winner_rows))
+        odds = prediction_odds(winner_points, total_points - winner_points)
         total_payout = 0
         settled_count = 0
         claimed_rows = []
@@ -507,50 +518,147 @@ async def refund_expired_predictions(*, now: datetime | None = None) -> int:
 
 
 async def get_current_prediction_details(group_id: str) -> list[dict[str, Any]]:
-    """汇总本群当前竞猜比赛的跨群下注人数、积分、倍率和脱敏用户名单。"""
+    """合并当前竞猜与本群未结算比赛，只读汇总跨群下注和赔率。"""
     matches = await list_current_prediction_matches(group_id)
-    if not matches:
-        return []
-    match_keys = [(match["event_id"], match["match_id"]) for match in matches]
+    by_key = {
+        (str(match["event_id"]), str(match["match_id"])): match
+        for match in matches
+    }
+
     async with create_session() as session:
+        pending_rows = (await session.scalars(
+            select(CsPrediction).where(
+                CsPrediction.group_id == str(group_id),
+                CsPrediction.result == "open",
+            ).order_by(CsPrediction.created_at, CsPrediction.match_id)
+        )).all()
+        missing_keys = list({
+            (row.event_id, row.match_id) for row in pending_rows
+            if (row.event_id, row.match_id) not in by_key
+        })
+        states = await get_prediction_match_states(missing_keys) if missing_keys else {}
+        for row in pending_rows:
+            key = (row.event_id, row.match_id)
+            if key in by_key:
+                continue
+            state = states.get(key, {})
+            team_names = state.get("team_names") or []
+            if len(team_names) < 2:
+                team_names = [row.team1_name, row.team2_name]
+            by_key[key] = {
+                "event_id": row.event_id,
+                "match_id": row.match_id,
+                "state": {**state, "team_names": team_names},
+            }
+        if not by_key:
+            return []
+        matches = list(by_key.values())
+        match_keys = list(by_key)
         rows = (await session.execute(
             select(CsPrediction, UserStats)
             .outerjoin(UserStats, CsPrediction.user_id == UserStats.user_id)
-            .where(tuple_(CsPrediction.event_id, CsPrediction.match_id).in_(match_keys))
+            .where(
+                tuple_(
+                    CsPrediction.event_id,
+                    CsPrediction.match_id
+                ).in_(match_keys),
+                CsPrediction.result == "open",
+            )
             .order_by(CsPrediction.created_at, CsPrediction.user_id)
         )).all()
 
-        by_match: dict[tuple[str, str], list[tuple[CsPrediction, UserStats | None]]] = {}
+        by_match: dict[
+            tuple[str, str],
+            list[tuple[CsPrediction, UserStats | None]]
+        ] = {}
+
         for row, user in rows:
-            by_match.setdefault((row.event_id, row.match_id), []).append((row, user))
+            by_match.setdefault(
+                (row.event_id, row.match_id), []
+            ).append((row, user))
+
         details = []
+
         for match in matches:
-            match_rows = by_match.get((match["event_id"], match["match_id"]), [])
+            match_rows = by_match.get(
+                (str(match["event_id"]), str(match["match_id"])),
+                []
+            )
+            state = match["state"]
+            team_names = state["team_names"][:2]
+            if len(team_names) < 2 or not all(team_names):
+                # 旧记录缺少对阵时，保留已知下注队伍，不猜测未存档的对手。
+                team_names = list(dict.fromkeys(row.team_name for row, _ in match_rows))[:2]
+                team_names += ["未知队伍"] * (2 - len(team_names))
+
+            # 当前比赛跨群总下注积分
+            total_points = sum(
+                row.points for row, _ in match_rows
+            )
+
             teams = []
-            for team_name in match["state"]["team_names"][:2]:
+
+            for team_name in team_names:
                 team_rows = [
-                    (row, user) for row, user in match_rows
+                    (row, user)
+                    for row, user in match_rows
                     if _normalize_team(row.team_name) == _normalize_team(team_name)
                 ]
+
+                # 当前队伍总下注积分
+                team_points = sum(
+                    row.points for row, _ in team_rows
+                )
+
+                # 对手队伍总下注积分
+                opponent_points = total_points - team_points
+
                 players = []
+
                 for row, user in team_rows:
                     nickname = (
-                        str(user.display_name or user.qq_nickname or "").strip() if user else ""
+                        str(
+                            user.display_name
+                            or user.qq_nickname
+                            or ""
+                        ).strip()
+                        if user else ""
                     ) or "用户"
-                    masked_id = f"{row.user_id[:2]}**{row.user_id[-2:]}"
-                    players.append({"name": f"{nickname}({masked_id})", "points": row.points})
+
+                    masked_id = _masked_user_id(row.user_id)
+
+                    players.append({
+                        "name": f"{nickname}({masked_id})",
+                        "points": row.points,
+                    })
+
                 teams.append({
                     "name": team_name,
                     "count": len(team_rows),
-                    "points": sum(row.points for row, _ in team_rows),
-                    "odds": prediction_odds(len(team_rows), len(match_rows) - len(team_rows)),
+                    "points": team_points,
+                    "odds": prediction_odds(
+                        team_points,
+                        opponent_points
+                    ),
                     "players": players,
                 })
+
+            if state.get("completed") or state.get("rating_final_text"):
+                status = "已结束，等待结算"
+            elif state.get("started_sent"):
+                status = "比赛已开始"
+            elif state.get("prediction_open"):
+                status = "等待比赛开始"
+            else:
+                status = "竞猜未锁定"
             details.append({
-                "started": bool(match["state"].get("started_sent")),
+                "started": bool(state.get("started_sent")),
+                "status": status,
                 "teams": teams,
             })
+
     return details
+
 
 
 def _masked_user_id(user_id: str) -> str:

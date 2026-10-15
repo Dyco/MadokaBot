@@ -6,6 +6,7 @@ from nonebot_plugin_datastore import create_session
 from madokabot.core.user.queries import UserQueries
 from madokabot.core.user.accounts import UserAccount
 from madokabot.default.shop.service import SignTemplateService, SkinService
+from .appearance import toggle_random_appearance
 from .render import render_sign_card
 from .matchers import QUERY_USAGE, RENAME_USAGE, SET_USAGE, query_cmd, set_cmd
 from .service import rename_user
@@ -39,6 +40,20 @@ async def _rename(event: MessageEvent, name: Match[str]):
         await set_cmd.finish(f"用法：{RENAME_USAGE}")
 
     _, message = await rename_user(event.get_user_id(), name.result)
+    await set_cmd.finish(message)
+
+
+@set_cmd.assign("random_skin")
+async def _set_random_skin(event: MessageEvent) -> None:
+    """随机立绘命令处理方法。"""
+    _, message = await toggle_random_appearance(event.get_user_id(), "skin")
+    await set_cmd.finish(message)
+
+
+@set_cmd.assign("random_template")
+async def _set_random_template(event: MessageEvent) -> None:
+    """随机模板命令处理方法。"""
+    _, message = await toggle_random_appearance(event.get_user_id(), "template")
     await set_cmd.finish(message)
 
 

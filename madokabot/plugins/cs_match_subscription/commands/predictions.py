@@ -23,7 +23,7 @@ from ..subscriptions.delivery import send_forward_to_target
 
 
 async def _show_prediction_details(bot: Bot, event: GroupMessageEvent) -> None:
-    """按每场总览及双方名单三个节点合并转发跨群下注详情。"""
+    """按每场状态总览及双方名单三个节点合并转发跨群下注详情。"""
     try:
         details = await get_current_prediction_details(str(event.group_id))
     except Exception:
@@ -39,7 +39,7 @@ async def _show_prediction_details(bot: Bot, event: GroupMessageEvent) -> None:
         first, second = detail["teams"]
         lines = [
             f"【{first['name']} VS {second['name']}】下注情况",
-            "比赛已开始" if detail["started"] else "等待比赛开始",
+            detail["status"],
         ]
         for team in detail["teams"]:
             lines.extend((

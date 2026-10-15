@@ -16,6 +16,7 @@ from madokabot.core.version import get_bot_version
 from madokabot.default.shop.catalog import get_sign_template_path, get_skin_path
 
 from .config import HTML_FILE_PATH
+from .appearance import select_sign_template, select_skin_asset
 
 _SHANGHAI_TZ = ZoneInfo("Asia/Shanghai")
 
@@ -176,13 +177,13 @@ async def render_sign_card(
     sign: SignRecord,
     reward_data: dict[str, int] | None = None,
 ) -> MessageSegment:
-    """统一准备账号数值、奖励与版本，交由所选模板渲染。"""
-    template_path = get_sign_template_path(user.sign_template) or HTML_FILE_PATH
+    """签到与资料卡片渲染方法。"""
+    template_path = get_sign_template_path(await select_sign_template(user)) or HTML_FILE_PATH
     if not template_path.is_file():
         raise FileNotFoundError(f"签到模板不存在：{HTML_FILE_PATH}")
     font_context = get_template_font_context(template_path.name)
 
-    chara_path = get_skin_path(user.skin_asset)
+    chara_path = get_skin_path(await select_skin_asset(user))
     chara_display_name = None
     chara_b64 = None
     if chara_path is not None:
