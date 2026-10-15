@@ -23,9 +23,9 @@ from ..subscriptions.delivery import send_forward_to_target
 
 
 async def _show_prediction_details(bot: Bot, event: GroupMessageEvent) -> None:
-    """按每场状态总览及双方名单三个节点合并转发跨群下注详情。"""
+    """将全局竞猜的状态总览及双方下注名单合并发送到当前群。"""
     try:
-        details = await get_current_prediction_details(str(event.group_id))
+        details = await get_current_prediction_details()
     except Exception:
         logger.exception("CS 当前竞猜详情查询失败：group_id=%s", event.group_id)
         await cs_cmd.finish("竞猜详情查询失败，请稍后重试。")

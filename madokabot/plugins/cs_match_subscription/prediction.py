@@ -517,9 +517,9 @@ async def refund_expired_predictions(*, now: datetime | None = None) -> int:
     return refunded_count
 
 
-async def get_current_prediction_details(group_id: str) -> list[dict[str, Any]]:
-    """合并当前竞猜与本群未结算比赛，只读汇总跨群下注和赔率。"""
-    matches = await list_current_prediction_matches(group_id)
+async def get_current_prediction_details() -> list[dict[str, Any]]:
+    """合并全局当前竞猜与未结算比赛，只读汇总跨群下注和赔率。"""
+    matches = await list_current_prediction_matches()
     by_key = {
         (str(match["event_id"]), str(match["match_id"])): match
         for match in matches
@@ -528,7 +528,6 @@ async def get_current_prediction_details(group_id: str) -> list[dict[str, Any]]:
     async with create_session() as session:
         pending_rows = (await session.scalars(
             select(CsPrediction).where(
-                CsPrediction.group_id == str(group_id),
                 CsPrediction.result == "open",
             ).order_by(CsPrediction.created_at, CsPrediction.match_id)
         )).all()

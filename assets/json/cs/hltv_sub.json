@@ -3190,9 +3190,338 @@
                 "rating_skipped": false
             },
             "2399386": {
-                "source": "waiting",
+                "source": "finished",
                 "url": "https://www.hltv.org/matches/2399386/legacy-vs-parivision-thunderpick-world-championship-2026",
                 "scheduled_at": "2026-10-14T15:40:00+00:00",
+                "initialized": true,
+                "started_sent": true,
+                "completed": true,
+                "map_scores": {
+                    "0": "13:11",
+                    "1": "16:14"
+                },
+                "started_maps": [
+                    "0",
+                    "1"
+                ],
+                "notified_maps": [
+                    "0"
+                ],
+                "rating_maps": [
+                    "0"
+                ],
+                "rating_summary_sent": true,
+                "finalization_attempts": 0,
+                "prediction_open_sent": true,
+                "prediction_closed_sent": true,
+                "prediction_open": false,
+                "prediction_closed": true,
+                "prediction_settled": true,
+                "winner_name": "Legacy",
+                "prediction_payout": 0,
+                "team_names": [
+                    "Legacy",
+                    "PARIVISION"
+                ],
+                "format_code": "BO3",
+                "prediction_team_labels": {
+                    "1098472556": {
+                        "slots": [
+                            1,
+                            2
+                        ],
+                        "numeric": false,
+                        "released": true
+                    },
+                    "560362441": {
+                        "slots": [
+                            1,
+                            2
+                        ],
+                        "numeric": false,
+                        "released": true
+                    },
+                    "548312550": {
+                        "slots": [
+                            1,
+                            2
+                        ],
+                        "numeric": false,
+                        "released": true
+                    }
+                },
+                "rating_retry_attempts": 0,
+                "rating_final_text": "订阅赛事更新\nLegacy vs PARIVISION 比赛结束，系列赛比分为：Legacy 2:0 PARIVISION",
+                "rating_skipped": false
+            },
+            "2399387": {
+                "source": "finished",
+                "url": "https://www.hltv.org/matches/2399387/furia-vs-betboom-thunderpick-world-championship-2026",
+                "scheduled_at": "2026-10-14T19:00:00+00:00",
+                "initialized": true,
+                "started_sent": true,
+                "completed": true,
+                "map_scores": {
+                    "0": "13:10",
+                    "1": "13:9"
+                },
+                "started_maps": [
+                    "0",
+                    "1"
+                ],
+                "notified_maps": [
+                    "0"
+                ],
+                "rating_maps": [
+                    "0"
+                ],
+                "rating_summary_sent": true,
+                "finalization_attempts": 0,
+                "prediction_open_sent": true,
+                "prediction_closed_sent": true,
+                "prediction_open": false,
+                "prediction_closed": true,
+                "prediction_settled": true,
+                "winner_name": "FURIA",
+                "prediction_payout": 0,
+                "team_names": [
+                    "FURIA",
+                    "BETBOOM"
+                ],
+                "format_code": "BO3",
+                "prediction_team_labels": {
+                    "1098472556": {
+                        "slots": [
+                            1,
+                            2
+                        ],
+                        "numeric": false,
+                        "released": true
+                    },
+                    "560362441": {
+                        "slots": [
+                            1,
+                            2
+                        ],
+                        "numeric": false,
+                        "released": true
+                    },
+                    "548312550": {
+                        "slots": [
+                            1,
+                            2
+                        ],
+                        "numeric": false,
+                        "released": true
+                    }
+                },
+                "rating_retry_attempts": 0,
+                "rating_final_text": "订阅赛事更新\nFURIA vs BETBOOM 比赛结束，系列赛比分为：FURIA 2:0 BETBOOM",
+                "rating_skipped": false
+            },
+            "2399408": {
+                "source": "finished",
+                "url": "https://www.hltv.org/matches/2399408/aurora-vs-ninjas-in-pyjamas-thunderpick-world-championship-2026",
+                "scheduled_at": "2026-10-15T08:35:00+00:00",
+                "initialized": true,
+                "started_sent": true,
+                "completed": true,
+                "map_scores": {
+                    "0": "13:9",
+                    "1": "13:7"
+                },
+                "started_maps": [
+                    "0",
+                    "1"
+                ],
+                "notified_maps": [
+                    "0"
+                ],
+                "rating_maps": [
+                    "0"
+                ],
+                "rating_summary_sent": true,
+                "finalization_attempts": 0,
+                "prediction_open_sent": true,
+                "prediction_closed_sent": true,
+                "prediction_open": false,
+                "prediction_closed": true,
+                "prediction_settled": true,
+                "winner_name": "Aurora",
+                "prediction_payout": 0,
+                "team_names": [
+                    "Aurora",
+                    "Ninjas in Pyjamas"
+                ],
+                "format_code": "BO3",
+                "prediction_team_labels": {
+                    "1098472556": {
+                        "slots": [
+                            1,
+                            2
+                        ],
+                        "numeric": false,
+                        "released": true
+                    },
+                    "560362441": {
+                        "slots": [
+                            1,
+                            2
+                        ],
+                        "numeric": false,
+                        "released": true
+                    },
+                    "548312550": {
+                        "slots": [
+                            1,
+                            2
+                        ],
+                        "numeric": false,
+                        "released": true
+                    }
+                },
+                "rating_retry_attempts": 0,
+                "rating_final_text": "订阅赛事更新\nAurora vs Ninjas in Pyjamas 比赛结束，系列赛比分为：Aurora 2:0 Ninjas in Pyjamas",
+                "rating_skipped": false
+            },
+            "2399409": {
+                "source": "finished",
+                "url": "https://www.hltv.org/matches/2399409/9z-vs-falcons-thunderpick-world-championship-2026",
+                "scheduled_at": "2026-10-15T11:30:00+00:00",
+                "initialized": true,
+                "started_sent": true,
+                "completed": true,
+                "map_scores": {
+                    "0": "9:13",
+                    "1": "13:8",
+                    "2": "9:13"
+                },
+                "started_maps": [
+                    "0",
+                    "1",
+                    "2"
+                ],
+                "notified_maps": [
+                    "0",
+                    "1"
+                ],
+                "rating_maps": [
+                    "0",
+                    "1"
+                ],
+                "rating_summary_sent": true,
+                "finalization_attempts": 0,
+                "prediction_open_sent": true,
+                "prediction_closed_sent": true,
+                "prediction_open": false,
+                "prediction_closed": true,
+                "prediction_settled": true,
+                "winner_name": "Falcons",
+                "prediction_payout": 0,
+                "team_names": [
+                    "9z",
+                    "Falcons"
+                ],
+                "format_code": "BO3",
+                "prediction_team_labels": {
+                    "1098472556": {
+                        "slots": [
+                            1,
+                            2
+                        ],
+                        "numeric": false,
+                        "released": true
+                    },
+                    "560362441": {
+                        "slots": [
+                            1,
+                            2
+                        ],
+                        "numeric": false,
+                        "released": true
+                    },
+                    "548312550": {
+                        "slots": [
+                            1,
+                            2
+                        ],
+                        "numeric": false,
+                        "released": true
+                    }
+                },
+                "rating_retry_attempts": 0,
+                "rating_final_text": "订阅赛事更新\n9z vs Falcons 比赛结束，系列赛比分为：9z 1:2 Falcons",
+                "rating_skipped": false
+            },
+            "2399410": {
+                "source": "upcoming",
+                "url": "https://www.hltv.org/matches/2399410/parivision-vs-betboom-thunderpick-world-championship-2026",
+                "scheduled_at": "2026-10-15T15:10:00+00:00",
+                "initialized": true,
+                "started_sent": true,
+                "completed": false,
+                "map_scores": {
+                    "0": "13:10",
+                    "1": "4:13"
+                },
+                "started_maps": [
+                    "0",
+                    "1",
+                    "2"
+                ],
+                "notified_maps": [
+                    "0",
+                    "1"
+                ],
+                "rating_maps": [
+                    "0",
+                    "1"
+                ],
+                "rating_summary_sent": false,
+                "finalization_attempts": 0,
+                "prediction_open_sent": true,
+                "prediction_closed_sent": true,
+                "prediction_open": false,
+                "prediction_closed": true,
+                "prediction_settled": false,
+                "winner_name": "",
+                "prediction_payout": 0,
+                "team_names": [
+                    "PARIVISION",
+                    "BETBOOM"
+                ],
+                "format_code": "BO3",
+                "prediction_team_labels": {
+                    "1098472556": {
+                        "slots": [
+                            1,
+                            2
+                        ],
+                        "numeric": false,
+                        "released": true
+                    },
+                    "560362441": {
+                        "slots": [
+                            1,
+                            2
+                        ],
+                        "numeric": false,
+                        "released": true
+                    },
+                    "548312550": {
+                        "slots": [
+                            1,
+                            2
+                        ],
+                        "numeric": false,
+                        "released": true
+                    }
+                }
+            },
+            "2399411": {
+                "source": "waiting",
+                "url": "https://www.hltv.org/matches/2399411/legacy-vs-furia-thunderpick-world-championship-2026",
+                "scheduled_at": "2026-10-15T18:00:00+00:00",
                 "initialized": true,
                 "started_sent": false,
                 "completed": false,
@@ -3211,10 +3540,17 @@
                 "prediction_payout": 0,
                 "team_names": [
                     "Legacy",
-                    "PARIVISION"
+                    "FURIA"
                 ],
                 "format_code": "BO3",
                 "prediction_team_labels": {
+                    "548312550": {
+                        "slots": [
+                            1,
+                            2
+                        ],
+                        "numeric": false
+                    },
                     "1098472556": {
                         "slots": [
                             1,
@@ -3228,134 +3564,12 @@
                             2
                         ],
                         "numeric": false
-                    },
-                    "548312550": {
-                        "slots": [
-                            1,
-                            2
-                        ],
-                        "numeric": false
                     }
                 }
             },
-            "2399387": {
-                "source": "waiting",
-                "url": "https://www.hltv.org/matches/2399387/furia-vs-betboom-thunderpick-world-championship-2026",
-                "scheduled_at": "2026-10-14T17:30:00+00:00",
-                "initialized": false,
-                "started_sent": false,
-                "completed": false,
-                "map_scores": {},
-                "started_maps": [],
-                "notified_maps": [],
-                "rating_maps": [],
-                "rating_summary_sent": false,
-                "finalization_attempts": 0,
-                "prediction_open_sent": false,
-                "prediction_closed_sent": false,
-                "prediction_open": false,
-                "prediction_closed": false,
-                "prediction_settled": false,
-                "winner_name": "",
-                "prediction_payout": 0,
-                "team_names": [],
-                "format_code": ""
-            },
-            "2399408": {
-                "source": "waiting",
-                "url": "https://www.hltv.org/matches/2399408/aurora-vs-ninjas-in-pyjamas-thunderpick-world-championship-2026",
-                "scheduled_at": "2026-10-15T08:30:00+00:00",
-                "initialized": false,
-                "started_sent": false,
-                "completed": false,
-                "map_scores": {},
-                "started_maps": [],
-                "notified_maps": [],
-                "rating_maps": [],
-                "rating_summary_sent": false,
-                "finalization_attempts": 0,
-                "prediction_open_sent": false,
-                "prediction_closed_sent": false,
-                "prediction_open": false,
-                "prediction_closed": false,
-                "prediction_settled": false,
-                "winner_name": "",
-                "prediction_payout": 0,
-                "team_names": [],
-                "format_code": ""
-            },
-            "2399409": {
-                "source": "waiting",
-                "url": "https://www.hltv.org/matches/2399409/9z-vs-falcons-thunderpick-world-championship-2026",
-                "scheduled_at": "2026-10-15T11:00:00+00:00",
-                "initialized": false,
-                "started_sent": false,
-                "completed": false,
-                "map_scores": {},
-                "started_maps": [],
-                "notified_maps": [],
-                "rating_maps": [],
-                "rating_summary_sent": false,
-                "finalization_attempts": 0,
-                "prediction_open_sent": false,
-                "prediction_closed_sent": false,
-                "prediction_open": false,
-                "prediction_closed": false,
-                "prediction_settled": false,
-                "winner_name": "",
-                "prediction_payout": 0,
-                "team_names": [],
-                "format_code": ""
-            },
-            "2399410": {
-                "source": "waiting",
-                "url": "https://www.hltv.org/matches/2399410/thunderpick-world-championship-2026-match-7-thunderpick-world-championship-2026",
-                "scheduled_at": "2026-10-15T13:30:00+00:00",
-                "initialized": false,
-                "started_sent": false,
-                "completed": false,
-                "map_scores": {},
-                "started_maps": [],
-                "notified_maps": [],
-                "rating_maps": [],
-                "rating_summary_sent": false,
-                "finalization_attempts": 0,
-                "prediction_open_sent": false,
-                "prediction_closed_sent": false,
-                "prediction_open": false,
-                "prediction_closed": false,
-                "prediction_settled": false,
-                "winner_name": "",
-                "prediction_payout": 0,
-                "team_names": [],
-                "format_code": ""
-            },
-            "2399411": {
-                "source": "waiting",
-                "url": "https://www.hltv.org/matches/2399411/thunderpick-world-championship-2026-match-8-thunderpick-world-championship-2026",
-                "scheduled_at": "2026-10-15T16:00:00+00:00",
-                "initialized": false,
-                "started_sent": false,
-                "completed": false,
-                "map_scores": {},
-                "started_maps": [],
-                "notified_maps": [],
-                "rating_maps": [],
-                "rating_summary_sent": false,
-                "finalization_attempts": 0,
-                "prediction_open_sent": false,
-                "prediction_closed_sent": false,
-                "prediction_open": false,
-                "prediction_closed": false,
-                "prediction_settled": false,
-                "winner_name": "",
-                "prediction_payout": 0,
-                "team_names": [],
-                "format_code": ""
-            },
             "2399412": {
                 "source": "waiting",
-                "url": "https://www.hltv.org/matches/2399412/thunderpick-world-championship-2026-match-9-thunderpick-world-championship-2026",
+                "url": "https://www.hltv.org/matches/2399412/aurora-vs-9z-thunderpick-world-championship-2026",
                 "scheduled_at": "2026-10-16T14:00:00+00:00",
                 "initialized": false,
                 "started_sent": false,

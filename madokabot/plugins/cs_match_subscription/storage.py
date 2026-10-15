@@ -690,9 +690,8 @@ async def reserve_prediction_team_labels(
         return {group: _open_prediction_matches(snapshot, group) for group in groups}
 
 
-async def list_current_prediction_matches(group_id: str | int) -> list[dict[str, Any]]:
-    """读取当前群订阅中已开放竞猜且尚未结束、结算的比赛。"""
-    target = {"kind": "group", "id": str(group_id).strip()}
+async def list_current_prediction_matches() -> list[dict[str, Any]]:
+    """读取全局订阅中已开放竞猜且尚未结束、结算的比赛。"""
     async with _lock:
         data = _read()
         current = []
@@ -700,7 +699,6 @@ async def list_current_prediction_matches(group_id: str | int) -> list[dict[str,
             if not (
                 key.startswith("event:") and isinstance(entry, dict)
                 and entry.get("kind") == "event" and not entry.get("completed")
-                and _target_in_entry(entry, target)
             ):
                 continue
             matches = entry.get("matches")
