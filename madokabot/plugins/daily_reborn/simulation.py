@@ -8,15 +8,17 @@ from pathlib import Path
 
 from .attributes import ATTRIBUTES, STAR_SYSTEM, attribute_stars, draw_star
 from .geography import random_location
-from .potential import EVALUATION_SYSTEM, evaluate_life, score_label as score_label
+from .modes import RebornMode
+from .potential import EVALUATION_SYSTEM, evaluate_life
+from .potential import score_label as score_label
 
 DATA_DIR = Path(__file__).parent / "data"
 
 
-@lru_cache(maxsize=2)
-def load_population(china: bool = False) -> dict:
-    """读取世界或中国人口快照，拒绝无效的抽样权重与出生性别比。"""
-    filename = "china_population.json" if china else "population.json"
+@lru_cache(maxsize=4)
+def load_population(mode: RebornMode = "world") -> dict:
+    """读取所选模式的人口快照，拒绝无效的抽样权重与出生性别比。"""
+    filename = "population.json" if mode == "world" else f"{mode}_population.json"
     dataset = json.loads((DATA_DIR / filename).read_text(encoding="utf-8"))
     countries = dataset["countries"]
     if not countries or len({row["code"] for row in countries}) != len(countries):
@@ -44,9 +46,9 @@ def display_result(result: dict) -> dict:
     return result | {"attributes": stars, "attribute_system": STAR_SYSTEM} | evaluate_life(stars)
 
 
-def simulate_rebirth(*, china: bool = False) -> dict:
+def simulate_rebirth(*, mode: RebornMode = "world") -> dict:
     """按出生人数与性别比抽样，生成星级潜力并保存地区内的随机定位。"""
-    dataset = load_population(True) if china else load_population()
+    dataset = load_population(mode)
     countries = dataset["countries"]
     country = random.choices(countries, weights=[row["births"] for row in countries])[0]
     attributes = {name: draw_star() for name in ATTRIBUTES}
@@ -55,13 +57,13 @@ def simulate_rebirth(*, china: bool = False) -> dict:
     gender = "男" if random.random() < ratio / (ratio + 100) else "女"
     return {
         "country": country,
-        "mode": "china" if china else "world",
+        "mode": mode,
         "data_year": country.get("year", dataset["year"]),
         "source": country.get("source", dataset["source"]),
-        "data_note": country.get("births_note", "") if china else "中方案预测",
+        "data_note": "中方案预测" if mode == "world" else country.get("births_note", dataset.get("births_note", "")),
         "probability": country["births"] / sum(row["births"] for row in countries),
         "gender": gender,
-        "map_point": random_location(country, china=china),
+        "map_point": random_location(country, mode=mode),
         "attributes": attributes,
         "attribute_system": STAR_SYSTEM,
         **evaluate_life(attributes),

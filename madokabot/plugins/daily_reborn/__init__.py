@@ -14,6 +14,8 @@ __plugin_meta__ = PluginMetadata(
     description="模拟投胎，生成出生地与人生属性卡片",
     usage=f"{command_start}投胎：世界投胎，每日免费一次\n"
     f"{command_start}投胎中国：中国投胎，每日免费一次（含港澳台）\n"
+    f"{command_start}投胎日本：日本投胎，每日免费一次（47 个都道府县）\n"
+    f"{command_start}投胎美国：美国投胎，每日免费一次（50 州及华盛顿特区）\n"
     f"{command_start}投胎 重开：消耗 5 积分重新随机投胎\n",
     type="application",
     supported_adapters=inherit_supported_adapters("nonebot_plugin_alconna"),

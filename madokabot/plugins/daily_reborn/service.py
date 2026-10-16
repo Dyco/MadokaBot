@@ -9,11 +9,20 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from madokabot.core.db.base import shanghai_now
 from madokabot.core.user.models import UserStats
-from .models import ChinaRebornRecord, RebornProgress, RebornRecord
+
+from .models import (
+    ChinaRebornRecord,
+    JapanRebornRecord,
+    RebornProgress,
+    RebornRecord,
+    USRebornRecord,
+)
+from .modes import MODE_COMMANDS, RebornMode
 from .simulation import simulate_rebirth
 
 REROLL_COST = 5
 HISTORY_LIMIT = 10
+RECORD_MODELS = {"world": RebornRecord, "china": ChinaRebornRecord, "japan": JapanRebornRecord, "usa": USRebornRecord}
 
 
 def history_entry(result: dict, count: int) -> dict:
@@ -29,10 +38,9 @@ def history_entry(result: dict, count: int) -> dict:
     }
 
 
-async def lock_progress(session: AsyncSession, user_id: str, *, china: bool) -> RebornProgress:
+async def lock_progress(session: AsyncSession, user_id: str, *, mode: RebornMode) -> RebornProgress:
     """锁定模式计数；首次使用时从现存每日记录补全可恢复的历史。"""
-    mode = "china" if china else "world"
-    model = ChinaRebornRecord if china else RebornRecord
+    model = RECORD_MODELS[mode]
     statement = update(RebornProgress).where(
         RebornProgress.user_id == user_id, RebornProgress.mode == mode
     ).values(count=RebornProgress.count)
@@ -65,20 +73,20 @@ def record_birth(progress: RebornProgress, result: dict) -> dict:
     return result | {"reborn_count": progress.count, "reborn_history": progress.history}
 
 
-async def reborn_today(user_id: str, *, china: bool = False) -> tuple[dict, bool]:
+async def reborn_today(user_id: str, *, mode: RebornMode = "world") -> tuple[dict, bool]:
     """返回所选模式当天结果，新抽取才累计次数，重复查看不增加历史。"""
     today = shanghai_now().astimezone(ZoneInfo("Asia/Shanghai")).date()
-    model = ChinaRebornRecord if china else RebornRecord
+    model = RECORD_MODELS[mode]
     key = (user_id, today)
     async with create_session() as session:
-        progress = await lock_progress(session, user_id, china=china)
+        progress = await lock_progress(session, user_id, mode=mode)
         record = await session.get(model, key)
         if record is not None:
             result = dict(record.result) | {"reborn_count": progress.count, "reborn_history": progress.history}
             await session.commit()
             return result, False
 
-        result = simulate_rebirth(china=True) if china else simulate_rebirth()
+        result = simulate_rebirth(mode=mode)
         result["date"] = today.isoformat()
         result = record_birth(progress, result)
         session.add(model(user_id=user_id, reborn_date=today, result=result))
@@ -86,10 +94,10 @@ async def reborn_today(user_id: str, *, china: bool = False) -> tuple[dict, bool
         return result, True
 
 
-async def reroll_today(user_id: str, *, china: bool = False) -> tuple[dict, int]:
+async def reroll_today(user_id: str, *, mode: RebornMode = "world") -> tuple[dict, int]:
     """扣款、计数、历史及当天结果一起提交，重开失败时整笔回滚。"""
     today = shanghai_now().astimezone(ZoneInfo("Asia/Shanghai")).date()
-    model = ChinaRebornRecord if china else RebornRecord
+    model = RECORD_MODELS[mode]
     async with create_session() as session:
         # 先条件扣款以串行处理同一账号的消费，避免并发重开透支。
         deduction = await session.execute(
@@ -105,12 +113,12 @@ async def reroll_today(user_id: str, *, china: bool = False) -> tuple[dict, int]
                 raise ValueError("请先发送“注册”完成用户注册，再使用积分重开。")
             raise ValueError(f"积分不足，重开需要 {REROLL_COST} 积分，你当前只有 {points} 积分。")
 
-        progress = await lock_progress(session, user_id, china=china)
+        progress = await lock_progress(session, user_id, mode=mode)
         record = await session.get(model, (user_id, today))
         if record is None:
-            command = "投胎中国" if china else "投胎"
+            command = MODE_COMMANDS[mode]
             raise ValueError(f"今天还没有进行{command}，请先使用{command}命令领取本模式的免费投胎。")
-        result = simulate_rebirth(china=True) if china else simulate_rebirth()
+        result = simulate_rebirth(mode=mode)
         result["date"] = today.isoformat()
         result = record_birth(progress, result)
         record.result = result

@@ -27,8 +27,8 @@
     .selected { fill: #a7e8ba; stroke: #d9f7d8; stroke-width: .6; }
     .map-footer { display: flex; justify-content: space-between; padding: 8px 18px; color: #92b1b8; font-size: 14px; }
     .map-footer b { color: #b5ebcc; font-weight: normal; }
-    .china-land { stroke-width: .85; }
-    .china-land.selected { stroke-width: 1.2; }
+    .regional-land { stroke-width: .85; }
+    .regional-land.selected { stroke-width: 1.2; }
     .sea-lines { fill: #648996; stroke: #648996; stroke-width: .3; }
     .facts { display: grid; grid-template-columns: 1fr 1fr 1fr; padding: 24px 0; gap: 20px; }
     .fact { border-right: 1px solid #29424b; }
@@ -90,7 +90,7 @@
     <linearGradient id="reborn-rainbow" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#ff9ed2"/><stop offset=".35" stop-color="#ffe7a0"/><stop offset=".7" stop-color="#88e6d7"/><stop offset="1" stop-color="#bda3ff"/></linearGradient>
   </defs></svg>
   <header>
-    <div><div class="eyebrow">DAILY REBORN / {% if china %}CHINA{% else %}NEW LIFE{% endif %} ARCHIVE</div><h1>{% if china %}投胎中国{% else %}每日投胎{% endif %}</h1></div>
+    <div><div class="eyebrow">DAILY REBORN / {% if mode == 'world' %}NEW LIFE{% else %}{{ mode|upper }}{% endif %} ARCHIVE</div><h1>{{ title }}</h1></div>
     <div class="date">{{ result.date }}<br>人生模拟</div>
   </header>
   <section class="identity">
@@ -104,10 +104,10 @@
   </section>
   <div class="map">
     <svg viewBox="{{ map_view_box }}" xmlns="http://www.w3.org/2000/svg" aria-label="{{ result.country.name }}及周边出生地图">
-    {% if china %}
-      <g class="grid">{% for path in china_map.grid %}<path d="{{ path }}"/>{% endfor %}</g>
-      {% for region in regions %}<path data-region="{{ region.code }}" class="land china-land{% if region.code == result.country.code %} selected{% endif %}" fill-rule="evenodd" d="{{ region.path }}"/>{% endfor %}
-      <path class="sea-lines" d="{{ china_map.sea_lines }}"/>
+    {% if mode != 'world' %}
+      <g class="grid">{% for path in regional_map.grid %}<path d="{{ path }}"/>{% endfor %}</g>
+      {% for region in regions %}<path data-region="{{ region.code }}" class="land regional-land{% if region.code == result.country.code %} selected{% endif %}" fill-rule="evenodd" d="{{ region.path }}"/>{% endfor %}
+      {% if mode == 'china' %}<path class="sea-lines" d="{{ regional_map.sea_lines }}"/>{% endif %}
     {% else %}
       {% for offset in map_offsets %}
       <g transform="translate({{ offset }}, 0)">
@@ -123,12 +123,16 @@
       <circle cx="{{ marker_x }}" cy="{{ marker_y }}" r="{{ 6 * map_scale }}" fill="#edf7ca" stroke="#143832" stroke-width="{{ 2 * map_scale }}"/>
       <circle cx="{{ marker_x }}" cy="{{ marker_y }}" r="{{ 2 * map_scale }}" fill="#205442"/>
     </svg>
-    <div class="map-footer"><b>● 本次出生地</b><span>{% if china %}中国{% else %}世界{% endif %} · 出生地周边示意图</span></div>
+    <div class="map-footer"><b>● 本次出生地</b><span>{{ mode_name }} · 出生地周边示意图{% if mode == 'japan' %} · 地图：国土交通省（加工）{% elif mode == 'usa' %} · 地图：美国人口普查局（加工）{% endif %}</span></div>
   </div>
   <div class="facts">
     <div class="fact"><div class="fact-label">抽中该地区的概率</div><div class="fact-value">{{ probability }}</div></div>
-    <div class="fact"><div class="fact-label">该地区年度出生人数{% if china %} · {{ result.data_year }}{% endif %}</div><div class="fact-value">{{ births }} <small>人</small></div></div>
+    <div class="fact"><div class="fact-label">该地区年度出生人数{% if mode != 'world' %} · {{ result.data_year }}{% endif %}</div><div class="fact-value">{{ births }} <small>人</small></div></div>
+    {% if result.country.get('birth_rate') is not none %}
     <div class="fact"><div class="fact-label">该地区粗出生率{% if result.country.get('birth_rate_estimated') %}（估算）{% endif %}</div><div class="fact-value">{{ '%.2f'|format(result.country.birth_rate) }} <small>‰</small></div></div>
+    {% else %}
+    <div class="fact"><div class="fact-label">人口数据年份</div><div class="fact-value">{{ result.data_year }} <small>年</small></div></div>
+    {% endif %}
   </div>
   <div class="life-analysis">
   <div class="bottom">

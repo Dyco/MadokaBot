@@ -17,3 +17,19 @@ reborn_cn = on_alconna(
     priority=10,
     block=True,
 )
+
+reborn_jp = on_alconna(
+    Alconna("rebornJP", Subcommand("reroll", alias=["重开"], help_text="消耗5积分重新随机投胎")),
+    aliases={"投胎日本"},
+    use_cmd_start=True,
+    priority=10,
+    block=True,
+)
+
+reborn_us = on_alconna(
+    Alconna("rebornUS", Subcommand("reroll", alias=["重开"], help_text="消耗5积分重新随机投胎")),
+    aliases={"投胎美国"},
+    use_cmd_start=True,
+    priority=10,
+    block=True,
+)

@@ -1,6 +1,6 @@
 [project]
 name = "MadokaBot"
-version = "0.4.1"
+version = "0.4.2"
 description = "MadokaBot"
 readme = "README.md"
 requires-python = ">=3.10, <4.0"
@@ -40,6 +40,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+data = ["shapely>=2.1"]
 dev = [
     
 ]

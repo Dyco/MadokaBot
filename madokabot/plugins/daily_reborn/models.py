@@ -3,7 +3,7 @@
 from datetime import date
 from typing import Any
 
-from sqlalchemy import Date, Integer, JSON, String
+from sqlalchemy import JSON, Date, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column
 
 from madokabot.core.db.base import data
@@ -23,6 +23,26 @@ class ChinaRebornRecord(data.Model):
     """中国投胎的每日记录，与世界投胎分别计次并保留各自结果。"""
 
     __tablename__ = "madoka_daily_reborn_china_record"
+
+    user_id: Mapped[str] = mapped_column(String, primary_key=True)
+    reborn_date: Mapped[date] = mapped_column(Date, primary_key=True)
+    result: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=False)
+
+
+class JapanRebornRecord(data.Model):
+    """日本投胎的每日记录，与其他模式分别计次并保留结果。"""
+
+    __tablename__ = "madoka_daily_reborn_japan_record"
+
+    user_id: Mapped[str] = mapped_column(String, primary_key=True)
+    reborn_date: Mapped[date] = mapped_column(Date, primary_key=True)
+    result: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=False)
+
+
+class USRebornRecord(data.Model):
+    """美国投胎的每日记录，与其他模式分别计次并保留结果。"""
+
+    __tablename__ = "madoka_daily_reborn_usa_record"
 
     user_id: Mapped[str] = mapped_column(String, primary_key=True)
     reborn_date: Mapped[date] = mapped_column(Date, primary_key=True)

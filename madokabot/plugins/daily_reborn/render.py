@@ -1,4 +1,4 @@
-"""每日投胎卡片与世界地图渲染。"""
+"""每日投胎卡片与各模式地图渲染。"""
 
 import asyncio
 from pathlib import Path
@@ -9,8 +9,10 @@ from nonebot_plugin_htmlrender import html_to_pic
 
 from madokabot.core.resources import ResourceFolder, ResourceType, get_file
 from madokabot.core.version import get_bot_version
+
 from .attributes import attribute_rows
-from .geography import focused_map, load_china_map, load_world_map, result_location
+from .geography import focused_map, load_regional_map, load_world_map, result_location
+from .modes import MODE_COMMANDS, MODE_NAMES
 from .simulation import display_result
 
 TEMPLATE_DIR = Path(__file__).parent / "templates"
@@ -48,11 +50,11 @@ def render_reborn_html(result: dict, name: str) -> str:
     result = display_result(result)
     font = get_file(ResourceType.FONT, ResourceFolder.SIGN, "font.ttf")
     country = result["country"]
-    china = result.get("mode") == "china"
-    china_map = load_china_map() if china else {}
-    regions = china_map["regions"] if china else load_world_map()
+    mode = result.get("mode", "world")
+    regional_map = load_regional_map(mode) if mode != "world" else {}
+    regions = regional_map["regions"] if regional_map else load_world_map()
     region, marker_x, marker_y = result_location(result)
-    view_box, map_scale, map_offsets = focused_map(region, marker_x, marker_y, china=china)
+    view_box, map_scale, map_offsets = focused_map(region, marker_x, marker_y, mode=mode)
     rows = attribute_rows(result["attributes"])
     history = recent_history(result)
     return _environment.get_template("reborn.html").render(
@@ -62,8 +64,10 @@ def render_reborn_html(result: dict, name: str) -> str:
         bot_version=get_bot_version(),
         reborn_count=result.get("reborn_count", 1),
         history_slots=history + [None] * (10 - len(history)),
-        china=china,
-        china_map=china_map,
+        mode=mode,
+        mode_name=MODE_NAMES[mode],
+        title="每日投胎" if mode == "world" else MODE_COMMANDS[mode],
+        regional_map=regional_map,
         regions=regions,
         marker_x=marker_x,
         marker_y=marker_y,
@@ -96,7 +100,8 @@ def result_text(result: dict, *, prefix: str, name: str = "") -> str:
         f"{row['name']}：{row['value_text']} 星（{row['title']}）"
         for row in attribute_rows(result["attributes"])
     )
-    title = "投胎中国" if result.get("mode") == "china" else "每日投胎"
+    mode = result.get("mode", "world")
+    title = "每日投胎" if mode == "world" else MODE_COMMANDS[mode]
     note = result.get("data_note", "中方案预测")
     history = recent_history(result)
     history_lines = [
