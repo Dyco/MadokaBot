@@ -18,7 +18,7 @@ sign_locks: defaultdict[str, asyncio.Lock] = defaultdict(asyncio.Lock)
 
 @sign_matcher.handle()
 async def _handle_sign(bot: Bot, event: MessageEvent):
-    """签到命令处理方法。"""
+    """处理签到命令并引用原消息回复结果。"""
     uid = event.get_user_id()
     username = event.sender.card or event.sender.nickname or uid
     lock = sign_locks[uid]
@@ -52,5 +52,5 @@ async def _handle_sign(bot: Bot, event: MessageEvent):
         sign_locks.pop(uid, None)
 
     if image_message is None:
-        await sign_matcher.finish("抱歉，円香现在心情不太好，无法签到。")
-    await sign_matcher.finish(image_message)
+        await sign_matcher.finish("抱歉，円香现在心情不太好，无法签到。", reply_message=True)
+    await sign_matcher.finish(image_message, reply_message=True)

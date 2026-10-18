@@ -24,13 +24,13 @@ from .service import get_points_ranking, transfer_points
 async def handle_point_root(result: Arparma) -> None:
     """积分命令入口。"""
     if not result.subcommands:
-        await point_cmd.finish(f"用法：{POINT_USAGE}")
+        await point_cmd.finish(f"用法：{POINT_USAGE}", reply_message=True)
 
 
 @point_cmd.assign("help")
 async def handle_point_help() -> None:
     """积分帮助方法。"""
-    await point_cmd.finish(f"用法：{POINT_USAGE}")
+    await point_cmd.finish(f"用法：{POINT_USAGE}", reply_message=True)
 
 
 # assign复用函数的注册索引，跨命令共享方法需用handle分别注册。
@@ -41,9 +41,9 @@ async def handle_point_query(event: MessageEvent, matcher: Matcher) -> None:
     try:
         points, rank = await UserAccount.get_points_and_rank(event.get_user_id())
     except LookupError:
-        await matcher.finish("请先发送“注册”完成用户注册")
+        await matcher.finish("请先发送“注册”完成用户注册", reply_message=True)
     rank_text = f"排名第{rank}名" if rank is not None else "未参与排名"
-    await matcher.finish(f"查询结果：制作人当前持有{points}积分，{rank_text}。")
+    await matcher.finish(f"查询结果：制作人当前持有{points}积分，{rank_text}。", reply_message=True)
 
 
 def format_points_ranking(title: str, ranking: list[tuple[str, str, int]]) -> str:
@@ -66,7 +66,7 @@ async def handle_points_ranking(bot: Bot, event: MessageEvent) -> None:
             members = await bot.get_group_member_list(group_id=event.group_id)
         except Exception:
             logger.exception("积分排名获取本群成员失败")
-            await point_cmd.finish("获取本群成员失败，请稍后重试")
+            await point_cmd.finish("获取本群成员失败，请稍后重试", reply_message=True)
         ranking = await get_points_ranking([str(member["user_id"]) for member in members])
         group_text = format_points_ranking("本群积分排名（前 20 名）", ranking)
     else:
@@ -100,12 +100,12 @@ async def handle_transfer(
 ) -> None:
     """转账命令处理方法。"""
     if not target.available or not amount.available:
-        await point_cmd.finish(f"请补充收款人和积分数量，使用空格分隔。用法：\n{POINT_USAGE}\n示例：{command_start}积分 转账 @用户 100")
+        await point_cmd.finish(f"请补充收款人和积分数量，使用空格分隔。用法：\n{POINT_USAGE}\n示例：{command_start}积分 转账 @用户 100", reply_message=True)
 
     recipient = target.result
     if isinstance(recipient, At):
         if recipient.flag != "user":
-            await point_cmd.finish("请艾特一位用户或输入有效的 QQ 号")
+            await point_cmd.finish("请艾特一位用户或输入有效的 QQ 号", reply_message=True)
         recipient_id = str(recipient.target)
     else:
         recipient_id = recipient.strip()
@@ -114,18 +114,18 @@ async def handle_transfer(
         or not recipient_id.isdecimal()
         or int(recipient_id) <= 0
     ):
-        await point_cmd.finish("请艾特一位用户或输入有效的 QQ 号")
+        await point_cmd.finish("请艾特一位用户或输入有效的 QQ 号", reply_message=True)
 
     raw_amount = amount.result.strip()
     if not raw_amount.isascii() or not raw_amount.isdecimal() or int(raw_amount) <= 0:
-        await point_cmd.finish("转账积分数量必须是正整数")
+        await point_cmd.finish("转账积分数量必须是正整数", reply_message=True)
 
     recipient_id = str(int(recipient_id))
     recipient_name = await get_recipient_name(bot, event, recipient_id)
     ok, message = await transfer_points(
         event.get_user_id(), recipient_id, int(raw_amount), recipient_name
     )
-    await point_cmd.finish(MessageSegment.text(message if ok else f"转账失败：{message}"))
+    await point_cmd.finish(MessageSegment.text(message if ok else f"转账失败：{message}"), reply_message=True)
 
 
 @point_cmd.assign("gift")
@@ -134,11 +134,11 @@ async def handle_gift(
 ) -> None:
     """赠礼命令处理方法。"""
     if not target.available or not item.available:
-        await point_cmd.finish(f"请补充接收人和商品编号。用法：\n{POINT_USAGE}")
+        await point_cmd.finish(f"请补充接收人和商品编号。用法：\n{POINT_USAGE}", reply_message=True)
     recipient = target.result
     if isinstance(recipient, At):
         if recipient.flag != "user":
-            await point_cmd.finish("请艾特一位用户或输入有效的QQ号")
+            await point_cmd.finish("请艾特一位用户或输入有效的QQ号", reply_message=True)
         recipient_id = str(recipient.target)
     else:
         recipient_id = recipient.strip()
@@ -147,7 +147,7 @@ async def handle_gift(
         or not recipient_id.isdecimal()
         or int(recipient_id) <= 0
     ):
-        await point_cmd.finish("请艾特一位用户或输入有效的QQ号")
+        await point_cmd.finish("请艾特一位用户或输入有效的QQ号", reply_message=True)
     recipient_id = str(int(recipient_id))
     recipient_name = await get_recipient_name(bot, event, recipient_id)
     try:
@@ -156,8 +156,8 @@ async def handle_gift(
         )
     except Exception:
         logger.exception("积分赠礼失败")
-        await point_cmd.finish("赠礼暂时无法处理，请稍后重试")
-    await point_cmd.finish(MessageSegment.text(message if ok else f"赠礼失败：{message}"))
+        await point_cmd.finish("赠礼暂时无法处理，请稍后重试", reply_message=True)
+    await point_cmd.finish(MessageSegment.text(message if ok else f"赠礼失败：{message}"), reply_message=True)
 
 
 async def get_recipient_name(bot: Bot, event: MessageEvent, recipient_id: str) -> str:

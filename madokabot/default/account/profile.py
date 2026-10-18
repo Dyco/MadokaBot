@@ -16,7 +16,7 @@ from .service import rename_user
 async def handle_set_base(result: Arparma):
     """返回账号设置命令的使用说明。"""
     if not result.subcommands:
-        await set_cmd.finish(f"用法：{SET_USAGE}")
+        await set_cmd.finish(f"用法：{SET_USAGE}", reply_message=True)
 
 
 @set_cmd.assign("chara")
@@ -24,53 +24,53 @@ async def _set_skin(event: MessageEvent, skin_id: Match[str]):
     """切换当前账号已拥有的立绘。"""
     uid = event.get_user_id()
     if not await UserAccount.is_registered(uid):
-        await set_cmd.finish("请先发送“注册”完成用户注册")
+        await set_cmd.finish("请先发送“注册”完成用户注册", reply_message=True)
 
     if not skin_id.available or not skin_id.result.strip():
-        await set_cmd.finish(f"用法：{SET_USAGE}")
+        await set_cmd.finish(f"用法：{SET_USAGE}", reply_message=True)
 
     _, message = await SkinService.switch_skin(uid, skin_id.result)
-    await set_cmd.finish(message)
+    await set_cmd.finish(message, reply_message=True)
 
 
 @set_cmd.assign("rename")
 async def _rename(event: MessageEvent, name: Match[str]):
     """改名命令处理方法。"""
     if not name.available:
-        await set_cmd.finish(f"用法：{RENAME_USAGE}")
+        await set_cmd.finish(f"用法：{RENAME_USAGE}", reply_message=True)
 
     _, message = await rename_user(event.get_user_id(), name.result)
-    await set_cmd.finish(message)
+    await set_cmd.finish(message, reply_message=True)
 
 
 @set_cmd.assign("random_skin")
 async def _set_random_skin(event: MessageEvent) -> None:
     """随机立绘命令处理方法。"""
     _, message = await toggle_random_appearance(event.get_user_id(), "skin")
-    await set_cmd.finish(message)
+    await set_cmd.finish(message, reply_message=True)
 
 
 @set_cmd.assign("random_template")
 async def _set_random_template(event: MessageEvent) -> None:
     """随机模板命令处理方法。"""
     _, message = await toggle_random_appearance(event.get_user_id(), "template")
-    await set_cmd.finish(message)
+    await set_cmd.finish(message, reply_message=True)
 
 
 @set_cmd.assign("sign")
 async def _set_sign_template(event: MessageEvent, template_id: Match[str]):
     """切换当前账号库存中的签到模板。"""
     if not template_id.available or not template_id.result.strip():
-        await set_cmd.finish(f"用法：{SET_USAGE}")
+        await set_cmd.finish(f"用法：{SET_USAGE}", reply_message=True)
     _, message = await SignTemplateService.switch_template(event.get_user_id(), template_id.result)
-    await set_cmd.finish(message)
+    await set_cmd.finish(message, reply_message=True)
 
 
 @query_cmd.handle()
 async def handle_query_base(result: Arparma):
     """返回账号查询命令的使用说明。"""
     if not result.subcommands:
-        await query_cmd.finish(f"用法：{QUERY_USAGE}")
+        await query_cmd.finish(f"用法：{QUERY_USAGE}", reply_message=True)
 
 
 @query_cmd.assign("chara")
@@ -78,11 +78,11 @@ async def _query_skin_list(event: MessageEvent):
     """列出账号持有的立绘。"""
     uid = event.get_user_id()
     if not await UserAccount.is_registered(uid):
-        await query_cmd.finish("请先发送“注册”完成用户注册")
+        await query_cmd.finish("请先发送“注册”完成用户注册", reply_message=True)
 
     owned_skins = await SkinService.get_owned_skin_list(uid)
     if not owned_skins:
-        await query_cmd.finish("你还没有可用立绘，请前往商店购买")
+        await query_cmd.finish("你还没有可用立绘，请前往商店购买", reply_message=True)
 
     lines = [
         f"{'[使用中] ' if skin['current'] else ''}{skin['item_key']}："
@@ -90,7 +90,7 @@ async def _query_skin_list(event: MessageEvent):
         for skin in owned_skins
     ]
     await query_cmd.finish(
-        "已拥有立绘：\n" + "\n".join(lines) + "\n\n切换方式：设置 立绘 <立绘ID>"
+        "已拥有立绘：\n" + "\n".join(lines) + "\n\n切换方式：设置 立绘 <立绘ID>", reply_message=True
     )
 
 
@@ -98,7 +98,7 @@ async def _query_skin_list(event: MessageEvent):
 async def _query_sign_templates(event: MessageEvent):
     """列出持有的签到模板及当前使用状态。"""
     if not await UserAccount.is_registered(event.get_user_id()):
-        await query_cmd.finish("请先发送“注册”完成用户注册")
+        await query_cmd.finish("请先发送“注册”完成用户注册", reply_message=True)
     items = await SignTemplateService.get_owned_template_list(event.get_user_id())
     lines = [
         f"{'[使用中] ' if item['current'] else ''}{item['item_key']}：{item['name']}"
@@ -106,7 +106,7 @@ async def _query_sign_templates(event: MessageEvent):
     ]
     await query_cmd.finish(
         "已拥有签到模板：\n" + ("\n".join(lines) or "暂无可用模板")
-        + "\n\n切换方式：设置 签到模板 <模板ID>"
+        + "\n\n切换方式：设置 签到模板 <模板ID>", reply_message=True
     )
 
 
@@ -127,9 +127,9 @@ async def _query_profile(event: MessageEvent):
             reward_data=None,
         )
     except LookupError:
-        await query_cmd.finish("请先发送“注册”完成用户注册")
+        await query_cmd.finish("请先发送“注册”完成用户注册", reply_message=True)
     except Exception:
         logger.exception("生成用户资料失败")
-        await query_cmd.finish("资料查询失败，请稍后重试")
+        await query_cmd.finish("资料查询失败，请稍后重试", reply_message=True)
 
-    await query_cmd.finish(image_data)
+    await query_cmd.finish(image_data, reply_message=True)

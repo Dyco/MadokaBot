@@ -111,33 +111,33 @@ async def handle_red_packet(
 ) -> None:
     """红包发送命令处理方法。"""
     if not isinstance(event, GroupMessageEvent):
-        await point_cmd.finish("请在群聊中发送积分红包")
+        await point_cmd.finish("请在群聊中发送积分红包", reply_message=True)
     if not points.available or not count.available:
-        await point_cmd.finish(f"用法：{command_start}积分 红包 <总积分> <人数>")
+        await point_cmd.finish(f"用法：{command_start}积分 红包 <总积分> <人数>", reply_message=True)
     raw_points, raw_count = points.result.strip(), count.result.strip()
     if not all(value.isascii() and value.isdecimal() for value in (raw_points, raw_count)):
-        await point_cmd.finish("红包积分和人数必须是正整数")
+        await point_cmd.finish("红包积分和人数必须是正整数", reply_message=True)
     try:
         total_points, people = int(raw_points), int(raw_count)
     except ValueError:
-        await point_cmd.finish("红包数值过大")
+        await point_cmd.finish("红包数值过大", reply_message=True)
     people = min(people, MAX_RED_PACKET_COUNT)
     try:
         packet_id = await create_red_packet(
             event.get_user_id(), bot.self_id, str(event.group_id), total_points, people
         )
     except ValueError as exc:
-        await point_cmd.finish(str(exc))
+        await point_cmd.finish(str(exc), reply_message=True)
     except Exception:
         logger.exception("积分红包创建失败")
-        await point_cmd.finish("红包暂时无法发送，请稍后重试")
+        await point_cmd.finish("红包暂时无法发送，请稍后重试", reply_message=True)
 
     message_id = None
     name = event.sender.card or event.sender.nickname or f"QQ{event.user_id}"
     try:
         sent = await point_cmd.send(MessageSegment.text(
             f"{name}发了红包！\n{people}人可抢，总计{total_points}积分！\n回复此消息即可抢红包"
-        ))
+        ), reply_message=True)
         message_id = extract_message_id(sent)
         if message_id is None:
             raise RuntimeError("红包消息编号缺失")
@@ -148,13 +148,13 @@ async def handle_red_packet(
             await refund_red_packet(packet_id, expired_only=False)
         except Exception:
             logger.exception("红包发送失败后退款异常，保留记录等待到期退款")
-            await point_cmd.finish("红包发送失败，剩余积分将在到期后自动退回")
+            await point_cmd.finish("红包发送失败，剩余积分将在到期后自动退回", reply_message=True)
         if message_id is not None:
             try:
                 await bot.delete_msg(message_id=message_id)
             except Exception:
                 logger.warning("未能撤回已关闭的红包消息")
-        await point_cmd.finish("红包发送失败，剩余积分已退回")
+        await point_cmd.finish("红包发送失败，剩余积分已退回", reply_message=True)
     try:
         schedule_red_packet_refund(packet_id, expires_at)
     except Exception:
