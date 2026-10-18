@@ -18,18 +18,15 @@ async def handle_reborn(bot: Bot, event: MessageEvent, command: Arparma) -> None
     """处理世界投胎入口。"""
     await send_reborn(bot, event, command, mode="world")
 
-
 @reborn_cn.handle()
 async def handle_reborn_cn(bot: Bot, event: MessageEvent, command: Arparma) -> None:
     """处理中国投胎入口。"""
     await send_reborn(bot, event, command, mode="china")
 
-
 @reborn_jp.handle()
 async def handle_reborn_jp(bot: Bot, event: MessageEvent, command: Arparma) -> None:
     """处理日本投胎入口。"""
     await send_reborn(bot, event, command, mode="japan")
-
 
 @reborn_us.handle()
 async def handle_reborn_us(bot: Bot, event: MessageEvent, command: Arparma) -> None:
@@ -53,15 +50,15 @@ async def send_reborn(bot: Bot, event: MessageEvent, command: Arparma, *, mode: 
                 f"可使用“{command_start}{command_name} 重开”消耗{REROLL_COST}积分重新投胎。"
             )
     except ValueError as exc:
-        await matcher.finish(str(exc))
+        await matcher.finish(str(exc), reply_message=True)
     except Exception:
         logger.exception("每日投胎结果生成或保存失败")
-        await matcher.finish("投胎结果暂时无法读取，请稍后重试。")
+        await matcher.finish("投胎结果暂时无法读取，请稍后重试。", reply_message=True)
 
     name = event.sender.card or event.sender.nickname or event.get_user_id()
     try:
         picture = await render_reborn_card(result, name)
     except Exception:
         logger.exception("每日投胎图片生成失败")
-        await matcher.finish(result_text(result, prefix=prefix, name=name))
-    await matcher.finish(MessageSegment.text(prefix + "\n") + picture)
+        await matcher.finish(result_text(result, prefix=prefix, name=name), reply_message=True)
+    await matcher.finish(MessageSegment.text(prefix + "\n") + picture, reply_message=True)
