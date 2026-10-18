@@ -35,7 +35,6 @@
     .trophy span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .brand { text-align: right; flex: 0 0 220px; }
     .logo { width: 166px; height: 80px; object-fit: contain; }
-    .brand-title { font-size: 30px; font-weight: bold; color: #ea4794; }
     .section-title { margin: 24px 0 12px;
       color: #753c66; font-size: 27px; padding: 6px 14px; border-left: 6px solid #f34799;
       background: #fff9fccf; border-radius: 0 12px 12px 0; }
@@ -83,7 +82,6 @@
     </div>
     <div class="brand">
       {% if logo %}<img class="logo" src="{{ logo }}">{% endif %}
-      <div class="brand-title">BEST 50</div>
     </div>
   </div>
   {% for section in sections %}

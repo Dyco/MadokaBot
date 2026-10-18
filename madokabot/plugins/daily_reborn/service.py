@@ -18,6 +18,7 @@ from .models import (
     USRebornRecord,
 )
 from .modes import MODE_COMMANDS, RebornMode
+from .regions import result_region
 from .simulation import simulate_rebirth
 
 REROLL_COST = 5
@@ -26,12 +27,13 @@ RECORD_MODELS = {"world": RebornRecord, "china": ChinaRebornRecord, "japan": Jap
 
 
 def history_entry(result: dict, count: int) -> dict:
-    """提取投胎简要记录并保留地区代码，避免仅凭名称无法区分旧历史。"""
+    """保存投胎简要记录及世界分区，保留俄罗斯当次坐标对应的区域。"""
     return {
         "count": count,
         "date": result["date"],
         "country": result["country"]["name"],
         "country_code": result["country"]["code"],
+        "world_region": result_region(result),
         "gender": result["gender"],
         "score": result["score"],
         "label": result["label"],

@@ -13,7 +13,8 @@ from madokabot.core.version import get_bot_version
 from .attributes import attribute_rows
 from .geography import focused_map, load_regional_map, load_world_map, result_location
 from .modes import MODE_COMMANDS, MODE_NAMES
-from .simulation import display_result
+from .regions import result_region, world_region
+from .simulation import display_result, load_population
 
 TEMPLATE_DIR = Path(__file__).parent / "templates"
 _environment = Environment(
@@ -25,7 +26,7 @@ _render_limit = asyncio.Semaphore(2)
 
 
 def recent_history(result: dict) -> list[dict]:
-    """整理最近历史并纠正朝韩误标，旧记录无法区分时如实显示两种可能。"""
+    """整理最近历史、纠正朝韩误标，并为世界记录补充可确定的地理分区。"""
     history = result.get("reborn_history") or [{
         "count": result.get("reborn_count", 1),
         "date": result["date"],
@@ -41,6 +42,15 @@ def recent_history(result: dict) -> list[dict]:
             if not code and entry["count"] == result.get("reborn_count"):
                 code = result["country"]["code"]
             entry = entry | {"country": {"PRK": "朝鲜", "KOR": "韩国"}.get(code, "朝鲜／韩国")}
+        if result.get("mode", "world") == "world":
+            code = entry.get("country_code") or next(
+                (row["code"] for row in load_population()["countries"] if row["name"] == entry["country"]), ""
+            )
+            area = result_region(result) if entry["count"] == result.get("reborn_count", 1) else (
+                entry.get("world_region") or world_region(code)
+            )
+            if area:
+                entry = entry | {"country": f"{entry['country']} - {area}"}
         rows.append(entry)
     return rows
 
@@ -59,6 +69,7 @@ def render_reborn_html(result: dict, name: str) -> str:
     history = recent_history(result)
     return _environment.get_template("reborn.html").render(
         result=result,
+        world_region=result_region(result),
         attribute_rows=rows,
         name=name,
         bot_version=get_bot_version(),
@@ -103,6 +114,8 @@ def result_text(result: dict, *, prefix: str, name: str = "") -> str:
     mode = result.get("mode", "world")
     title = "每日投胎" if mode == "world" else MODE_COMMANDS[mode]
     note = result.get("data_note", "中方案预测")
+    area = result_region(result)
+    destination = country["name"] + (f" - {area}" if area else "")
     history = recent_history(result)
     history_lines = [
         f"第{row['count']}次 {row['date'][5:]} {row['country']} · {row['gender']} · {row['score']}分 · {row['label'].split(' · ')[0]}"
@@ -113,7 +126,7 @@ def result_text(result: dict, *, prefix: str, name: str = "") -> str:
     return (
         f"{prefix}\n{title} · {result['date']}\n"
         f"{introduction}这是你的第{result.get('reborn_count', 1)}次投胎，这次你出生在\n"
-        f"出生地：{country['name']}\n性别：{result['gender']}\n"
+        f"出生地：{destination}\n性别：{result['gender']}\n"
         f"抽中概率：{result['probability']:.4%}\n"
         f"{attributes}\n综合潜力：{result['score']}/100 · {result['label']}\n"
         f"人口数据：{result['source']} / {result['data_year']} 年，{note}\n"

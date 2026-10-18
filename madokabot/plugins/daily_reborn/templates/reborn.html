@@ -15,6 +15,7 @@
     .nickname { color: #e0f2c9; font-size: 24px; font-weight: bold; background: #1d3b35; border-bottom: 2px solid #9bcfa1; border-radius: 6px; padding: 2px 8px; box-decoration-break: clone; -webkit-box-decoration-break: clone; }
     .destination { display: flex; justify-content: space-between; align-items: center; gap: 20px; margin: 6px 0 18px; }
     h2 { font-size: 48px; margin: 0; line-height: 1.5; max-width: 760px; overflow-wrap: anywhere; }
+    .destination-region { color: #afc5c7; font-size: 28px; font-weight: normal; }
     .male { --gender-color: #9adaff; --gender-border: #4e9fd0; --gender-bg: #15384b; }
     .female { --gender-color: #ffb5d4; --gender-border: #c6719a; --gender-bg: #432737; }
     .gender { display: flex; align-items: center; justify-content: center; gap: 12px; flex: none; min-width: 150px; border: 2px solid var(--gender-border); color: var(--gender-color); background: var(--gender-bg); padding: 12px 20px; border-radius: 14px; white-space: nowrap; font-size: 28px; font-weight: bold; }
@@ -95,7 +96,7 @@
   </header>
   <section class="identity">
     <div class="name"><strong class="nickname">{{ name }}</strong>，这是你的第{{ reborn_count }}次投胎，这次你出生在</div>
-    <div class="destination"><h2>{{ result.country.name }}</h2>
+    <div class="destination"><h2>{{ result.country.name }}{% if world_region %}<span class="destination-region"> - {{ world_region }}</span>{% endif %}</h2>
       <div class="gender {% if result.gender == '男' %}male{% else %}female{% endif %}" aria-label="{{ result.gender }}婴">
         <svg viewBox="0 0 24 24" aria-hidden="true">{% if result.gender == '男' %}<circle cx="9" cy="15" r="6"/><path d="M13.3 10.7L21 3M15 3h6v6"/>{% else %}<circle cx="12" cy="8" r="5"/><path d="M12 13v9M8 18h8"/>{% endif %}</svg>
         <span>{{ result.gender }}婴</span>
