@@ -1,0 +1,2405 @@
+{
+    "id": "cultivation",
+    "title": "仙侠修仙",
+    "weight": 1,
+    "description": "以凡人修仙传的境界和灵根分类为参考，人界与灵界分别限制家庭身份，宗门和聚落为原创。",
+    "source_refs": [
+        "rmji_127",
+        "rmji_1609",
+        "rmji_2270",
+        "project_isekai_v3",
+        "rmji_roots_ch127_guide",
+        "project_lower_power_ranges"
+    ],
+    "species": [
+        {
+            "id": "human",
+            "name": "人族",
+            "weight": 1,
+            "birth_state": "人族新生，尚未开始修炼；实际测定与启蒙由家庭日后安排。",
+            "features": [
+                "人族自然出生",
+                "凡俗武学、修仙资质与已修成境界分别记录"
+            ],
+            "life_span": "寿元随修炼与经历变化。",
+            "provenance": "mixed",
+            "source_refs": [
+                "rmji_127",
+                "project_isekai_v3"
+            ],
+            "source_locator": "人族出生模型",
+            "review_note": "不将未收集的妖族、真灵或特殊体质自动并入人族池。",
+            "reviewed_on": "2026-10-19"
+        }
+    ],
+    "regions": [
+        {
+            "id": "village",
+            "name": "凡俗村镇",
+            "weight": 38,
+            "description": "农田与山路连接日常生活，修仙之事大多来自传闻。",
+            "species_ids": [
+                "human"
+            ],
+            "family_ids": [
+                "mortal",
+                "martial",
+                "waterfolk",
+                "scholarly"
+            ],
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "仙侠修仙 / regions / village",
+            "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。",
+            "reviewed_on": "2026-10-19",
+            "context": "人界 · 凡俗与修士社会"
+        },
+        {
+            "id": "city",
+            "name": "凡俗城池",
+            "weight": 24,
+            "description": "商号、武馆与市集交织，识字和学艺需要家庭支持。",
+            "species_ids": [
+                "human"
+            ],
+            "family_ids": [
+                "mortal",
+                "martial",
+                "trader",
+                "scholarly",
+                "roadside"
+            ],
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "仙侠修仙 / regions / city",
+            "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。",
+            "reviewed_on": "2026-10-19",
+            "context": "人界 · 凡俗与修士社会"
+        },
+        {
+            "id": "market",
+            "name": "修士坊市",
+            "weight": 18,
+            "description": "凡俗生计与修炼交易相邻，接触修士不代表已具备资质。",
+            "species_ids": [
+                "human"
+            ],
+            "family_ids": [
+                "trader",
+                "independent",
+                "craft",
+                "roadside",
+                "array_craft",
+                "beast_care"
+            ],
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "仙侠修仙 / regions / market",
+            "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。",
+            "reviewed_on": "2026-10-19",
+            "context": "人界 · 凡俗与修士社会"
+        },
+        {
+            "id": "sect",
+            "name": "宗门外围",
+            "weight": 10,
+            "description": "聚落围绕宗门生活，服务、学艺与修炼有不同的门槛。",
+            "species_ids": [
+                "human"
+            ],
+            "family_ids": [
+                "mortal",
+                "craft",
+                "sect_family",
+                "archive",
+                "beast_care",
+                "array_craft"
+            ],
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "仙侠修仙 / regions / sect",
+            "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。",
+            "reviewed_on": "2026-10-19",
+            "context": "人界 · 凡俗与修士社会"
+        },
+        {
+            "id": "clan",
+            "name": "修仙家族驻地",
+            "weight": 8,
+            "description": "家族经营与修炼资源相连，族中身份决定最初的指导条件。",
+            "species_ids": [
+                "human"
+            ],
+            "family_ids": [
+                "independent",
+                "craft",
+                "sect_family",
+                "clan_family",
+                "archive",
+                "array_craft"
+            ],
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "仙侠修仙 / regions / clan",
+            "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。",
+            "reviewed_on": "2026-10-19",
+            "context": "人界 · 凡俗与修士社会"
+        },
+        {
+            "id": "spirit_city",
+            "name": "灵界城镇",
+            "weight": 2,
+            "description": "更高层次的修炼环境也伴随更复杂的竞争与庇护关系。",
+            "species_ids": [
+                "human"
+            ],
+            "family_ids": [
+                "spirit_family",
+                "spirit_trade"
+            ],
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "仙侠修仙 / regions / spirit_city",
+            "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。",
+            "reviewed_on": "2026-10-19",
+            "context": "灵界 · 人族聚落"
+        },
+        {
+            "id": "riverlands",
+            "name": "凡俗水乡",
+            "weight": 15,
+            "description": "河道和田畴围绕集镇，家庭依靠水运与收成生活。",
+            "species_ids": [
+                "human"
+            ],
+            "family_ids": [
+                "waterfolk",
+                "mortal",
+                "scholarly"
+            ],
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "仙侠修仙 / regions / riverlands",
+            "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。",
+            "reviewed_on": "2026-10-19",
+            "context": "人界 · 凡俗与修士社会"
+        },
+        {
+            "id": "post_town",
+            "name": "商路驿镇",
+            "weight": 12,
+            "description": "商旅在此歇脚，补给、客栈和护卫形成当地生计。",
+            "species_ids": [
+                "human"
+            ],
+            "family_ids": [
+                "roadside",
+                "martial",
+                "trader"
+            ],
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "仙侠修仙 / regions / post_town",
+            "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。",
+            "reviewed_on": "2026-10-19",
+            "context": "人界 · 凡俗与修士社会"
+        },
+        {
+            "id": "ore_town",
+            "name": "矿场聚落",
+            "weight": 10,
+            "description": "矿场周边聚集劳工和工坊，凡俗工作与修士事务相邻。",
+            "species_ids": [
+                "human"
+            ],
+            "family_ids": [
+                "mining",
+                "mortal",
+                "craft"
+            ],
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "仙侠修仙 / regions / ore_town",
+            "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。",
+            "reviewed_on": "2026-10-19",
+            "context": "人界 · 凡俗与修士社会"
+        },
+        {
+            "id": "herb_town",
+            "name": "药材集散地",
+            "weight": 9,
+            "description": "采集者和坊商围绕药材交易聚居，需要辨识与经营经验。",
+            "species_ids": [
+                "human"
+            ],
+            "family_ids": [
+                "trader",
+                "craft",
+                "beast_care"
+            ],
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "仙侠修仙 / regions / herb_town",
+            "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。",
+            "reviewed_on": "2026-10-19",
+            "context": "人界 · 凡俗与修士社会"
+        },
+        {
+            "id": "sect_workshops",
+            "name": "宗门工坊聚落",
+            "weight": 6,
+            "description": "工坊和典籍事务支撑宗门日常，学艺与权限各有门槛。",
+            "species_ids": [
+                "human"
+            ],
+            "family_ids": [
+                "array_craft",
+                "archive",
+                "craft",
+                "sect_family"
+            ],
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "仙侠修仙 / regions / sect_workshops",
+            "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。",
+            "reviewed_on": "2026-10-19",
+            "context": "人界 · 凡俗与修士社会"
+        },
+        {
+            "id": "spirit_trade_town",
+            "name": "灵界商路聚落",
+            "weight": 1,
+            "description": "交易与技艺服务聚集在商路节点，家庭依靠组织和同行联系生活。",
+            "species_ids": [
+                "human"
+            ],
+            "family_ids": [
+                "spirit_trade",
+                "spirit_family"
+            ],
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "仙侠修仙 / regions / spirit_trade_town",
+            "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。",
+            "reviewed_on": "2026-10-19",
+            "context": "灵界 · 人族聚落"
+        }
+    ],
+    "families": [
+        {
+            "id": "mortal",
+            "name": "凡俗劳作家庭",
+            "weight": 43,
+            "rarity": "普通",
+            "description": "家中没有稳定的修炼传承，以凡俗生计养育孩子。",
+            "parent_profile_ids": [
+                "farmer",
+                "herbalist",
+                "artisan"
+            ],
+            "resources": [
+                "乡邻支持",
+                "基础生活经验"
+            ],
+            "directions": [
+                "凡俗学艺",
+                "寻找求学机会"
+            ],
+            "challenge": "尚无修炼渠道，灵根也需要日后测定。",
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "仙侠修仙 / families / mortal",
+            "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。",
+            "reviewed_on": "2026-10-19",
+            "birth_options": {
+                "spiritual_root": [
+                    "unassessed",
+                    "not_detected",
+                    "false_five",
+                    "false_four",
+                    "true_three",
+                    "true_two",
+                    "heavenly",
+                    "mutated"
+                ],
+                "instruction": [
+                    "mortal"
+                ]
+            }
+        },
+        {
+            "id": "martial",
+            "name": "武学家庭",
+            "weight": 20,
+            "rarity": "常见",
+            "description": "家中有人习武，能够提供体能与基本武学指导。",
+            "parent_profile_ids": [
+                "martial_artist",
+                "escort",
+                "physician"
+            ],
+            "resources": [
+                "基础体能指导",
+                "武馆或镖行联系"
+            ],
+            "directions": [
+                "武学训练",
+                "凡俗职业"
+            ],
+            "challenge": "武学经验不等同于修仙资质。",
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "仙侠修仙 / families / martial",
+            "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。",
+            "reviewed_on": "2026-10-19",
+            "birth_options": {
+                "spiritual_root": [
+                    "unassessed",
+                    "not_detected",
+                    "false_five",
+                    "false_four",
+                    "true_three",
+                    "true_two",
+                    "heavenly",
+                    "mutated"
+                ],
+                "instruction": [
+                    "mortal"
+                ]
+            }
+        },
+        {
+            "id": "trader",
+            "name": "坊市经营家庭",
+            "weight": 15,
+            "rarity": "少见",
+            "description": "家中接触修炼物资交易，但资源需要经营换取。",
+            "parent_profile_ids": [
+                "trader",
+                "herbalist",
+                "artifact_apprentice",
+                "market_appraiser"
+            ],
+            "resources": [
+                "交易见闻",
+                "基础识字",
+                "物资接触"
+            ],
+            "directions": [
+                "经营与鉴识",
+                "寻找修炼启蒙"
+            ],
+            "challenge": "接触灵物不代表可以随意使用。",
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "仙侠修仙 / families / trader",
+            "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。",
+            "reviewed_on": "2026-10-19",
+            "birth_options": {
+                "spiritual_root": [
+                    "unassessed",
+                    "not_detected",
+                    "false_five",
+                    "false_four",
+                    "true_three",
+                    "true_two",
+                    "heavenly",
+                    "mutated"
+                ],
+                "instruction": [
+                    "mortal",
+                    "craft"
+                ]
+            }
+        },
+        {
+            "id": "independent",
+            "name": "散修家庭",
+            "weight": 10,
+            "rarity": "少见",
+            "description": "家中有修炼者，传承和生活依靠个人积累。",
+            "parent_profile_ids": [
+                "independent",
+                "talisman_maker",
+                "spirit_farmer"
+            ],
+            "resources": [
+                "基础修炼见闻",
+                "有限功法渠道"
+            ],
+            "directions": [
+                "修炼启蒙",
+                "符箓与灵植学艺"
+            ],
+            "challenge": "可用资源有限，孩子能否修炼仍待资质测定。",
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "仙侠修仙 / families / independent",
+            "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。",
+            "reviewed_on": "2026-10-19",
+            "birth_options": {
+                "spiritual_root": [
+                    "unassessed",
+                    "not_detected",
+                    "false_five",
+                    "false_four",
+                    "true_three",
+                    "true_two",
+                    "heavenly",
+                    "mutated"
+                ],
+                "instruction": [
+                    "independent"
+                ]
+            }
+        },
+        {
+            "id": "craft",
+            "name": "修仙技艺家庭",
+            "weight": 7,
+            "rarity": "少见",
+            "description": "家庭围绕丹器、制符和灵植等服务谋生，各人专长由具体身份决定。",
+            "parent_profile_ids": [
+                "alchemist",
+                "artifact_maker",
+                "talisman_maker",
+                "spirit_farmer"
+            ],
+            "resources": [
+                "工坊接触",
+                "基础师承",
+                "材料知识"
+            ],
+            "directions": [
+                "修仙技艺",
+                "修炼与经营"
+            ],
+            "challenge": "技艺学习受材料、指导和个人资质限制。",
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "仙侠修仙 / families / craft",
+            "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。",
+            "reviewed_on": "2026-10-19",
+            "birth_options": {
+                "spiritual_root": [
+                    "unassessed",
+                    "not_detected",
+                    "false_five",
+                    "false_four",
+                    "true_three",
+                    "true_two",
+                    "heavenly",
+                    "mutated"
+                ],
+                "instruction": [
+                    "craft"
+                ]
+            }
+        },
+        {
+            "id": "sect_family",
+            "name": "宗门从业家庭",
+            "weight": 3,
+            "rarity": "罕见",
+            "description": "家中有人承担宗门事务，能够提供较稳定的指导。",
+            "parent_profile_ids": [
+                "sect_steward",
+                "alchemist",
+                "artifact_maker"
+            ],
+            "resources": [
+                "宗门见闻",
+                "识字与功法渠道",
+                "较稳定照护"
+            ],
+            "directions": [
+                "宗门求学",
+                "修仙技艺"
+            ],
+            "challenge": "父母职位不保证子女入门与修炼成果。",
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "仙侠修仙 / families / sect_family",
+            "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。",
+            "reviewed_on": "2026-10-19",
+            "birth_options": {
+                "spiritual_root": [
+                    "unassessed",
+                    "not_detected",
+                    "false_five",
+                    "false_four",
+                    "true_three",
+                    "true_two",
+                    "heavenly",
+                    "mutated"
+                ],
+                "instruction": [
+                    "sect",
+                    "craft"
+                ]
+            }
+        },
+        {
+            "id": "clan_family",
+            "name": "修仙世家家庭",
+            "weight": 1.5,
+            "rarity": "稀有",
+            "description": "家中有较深的修炼积累，传承与家族事务并存。",
+            "parent_profile_ids": [
+                "clan_elder",
+                "clan_steward"
+            ],
+            "resources": [
+                "系统启蒙",
+                "家族传承",
+                "较丰富修炼资源"
+            ],
+            "directions": [
+                "家族培养",
+                "独立修炼"
+            ],
+            "challenge": "家族责任与外部关系会影响成长选择。",
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "仙侠修仙 / families / clan_family",
+            "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。",
+            "reviewed_on": "2026-10-19",
+            "birth_options": {
+                "spiritual_root": [
+                    "unassessed",
+                    "not_detected",
+                    "false_five",
+                    "false_four",
+                    "true_three",
+                    "true_two",
+                    "heavenly",
+                    "mutated"
+                ],
+                "instruction": [
+                    "clan"
+                ]
+            }
+        },
+        {
+            "id": "spirit_family",
+            "name": "灵界修士家庭",
+            "weight": 0.5,
+            "rarity": "稀有",
+            "description": "家庭扎根于灵界聚落，修炼经验较深但仍需适应当地秩序。",
+            "parent_profile_ids": [
+                "spirit_guard",
+                "spirit_crafter",
+                "spirit_elder"
+            ],
+            "resources": [
+                "灵界生活支持",
+                "高阶见闻",
+                "修炼指导"
+            ],
+            "directions": [
+                "灵界修炼",
+                "技艺与家族事务"
+            ],
+            "challenge": "起点环境较高不代表新生儿已经拥有修为。",
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "仙侠修仙 / families / spirit_family",
+            "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。",
+            "reviewed_on": "2026-10-19",
+            "birth_options": {
+                "spiritual_root": [
+                    "unassessed",
+                    "not_detected",
+                    "false_five",
+                    "false_four",
+                    "true_three",
+                    "true_two",
+                    "heavenly",
+                    "mutated"
+                ],
+                "instruction": [
+                    "clan",
+                    "independent"
+                ]
+            },
+            "region_ids": [
+                "spirit_city",
+                "spirit_trade_town"
+            ]
+        },
+        {
+            "id": "scholarly",
+            "name": "凡俗书香家庭",
+            "weight": 16,
+            "rarity": "少见",
+            "description": "家中重视识字与典籍，生活仍遵循凡俗生计。",
+            "parent_profile_ids": [
+                "school_teacher",
+                "physician",
+                "trader"
+            ],
+            "resources": [
+                "识字教育",
+                "典籍接触",
+                "稳定学习指导"
+            ],
+            "directions": [
+                "凡俗求学",
+                "典籍与经营"
+            ],
+            "challenge": "书香背景不能替代修炼资质和入门渠道。",
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "仙侠修仙 / families / scholarly",
+            "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。",
+            "reviewed_on": "2026-10-19",
+            "birth_options": {
+                "spiritual_root": [
+                    "unassessed",
+                    "not_detected",
+                    "false_five",
+                    "false_four",
+                    "true_three",
+                    "true_two",
+                    "heavenly",
+                    "mutated"
+                ],
+                "instruction": [
+                    "mortal"
+                ]
+            }
+        },
+        {
+            "id": "waterfolk",
+            "name": "水乡渔舟家庭",
+            "weight": 18,
+            "rarity": "常见",
+            "description": "家庭依靠渔获和渡运生活，熟悉水道与邻里互助。",
+            "parent_profile_ids": [
+                "fisher",
+                "boatman",
+                "artisan"
+            ],
+            "resources": [
+                "水乡生活经验",
+                "基础手艺"
+            ],
+            "directions": [
+                "舟运与经营",
+                "凡俗学艺"
+            ],
+            "challenge": "天气和收成变化会限制家庭积蓄。",
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "仙侠修仙 / families / waterfolk",
+            "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。",
+            "reviewed_on": "2026-10-19",
+            "birth_options": {
+                "spiritual_root": [
+                    "unassessed",
+                    "not_detected",
+                    "false_five",
+                    "false_four",
+                    "true_three",
+                    "true_two",
+                    "heavenly",
+                    "mutated"
+                ],
+                "instruction": [
+                    "mortal"
+                ]
+            }
+        },
+        {
+            "id": "roadside",
+            "name": "商路客栈家庭",
+            "weight": 13,
+            "rarity": "常见",
+            "description": "家中经营歇脚和补给生意，能够听闻不同地方的消息。",
+            "parent_profile_ids": [
+                "innkeeper",
+                "trader",
+                "caravan_guard"
+            ],
+            "resources": [
+                "商路见闻",
+                "经营经验",
+                "有限人脉"
+            ],
+            "directions": [
+                "经营与护卫",
+                "寻找求学机会"
+            ],
+            "challenge": "见闻需要辨别，接近修士不意味着受到庇护。",
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "仙侠修仙 / families / roadside",
+            "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。",
+            "reviewed_on": "2026-10-19",
+            "birth_options": {
+                "spiritual_root": [
+                    "unassessed",
+                    "not_detected",
+                    "false_five",
+                    "false_four",
+                    "true_three",
+                    "true_two",
+                    "heavenly",
+                    "mutated"
+                ],
+                "instruction": [
+                    "mortal"
+                ]
+            }
+        },
+        {
+            "id": "array_craft",
+            "name": "阵法技艺家庭",
+            "weight": 5,
+            "rarity": "少见",
+            "description": "家中以阵法和相关工坊事务谋生，基础训练较系统。",
+            "parent_profile_ids": [
+                "formation_worker",
+                "artifact_maker",
+                "archive_keeper"
+            ],
+            "resources": [
+                "阵法知识接触",
+                "典籍渠道",
+                "工坊指导"
+            ],
+            "directions": [
+                "阵法学艺",
+                "工坊修炼"
+            ],
+            "challenge": "技艺需要资质、材料与长期练习共同支撑。",
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "仙侠修仙 / families / array_craft",
+            "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。",
+            "reviewed_on": "2026-10-19",
+            "birth_options": {
+                "spiritual_root": [
+                    "unassessed",
+                    "not_detected",
+                    "false_five",
+                    "false_four",
+                    "true_three",
+                    "true_two",
+                    "heavenly",
+                    "mutated"
+                ],
+                "instruction": [
+                    "craft"
+                ]
+            }
+        },
+        {
+            "id": "beast_care",
+            "name": "灵兽照养家庭",
+            "weight": 8,
+            "rarity": "少见",
+            "description": "家中参与饲养和照料灵兽，生计依赖经验与耐心。",
+            "parent_profile_ids": [
+                "beast_keeper",
+                "spirit_farmer",
+                "herbalist"
+            ],
+            "resources": [
+                "生灵照护经验",
+                "药材和灵植见闻"
+            ],
+            "directions": [
+                "照养与经营",
+                "修炼启蒙"
+            ],
+            "challenge": "接触灵兽需要指导，不能把幼年接触当作战斗能力。",
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "仙侠修仙 / families / beast_care",
+            "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。",
+            "reviewed_on": "2026-10-19",
+            "birth_options": {
+                "spiritual_root": [
+                    "unassessed",
+                    "not_detected",
+                    "false_five",
+                    "false_four",
+                    "true_three",
+                    "true_two",
+                    "heavenly",
+                    "mutated"
+                ],
+                "instruction": [
+                    "craft"
+                ]
+            }
+        },
+        {
+            "id": "mining",
+            "name": "矿场务工家庭",
+            "weight": 18,
+            "rarity": "普通",
+            "description": "家庭靠矿场工作与物资供应生活，资源接触与劳作压力并存。",
+            "parent_profile_ids": [
+                "ore_worker",
+                "artisan",
+                "caravan_guard"
+            ],
+            "resources": [
+                "矿料见闻",
+                "基础手艺",
+                "务工互助"
+            ],
+            "directions": [
+                "矿业与工坊",
+                "凡俗经营"
+            ],
+            "challenge": "接触矿料不等于能够拥有修炼资源。",
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "仙侠修仙 / families / mining",
+            "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。",
+            "reviewed_on": "2026-10-19",
+            "birth_options": {
+                "spiritual_root": [
+                    "unassessed",
+                    "not_detected",
+                    "false_five",
+                    "false_four",
+                    "true_three",
+                    "true_two",
+                    "heavenly",
+                    "mutated"
+                ],
+                "instruction": [
+                    "mortal",
+                    "craft"
+                ]
+            }
+        },
+        {
+            "id": "archive",
+            "name": "宗门典籍从业家庭",
+            "weight": 5,
+            "rarity": "少见",
+            "description": "家庭参与抄录和整理典籍，能够提供识字与基础知识指导。",
+            "parent_profile_ids": [
+                "archive_keeper",
+                "sect_steward",
+                "school_teacher"
+            ],
+            "resources": [
+                "识字与典籍接触",
+                "宗门事务见闻"
+            ],
+            "directions": [
+                "典籍学艺",
+                "宗门事务"
+            ],
+            "challenge": "接触典籍有权限和修为要求，不能任意获得高阶功法。",
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "仙侠修仙 / families / archive",
+            "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。",
+            "reviewed_on": "2026-10-19",
+            "birth_options": {
+                "spiritual_root": [
+                    "unassessed",
+                    "not_detected",
+                    "false_five",
+                    "false_four",
+                    "true_three",
+                    "true_two",
+                    "heavenly",
+                    "mutated"
+                ],
+                "instruction": [
+                    "sect"
+                ]
+            }
+        },
+        {
+            "id": "spirit_trade",
+            "name": "灵界技艺商旅家庭",
+            "weight": 1,
+            "rarity": "稀有",
+            "description": "家中围绕灵界商路与技艺服务谋生，生活依赖交易与庇护关系。",
+            "parent_profile_ids": [
+                "spirit_merchant",
+                "spirit_array",
+                "spirit_crafter"
+            ],
+            "resources": [
+                "灵界交易见闻",
+                "高阶技艺指导",
+                "跨地生活经验"
+            ],
+            "directions": [
+                "灵界经营",
+                "技艺与修炼"
+            ],
+            "challenge": "较高环境起点仍不能保证孩子的灵根与未来修为。",
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "仙侠修仙 / families / spirit_trade",
+            "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。",
+            "reviewed_on": "2026-10-19",
+            "birth_options": {
+                "spiritual_root": [
+                    "unassessed",
+                    "not_detected",
+                    "false_five",
+                    "false_four",
+                    "true_three",
+                    "true_two",
+                    "heavenly",
+                    "mutated"
+                ],
+                "instruction": [
+                    "craft",
+                    "clan"
+                ]
+            },
+            "region_ids": [
+                "spirit_city",
+                "spirit_trade_town"
+            ]
+        }
+    ],
+    "parent_profiles": [
+        {
+            "id": "farmer",
+            "occupation": "农户",
+            "identity": "凡俗居民",
+            "weight": 4,
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "仙侠修仙 / parent_profiles / farmer",
+            "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。",
+            "reviewed_on": "2026-10-19",
+            "affiliation": "当地坊市、宗门、家族或个人师承",
+            "resources": [
+                "农户相关的见闻与基础指导"
+            ],
+            "power_set_ids": [
+                "single_mortal"
+            ]
+        },
+        {
+            "id": "herbalist",
+            "occupation": "采药人",
+            "identity": "山地居民",
+            "weight": 3,
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "仙侠修仙 / parent_profiles / herbalist",
+            "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。",
+            "reviewed_on": "2026-10-19",
+            "affiliation": "当地坊市、宗门、家族或个人师承",
+            "resources": [
+                "采药人相关的见闻与基础指导"
+            ],
+            "power_set_ids": [
+                "single_mortal"
+            ]
+        },
+        {
+            "id": "artisan",
+            "occupation": "手工业者",
+            "identity": "凡俗工匠",
+            "weight": 3,
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "仙侠修仙 / parent_profiles / artisan",
+            "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。",
+            "reviewed_on": "2026-10-19",
+            "affiliation": "当地坊市、宗门、家族或个人师承",
+            "resources": [
+                "手工业者相关的见闻与基础指导"
+            ],
+            "power_set_ids": [
+                "single_mortal"
+            ]
+        },
+        {
+            "id": "martial_artist",
+            "occupation": "武者",
+            "identity": "武馆从业者",
+            "weight": 3,
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "仙侠修仙 / parent_profiles / martial_artist",
+            "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。",
+            "reviewed_on": "2026-10-19",
+            "affiliation": "当地坊市、宗门、家族或个人师承",
+            "resources": [
+                "武者相关的见闻与基础指导"
+            ],
+            "power_set_ids": [
+                "single_mortal"
+            ]
+        },
+        {
+            "id": "escort",
+            "occupation": "镖师",
+            "identity": "镖行从业者",
+            "weight": 2,
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "仙侠修仙 / parent_profiles / escort",
+            "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。",
+            "reviewed_on": "2026-10-19",
+            "affiliation": "当地坊市、宗门、家族或个人师承",
+            "resources": [
+                "镖师相关的见闻与基础指导"
+            ],
+            "power_set_ids": [
+                "single_mortal"
+            ]
+        },
+        {
+            "id": "physician",
+            "occupation": "医师",
+            "identity": "凡俗医者",
+            "weight": 2,
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "仙侠修仙 / parent_profiles / physician",
+            "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。",
+            "reviewed_on": "2026-10-19",
+            "affiliation": "当地坊市、宗门、家族或个人师承",
+            "resources": [
+                "医师相关的见闻与基础指导"
+            ],
+            "power_set_ids": [
+                "single_mortal"
+            ]
+        },
+        {
+            "id": "trader",
+            "occupation": "商铺经营者",
+            "identity": "凡俗或坊市交易从业者",
+            "weight": 3,
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "仙侠修仙 / parent_profiles / trader",
+            "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。",
+            "reviewed_on": "2026-10-19",
+            "affiliation": "当地坊市、宗门、家族或个人师承",
+            "resources": [
+                "坊市商贩相关的见闻与基础指导"
+            ],
+            "power_set_ids": [
+                "single_mortal",
+                "single_qi"
+            ]
+        },
+        {
+            "id": "artifact_apprentice",
+            "occupation": "工坊学徒",
+            "identity": "坊市从业者",
+            "weight": 1,
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "仙侠修仙 / parent_profiles / artifact_apprentice",
+            "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。",
+            "reviewed_on": "2026-10-19",
+            "affiliation": "当地坊市、宗门、家族或个人师承",
+            "resources": [
+                "工坊学徒相关的见闻与基础指导"
+            ],
+            "power_set_ids": [
+                "single_mortal",
+                "single_qi"
+            ]
+        },
+        {
+            "id": "independent",
+            "occupation": "游历修士",
+            "identity": "散修",
+            "weight": 3,
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "仙侠修仙 / parent_profiles / independent",
+            "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。",
+            "reviewed_on": "2026-10-19",
+            "affiliation": "当地坊市、宗门、家族或个人师承",
+            "resources": [
+                "游历修士相关的见闻与基础指导"
+            ],
+            "power_set_ids": [
+                "single_qi",
+                "single_foundation"
+            ]
+        },
+        {
+            "id": "talisman_maker",
+            "occupation": "制符修士",
+            "identity": "技艺从业者",
+            "weight": 3,
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "仙侠修仙 / parent_profiles / talisman_maker",
+            "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。",
+            "reviewed_on": "2026-10-19",
+            "affiliation": "当地坊市、宗门、家族或个人师承",
+            "resources": [
+                "制符修士相关的见闻与基础指导"
+            ],
+            "power_set_ids": [
+                "single_qi",
+                "single_foundation"
+            ]
+        },
+        {
+            "id": "spirit_farmer",
+            "occupation": "灵植经营者",
+            "identity": "灵田从业者",
+            "weight": 3,
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "仙侠修仙 / parent_profiles / spirit_farmer",
+            "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。",
+            "reviewed_on": "2026-10-19",
+            "affiliation": "当地坊市、宗门、家族或个人师承",
+            "resources": [
+                "灵植经营者相关的见闻与基础指导"
+            ],
+            "power_set_ids": [
+                "single_qi",
+                "single_foundation"
+            ]
+        },
+        {
+            "id": "alchemist",
+            "occupation": "炼丹修士",
+            "identity": "丹坊从业者",
+            "weight": 2,
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3",
+                "project_lower_power_ranges"
+            ],
+            "source_locator": "仙侠修仙 / parent_profiles / alchemist",
+            "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。 本轮较低实力范围：技艺或家族事务身份不固定等同筑基，允许炼气从业者；这是项目岗位范围，不声称所有原著岗位都无境界门槛。",
+            "reviewed_on": "2026-10-19",
+            "affiliation": "当地坊市、宗门、家族或个人师承",
+            "resources": [
+                "炼丹修士相关的见闻与基础指导"
+            ],
+            "power_set_ids": [
+                "single_qi",
+                "single_foundation",
+                "single_core"
+            ]
+        },
+        {
+            "id": "artifact_maker",
+            "occupation": "炼器修士",
+            "identity": "器坊从业者",
+            "weight": 2,
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3",
+                "project_lower_power_ranges"
+            ],
+            "source_locator": "仙侠修仙 / parent_profiles / artifact_maker",
+            "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。 本轮较低实力范围：技艺或家族事务身份不固定等同筑基，允许炼气从业者；这是项目岗位范围，不声称所有原著岗位都无境界门槛。",
+            "reviewed_on": "2026-10-19",
+            "affiliation": "当地坊市、宗门、家族或个人师承",
+            "resources": [
+                "炼器修士相关的见闻与基础指导"
+            ],
+            "power_set_ids": [
+                "single_qi",
+                "single_foundation",
+                "single_core"
+            ]
+        },
+        {
+            "id": "sect_steward",
+            "occupation": "宗门执事",
+            "identity": "宗门事务人员",
+            "weight": 1,
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "仙侠修仙 / parent_profiles / sect_steward",
+            "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。",
+            "reviewed_on": "2026-10-19",
+            "affiliation": "当地坊市、宗门、家族或个人师承",
+            "resources": [
+                "宗门执事相关的见闻与基础指导"
+            ],
+            "power_set_ids": [
+                "single_foundation",
+                "single_core"
+            ]
+        },
+        {
+            "id": "clan_steward",
+            "occupation": "家族执事",
+            "identity": "修仙家族成员",
+            "weight": 1,
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3",
+                "project_lower_power_ranges"
+            ],
+            "source_locator": "仙侠修仙 / parent_profiles / clan_steward",
+            "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。 本轮较低实力范围：技艺或家族事务身份不固定等同筑基，允许炼气从业者；这是项目岗位范围，不声称所有原著岗位都无境界门槛。",
+            "reviewed_on": "2026-10-19",
+            "affiliation": "当地坊市、宗门、家族或个人师承",
+            "resources": [
+                "家族执事相关的见闻与基础指导"
+            ],
+            "power_set_ids": [
+                "single_qi",
+                "single_foundation",
+                "single_core"
+            ]
+        },
+        {
+            "id": "clan_elder",
+            "occupation": "家族长老",
+            "identity": "修仙家族成员",
+            "weight": 1,
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3",
+                "project_lower_power_ranges"
+            ],
+            "source_locator": "仙侠修仙 / parent_profiles / clan_elder",
+            "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。 本轮较低实力范围：家族规模未固定，本版允许筑基长老；不将长老职位当作结丹以上的统一境界名。",
+            "reviewed_on": "2026-10-19",
+            "affiliation": "当地坊市、宗门、家族或个人师承",
+            "resources": [
+                "家族长老相关的见闻与基础指导"
+            ],
+            "power_set_ids": [
+                "single_foundation",
+                "single_core",
+                "single_nascent",
+                "single_deity"
+            ]
+        },
+        {
+            "id": "spirit_guard",
+            "occupation": "城镇护卫修士",
+            "identity": "灵界聚落成员",
+            "weight": 3,
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "仙侠修仙 / parent_profiles / spirit_guard",
+            "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。",
+            "reviewed_on": "2026-10-19",
+            "affiliation": "当地坊市、宗门、家族或个人师承",
+            "resources": [
+                "城镇护卫修士相关的见闻与基础指导"
+            ],
+            "region_ids": [
+                "spirit_city",
+                "spirit_trade_town"
+            ],
+            "power_set_ids": [
+                "single_deity",
+                "single_void"
+            ]
+        },
+        {
+            "id": "spirit_crafter",
+            "occupation": "高阶技艺修士",
+            "identity": "灵界工坊从业者",
+            "weight": 2,
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "仙侠修仙 / parent_profiles / spirit_crafter",
+            "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。",
+            "reviewed_on": "2026-10-19",
+            "affiliation": "当地坊市、宗门、家族或个人师承",
+            "resources": [
+                "高阶技艺修士相关的见闻与基础指导"
+            ],
+            "region_ids": [
+                "spirit_city",
+                "spirit_trade_town"
+            ],
+            "power_set_ids": [
+                "single_deity",
+                "single_void"
+            ]
+        },
+        {
+            "id": "spirit_elder",
+            "occupation": "家族长老",
+            "identity": "灵界修仙家族成员",
+            "weight": 1,
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "仙侠修仙 / parent_profiles / spirit_elder",
+            "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。",
+            "reviewed_on": "2026-10-19",
+            "affiliation": "当地坊市、宗门、家族或个人师承",
+            "resources": [
+                "家族长老相关的见闻与基础指导"
+            ],
+            "region_ids": [
+                "spirit_city",
+                "spirit_trade_town"
+            ],
+            "power_set_ids": [
+                "single_void",
+                "single_integration",
+                "single_ascension"
+            ]
+        },
+        {
+            "id": "school_teacher",
+            "occupation": "书院先生",
+            "identity": "凡俗教育从业者",
+            "weight": 2,
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "仙侠修仙 / parent_profiles / school_teacher",
+            "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。",
+            "reviewed_on": "2026-10-19",
+            "affiliation": "当地坊市、宗门、家族或个人师承",
+            "resources": [
+                "书院先生相关的见闻与基础指导"
+            ],
+            "power_set_ids": [
+                "single_mortal"
+            ]
+        },
+        {
+            "id": "fisher",
+            "occupation": "渔户",
+            "identity": "水乡居民",
+            "weight": 3,
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "仙侠修仙 / parent_profiles / fisher",
+            "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。",
+            "reviewed_on": "2026-10-19",
+            "affiliation": "当地坊市、宗门、家族或个人师承",
+            "resources": [
+                "渔户相关的见闻与基础指导"
+            ],
+            "power_set_ids": [
+                "single_mortal"
+            ]
+        },
+        {
+            "id": "boatman",
+            "occupation": "船工",
+            "identity": "渡口从业者",
+            "weight": 3,
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "仙侠修仙 / parent_profiles / boatman",
+            "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。",
+            "reviewed_on": "2026-10-19",
+            "affiliation": "当地坊市、宗门、家族或个人师承",
+            "resources": [
+                "船工相关的见闻与基础指导"
+            ],
+            "power_set_ids": [
+                "single_mortal"
+            ]
+        },
+        {
+            "id": "innkeeper",
+            "occupation": "客栈经营者",
+            "identity": "坊镇经营者",
+            "weight": 2,
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "仙侠修仙 / parent_profiles / innkeeper",
+            "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。",
+            "reviewed_on": "2026-10-19",
+            "affiliation": "当地坊市、宗门、家族或个人师承",
+            "resources": [
+                "客栈经营者相关的见闻与基础指导"
+            ],
+            "power_set_ids": [
+                "single_mortal",
+                "single_qi"
+            ]
+        },
+        {
+            "id": "caravan_guard",
+            "occupation": "商队护卫",
+            "identity": "受雇护卫",
+            "weight": 2,
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "仙侠修仙 / parent_profiles / caravan_guard",
+            "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。",
+            "reviewed_on": "2026-10-19",
+            "affiliation": "当地坊市、宗门、家族或个人师承",
+            "resources": [
+                "商队护卫相关的见闻与基础指导"
+            ],
+            "power_set_ids": [
+                "single_mortal",
+                "single_qi"
+            ]
+        },
+        {
+            "id": "formation_worker",
+            "occupation": "阵法修士",
+            "identity": "阵法技艺从业者",
+            "weight": 2,
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3",
+                "project_lower_power_ranges"
+            ],
+            "source_locator": "仙侠修仙 / parent_profiles / formation_worker",
+            "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。 本轮较低实力范围：技艺或家族事务身份不固定等同筑基，允许炼气从业者；这是项目岗位范围，不声称所有原著岗位都无境界门槛。",
+            "reviewed_on": "2026-10-19",
+            "affiliation": "当地坊市、宗门、家族或个人师承",
+            "resources": [
+                "阵法修士相关的见闻与基础指导"
+            ],
+            "power_set_ids": [
+                "single_qi",
+                "single_foundation",
+                "single_core"
+            ]
+        },
+        {
+            "id": "beast_keeper",
+            "occupation": "灵兽饲养修士",
+            "identity": "驯养技艺从业者",
+            "weight": 2,
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "仙侠修仙 / parent_profiles / beast_keeper",
+            "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。",
+            "reviewed_on": "2026-10-19",
+            "affiliation": "当地坊市、宗门、家族或个人师承",
+            "resources": [
+                "灵兽饲养修士相关的见闻与基础指导"
+            ],
+            "power_set_ids": [
+                "single_qi",
+                "single_foundation"
+            ]
+        },
+        {
+            "id": "ore_worker",
+            "occupation": "矿场劳工",
+            "identity": "矿业从业者",
+            "weight": 3,
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "仙侠修仙 / parent_profiles / ore_worker",
+            "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。",
+            "reviewed_on": "2026-10-19",
+            "affiliation": "当地坊市、宗门、家族或个人师承",
+            "resources": [
+                "矿场劳工相关的见闻与基础指导"
+            ],
+            "power_set_ids": [
+                "single_mortal",
+                "single_qi"
+            ]
+        },
+        {
+            "id": "market_appraiser",
+            "occupation": "坊市鉴定修士",
+            "identity": "交易服务从业者",
+            "weight": 2,
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3",
+                "project_lower_power_ranges"
+            ],
+            "source_locator": "仙侠修仙 / parent_profiles / market_appraiser",
+            "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。 本轮较低实力范围：技艺或家族事务身份不固定等同筑基，允许炼气从业者；这是项目岗位范围，不声称所有原著岗位都无境界门槛。",
+            "reviewed_on": "2026-10-19",
+            "affiliation": "当地坊市、宗门、家族或个人师承",
+            "resources": [
+                "坊市鉴定修士相关的见闻与基础指导"
+            ],
+            "power_set_ids": [
+                "single_qi",
+                "single_foundation",
+                "single_core"
+            ]
+        },
+        {
+            "id": "archive_keeper",
+            "occupation": "典籍整理修士",
+            "identity": "宗门事务人员",
+            "weight": 2,
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "仙侠修仙 / parent_profiles / archive_keeper",
+            "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。",
+            "reviewed_on": "2026-10-19",
+            "affiliation": "当地坊市、宗门、家族或个人师承",
+            "resources": [
+                "典籍整理修士相关的见闻与基础指导"
+            ],
+            "power_set_ids": [
+                "single_qi",
+                "single_foundation"
+            ]
+        },
+        {
+            "id": "spirit_merchant",
+            "occupation": "商路经营修士",
+            "identity": "灵界贸易从业者",
+            "weight": 2,
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "仙侠修仙 / parent_profiles / spirit_merchant",
+            "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。",
+            "reviewed_on": "2026-10-19",
+            "affiliation": "当地坊市、宗门、家族或个人师承",
+            "resources": [
+                "商路经营修士相关的见闻与基础指导"
+            ],
+            "region_ids": [
+                "spirit_city",
+                "spirit_trade_town"
+            ],
+            "power_set_ids": [
+                "single_deity",
+                "single_void"
+            ]
+        },
+        {
+            "id": "spirit_array",
+            "occupation": "阵法修士",
+            "identity": "灵界技艺从业者",
+            "weight": 1,
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "仙侠修仙 / parent_profiles / spirit_array",
+            "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。",
+            "reviewed_on": "2026-10-19",
+            "affiliation": "当地坊市、宗门、家族或个人师承",
+            "resources": [
+                "阵法修士相关的见闻与基础指导"
+            ],
+            "region_ids": [
+                "spirit_city",
+                "spirit_trade_town"
+            ],
+            "power_set_ids": [
+                "single_deity",
+                "single_void",
+                "single_integration"
+            ]
+        }
+    ],
+    "powers": [
+        {
+            "id": "mortal",
+            "name": "凡人 · 未修炼",
+            "system": "cultivation",
+            "rank": null,
+            "acquisition": "凡俗生活",
+            "risk": "",
+            "birth_note": "",
+            "description": "未开始修仙，凡俗武学和职业技能另论。",
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "凡人修仙传第127、1609章 / 公开节选",
+            "review_note": "只采用境界名称与相邻层次，不将职业、寿元和突破率压成境界数值。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "qi",
+            "name": "炼气",
+            "system": "cultivation",
+            "rank": 1,
+            "acquisition": "修炼积累",
+            "risk": "",
+            "birth_note": "",
+            "description": "修炼的入门阶段，不保证能够筑基。",
+            "provenance": "source_summary",
+            "source_refs": [
+                "rmji_127",
+                "rmji_1609"
+            ],
+            "source_locator": "凡人修仙传第127、1609章 / 公开节选",
+            "review_note": "只采用境界名称与相邻层次，不将职业、寿元和突破率压成境界数值。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "foundation",
+            "name": "筑基",
+            "system": "cultivation",
+            "rank": 2,
+            "acquisition": "修炼积累",
+            "risk": "",
+            "birth_note": "",
+            "description": "筑基阶段，与宗门职位和具体技艺分开记录。",
+            "provenance": "source_summary",
+            "source_refs": [
+                "rmji_127",
+                "rmji_1609"
+            ],
+            "source_locator": "凡人修仙传第127、1609章 / 公开节选",
+            "review_note": "只采用境界名称与相邻层次，不将职业、寿元和突破率压成境界数值。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "core",
+            "name": "结丹",
+            "system": "cultivation",
+            "rank": 3,
+            "acquisition": "修炼积累",
+            "risk": "",
+            "birth_note": "",
+            "description": "结丹阶段，修为不等于家族行政地位。",
+            "provenance": "source_summary",
+            "source_refs": [
+                "rmji_127",
+                "rmji_1609"
+            ],
+            "source_locator": "凡人修仙传第127、1609章 / 公开节选",
+            "review_note": "只采用境界名称与相邻层次，不将职业、寿元和突破率压成境界数值。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "nascent",
+            "name": "元婴",
+            "system": "cultivation",
+            "rank": 4,
+            "acquisition": "修炼积累",
+            "risk": "",
+            "birth_note": "",
+            "description": "元婴阶段，本版仅用于稀有修士父母。",
+            "provenance": "source_summary",
+            "source_refs": [
+                "rmji_127",
+                "rmji_1609"
+            ],
+            "source_locator": "凡人修仙传第127、1609章 / 公开节选",
+            "review_note": "只采用境界名称与相邻层次，不将职业、寿元和突破率压成境界数值。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "deity",
+            "name": "化神",
+            "system": "cultivation",
+            "rank": 5,
+            "acquisition": "修炼积累",
+            "risk": "",
+            "birth_note": "",
+            "description": "化神阶段，属于人界与灵界可涉及的高阶修为。",
+            "provenance": "source_summary",
+            "source_refs": [
+                "rmji_127",
+                "rmji_1609"
+            ],
+            "source_locator": "凡人修仙传第127、1609章 / 公开节选",
+            "review_note": "只采用境界名称与相邻层次，不将职业、寿元和突破率压成境界数值。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "void",
+            "name": "炼虚",
+            "system": "cultivation",
+            "rank": 6,
+            "acquisition": "修炼积累",
+            "risk": "",
+            "birth_note": "",
+            "description": "炼虚阶段，本版限定在灵界家庭。",
+            "provenance": "source_summary",
+            "source_refs": [
+                "rmji_127",
+                "rmji_1609"
+            ],
+            "source_locator": "凡人修仙传第127、1609章 / 公开节选",
+            "review_note": "只采用境界名称与相邻层次，不将职业、寿元和突破率压成境界数值。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "integration",
+            "name": "合体",
+            "system": "cultivation",
+            "rank": 7,
+            "acquisition": "修炼积累",
+            "risk": "",
+            "birth_note": "",
+            "description": "合体阶段，本版限定在灵界家庭。",
+            "provenance": "source_summary",
+            "source_refs": [
+                "rmji_127",
+                "rmji_1609"
+            ],
+            "source_locator": "凡人修仙传第127、1609章 / 公开节选",
+            "review_note": "只采用境界名称与相邻层次，不将职业、寿元和突破率压成境界数值。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "ascension",
+            "name": "大乘",
+            "system": "cultivation",
+            "rank": 8,
+            "acquisition": "修炼积累",
+            "risk": "",
+            "birth_note": "",
+            "description": "大乘阶段，不等于已经飞升成为仙人。",
+            "provenance": "source_summary",
+            "source_refs": [
+                "rmji_127",
+                "rmji_1609"
+            ],
+            "source_locator": "凡人修仙传第127、1609章 / 公开节选",
+            "review_note": "只采用境界名称与相邻层次，不将职业、寿元和突破率压成境界数值。",
+            "reviewed_on": "2026-10-19"
+        }
+    ],
+    "traits": [
+        {
+            "id": "observant",
+            "name": "感知敏锐",
+            "weight": 20,
+            "description": "对环境变化较敏感，尚不能据此确定灵根或修炼资质。",
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "仙侠修仙 / traits / observant",
+            "review_note": "成长倾向属于游戏叙事，不作新生儿认知诊断，不推断未来职业、原作能力或必然成就。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "insightful",
+            "name": "悟性灵动",
+            "weight": 15,
+            "description": "容易对新事物产生联想，未来学习仍需要方法和指导。",
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "仙侠修仙 / traits / insightful",
+            "review_note": "成长倾向属于游戏叙事，不作新生儿认知诊断，不推断未来职业、原作能力或必然成就。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "sturdy",
+            "name": "体魄扎实",
+            "weight": 20,
+            "description": "出生时体能基础较稳，未来可能适合长期训练。",
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "仙侠修仙 / traits / sturdy",
+            "review_note": "成长倾向属于游戏叙事，不作新生儿认知诊断，不推断未来职业、原作能力或必然成就。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "patient",
+            "name": "心性沉稳",
+            "weight": 20,
+            "description": "能够逐渐建立稳定节奏，耐心可能成为长期学习的优势。",
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "仙侠修仙 / traits / patient",
+            "review_note": "成长倾向属于游戏叙事，不作新生儿认知诊断，不推断未来职业、原作能力或必然成就。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "focused",
+            "name": "专注内敛",
+            "weight": 15,
+            "description": "较容易专注于眼前事物，适合循序培养兴趣。",
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "仙侠修仙 / traits / focused",
+            "review_note": "成长倾向属于游戏叙事，不作新生儿认知诊断，不推断未来职业、原作能力或必然成就。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "ordinary",
+            "name": "未见额外征兆",
+            "weight": 10,
+            "description": "未记录额外的行为或体魄特点，灵根与修为另列。",
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "仙侠修仙 / traits / ordinary",
+            "review_note": "成长倾向属于游戏叙事，不作新生儿认知诊断，不推断未来职业、原作能力或必然成就。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "remembering",
+            "name": "善于记取",
+            "weight": 10,
+            "description": "对熟悉事物的反应较稳定，未来可培养识字和记忆习惯。",
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "仙侠修仙 / traits / remembering",
+            "review_note": "成长倾向属于游戏叙事，不作新生儿认知诊断，不推断未来职业、原作能力或必然成就。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "rhythm",
+            "name": "节奏感平稳",
+            "weight": 10,
+            "description": "较容易在照护中建立稳定节奏，适合循序培养日常习惯。",
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "仙侠修仙 / traits / rhythm",
+            "review_note": "成长倾向属于游戏叙事，不作新生儿认知诊断，不推断未来职业、原作能力或必然成就。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "craft_interest",
+            "name": "动手兴趣突出",
+            "weight": 10,
+            "description": "对形状和动作变化较有兴趣，未来可能喜欢工艺与制作。",
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "仙侠修仙 / traits / craft_interest",
+            "review_note": "成长倾向属于游戏叙事，不作新生儿认知诊断，不推断未来职业、原作能力或必然成就。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "determined",
+            "name": "韧性较好",
+            "weight": 10,
+            "description": "面对新环境能够在照护下逐渐适应，不能据此判断修炼前景。",
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "仙侠修仙 / traits / determined",
+            "review_note": "成长倾向属于游戏叙事，不作新生儿认知诊断，不推断未来职业、原作能力或必然成就。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "nature_interest",
+            "name": "亲近自然",
+            "weight": 10,
+            "description": "对周围生灵容易保持注意，不代表具有特定灵根或御兽能力。",
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "仙侠修仙 / traits / nature_interest",
+            "review_note": "成长倾向属于游戏叙事，不作新生儿认知诊断，不推断未来职业、原作能力或必然成就。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "imaginative",
+            "name": "联想活跃",
+            "weight": 10,
+            "description": "容易被声音和故事吸引，日后可在求学中培养理解与表达。",
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "仙侠修仙 / traits / imaginative",
+            "review_note": "成长倾向属于游戏叙事，不作新生儿认知诊断，不推断未来职业、原作能力或必然成就。",
+            "reviewed_on": "2026-10-19"
+        }
+    ],
+    "content_note": "原作名词、二手整理和游戏改编逐条标注。地区组合、岗位搭配、资源与权重为游戏设计，不表示人口统计；普通同族家庭不推导通用遗传规律。",
+    "dataset_version": "2026.10.19-v4",
+    "birth_notes": [
+        "灵根是出生资质档案，孩子尚未修炼；父母境界与子女灵根不作直接换算。",
+        "灵根分类依据章节导读整理，稀有度与抽取权重均为游戏设定。"
+    ],
+    "trait_label": "成长倾向",
+    "settings": [
+        {
+            "id": "rmji_inspired",
+            "name": "人界与灵界的修仙社会",
+            "description": "人界的凡俗生计与修士事务相邻，灵界家庭则依赖更高层次的修炼和庇护关系。",
+            "weight": 1,
+            "provenance": "mixed",
+            "source_refs": [
+                "rmji_127",
+                "rmji_1609",
+                "project_isekai_v3"
+            ],
+            "source_locator": "世界范围",
+            "review_note": "时代抽取权重为游戏设定。",
+            "reviewed_on": "2026-10-19",
+            "canon_scope": "凡人修仙传骨架；不混入仙界篇和其他作品的境界。"
+        }
+    ],
+    "birth_axes": [
+        {
+            "id": "spiritual_root",
+            "label": "灵根档案",
+            "options": [
+                {
+                    "id": "unassessed",
+                    "name": "灵根尚未辨明",
+                    "description": "尚无可确认的分类，需要后续测定与观察。",
+                    "weight": 30,
+                    "provenance": "adaptation",
+                    "source_refs": [
+                        "project_isekai_v3"
+                    ],
+                    "source_locator": "出生条件",
+                    "review_note": "抽取与家庭限制属于项目设计。",
+                    "reviewed_on": "2026-10-19"
+                },
+                {
+                    "id": "not_detected",
+                    "name": "暂未检出灵根",
+                    "description": "当前档案未检出灵根，不将未收集的隐性灵根机制一概排除。",
+                    "weight": 35,
+                    "provenance": "mixed",
+                    "source_refs": [
+                        "rmji_roots_ch127_guide"
+                    ],
+                    "source_locator": "出生条件",
+                    "review_note": "抽取与家庭限制属于项目设计。",
+                    "reviewed_on": "2026-10-19"
+                },
+                {
+                    "id": "false_five",
+                    "name": "五属性伪灵根",
+                    "description": "五行属性混杂，入门条件与长期资源需求需要分别考虑。",
+                    "weight": 18,
+                    "provenance": "mixed",
+                    "source_refs": [
+                        "rmji_roots_ch127_guide"
+                    ],
+                    "source_locator": "出生条件",
+                    "review_note": "抽取与家庭限制属于项目设计。",
+                    "reviewed_on": "2026-10-19"
+                },
+                {
+                    "id": "false_four",
+                    "name": "四属性伪灵根",
+                    "description": "属于多属性伪灵根分类，不将资质标签写成绝对命运。",
+                    "weight": 16,
+                    "provenance": "mixed",
+                    "source_refs": [
+                        "rmji_roots_ch127_guide"
+                    ],
+                    "source_locator": "出生条件",
+                    "review_note": "抽取与家庭限制属于项目设计。",
+                    "reviewed_on": "2026-10-19"
+                },
+                {
+                    "id": "true_three",
+                    "name": "三属性真灵根",
+                    "description": "真灵根的一类，适合的功法和培养仍需后续寻找。",
+                    "weight": 12,
+                    "provenance": "mixed",
+                    "source_refs": [
+                        "rmji_roots_ch127_guide"
+                    ],
+                    "source_locator": "出生条件",
+                    "review_note": "抽取与家庭限制属于项目设计。",
+                    "reviewed_on": "2026-10-19"
+                },
+                {
+                    "id": "true_two",
+                    "name": "双属性真灵根",
+                    "description": "真灵根的一类，拥有资质不等于已经取得宗门资格。",
+                    "weight": 8,
+                    "provenance": "mixed",
+                    "source_refs": [
+                        "rmji_roots_ch127_guide"
+                    ],
+                    "source_locator": "出生条件",
+                    "review_note": "抽取与家庭限制属于项目设计。",
+                    "reviewed_on": "2026-10-19"
+                },
+                {
+                    "id": "heavenly",
+                    "name": "单属性天灵根",
+                    "description": "单一属性的稀有分类，五行属性与修炼安排仍需具体确定。",
+                    "weight": 1,
+                    "provenance": "mixed",
+                    "source_refs": [
+                        "rmji_roots_ch127_guide"
+                    ],
+                    "source_locator": "出生条件",
+                    "review_note": "抽取与家庭限制属于项目设计。",
+                    "reviewed_on": "2026-10-19"
+                },
+                {
+                    "id": "mutated",
+                    "name": "变异灵根",
+                    "description": "区别于普通五行组合的分类，具体变异属性尚待辨明。",
+                    "weight": 2,
+                    "provenance": "mixed",
+                    "source_refs": [
+                        "rmji_roots_ch127_guide"
+                    ],
+                    "source_locator": "出生条件",
+                    "review_note": "抽取与家庭限制属于项目设计。",
+                    "reviewed_on": "2026-10-19"
+                }
+            ],
+            "provenance": "mixed",
+            "source_refs": [
+                "rmji_roots_ch127_guide"
+            ],
+            "source_locator": "灵根档案",
+            "review_note": "",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "instruction",
+            "label": "启蒙渠道",
+            "options": [
+                {
+                    "id": "mortal",
+                    "name": "凡俗学艺",
+                    "description": "先从识字、生活和凡俗技艺开始，尚无稳定修炼师承。",
+                    "weight": 6,
+                    "provenance": "adaptation",
+                    "source_refs": [
+                        "project_isekai_v3"
+                    ],
+                    "source_locator": "出生条件",
+                    "review_note": "抽取与家庭限制属于项目设计。",
+                    "reviewed_on": "2026-10-19"
+                },
+                {
+                    "id": "independent",
+                    "name": "散修指导",
+                    "description": "家中可能提供有限入门经验，功法与材料仍需积累。",
+                    "weight": 3,
+                    "provenance": "adaptation",
+                    "source_refs": [
+                        "project_isekai_v3"
+                    ],
+                    "source_locator": "出生条件",
+                    "review_note": "抽取与家庭限制属于项目设计。",
+                    "reviewed_on": "2026-10-19"
+                },
+                {
+                    "id": "craft",
+                    "name": "修仙工坊见习",
+                    "description": "能够接触材料和工序，实操受资质与师承限制。",
+                    "weight": 3,
+                    "provenance": "adaptation",
+                    "source_refs": [
+                        "project_isekai_v3"
+                    ],
+                    "source_locator": "出生条件",
+                    "review_note": "抽取与家庭限制属于项目设计。",
+                    "reviewed_on": "2026-10-19"
+                },
+                {
+                    "id": "sect",
+                    "name": "宗门事务渠道",
+                    "description": "家中与宗门保持事务联系，不保证孩子自动入门。",
+                    "weight": 2,
+                    "provenance": "adaptation",
+                    "source_refs": [
+                        "project_isekai_v3"
+                    ],
+                    "source_locator": "出生条件",
+                    "review_note": "抽取与家庭限制属于项目设计。",
+                    "reviewed_on": "2026-10-19"
+                },
+                {
+                    "id": "clan",
+                    "name": "家族培养渠道",
+                    "description": "可能获得家族指导，培养资格和资源分配仍有条件。",
+                    "weight": 1,
+                    "provenance": "adaptation",
+                    "source_refs": [
+                        "project_isekai_v3"
+                    ],
+                    "source_locator": "出生条件",
+                    "review_note": "抽取与家庭限制属于项目设计。",
+                    "reviewed_on": "2026-10-19"
+                }
+            ],
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "启蒙渠道",
+            "review_note": "",
+            "reviewed_on": "2026-10-19"
+        }
+    ],
+    "power_sets": [
+        {
+            "id": "single_mortal",
+            "weight": 1,
+            "power_ids": [
+                "mortal"
+            ],
+            "notes": [],
+            "provenance": "mixed",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "力量组合 / mortal",
+            "review_note": "单力量组合沿用原有抽取权重。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "single_qi",
+            "weight": 55,
+            "power_ids": [
+                "qi"
+            ],
+            "notes": [],
+            "provenance": "mixed",
+            "source_refs": [
+                "rmji_127",
+                "rmji_1609",
+                "project_isekai_v3"
+            ],
+            "source_locator": "力量组合 / qi",
+            "review_note": "单力量组合沿用原有抽取权重。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "single_foundation",
+            "weight": 25,
+            "power_ids": [
+                "foundation"
+            ],
+            "notes": [],
+            "provenance": "mixed",
+            "source_refs": [
+                "rmji_127",
+                "rmji_1609",
+                "project_isekai_v3"
+            ],
+            "source_locator": "力量组合 / foundation",
+            "review_note": "单力量组合沿用原有抽取权重。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "single_core",
+            "weight": 12,
+            "power_ids": [
+                "core"
+            ],
+            "notes": [],
+            "provenance": "mixed",
+            "source_refs": [
+                "rmji_127",
+                "rmji_1609",
+                "project_isekai_v3"
+            ],
+            "source_locator": "力量组合 / core",
+            "review_note": "单力量组合沿用原有抽取权重。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "single_nascent",
+            "weight": 5,
+            "power_ids": [
+                "nascent"
+            ],
+            "notes": [],
+            "provenance": "mixed",
+            "source_refs": [
+                "rmji_127",
+                "rmji_1609",
+                "project_isekai_v3"
+            ],
+            "source_locator": "力量组合 / nascent",
+            "review_note": "单力量组合沿用原有抽取权重。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "single_deity",
+            "weight": 2,
+            "power_ids": [
+                "deity"
+            ],
+            "notes": [],
+            "provenance": "mixed",
+            "source_refs": [
+                "rmji_127",
+                "rmji_1609",
+                "project_isekai_v3"
+            ],
+            "source_locator": "力量组合 / deity",
+            "review_note": "单力量组合沿用原有抽取权重。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "single_void",
+            "weight": 5,
+            "power_ids": [
+                "void"
+            ],
+            "notes": [],
+            "provenance": "mixed",
+            "source_refs": [
+                "rmji_127",
+                "rmji_1609",
+                "project_isekai_v3"
+            ],
+            "source_locator": "力量组合 / void",
+            "review_note": "单力量组合沿用原有抽取权重。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "single_integration",
+            "weight": 2,
+            "power_ids": [
+                "integration"
+            ],
+            "notes": [],
+            "provenance": "mixed",
+            "source_refs": [
+                "rmji_127",
+                "rmji_1609",
+                "project_isekai_v3"
+            ],
+            "source_locator": "力量组合 / integration",
+            "review_note": "单力量组合沿用原有抽取权重。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "single_ascension",
+            "weight": 1,
+            "power_ids": [
+                "ascension"
+            ],
+            "notes": [],
+            "provenance": "mixed",
+            "source_refs": [
+                "rmji_127",
+                "rmji_1609",
+                "project_isekai_v3"
+            ],
+            "source_locator": "力量组合 / ascension",
+            "review_note": "单力量组合沿用原有抽取权重。",
+            "reviewed_on": "2026-10-19"
+        }
+    ],
+    "provenance": "mixed",
+    "source_locator": "仙侠修仙 / 第三版",
+    "review_note": "原作名词、二手整理和游戏改编逐条标注。地区组合、岗位搭配、资源与权重为游戏设计，不表示人口统计；普通同族家庭不推导通用遗传规律。",
+    "reviewed_on": "2026-10-19"
+}

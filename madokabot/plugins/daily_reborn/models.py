@@ -49,6 +49,36 @@ class USRebornRecord(data.Model):
     result: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=False)
 
 
+class IsekaiRebornRecord(data.Model):
+    """异世界投胎的每日快照，四类世界共用一次免费机会并独立于现实模式。"""
+
+    __tablename__ = "madoka_daily_reborn_isekai_record"
+
+    user_id: Mapped[str] = mapped_column(String, primary_key=True)
+    reborn_date: Mapped[date] = mapped_column(Date, primary_key=True)
+    result: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=False)
+
+
+class AnimeRebornRecord(data.Model):
+    """二次元投胎的每日档案，所有作品共用一次免费机会并独立保存历史。"""
+
+    __tablename__ = "madoka_daily_reborn_anime_record"
+
+    user_id: Mapped[str] = mapped_column(String, primary_key=True)
+    reborn_date: Mapped[date] = mapped_column(Date, primary_key=True)
+    result: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=False)
+
+
+class GamesRebornRecord(data.Model):
+    """二游投胎的每日快照，独立计次并复用积分与历史事务。"""
+
+    __tablename__ = "madoka_daily_reborn_games_record"
+
+    user_id: Mapped[str] = mapped_column(String, primary_key=True)
+    reborn_date: Mapped[date] = mapped_column(Date, primary_key=True)
+    result: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=False)
+
+
 class RebornProgress(data.Model):
     """按用户与模式保存累计次数及最近十次结果，不覆盖已有每日记录表。"""
 

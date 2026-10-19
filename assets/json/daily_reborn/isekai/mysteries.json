@@ -1,0 +1,4757 @@
+{
+    "id": "occult_industrial",
+    "title": "诡秘之主",
+    "weight": 1,
+    "description": "第五纪的蒸汽工业社会，公开职业之外可能存在非凡特性、隐秘组织和外神恩赐。",
+    "source_refs": [
+        "lotm_setting",
+        "blades_home",
+        "blades_creation",
+        "lotm_loen_society",
+        "project_isekai_v3",
+        "lotm_official_society",
+        "coi_ch60",
+        "lotm_fandom_inheritance",
+        "lotm_sun_context",
+        "coi_ch72",
+        "lotm_huiji_pathways",
+        "project_lower_power_ranges"
+    ],
+    "species": [
+        {
+            "id": "human",
+            "name": "人类",
+            "weight": 1,
+            "birth_state": "人类新生，尚未主动服用魔药；是否具有先天非凡特性尚待确认。",
+            "features": [
+                "人类自然出生",
+                "公开生计、非凡力量与先天状态分开记录"
+            ],
+            "life_span": "寿命与本人状态、力量及经历有关。",
+            "provenance": "mixed",
+            "source_refs": [
+                "lotm_fandom_inheritance",
+                "project_isekai_v3"
+            ],
+            "source_locator": "普通人类出生 / 特性另判",
+            "review_note": "具体遗传机制仍需原章直读；本版不生成完整序列继承。",
+            "reviewed_on": "2026-10-19"
+        }
+    ],
+    "regions": [
+        {
+            "id": "industrial",
+            "name": "贝克兰德工业街区",
+            "weight": 30,
+            "description": "工厂、租屋与工人生活紧密交织。",
+            "species_ids": [
+                "human"
+            ],
+            "family_ids": [
+                "worker",
+                "street",
+                "craft",
+                "hidden",
+                "newspaper",
+                "communications",
+                "relocated",
+                "boon_contact"
+            ],
+            "provenance": "mixed",
+            "source_refs": [
+                "lotm_loen_society",
+                "project_isekai_v3"
+            ],
+            "source_locator": "原著国家/城市名称 / 原创聚落类型",
+            "review_note": "城市名称有来源；具体街区与可出现家庭是游戏搭配，并非原著命名街道。",
+            "reviewed_on": "2026-10-19",
+            "context": "鲁恩 · 工业城区"
+        },
+        {
+            "id": "port",
+            "name": "普利兹港港区",
+            "weight": 21,
+            "description": "船运与贸易带来流动的人群，也带来真假难辨的消息。",
+            "species_ids": [
+                "human"
+            ],
+            "family_ids": [
+                "worker",
+                "street",
+                "craft",
+                "hidden",
+                "communications",
+                "relocated",
+                "security",
+                "boon_contact"
+            ],
+            "provenance": "mixed",
+            "source_refs": [
+                "lotm_loen_society",
+                "project_isekai_v3"
+            ],
+            "source_locator": "原著国家/城市名称 / 原创聚落类型",
+            "review_note": "城市名称有来源；具体街区与可出现家庭是游戏搭配，并非原著命名街道。",
+            "reviewed_on": "2026-10-19",
+            "context": "鲁恩 · 海港"
+        },
+        {
+            "id": "railway",
+            "name": "廷根铁路居住区",
+            "weight": 18,
+            "description": "铁路岗位和沿线商业支持着当地家庭。",
+            "species_ids": [
+                "human"
+            ],
+            "family_ids": [
+                "worker",
+                "craft",
+                "professional",
+                "communications",
+                "education",
+                "security"
+            ],
+            "provenance": "mixed",
+            "source_refs": [
+                "lotm_loen_society",
+                "project_isekai_v3"
+            ],
+            "source_locator": "原著国家/城市名称 / 原创聚落类型",
+            "review_note": "城市名称有来源；具体街区与可出现家庭是游戏搭配，并非原著命名街道。",
+            "reviewed_on": "2026-10-19",
+            "context": "鲁恩 · 铁路城镇"
+        },
+        {
+            "id": "church",
+            "name": "贝克兰德教会学校周边",
+            "weight": 12,
+            "description": "公共服务与信仰生活交织，普通雇员和非凡者各有职责。",
+            "species_ids": [
+                "human"
+            ],
+            "family_ids": [
+                "professional",
+                "church_family",
+                "education",
+                "estate"
+            ],
+            "provenance": "mixed",
+            "source_refs": [
+                "lotm_loen_society",
+                "project_isekai_v3"
+            ],
+            "source_locator": "原著国家/城市名称 / 原创聚落类型",
+            "review_note": "城市名称有来源；具体街区与可出现家庭是游戏搭配，并非原著命名街道。",
+            "reviewed_on": "2026-10-19",
+            "context": "鲁恩 · 教育与信仰生活"
+        },
+        {
+            "id": "commercial",
+            "name": "贝克兰德商业街区",
+            "weight": 11,
+            "description": "文书、商铺与专业服务为家庭提供不同生计。",
+            "species_ids": [
+                "human"
+            ],
+            "family_ids": [
+                "street",
+                "craft",
+                "professional",
+                "hidden",
+                "legacy",
+                "legal",
+                "education",
+                "newspaper",
+                "communications"
+            ],
+            "provenance": "mixed",
+            "source_refs": [
+                "lotm_loen_society",
+                "project_isekai_v3"
+            ],
+            "source_locator": "原著国家/城市名称 / 原创聚落类型",
+            "review_note": "城市名称有来源；具体街区与可出现家庭是游戏搭配，并非原著命名街道。",
+            "reviewed_on": "2026-10-19",
+            "context": "鲁恩 · 商业城区"
+        },
+        {
+            "id": "rural",
+            "name": "鲁恩乡村聚落",
+            "weight": 8,
+            "description": "农田与集市维系生活，城市和神秘传闻来自远方。",
+            "species_ids": [
+                "human"
+            ],
+            "family_ids": [
+                "rural",
+                "worker",
+                "estate",
+                "relocated"
+            ],
+            "provenance": "mixed",
+            "source_refs": [
+                "lotm_loen_society",
+                "project_isekai_v3"
+            ],
+            "source_locator": "原著国家/城市名称 / 原创聚落类型",
+            "review_note": "城市名称有来源；具体街区与可出现家庭是游戏搭配，并非原著命名街道。",
+            "reviewed_on": "2026-10-19",
+            "context": "鲁恩 · 凡俗乡村"
+        },
+        {
+            "id": "university",
+            "name": "廷根大学周边",
+            "weight": 7,
+            "description": "学校、书店与租屋围绕求学者形成日常生活网络。",
+            "species_ids": [
+                "human"
+            ],
+            "family_ids": [
+                "education",
+                "professional",
+                "newspaper"
+            ],
+            "provenance": "mixed",
+            "source_refs": [
+                "lotm_loen_society",
+                "project_isekai_v3"
+            ],
+            "source_locator": "原著国家/城市名称 / 原创聚落类型",
+            "review_note": "城市名称有来源；具体街区与可出现家庭是游戏搭配，并非原著命名街道。",
+            "reviewed_on": "2026-10-19",
+            "context": "鲁恩 · 大学城镇"
+        },
+        {
+            "id": "printing",
+            "name": "贝克兰德报馆印刷街",
+            "weight": 9,
+            "description": "报馆、排字工坊与纸张商铺相邻，消息和手艺在此流动。",
+            "species_ids": [
+                "human"
+            ],
+            "family_ids": [
+                "newspaper",
+                "street",
+                "communications"
+            ],
+            "provenance": "mixed",
+            "source_refs": [
+                "lotm_loen_society",
+                "project_isekai_v3"
+            ],
+            "source_locator": "原著国家/城市名称 / 原创聚落类型",
+            "review_note": "城市名称有来源；具体街区与可出现家庭是游戏搭配，并非原著命名街道。",
+            "reviewed_on": "2026-10-19",
+            "context": "鲁恩 · 报刊与文书"
+        },
+        {
+            "id": "mine_town",
+            "name": "康斯顿煤钢聚落",
+            "weight": 10,
+            "description": "矿场与铁路连接工坊和居所，生活受生产和运输影响。",
+            "species_ids": [
+                "human"
+            ],
+            "family_ids": [
+                "mining",
+                "worker",
+                "communications"
+            ],
+            "provenance": "mixed",
+            "source_refs": [
+                "lotm_loen_society",
+                "project_isekai_v3"
+            ],
+            "source_locator": "原著国家/城市名称 / 原创聚落类型",
+            "review_note": "城市名称有来源；具体街区与可出现家庭是游戏搭配，并非原著命名街道。",
+            "reviewed_on": "2026-10-19",
+            "context": "鲁恩 · 煤钢产业"
+        },
+        {
+            "id": "estate_town",
+            "name": "鲁恩庄园集镇",
+            "weight": 8,
+            "description": "地产事务、农事和定期集市共同支撑当地生计。",
+            "species_ids": [
+                "human"
+            ],
+            "family_ids": [
+                "estate",
+                "rural",
+                "professional"
+            ],
+            "provenance": "mixed",
+            "source_refs": [
+                "lotm_loen_society",
+                "project_isekai_v3"
+            ],
+            "source_locator": "原著国家/城市名称 / 原创聚落类型",
+            "review_note": "城市名称有来源；具体街区与可出现家庭是游戏搭配，并非原著命名街道。",
+            "reviewed_on": "2026-10-19",
+            "context": "鲁恩 · 庄园事务"
+        },
+        {
+            "id": "guard_town",
+            "name": "鲁恩地方守备驻地",
+            "weight": 6,
+            "description": "守备岗位与沿街生意相连，地方事务影响家庭节奏。",
+            "species_ids": [
+                "human"
+            ],
+            "family_ids": [
+                "security",
+                "communications",
+                "professional"
+            ],
+            "provenance": "mixed",
+            "source_refs": [
+                "lotm_loen_society",
+                "project_isekai_v3"
+            ],
+            "source_locator": "原著国家/城市名称 / 原创聚落类型",
+            "review_note": "城市名称有来源；具体街区与可出现家庭是游戏搭配，并非原著命名街道。",
+            "reviewed_on": "2026-10-19",
+            "context": "鲁恩 · 地方守备"
+        },
+        {
+            "id": "old_quarter",
+            "name": "特里尔旧城居住区",
+            "weight": 12,
+            "description": "拥挤租屋与传统商铺交错，居民依靠工作和街坊互助生活。",
+            "species_ids": [
+                "human"
+            ],
+            "family_ids": [
+                "relocated",
+                "street",
+                "worker",
+                "hidden",
+                "boon_contact"
+            ],
+            "provenance": "mixed",
+            "source_refs": [
+                "coi_ch60",
+                "project_isekai_v3"
+            ],
+            "source_locator": "原著国家/城市名称 / 原创聚落类型",
+            "review_note": "城市名称有来源；具体街区与可出现家庭是游戏搭配，并非原著命名街道。",
+            "reviewed_on": "2026-10-19",
+            "context": "因蒂斯 · 城市街区"
+        },
+        {
+            "id": "trier_market",
+            "name": "特里尔商业街区",
+            "context": "因蒂斯 · 城市商贸",
+            "weight": 12,
+            "description": "当地家庭围绕日常生计生活，信仰与隐秘接触取决于具体家庭。",
+            "species_ids": [
+                "human"
+            ],
+            "family_ids": [
+                "street",
+                "professional",
+                "legal",
+                "newspaper",
+                "church_family",
+                "hidden",
+                "boon_contact"
+            ],
+            "provenance": "mixed",
+            "source_refs": [
+                "coi_ch60",
+                "lotm_sun_context",
+                "project_isekai_v3"
+            ],
+            "source_locator": "因蒂斯、特里尔 / 原创家庭组合",
+            "review_note": "未绑定具体原著人物、事件或命名街道。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "intis_countryside",
+            "name": "因蒂斯乡村聚落",
+            "context": "因蒂斯 · 乡村与信仰生活",
+            "weight": 15,
+            "description": "当地家庭围绕日常生计生活，信仰与隐秘接触取决于具体家庭。",
+            "species_ids": [
+                "human"
+            ],
+            "family_ids": [
+                "rural",
+                "estate",
+                "church_family",
+                "relocated"
+            ],
+            "provenance": "mixed",
+            "source_refs": [
+                "coi_ch60",
+                "lotm_sun_context",
+                "project_isekai_v3"
+            ],
+            "source_locator": "因蒂斯、特里尔 / 原创家庭组合",
+            "review_note": "未绑定具体原著人物、事件或命名街道。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "trier_workshops",
+            "name": "特里尔工坊街区",
+            "context": "因蒂斯 · 工坊与运输",
+            "weight": 10,
+            "description": "当地家庭围绕日常生计生活，信仰与隐秘接触取决于具体家庭。",
+            "species_ids": [
+                "human"
+            ],
+            "family_ids": [
+                "worker",
+                "craft",
+                "communications",
+                "hidden",
+                "boon_contact"
+            ],
+            "provenance": "mixed",
+            "source_refs": [
+                "coi_ch60",
+                "lotm_sun_context",
+                "project_isekai_v3"
+            ],
+            "source_locator": "因蒂斯、特里尔 / 原创家庭组合",
+            "review_note": "未绑定具体原著人物、事件或命名街道。",
+            "reviewed_on": "2026-10-19"
+        }
+    ],
+    "families": [
+        {
+            "id": "worker",
+            "name": "产业劳工家庭",
+            "weight": 35,
+            "rarity": "普通",
+            "description": "家中依靠工厂、铁路或港口工作维持生活。",
+            "parent_profile_ids": [
+                "worker",
+                "railway",
+                "sailor"
+            ],
+            "resources": [
+                "日常照护",
+                "社区联系"
+            ],
+            "directions": [
+                "手艺与岗位学习",
+                "城市谋生"
+            ],
+            "challenge": "家庭生活受工资、工时和当地环境影响。",
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "诡秘之主 / families / worker",
+            "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。",
+            "reviewed_on": "2026-10-19",
+            "birth_options": {
+                "knowledge_access": [
+                    "daily"
+                ]
+            }
+        },
+        {
+            "id": "street",
+            "name": "街区经营家庭",
+            "weight": 25,
+            "rarity": "常见",
+            "description": "家中依靠商铺和手艺经营，熟悉街区往来。",
+            "parent_profile_ids": [
+                "vendor",
+                "artisan",
+                "clerk"
+            ],
+            "resources": [
+                "基础识字机会",
+                "街区见闻"
+            ],
+            "directions": [
+                "商铺经营",
+                "手工业学习"
+            ],
+            "challenge": "收入波动和街区变化限制成长资源。",
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "诡秘之主 / families / street",
+            "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。",
+            "reviewed_on": "2026-10-19",
+            "birth_options": {
+                "knowledge_access": [
+                    "daily"
+                ]
+            }
+        },
+        {
+            "id": "craft",
+            "name": "工匠家庭",
+            "weight": 18,
+            "rarity": "少见",
+            "description": "家庭有较稳定的制作与维修技能，能够提供工坊启蒙。",
+            "parent_profile_ids": [
+                "artisan",
+                "railway",
+                "clerk"
+            ],
+            "resources": [
+                "工坊接触",
+                "基础识字",
+                "实用技艺"
+            ],
+            "directions": [
+                "机械与维修",
+                "经营与学艺"
+            ],
+            "challenge": "普通机械经验不自动赋予非凡途径。",
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "诡秘之主 / families / craft",
+            "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。",
+            "reviewed_on": "2026-10-19",
+            "birth_options": {
+                "knowledge_access": [
+                    "daily"
+                ]
+            }
+        },
+        {
+            "id": "professional",
+            "name": "专业从业家庭",
+            "weight": 10,
+            "rarity": "少见",
+            "description": "家中从事文书、医疗或公共事务，教育渠道相对稳定。",
+            "parent_profile_ids": [
+                "physician",
+                "police",
+                "clerk",
+                "church"
+            ],
+            "resources": [
+                "基础教育",
+                "公共服务渠道",
+                "较稳定照护"
+            ],
+            "directions": [
+                "专业求学",
+                "文书与服务"
+            ],
+            "challenge": "职业身份不代表掌握神秘学真相。",
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "诡秘之主 / families / professional",
+            "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。",
+            "reviewed_on": "2026-10-19",
+            "birth_options": {
+                "knowledge_access": [
+                    "daily"
+                ]
+            }
+        },
+        {
+            "id": "rural",
+            "name": "乡村劳作家庭",
+            "weight": 8,
+            "rarity": "普通",
+            "description": "家中以田地、集市和季节性工作为生。",
+            "parent_profile_ids": [
+                "farmer",
+                "vendor",
+                "worker"
+            ],
+            "resources": [
+                "乡邻联系",
+                "日常劳动技能"
+            ],
+            "directions": [
+                "农业与手艺",
+                "前往城镇求学"
+            ],
+            "challenge": "远行与教育需要先积累资源。",
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "诡秘之主 / families / rural",
+            "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。",
+            "reviewed_on": "2026-10-19",
+            "birth_options": {
+                "knowledge_access": [
+                    "daily"
+                ]
+            }
+        },
+        {
+            "id": "church_family",
+            "name": "教会从业家庭",
+            "weight": 2,
+            "rarity": "罕见",
+            "description": "家庭通过普通雇佣或非凡事务与当地教会接触，个人身份分别记录。",
+            "parent_profile_ids": [
+                "church",
+                "clerk",
+                "evernight_staff",
+                "steam_staff",
+                "sun_staff",
+                "evernight_official",
+                "storm_official",
+                "steam_official",
+                "sun_official"
+            ],
+            "resources": [
+                "当地教会联系",
+                "基础识字渠道"
+            ],
+            "directions": [
+                "教会事务",
+                "知识与仪式学习"
+            ],
+            "challenge": "教会关系不保证非凡资格，接触隐秘也会带来风险。",
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "诡秘之主 / families / church_family",
+            "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。",
+            "reviewed_on": "2026-10-19",
+            "birth_options": {
+                "knowledge_access": [
+                    "church",
+                    "daily"
+                ]
+            }
+        },
+        {
+            "id": "hidden",
+            "name": "隐秘接触家庭",
+            "weight": 1.5,
+            "rarity": "罕见",
+            "description": "家中至少具备接触隐秘圈子的条件，公开生活仍需维持。",
+            "parent_profile_ids": [
+                "hidden_fool",
+                "hidden_door",
+                "hidden_error",
+                "hidden_visionary",
+                "hidden_sun",
+                "hidden_tyrant",
+                "hidden_hanged_man",
+                "hidden_death",
+                "hidden_darkness",
+                "hidden_twilight_giant",
+                "hidden_black_emperor",
+                "hidden_justiciar",
+                "hidden_red_priest",
+                "hidden_demoness",
+                "hidden_abyss",
+                "hidden_chained",
+                "hidden_hermit",
+                "hidden_paragon",
+                "hidden_mother",
+                "hidden_moon",
+                "hidden_wheel_of_fortune",
+                "hidden_white_tower"
+            ],
+            "resources": [
+                "少量神秘学见闻",
+                "隐秘圈子联系"
+            ],
+            "directions": [
+                "谨慎学习神秘知识",
+                "继续普通职业"
+            ],
+            "challenge": "隐秘联系伴随危险，孩子不会直接继承父母序列。",
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "诡秘之主 / families / hidden",
+            "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。",
+            "reviewed_on": "2026-10-19",
+            "birth_options": {
+                "knowledge_access": [
+                    "private",
+                    "restricted"
+                ]
+            }
+        },
+        {
+            "id": "legacy",
+            "name": "非凡传承家庭",
+            "weight": 0.5,
+            "rarity": "稀有",
+            "description": "家中接触非凡传承，亲代可能仍在入门序列；公开生计、组织归属与孩子先天状态分别记录。",
+            "parent_profile_ids": [
+                "senior_sun",
+                "senior_darkness",
+                "senior_death",
+                "senior_paragon"
+            ],
+            "resources": [
+                "系统教育",
+                "非凡经验指导",
+                "有限材料渠道"
+            ],
+            "directions": [
+                "专业求学",
+                "有条件的非凡道路"
+            ],
+            "challenge": "先天特性、配方渠道和已获得序列不同；传承也可能伴随危险关系。",
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "诡秘之主 / families / legacy",
+            "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。",
+            "reviewed_on": "2026-10-19",
+            "birth_options": {
+                "knowledge_access": [
+                    "private",
+                    "restricted"
+                ]
+            }
+        },
+        {
+            "id": "education",
+            "name": "教育文书家庭",
+            "weight": 12,
+            "rarity": "少见",
+            "description": "家中依靠教学、藏书或文书工作维持生活。",
+            "parent_profile_ids": [
+                "teacher",
+                "librarian",
+                "clerk"
+            ],
+            "resources": [
+                "稳定识字教育",
+                "图书接触",
+                "知识整理经验"
+            ],
+            "directions": [
+                "教育与文书",
+                "专业求学"
+            ],
+            "challenge": "读书条件较好并不代表能够识别所有隐秘危险。",
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "诡秘之主 / families / education",
+            "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。",
+            "reviewed_on": "2026-10-19",
+            "birth_options": {
+                "knowledge_access": [
+                    "daily"
+                ]
+            }
+        },
+        {
+            "id": "newspaper",
+            "name": "报刊印刷家庭",
+            "weight": 13,
+            "rarity": "常见",
+            "description": "家庭参与新闻、排字与印刷工作，接触来自城市各处的消息。",
+            "parent_profile_ids": [
+                "reporter",
+                "typesetter",
+                "clerk"
+            ],
+            "resources": [
+                "识字与表达启蒙",
+                "城市消息接触"
+            ],
+            "directions": [
+                "新闻与写作",
+                "印刷工艺"
+            ],
+            "challenge": "消息需要核实，职业见闻不能替代安全与判断。",
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "诡秘之主 / families / newspaper",
+            "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。",
+            "reviewed_on": "2026-10-19",
+            "birth_options": {
+                "knowledge_access": [
+                    "daily"
+                ]
+            }
+        },
+        {
+            "id": "legal",
+            "name": "法律事务家庭",
+            "weight": 8,
+            "rarity": "少见",
+            "description": "家中从事法律文书与账务工作，熟悉社会规则和日常契约。",
+            "parent_profile_ids": [
+                "law_clerk",
+                "accountant",
+                "clerk"
+            ],
+            "resources": [
+                "基础教育",
+                "文书训练",
+                "规则意识"
+            ],
+            "directions": [
+                "法律与账务",
+                "商业服务"
+            ],
+            "challenge": "普通法律职业不自动对应黑皇帝或审判者途径。",
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "诡秘之主 / families / legal",
+            "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。",
+            "reviewed_on": "2026-10-19",
+            "birth_options": {
+                "knowledge_access": [
+                    "daily"
+                ]
+            }
+        },
+        {
+            "id": "estate",
+            "name": "庄园事务家庭",
+            "weight": 8,
+            "rarity": "少见",
+            "description": "家中参与地产经营和私人教育，生活与雇佣关系相连。",
+            "parent_profile_ids": [
+                "estate_steward",
+                "governess",
+                "farmer"
+            ],
+            "resources": [
+                "基础识字机会",
+                "土地经营见闻"
+            ],
+            "directions": [
+                "庄园经营",
+                "教育与事务服务"
+            ],
+            "challenge": "资源依赖雇佣和经营情况，并不等于拥有土地爵位。",
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "诡秘之主 / families / estate",
+            "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。",
+            "reviewed_on": "2026-10-19",
+            "birth_options": {
+                "knowledge_access": [
+                    "daily"
+                ]
+            }
+        },
+        {
+            "id": "communications",
+            "name": "通信交通家庭",
+            "weight": 12,
+            "rarity": "常见",
+            "description": "家庭围绕电报、铁路与船运的调度工作生活。",
+            "parent_profile_ids": [
+                "telegraph_worker",
+                "railway",
+                "dock_clerk"
+            ],
+            "resources": [
+                "识字与流程训练",
+                "跨地消息接触"
+            ],
+            "directions": [
+                "通信与调度",
+                "交通事务"
+            ],
+            "challenge": "轮值和交通事故风险会影响家庭安排。",
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "诡秘之主 / families / communications",
+            "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。",
+            "reviewed_on": "2026-10-19",
+            "birth_options": {
+                "knowledge_access": [
+                    "daily"
+                ]
+            }
+        },
+        {
+            "id": "mining",
+            "name": "矿业劳作家庭",
+            "weight": 18,
+            "rarity": "普通",
+            "description": "家中依靠矿业劳动与相关供应维持生活。",
+            "parent_profile_ids": [
+                "mine_worker",
+                "artisan",
+                "worker"
+            ],
+            "resources": [
+                "务实生活经验",
+                "工坊见闻"
+            ],
+            "directions": [
+                "矿业与手艺",
+                "转向城镇工作"
+            ],
+            "challenge": "工作环境与收入变化限制了家庭积蓄。",
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "诡秘之主 / families / mining",
+            "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。",
+            "reviewed_on": "2026-10-19",
+            "birth_options": {
+                "knowledge_access": [
+                    "daily"
+                ]
+            }
+        },
+        {
+            "id": "relocated",
+            "name": "异乡安居家庭",
+            "weight": 16,
+            "rarity": "普通",
+            "description": "家庭来到新的聚落寻找生计，生活依靠务工和互助。",
+            "parent_profile_ids": [
+                "worker",
+                "vendor",
+                "clerk"
+            ],
+            "resources": [
+                "跨地生活见闻",
+                "有限互助关系"
+            ],
+            "directions": [
+                "稳定生计",
+                "识字与学艺"
+            ],
+            "challenge": "社会关系和住房需要重新建立。",
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "诡秘之主 / families / relocated",
+            "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。",
+            "reviewed_on": "2026-10-19",
+            "birth_options": {
+                "knowledge_access": [
+                    "daily"
+                ]
+            }
+        },
+        {
+            "id": "security",
+            "name": "守备安保家庭",
+            "weight": 10,
+            "rarity": "少见",
+            "description": "家中从事警务与地方安保，重视秩序和职业训练。",
+            "parent_profile_ids": [
+                "police",
+                "retired_guard",
+                "artisan"
+            ],
+            "resources": [
+                "基础训练见闻",
+                "地方事务联系"
+            ],
+            "directions": [
+                "安保与警务",
+                "公共事务服务"
+            ],
+            "challenge": "普通训练不能替代非凡力量，对异常事件仍需谨慎。",
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "诡秘之主 / families / security",
+            "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。",
+            "reviewed_on": "2026-10-19",
+            "birth_options": {
+                "knowledge_access": [
+                    "daily"
+                ]
+            }
+        },
+        {
+            "id": "boon_contact",
+            "name": "隐秘受赐关系家庭",
+            "weight": 1,
+            "rarity": "稀有",
+            "description": "家庭成员可能涉及外神恩赐，保护日常生活需要约束隐秘接触。",
+            "parent_profile_ids": [
+                "boon_dancer",
+                "boon_alms",
+                "boon_contractee",
+                "protected_dual_source",
+                "clerk",
+                "vendor"
+            ],
+            "resources": [
+                "有限的隐秘见闻"
+            ],
+            "directions": [
+                "普通职业生活",
+                "审慎寻求知识与庇护"
+            ],
+            "challenge": "受赐力量与污染风险相连，孩子不会自动获得父母的恩赐。",
+            "setting_ids": [
+                "fifth_1358"
+            ],
+            "provenance": "mixed",
+            "source_refs": [
+                "coi_ch60",
+                "coi_ch72",
+                "project_isekai_v3"
+            ],
+            "source_locator": "第二部低序列恩赐 / 原创家庭模型",
+            "review_note": "仅允许1358年背景，权重不代表原作人群比例。",
+            "reviewed_on": "2026-10-19",
+            "birth_options": {
+                "knowledge_access": [
+                    "restricted"
+                ]
+            }
+        }
+    ],
+    "parent_profiles": [
+        {
+            "id": "worker",
+            "occupation": "工厂工人",
+            "identity": "工厂雇员",
+            "weight": 3,
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "诡秘之主 / parent_profiles / worker",
+            "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。",
+            "reviewed_on": "2026-10-19",
+            "affiliation": "当地社区或民间职业关系",
+            "resources": [
+                "工厂工人相关的生活见闻"
+            ],
+            "power_set_ids": [
+                "single_ordinary"
+            ]
+        },
+        {
+            "id": "railway",
+            "occupation": "铁路职员",
+            "identity": "铁路雇员",
+            "weight": 3,
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "诡秘之主 / parent_profiles / railway",
+            "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。",
+            "reviewed_on": "2026-10-19",
+            "affiliation": "当地社区或民间职业关系",
+            "resources": [
+                "铁路职员相关的生活见闻"
+            ],
+            "power_set_ids": [
+                "single_ordinary"
+            ]
+        },
+        {
+            "id": "sailor",
+            "occupation": "港口水手",
+            "identity": "船运从业者",
+            "weight": 3,
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "诡秘之主 / parent_profiles / sailor",
+            "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。",
+            "reviewed_on": "2026-10-19",
+            "affiliation": "当地社区或民间职业关系",
+            "resources": [
+                "港口水手相关的生活见闻"
+            ],
+            "power_set_ids": [
+                "single_ordinary"
+            ]
+        },
+        {
+            "id": "artisan",
+            "occupation": "机械工匠",
+            "identity": "工坊从业者",
+            "weight": 3,
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "诡秘之主 / parent_profiles / artisan",
+            "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。",
+            "reviewed_on": "2026-10-19",
+            "affiliation": "当地社区或民间职业关系",
+            "resources": [
+                "机械工匠相关的生活见闻"
+            ],
+            "power_set_ids": [
+                "single_ordinary"
+            ]
+        },
+        {
+            "id": "clerk",
+            "occupation": "文书职员",
+            "identity": "受雇文书",
+            "weight": 3,
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "诡秘之主 / parent_profiles / clerk",
+            "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。",
+            "reviewed_on": "2026-10-19",
+            "affiliation": "当地社区或民间职业关系",
+            "resources": [
+                "文书职员相关的生活见闻"
+            ],
+            "power_set_ids": [
+                "single_ordinary"
+            ]
+        },
+        {
+            "id": "physician",
+            "occupation": "诊所医师",
+            "identity": "专业从业者",
+            "weight": 3,
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "诡秘之主 / parent_profiles / physician",
+            "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。",
+            "reviewed_on": "2026-10-19",
+            "affiliation": "当地社区或民间职业关系",
+            "resources": [
+                "诊所医师相关的生活见闻"
+            ],
+            "power_set_ids": [
+                "single_ordinary"
+            ]
+        },
+        {
+            "id": "police",
+            "occupation": "警务人员",
+            "identity": "公共事务人员",
+            "weight": 3,
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "诡秘之主 / parent_profiles / police",
+            "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。",
+            "reviewed_on": "2026-10-19",
+            "affiliation": "当地社区或民间职业关系",
+            "resources": [
+                "警务人员相关的生活见闻"
+            ],
+            "power_set_ids": [
+                "single_ordinary"
+            ]
+        },
+        {
+            "id": "church",
+            "occupation": "教会雇员",
+            "identity": "普通教会服务人员",
+            "weight": 3,
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "诡秘之主 / parent_profiles / church",
+            "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。",
+            "reviewed_on": "2026-10-19",
+            "affiliation": "当地教会 · 普通雇员",
+            "resources": [
+                "教会雇员相关的生活见闻"
+            ],
+            "power_set_ids": [
+                "single_ordinary"
+            ]
+        },
+        {
+            "id": "vendor",
+            "occupation": "商铺经营者",
+            "identity": "独立经营者",
+            "weight": 3,
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "诡秘之主 / parent_profiles / vendor",
+            "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。",
+            "reviewed_on": "2026-10-19",
+            "affiliation": "当地社区或民间职业关系",
+            "resources": [
+                "商铺经营者相关的生活见闻"
+            ],
+            "power_set_ids": [
+                "single_ordinary"
+            ]
+        },
+        {
+            "id": "farmer",
+            "occupation": "农户",
+            "identity": "乡村居民",
+            "weight": 3,
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "诡秘之主 / parent_profiles / farmer",
+            "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。",
+            "reviewed_on": "2026-10-19",
+            "affiliation": "当地社区或民间职业关系",
+            "resources": [
+                "农户相关的生活见闻"
+            ],
+            "power_set_ids": [
+                "single_ordinary"
+            ]
+        },
+        {
+            "id": "hidden_fool",
+            "occupation": "占卜从业者",
+            "identity": "拥有非凡特性的隐秘从业者；组织归属未作推断",
+            "weight": 1,
+            "provenance": "mixed",
+            "source_refs": [
+                "lotm_setting",
+                "project_isekai_v3"
+            ],
+            "source_locator": "hidden_fool / 原创公开职业与力量搭配",
+            "review_note": "职业不自动对应途径，不凭途径推断所属教会。",
+            "reviewed_on": "2026-10-19",
+            "affiliation": "当地社区或民间职业关系",
+            "resources": [
+                "可能获得有限的神秘学见闻，主动传授需审慎"
+            ],
+            "power_set_ids": [
+                "single_fool_9",
+                "single_fool_8"
+            ]
+        },
+        {
+            "id": "hidden_door",
+            "occupation": "戏法表演者",
+            "identity": "拥有非凡特性的隐秘从业者；组织归属未作推断",
+            "weight": 1,
+            "provenance": "mixed",
+            "source_refs": [
+                "lotm_setting",
+                "project_isekai_v3"
+            ],
+            "source_locator": "hidden_door / 原创公开职业与力量搭配",
+            "review_note": "职业不自动对应途径，不凭途径推断所属教会。",
+            "reviewed_on": "2026-10-19",
+            "affiliation": "当地社区或民间职业关系",
+            "resources": [
+                "可能获得有限的神秘学见闻，主动传授需审慎"
+            ],
+            "power_set_ids": [
+                "single_door_9",
+                "single_door_8"
+            ]
+        },
+        {
+            "id": "hidden_error",
+            "occupation": "街区经纪人",
+            "identity": "拥有非凡特性的隐秘从业者；组织归属未作推断",
+            "weight": 1,
+            "provenance": "mixed",
+            "source_refs": [
+                "lotm_setting",
+                "project_isekai_v3"
+            ],
+            "source_locator": "hidden_error / 原创公开职业与力量搭配",
+            "review_note": "职业不自动对应途径，不凭途径推断所属教会。",
+            "reviewed_on": "2026-10-19",
+            "affiliation": "当地社区或民间职业关系",
+            "resources": [
+                "可能获得有限的神秘学见闻，主动传授需审慎"
+            ],
+            "power_set_ids": [
+                "single_error_9",
+                "single_error_8"
+            ]
+        },
+        {
+            "id": "hidden_visionary",
+            "occupation": "心理咨询从业者",
+            "identity": "拥有非凡特性的隐秘从业者；组织归属未作推断",
+            "weight": 1,
+            "provenance": "mixed",
+            "source_refs": [
+                "lotm_setting",
+                "project_isekai_v3"
+            ],
+            "source_locator": "hidden_visionary / 原创公开职业与力量搭配",
+            "review_note": "职业不自动对应途径，不凭途径推断所属教会。",
+            "reviewed_on": "2026-10-19",
+            "affiliation": "当地社区或民间职业关系",
+            "resources": [
+                "可能获得有限的神秘学见闻，主动传授需审慎"
+            ],
+            "power_set_ids": [
+                "single_visionary_9",
+                "single_visionary_8"
+            ]
+        },
+        {
+            "id": "hidden_sun",
+            "occupation": "民间文书",
+            "identity": "拥有非凡特性的隐秘从业者；组织归属未作推断",
+            "weight": 1,
+            "provenance": "mixed",
+            "source_refs": [
+                "lotm_setting",
+                "project_isekai_v3"
+            ],
+            "source_locator": "hidden_sun / 原创公开职业与力量搭配",
+            "review_note": "职业不自动对应途径，不凭途径推断所属教会。",
+            "reviewed_on": "2026-10-19",
+            "affiliation": "当地社区或民间职业关系",
+            "resources": [
+                "可能获得有限的神秘学见闻，主动传授需审慎"
+            ],
+            "power_set_ids": [
+                "single_sun_9",
+                "single_sun_8"
+            ]
+        },
+        {
+            "id": "hidden_tyrant",
+            "occupation": "水手",
+            "identity": "拥有非凡特性的隐秘从业者；组织归属未作推断",
+            "weight": 1,
+            "provenance": "mixed",
+            "source_refs": [
+                "lotm_setting",
+                "project_isekai_v3"
+            ],
+            "source_locator": "hidden_tyrant / 原创公开职业与力量搭配",
+            "review_note": "职业不自动对应途径，不凭途径推断所属教会。",
+            "reviewed_on": "2026-10-19",
+            "affiliation": "当地社区或民间职业关系",
+            "resources": [
+                "可能获得有限的神秘学见闻，主动传授需审慎"
+            ],
+            "power_set_ids": [
+                "single_tyrant_9",
+                "single_tyrant_8"
+            ]
+        },
+        {
+            "id": "hidden_hanged_man",
+            "occupation": "工厂工人",
+            "identity": "拥有非凡特性的隐秘从业者；组织归属未作推断",
+            "weight": 1,
+            "provenance": "mixed",
+            "source_refs": [
+                "lotm_setting",
+                "project_isekai_v3"
+            ],
+            "source_locator": "hidden_hanged_man / 原创公开职业与力量搭配",
+            "review_note": "职业不自动对应途径，不凭途径推断所属教会。",
+            "reviewed_on": "2026-10-19",
+            "affiliation": "当地社区或民间职业关系",
+            "resources": [
+                "可能获得有限的神秘学见闻，主动传授需审慎"
+            ],
+            "power_set_ids": [
+                "single_hanged_man_9",
+                "single_hanged_man_8"
+            ]
+        },
+        {
+            "id": "hidden_death",
+            "occupation": "殡葬从业者",
+            "identity": "拥有非凡特性的隐秘从业者；组织归属未作推断",
+            "weight": 1,
+            "provenance": "mixed",
+            "source_refs": [
+                "lotm_setting",
+                "project_isekai_v3"
+            ],
+            "source_locator": "hidden_death / 原创公开职业与力量搭配",
+            "review_note": "职业不自动对应途径，不凭途径推断所属教会。",
+            "reviewed_on": "2026-10-19",
+            "affiliation": "当地社区或民间职业关系",
+            "resources": [
+                "可能获得有限的神秘学见闻，主动传授需审慎"
+            ],
+            "power_set_ids": [
+                "single_death_9",
+                "single_death_8"
+            ]
+        },
+        {
+            "id": "hidden_darkness",
+            "occupation": "夜间守卫",
+            "identity": "拥有非凡特性的隐秘从业者；组织归属未作推断",
+            "weight": 1,
+            "provenance": "mixed",
+            "source_refs": [
+                "lotm_setting",
+                "project_isekai_v3"
+            ],
+            "source_locator": "hidden_darkness / 原创公开职业与力量搭配",
+            "review_note": "职业不自动对应途径，不凭途径推断所属教会。",
+            "reviewed_on": "2026-10-19",
+            "affiliation": "当地社区或民间职业关系",
+            "resources": [
+                "可能获得有限的神秘学见闻，主动传授需审慎"
+            ],
+            "power_set_ids": [
+                "single_darkness_9",
+                "single_darkness_8"
+            ]
+        },
+        {
+            "id": "hidden_twilight_giant",
+            "occupation": "安保人员",
+            "identity": "拥有非凡特性的隐秘从业者；组织归属未作推断",
+            "weight": 1,
+            "provenance": "mixed",
+            "source_refs": [
+                "lotm_setting",
+                "project_isekai_v3"
+            ],
+            "source_locator": "hidden_twilight_giant / 原创公开职业与力量搭配",
+            "review_note": "职业不自动对应途径，不凭途径推断所属教会。",
+            "reviewed_on": "2026-10-19",
+            "affiliation": "当地社区或民间职业关系",
+            "resources": [
+                "可能获得有限的神秘学见闻，主动传授需审慎"
+            ],
+            "power_set_ids": [
+                "single_twilight_giant_9",
+                "single_twilight_giant_8"
+            ]
+        },
+        {
+            "id": "hidden_black_emperor",
+            "occupation": "法律助理",
+            "identity": "拥有非凡特性的隐秘从业者；组织归属未作推断",
+            "weight": 1,
+            "provenance": "mixed",
+            "source_refs": [
+                "lotm_setting",
+                "project_isekai_v3"
+            ],
+            "source_locator": "hidden_black_emperor / 原创公开职业与力量搭配",
+            "review_note": "职业不自动对应途径，不凭途径推断所属教会。",
+            "reviewed_on": "2026-10-19",
+            "affiliation": "当地社区或民间职业关系",
+            "resources": [
+                "可能获得有限的神秘学见闻，主动传授需审慎"
+            ],
+            "power_set_ids": [
+                "single_black_emperor_9",
+                "single_black_emperor_8"
+            ]
+        },
+        {
+            "id": "hidden_justiciar",
+            "occupation": "警务人员",
+            "identity": "拥有非凡特性的隐秘从业者；组织归属未作推断",
+            "weight": 1,
+            "provenance": "mixed",
+            "source_refs": [
+                "lotm_setting",
+                "project_isekai_v3"
+            ],
+            "source_locator": "hidden_justiciar / 原创公开职业与力量搭配",
+            "review_note": "职业不自动对应途径，不凭途径推断所属教会。",
+            "reviewed_on": "2026-10-19",
+            "affiliation": "当地社区或民间职业关系",
+            "resources": [
+                "可能获得有限的神秘学见闻，主动传授需审慎"
+            ],
+            "power_set_ids": [
+                "single_justiciar_9",
+                "single_justiciar_8"
+            ]
+        },
+        {
+            "id": "hidden_red_priest",
+            "occupation": "猎人",
+            "identity": "拥有非凡特性的隐秘从业者；组织归属未作推断",
+            "weight": 1,
+            "provenance": "mixed",
+            "source_refs": [
+                "lotm_setting",
+                "project_isekai_v3"
+            ],
+            "source_locator": "hidden_red_priest / 原创公开职业与力量搭配",
+            "review_note": "职业不自动对应途径，不凭途径推断所属教会。",
+            "reviewed_on": "2026-10-19",
+            "affiliation": "当地社区或民间职业关系",
+            "resources": [
+                "可能获得有限的神秘学见闻，主动传授需审慎"
+            ],
+            "power_set_ids": [
+                "single_red_priest_9",
+                "single_red_priest_8"
+            ]
+        },
+        {
+            "id": "hidden_demoness",
+            "occupation": "情报掮客",
+            "identity": "拥有非凡特性的隐秘从业者；组织归属未作推断",
+            "weight": 1,
+            "provenance": "mixed",
+            "source_refs": [
+                "lotm_setting",
+                "project_isekai_v3"
+            ],
+            "source_locator": "hidden_demoness / 原创公开职业与力量搭配",
+            "review_note": "职业不自动对应途径，不凭途径推断所属教会。",
+            "reviewed_on": "2026-10-19",
+            "affiliation": "当地社区或民间职业关系",
+            "resources": [
+                "可能获得有限的神秘学见闻，主动传授需审慎"
+            ],
+            "power_set_ids": [
+                "single_demoness_9",
+                "single_demoness_8"
+            ]
+        },
+        {
+            "id": "hidden_abyss",
+            "occupation": "地下交易者",
+            "identity": "拥有非凡特性的隐秘从业者；组织归属未作推断",
+            "weight": 1,
+            "provenance": "mixed",
+            "source_refs": [
+                "lotm_setting",
+                "project_isekai_v3"
+            ],
+            "source_locator": "hidden_abyss / 原创公开职业与力量搭配",
+            "review_note": "职业不自动对应途径，不凭途径推断所属教会。",
+            "reviewed_on": "2026-10-19",
+            "affiliation": "当地社区或民间职业关系",
+            "resources": [
+                "可能获得有限的神秘学见闻，主动传授需审慎"
+            ],
+            "power_set_ids": [
+                "single_abyss_9"
+            ]
+        },
+        {
+            "id": "hidden_chained",
+            "occupation": "街区劳工",
+            "identity": "拥有非凡特性的隐秘从业者；组织归属未作推断",
+            "weight": 1,
+            "provenance": "mixed",
+            "source_refs": [
+                "lotm_setting",
+                "project_isekai_v3"
+            ],
+            "source_locator": "hidden_chained / 原创公开职业与力量搭配",
+            "review_note": "职业不自动对应途径，不凭途径推断所属教会。",
+            "reviewed_on": "2026-10-19",
+            "affiliation": "当地社区或民间职业关系",
+            "resources": [
+                "可能获得有限的神秘学见闻，主动传授需审慎"
+            ],
+            "power_set_ids": [
+                "single_chained_9",
+                "single_chained_8"
+            ]
+        },
+        {
+            "id": "hidden_hermit",
+            "occupation": "书店从业者",
+            "identity": "拥有非凡特性的隐秘从业者；组织归属未作推断",
+            "weight": 1,
+            "provenance": "mixed",
+            "source_refs": [
+                "lotm_setting",
+                "project_isekai_v3"
+            ],
+            "source_locator": "hidden_hermit / 原创公开职业与力量搭配",
+            "review_note": "职业不自动对应途径，不凭途径推断所属教会。",
+            "reviewed_on": "2026-10-19",
+            "affiliation": "当地社区或民间职业关系",
+            "resources": [
+                "可能获得有限的神秘学见闻，主动传授需审慎"
+            ],
+            "power_set_ids": [
+                "single_hermit_9",
+                "single_hermit_8"
+            ]
+        },
+        {
+            "id": "hidden_paragon",
+            "occupation": "机械工匠",
+            "identity": "拥有非凡特性的隐秘从业者；组织归属未作推断",
+            "weight": 1,
+            "provenance": "mixed",
+            "source_refs": [
+                "lotm_setting",
+                "project_isekai_v3"
+            ],
+            "source_locator": "hidden_paragon / 原创公开职业与力量搭配",
+            "review_note": "职业不自动对应途径，不凭途径推断所属教会。",
+            "reviewed_on": "2026-10-19",
+            "affiliation": "当地社区或民间职业关系",
+            "resources": [
+                "可能获得有限的神秘学见闻，主动传授需审慎"
+            ],
+            "power_set_ids": [
+                "single_paragon_9",
+                "single_paragon_8"
+            ]
+        },
+        {
+            "id": "hidden_mother",
+            "occupation": "园艺从业者",
+            "identity": "拥有非凡特性的隐秘从业者；组织归属未作推断",
+            "weight": 1,
+            "provenance": "mixed",
+            "source_refs": [
+                "lotm_setting",
+                "project_isekai_v3"
+            ],
+            "source_locator": "hidden_mother / 原创公开职业与力量搭配",
+            "review_note": "职业不自动对应途径，不凭途径推断所属教会。",
+            "reviewed_on": "2026-10-19",
+            "affiliation": "当地社区或民间职业关系",
+            "resources": [
+                "可能获得有限的神秘学见闻，主动传授需审慎"
+            ],
+            "power_set_ids": [
+                "single_mother_9",
+                "single_mother_8"
+            ]
+        },
+        {
+            "id": "hidden_moon",
+            "occupation": "药剂从业者",
+            "identity": "拥有非凡特性的隐秘从业者；组织归属未作推断",
+            "weight": 1,
+            "provenance": "mixed",
+            "source_refs": [
+                "lotm_setting",
+                "project_isekai_v3"
+            ],
+            "source_locator": "hidden_moon / 原创公开职业与力量搭配",
+            "review_note": "职业不自动对应途径，不凭途径推断所属教会。",
+            "reviewed_on": "2026-10-19",
+            "affiliation": "当地社区或民间职业关系",
+            "resources": [
+                "可能获得有限的神秘学见闻，主动传授需审慎"
+            ],
+            "power_set_ids": [
+                "single_moon_9",
+                "single_moon_8"
+            ]
+        },
+        {
+            "id": "hidden_wheel_of_fortune",
+            "occupation": "手工业者",
+            "identity": "拥有非凡特性的隐秘从业者；组织归属未作推断",
+            "weight": 1,
+            "provenance": "mixed",
+            "source_refs": [
+                "lotm_setting",
+                "project_isekai_v3"
+            ],
+            "source_locator": "hidden_wheel_of_fortune / 原创公开职业与力量搭配",
+            "review_note": "职业不自动对应途径，不凭途径推断所属教会。",
+            "reviewed_on": "2026-10-19",
+            "affiliation": "当地社区或民间职业关系",
+            "resources": [
+                "可能获得有限的神秘学见闻，主动传授需审慎"
+            ],
+            "power_set_ids": [
+                "single_wheel_of_fortune_9",
+                "single_wheel_of_fortune_8"
+            ]
+        },
+        {
+            "id": "hidden_white_tower",
+            "occupation": "图书馆文书",
+            "identity": "拥有非凡特性的隐秘从业者；组织归属未作推断",
+            "weight": 1,
+            "provenance": "mixed",
+            "source_refs": [
+                "lotm_setting",
+                "project_isekai_v3"
+            ],
+            "source_locator": "hidden_white_tower / 原创公开职业与力量搭配",
+            "review_note": "职业不自动对应途径，不凭途径推断所属教会。",
+            "reviewed_on": "2026-10-19",
+            "affiliation": "当地社区或民间职业关系",
+            "resources": [
+                "可能获得有限的神秘学见闻，主动传授需审慎"
+            ],
+            "power_set_ids": [
+                "single_white_tower_9",
+                "single_white_tower_8"
+            ]
+        },
+        {
+            "id": "senior_sun",
+            "occupation": "文书事务人员",
+            "identity": "拥有非凡特性的隐秘从业者；组织归属未作推断",
+            "weight": 1,
+            "provenance": "mixed",
+            "source_refs": [
+                "lotm_setting",
+                "project_isekai_v3",
+                "project_lower_power_ranges"
+            ],
+            "source_locator": "senior_sun / 原创公开职业与力量搭配",
+            "review_note": "职业不自动对应途径，不凭途径推断所属教会。 本轮较低实力范围：传承接触者可仍处于序列9或8，补齐较低序列；序列9以下不再设非凡序列。",
+            "reviewed_on": "2026-10-19",
+            "affiliation": "当地社区或民间职业关系",
+            "resources": [
+                "可能获得有限的神秘学见闻，主动传授需审慎"
+            ],
+            "power_set_ids": [
+                "single_sun_9",
+                "single_sun_8",
+                "single_sun_7",
+                "single_sun_6"
+            ]
+        },
+        {
+            "id": "senior_darkness",
+            "occupation": "夜间巡查人员",
+            "identity": "拥有非凡特性的隐秘从业者；组织归属未作推断",
+            "weight": 1,
+            "provenance": "mixed",
+            "source_refs": [
+                "lotm_setting",
+                "project_isekai_v3",
+                "project_lower_power_ranges"
+            ],
+            "source_locator": "senior_darkness / 原创公开职业与力量搭配",
+            "review_note": "职业不自动对应途径，不凭途径推断所属教会。 本轮较低实力范围：传承接触者可仍处于序列9或8，补齐较低序列；序列9以下不再设非凡序列。",
+            "reviewed_on": "2026-10-19",
+            "affiliation": "当地社区或民间职业关系",
+            "resources": [
+                "可能获得有限的神秘学见闻，主动传授需审慎"
+            ],
+            "power_set_ids": [
+                "single_darkness_9",
+                "single_darkness_8",
+                "single_darkness_7",
+                "single_darkness_6"
+            ]
+        },
+        {
+            "id": "senior_death",
+            "occupation": "殡葬事务人员",
+            "identity": "拥有非凡特性的隐秘从业者；组织归属未作推断",
+            "weight": 1,
+            "provenance": "mixed",
+            "source_refs": [
+                "lotm_setting",
+                "project_isekai_v3",
+                "project_lower_power_ranges"
+            ],
+            "source_locator": "senior_death / 原创公开职业与力量搭配",
+            "review_note": "职业不自动对应途径，不凭途径推断所属教会。 本轮较低实力范围：传承接触者可仍处于序列9或8，补齐较低序列；序列9以下不再设非凡序列。",
+            "reviewed_on": "2026-10-19",
+            "affiliation": "当地社区或民间职业关系",
+            "resources": [
+                "可能获得有限的神秘学见闻，主动传授需审慎"
+            ],
+            "power_set_ids": [
+                "single_death_9",
+                "single_death_8",
+                "single_death_7",
+                "single_death_6"
+            ]
+        },
+        {
+            "id": "senior_paragon",
+            "occupation": "机械工匠",
+            "identity": "拥有非凡特性的隐秘从业者；组织归属未作推断",
+            "weight": 1,
+            "provenance": "mixed",
+            "source_refs": [
+                "lotm_setting",
+                "project_isekai_v3",
+                "project_lower_power_ranges"
+            ],
+            "source_locator": "senior_paragon / 原创公开职业与力量搭配",
+            "review_note": "职业不自动对应途径，不凭途径推断所属教会。 本轮较低实力范围：传承接触者可仍处于序列9或8，补齐较低序列；序列9以下不再设非凡序列。",
+            "reviewed_on": "2026-10-19",
+            "affiliation": "当地社区或民间职业关系",
+            "resources": [
+                "可能获得有限的神秘学见闻，主动传授需审慎"
+            ],
+            "power_set_ids": [
+                "single_paragon_9",
+                "single_paragon_8",
+                "single_paragon_7",
+                "single_paragon_6"
+            ]
+        },
+        {
+            "id": "teacher",
+            "occupation": "学校教师",
+            "identity": "教育从业者",
+            "weight": 2,
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "诡秘之主 / parent_profiles / teacher",
+            "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。",
+            "reviewed_on": "2026-10-19",
+            "affiliation": "当地社区或民间职业关系",
+            "resources": [
+                "学校教师相关的生活见闻"
+            ],
+            "power_set_ids": [
+                "single_ordinary"
+            ]
+        },
+        {
+            "id": "typesetter",
+            "occupation": "印刷排字工",
+            "identity": "印刷工坊雇员",
+            "weight": 3,
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "诡秘之主 / parent_profiles / typesetter",
+            "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。",
+            "reviewed_on": "2026-10-19",
+            "affiliation": "当地社区或民间职业关系",
+            "resources": [
+                "印刷排字工相关的生活见闻"
+            ],
+            "power_set_ids": [
+                "single_ordinary"
+            ]
+        },
+        {
+            "id": "reporter",
+            "occupation": "报馆记者",
+            "identity": "新闻从业者",
+            "weight": 2,
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "诡秘之主 / parent_profiles / reporter",
+            "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。",
+            "reviewed_on": "2026-10-19",
+            "affiliation": "当地社区或民间职业关系",
+            "resources": [
+                "报馆记者相关的生活见闻"
+            ],
+            "power_set_ids": [
+                "single_ordinary"
+            ]
+        },
+        {
+            "id": "law_clerk",
+            "occupation": "法律文书",
+            "identity": "法律事务从业者",
+            "weight": 2,
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "诡秘之主 / parent_profiles / law_clerk",
+            "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。",
+            "reviewed_on": "2026-10-19",
+            "affiliation": "当地社区或民间职业关系",
+            "resources": [
+                "法律文书相关的生活见闻"
+            ],
+            "power_set_ids": [
+                "single_ordinary"
+            ]
+        },
+        {
+            "id": "accountant",
+            "occupation": "账房职员",
+            "identity": "商业文书从业者",
+            "weight": 2,
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "诡秘之主 / parent_profiles / accountant",
+            "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。",
+            "reviewed_on": "2026-10-19",
+            "affiliation": "当地社区或民间职业关系",
+            "resources": [
+                "账房职员相关的生活见闻"
+            ],
+            "power_set_ids": [
+                "single_ordinary"
+            ]
+        },
+        {
+            "id": "mine_worker",
+            "occupation": "矿工",
+            "identity": "矿业雇员",
+            "weight": 3,
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "诡秘之主 / parent_profiles / mine_worker",
+            "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。",
+            "reviewed_on": "2026-10-19",
+            "affiliation": "当地社区或民间职业关系",
+            "resources": [
+                "矿工相关的生活见闻"
+            ],
+            "power_set_ids": [
+                "single_ordinary"
+            ]
+        },
+        {
+            "id": "governess",
+            "occupation": "家庭教师",
+            "identity": "私人教育从业者",
+            "weight": 2,
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "诡秘之主 / parent_profiles / governess",
+            "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。",
+            "reviewed_on": "2026-10-19",
+            "affiliation": "当地社区或民间职业关系",
+            "resources": [
+                "家庭教师相关的生活见闻"
+            ],
+            "power_set_ids": [
+                "single_ordinary"
+            ]
+        },
+        {
+            "id": "estate_steward",
+            "occupation": "庄园管事",
+            "identity": "地产事务人员",
+            "weight": 2,
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "诡秘之主 / parent_profiles / estate_steward",
+            "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。",
+            "reviewed_on": "2026-10-19",
+            "affiliation": "当地社区或民间职业关系",
+            "resources": [
+                "庄园管事相关的生活见闻"
+            ],
+            "power_set_ids": [
+                "single_ordinary"
+            ]
+        },
+        {
+            "id": "telegraph_worker",
+            "occupation": "电报职员",
+            "identity": "通信服务人员",
+            "weight": 2,
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "诡秘之主 / parent_profiles / telegraph_worker",
+            "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。",
+            "reviewed_on": "2026-10-19",
+            "affiliation": "当地社区或民间职业关系",
+            "resources": [
+                "电报职员相关的生活见闻"
+            ],
+            "power_set_ids": [
+                "single_ordinary"
+            ]
+        },
+        {
+            "id": "dock_clerk",
+            "occupation": "船运文书",
+            "identity": "港口事务人员",
+            "weight": 2,
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "诡秘之主 / parent_profiles / dock_clerk",
+            "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。",
+            "reviewed_on": "2026-10-19",
+            "affiliation": "当地社区或民间职业关系",
+            "resources": [
+                "船运文书相关的生活见闻"
+            ],
+            "power_set_ids": [
+                "single_ordinary"
+            ]
+        },
+        {
+            "id": "librarian",
+            "occupation": "图书馆管理员",
+            "identity": "公共知识服务人员",
+            "weight": 2,
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "诡秘之主 / parent_profiles / librarian",
+            "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。",
+            "reviewed_on": "2026-10-19",
+            "affiliation": "当地社区或民间职业关系",
+            "resources": [
+                "图书馆管理员相关的生活见闻"
+            ],
+            "power_set_ids": [
+                "single_ordinary"
+            ]
+        },
+        {
+            "id": "retired_guard",
+            "occupation": "退役卫兵",
+            "identity": "地方安保从业者",
+            "weight": 2,
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "诡秘之主 / parent_profiles / retired_guard",
+            "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。",
+            "reviewed_on": "2026-10-19",
+            "affiliation": "当地社区或民间职业关系",
+            "resources": [
+                "退役卫兵相关的生活见闻"
+            ],
+            "power_set_ids": [
+                "single_ordinary"
+            ]
+        },
+        {
+            "id": "evernight_staff",
+            "occupation": "教会学校雇员",
+            "identity": "普通教会雇员，未具备非凡力量",
+            "affiliation": "黑夜女神教会",
+            "weight": 3,
+            "region_ids": [
+                "industrial",
+                "port",
+                "railway",
+                "church",
+                "commercial",
+                "rural",
+                "university",
+                "printing",
+                "mine_town",
+                "estate_town",
+                "guard_town"
+            ],
+            "resources": [
+                "当地教会的事务与识字渠道"
+            ],
+            "provenance": "mixed",
+            "source_refs": [
+                "lotm_loen_society",
+                "lotm_sun_context",
+                "project_isekai_v3"
+            ],
+            "source_locator": "当地教会 / 原创岗位与低序列组合",
+            "review_note": "正式雇员与非凡身份分开；本版地区范围不代表完整传教史。",
+            "reviewed_on": "2026-10-19",
+            "power_set_ids": [
+                "single_ordinary"
+            ]
+        },
+        {
+            "id": "steam_staff",
+            "occupation": "教会工坊雇员",
+            "identity": "普通教会雇员，未具备非凡力量",
+            "affiliation": "蒸汽与机械之神教会",
+            "weight": 3,
+            "region_ids": [
+                "industrial",
+                "port",
+                "railway",
+                "church",
+                "commercial",
+                "rural",
+                "university",
+                "printing",
+                "mine_town",
+                "estate_town",
+                "guard_town",
+                "old_quarter",
+                "trier_market",
+                "intis_countryside",
+                "trier_workshops"
+            ],
+            "resources": [
+                "当地教会的事务与识字渠道"
+            ],
+            "provenance": "mixed",
+            "source_refs": [
+                "lotm_loen_society",
+                "lotm_sun_context",
+                "project_isekai_v3"
+            ],
+            "source_locator": "当地教会 / 原创岗位与低序列组合",
+            "review_note": "正式雇员与非凡身份分开；本版地区范围不代表完整传教史。",
+            "reviewed_on": "2026-10-19",
+            "power_set_ids": [
+                "single_ordinary"
+            ]
+        },
+        {
+            "id": "sun_staff",
+            "occupation": "教会事务雇员",
+            "identity": "普通教会雇员，未具备非凡力量",
+            "affiliation": "永恒烈阳教会",
+            "weight": 3,
+            "region_ids": [
+                "old_quarter",
+                "trier_market",
+                "intis_countryside",
+                "trier_workshops"
+            ],
+            "resources": [
+                "当地教会的事务与识字渠道"
+            ],
+            "provenance": "mixed",
+            "source_refs": [
+                "lotm_loen_society",
+                "lotm_sun_context",
+                "project_isekai_v3"
+            ],
+            "source_locator": "当地教会 / 原创岗位与低序列组合",
+            "review_note": "正式雇员与非凡身份分开；本版地区范围不代表完整传教史。",
+            "reviewed_on": "2026-10-19",
+            "power_set_ids": [
+                "single_ordinary"
+            ]
+        },
+        {
+            "id": "evernight_official",
+            "occupation": "教会巡查人员",
+            "identity": "教会非凡事务人员",
+            "affiliation": "黑夜女神教会",
+            "weight": 1,
+            "region_ids": [
+                "industrial",
+                "port",
+                "railway",
+                "church",
+                "commercial",
+                "rural",
+                "university",
+                "printing",
+                "mine_town",
+                "estate_town",
+                "guard_town"
+            ],
+            "resources": [
+                "当地教会的事务与识字渠道"
+            ],
+            "provenance": "mixed",
+            "source_refs": [
+                "lotm_loen_society",
+                "lotm_sun_context",
+                "project_isekai_v3"
+            ],
+            "source_locator": "当地教会 / 原创岗位与低序列组合",
+            "review_note": "正式雇员与非凡身份分开；本版地区范围不代表完整传教史。",
+            "reviewed_on": "2026-10-19",
+            "power_set_ids": [
+                "single_darkness_9",
+                "single_darkness_8"
+            ]
+        },
+        {
+            "id": "storm_official",
+            "occupation": "教会港务协理",
+            "identity": "教会非凡事务人员",
+            "affiliation": "风暴之主教会",
+            "weight": 1,
+            "region_ids": [
+                "industrial",
+                "port",
+                "railway",
+                "church",
+                "commercial",
+                "rural",
+                "university",
+                "printing",
+                "mine_town",
+                "estate_town",
+                "guard_town"
+            ],
+            "resources": [
+                "当地教会的事务与识字渠道"
+            ],
+            "provenance": "mixed",
+            "source_refs": [
+                "lotm_loen_society",
+                "lotm_sun_context",
+                "project_isekai_v3"
+            ],
+            "source_locator": "当地教会 / 原创岗位与低序列组合",
+            "review_note": "正式雇员与非凡身份分开；本版地区范围不代表完整传教史。",
+            "reviewed_on": "2026-10-19",
+            "power_set_ids": [
+                "single_tyrant_9",
+                "single_tyrant_8"
+            ]
+        },
+        {
+            "id": "steam_official",
+            "occupation": "教会工坊技术员",
+            "identity": "教会非凡事务人员",
+            "affiliation": "蒸汽与机械之神教会",
+            "weight": 1,
+            "region_ids": [
+                "industrial",
+                "port",
+                "railway",
+                "church",
+                "commercial",
+                "rural",
+                "university",
+                "printing",
+                "mine_town",
+                "estate_town",
+                "guard_town",
+                "old_quarter",
+                "trier_market",
+                "intis_countryside",
+                "trier_workshops"
+            ],
+            "resources": [
+                "当地教会的事务与识字渠道"
+            ],
+            "provenance": "mixed",
+            "source_refs": [
+                "lotm_loen_society",
+                "lotm_sun_context",
+                "project_isekai_v3"
+            ],
+            "source_locator": "当地教会 / 原创岗位与低序列组合",
+            "review_note": "正式雇员与非凡身份分开；本版地区范围不代表完整传教史。",
+            "reviewed_on": "2026-10-19",
+            "power_set_ids": [
+                "single_paragon_9",
+                "single_paragon_8"
+            ]
+        },
+        {
+            "id": "sun_official",
+            "occupation": "教会文书人员",
+            "identity": "教会非凡事务人员",
+            "affiliation": "永恒烈阳教会",
+            "weight": 1,
+            "region_ids": [
+                "old_quarter",
+                "trier_market",
+                "intis_countryside",
+                "trier_workshops"
+            ],
+            "resources": [
+                "当地教会的事务与识字渠道"
+            ],
+            "provenance": "mixed",
+            "source_refs": [
+                "lotm_loen_society",
+                "lotm_sun_context",
+                "project_isekai_v3"
+            ],
+            "source_locator": "当地教会 / 原创岗位与低序列组合",
+            "review_note": "正式雇员与非凡身份分开；本版地区范围不代表完整传教史。",
+            "reviewed_on": "2026-10-19",
+            "power_set_ids": [
+                "single_sun_9",
+                "single_sun_8"
+            ]
+        },
+        {
+            "id": "boon_dancer",
+            "occupation": "巡演艺人",
+            "identity": "隐秘受赐者，公开岗位不代表其力量来源",
+            "affiliation": "未具名的隐秘接触关系",
+            "weight": 2,
+            "setting_ids": [
+                "fifth_1358"
+            ],
+            "resources": [
+                "隐秘关系线索，伴随需要隔离的风险"
+            ],
+            "provenance": "mixed",
+            "source_refs": [
+                "coi_ch60",
+                "project_isekai_v3"
+            ],
+            "source_locator": "受赐者 / 原创岗位",
+            "review_note": "岗位和家庭为项目搭配，不使用原著人物姓名。",
+            "reviewed_on": "2026-10-19",
+            "power_set_ids": [
+                "single_inevitability_boon_9"
+            ]
+        },
+        {
+            "id": "boon_alms",
+            "occupation": "流动杂役",
+            "identity": "隐秘受赐者，公开岗位不代表其力量来源",
+            "affiliation": "未具名的隐秘接触关系",
+            "weight": 1,
+            "setting_ids": [
+                "fifth_1358"
+            ],
+            "resources": [
+                "隐秘关系线索，伴随需要隔离的风险"
+            ],
+            "provenance": "mixed",
+            "source_refs": [
+                "coi_ch60",
+                "project_isekai_v3",
+                "project_lower_power_ranges"
+            ],
+            "source_locator": "受赐者 / 原创岗位",
+            "review_note": "岗位和家庭为项目搭配，不使用原著人物姓名。 本轮较低实力范围：受赐者公开岗位不绑定某一个序列，补入同一恩赐来源的较低序列；不改变1358年范围。",
+            "reviewed_on": "2026-10-19",
+            "power_set_ids": [
+                "single_inevitability_boon_9",
+                "single_inevitability_boon_8"
+            ]
+        },
+        {
+            "id": "boon_contractee",
+            "occupation": "交易从业者",
+            "identity": "隐秘受赐者，公开岗位不代表其力量来源",
+            "affiliation": "未具名的隐秘接触关系",
+            "weight": 1,
+            "setting_ids": [
+                "fifth_1358"
+            ],
+            "resources": [
+                "隐秘关系线索，伴随需要隔离的风险"
+            ],
+            "provenance": "mixed",
+            "source_refs": [
+                "coi_ch60",
+                "project_isekai_v3",
+                "project_lower_power_ranges"
+            ],
+            "source_locator": "受赐者 / 原创岗位",
+            "review_note": "岗位和家庭为项目搭配，不使用原著人物姓名。 本轮较低实力范围：受赐者公开岗位不绑定某一个序列，补入同一恩赐来源的较低序列；不改变1358年范围。",
+            "reviewed_on": "2026-10-19",
+            "power_set_ids": [
+                "single_inevitability_boon_9",
+                "single_inevitability_boon_8",
+                "single_inevitability_boon_7"
+            ]
+        },
+        {
+            "id": "protected_dual_source",
+            "occupation": "商路护卫",
+            "identity": "具备庇护与污染控制条件的双来源非凡者",
+            "affiliation": "未具名的庇护关系",
+            "power_set_ids": [
+                "hunter_dancer_protected"
+            ],
+            "weight": 1,
+            "setting_ids": [
+                "fifth_1358"
+            ],
+            "resources": [
+                "有限的隐秘知识与庇护关系线索"
+            ],
+            "provenance": "mixed",
+            "source_refs": [
+                "coi_ch72",
+                "project_isekai_v3"
+            ],
+            "source_locator": "第72章组合例证 / 原创父母身份",
+            "review_note": "不复制原著人物；特定庇护条件是该游戏身份的前提，不是普遍兼容性。",
+            "reviewed_on": "2026-10-19"
+        }
+    ],
+    "powers": [
+        {
+            "id": "ordinary",
+            "name": "普通人 · 无非凡序列",
+            "system": "sequence",
+            "rank": null,
+            "acquisition": "普通生活",
+            "risk": "",
+            "birth_note": "",
+            "aliases": [],
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "普通人 / 不虚设序列10",
+            "review_note": "",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "fool_9",
+            "name": "愚者途径 · 序列9 · 占卜家",
+            "system": "sequence",
+            "path": "fool",
+            "rank": 9,
+            "sequence_name": "占卜家",
+            "acquisition": "非凡特性",
+            "risk": "晋升与使用力量需要知识和状态管理，序列不代表财富或社会权限。",
+            "birth_note": "",
+            "aliases": [],
+            "provenance": "source_summary",
+            "source_refs": [
+                "lotm_setting",
+                "lotm_huiji_pathways"
+            ],
+            "source_locator": "fool / 序列9",
+            "review_note": "名称来自官方及百科索引，未标记为逐条原章全文直读；公开职业搭配与权重为游戏设定。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "fool_8",
+            "name": "愚者途径 · 序列8 · 小丑",
+            "system": "sequence",
+            "path": "fool",
+            "rank": 8,
+            "sequence_name": "小丑",
+            "acquisition": "非凡特性",
+            "risk": "晋升与使用力量需要知识和状态管理，序列不代表财富或社会权限。",
+            "birth_note": "",
+            "aliases": [],
+            "provenance": "source_summary",
+            "source_refs": [
+                "lotm_setting",
+                "lotm_huiji_pathways"
+            ],
+            "source_locator": "fool / 序列8",
+            "review_note": "名称来自官方及百科索引，未标记为逐条原章全文直读；公开职业搭配与权重为游戏设定。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "door_9",
+            "name": "门途径 · 序列9 · 学徒",
+            "system": "sequence",
+            "path": "door",
+            "rank": 9,
+            "sequence_name": "学徒",
+            "acquisition": "非凡特性",
+            "risk": "晋升与使用力量需要知识和状态管理，序列不代表财富或社会权限。",
+            "birth_note": "",
+            "aliases": [],
+            "provenance": "source_summary",
+            "source_refs": [
+                "lotm_setting",
+                "lotm_huiji_pathways"
+            ],
+            "source_locator": "door / 序列9",
+            "review_note": "名称来自官方及百科索引，未标记为逐条原章全文直读；公开职业搭配与权重为游戏设定。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "door_8",
+            "name": "门途径 · 序列8 · 戏法大师",
+            "system": "sequence",
+            "path": "door",
+            "rank": 8,
+            "sequence_name": "戏法大师",
+            "acquisition": "非凡特性",
+            "risk": "晋升与使用力量需要知识和状态管理，序列不代表财富或社会权限。",
+            "birth_note": "",
+            "aliases": [],
+            "provenance": "source_summary",
+            "source_refs": [
+                "lotm_setting",
+                "lotm_huiji_pathways"
+            ],
+            "source_locator": "door / 序列8",
+            "review_note": "名称来自官方及百科索引，未标记为逐条原章全文直读；公开职业搭配与权重为游戏设定。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "error_9",
+            "name": "错误途径 · 序列9 · 偷盗者",
+            "system": "sequence",
+            "path": "error",
+            "rank": 9,
+            "sequence_name": "偷盗者",
+            "acquisition": "非凡特性",
+            "risk": "晋升与使用力量需要知识和状态管理，序列不代表财富或社会权限。",
+            "birth_note": "",
+            "aliases": [],
+            "provenance": "source_summary",
+            "source_refs": [
+                "lotm_setting",
+                "lotm_huiji_pathways"
+            ],
+            "source_locator": "error / 序列9",
+            "review_note": "名称来自官方及百科索引，未标记为逐条原章全文直读；公开职业搭配与权重为游戏设定。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "error_8",
+            "name": "错误途径 · 序列8 · 诈骗师",
+            "system": "sequence",
+            "path": "error",
+            "rank": 8,
+            "sequence_name": "诈骗师",
+            "acquisition": "非凡特性",
+            "risk": "晋升与使用力量需要知识和状态管理，序列不代表财富或社会权限。",
+            "birth_note": "",
+            "aliases": [],
+            "provenance": "source_summary",
+            "source_refs": [
+                "lotm_setting",
+                "lotm_huiji_pathways"
+            ],
+            "source_locator": "error / 序列8",
+            "review_note": "名称来自官方及百科索引，未标记为逐条原章全文直读；公开职业搭配与权重为游戏设定。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "visionary_9",
+            "name": "空想家途径 · 序列9 · 观众",
+            "system": "sequence",
+            "path": "visionary",
+            "rank": 9,
+            "sequence_name": "观众",
+            "acquisition": "非凡特性",
+            "risk": "晋升与使用力量需要知识和状态管理，序列不代表财富或社会权限。",
+            "birth_note": "",
+            "aliases": [],
+            "provenance": "source_summary",
+            "source_refs": [
+                "lotm_setting",
+                "lotm_huiji_pathways"
+            ],
+            "source_locator": "visionary / 序列9",
+            "review_note": "名称来自官方及百科索引，未标记为逐条原章全文直读；公开职业搭配与权重为游戏设定。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "visionary_8",
+            "name": "空想家途径 · 序列8 · 读心者",
+            "system": "sequence",
+            "path": "visionary",
+            "rank": 8,
+            "sequence_name": "读心者",
+            "acquisition": "非凡特性",
+            "risk": "晋升与使用力量需要知识和状态管理，序列不代表财富或社会权限。",
+            "birth_note": "",
+            "aliases": [],
+            "provenance": "source_summary",
+            "source_refs": [
+                "lotm_setting",
+                "lotm_huiji_pathways"
+            ],
+            "source_locator": "visionary / 序列8",
+            "review_note": "名称来自官方及百科索引，未标记为逐条原章全文直读；公开职业搭配与权重为游戏设定。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "sun_9",
+            "name": "太阳途径 · 序列9 · 歌颂者",
+            "system": "sequence",
+            "path": "sun",
+            "rank": 9,
+            "sequence_name": "歌颂者",
+            "acquisition": "非凡特性",
+            "risk": "晋升与使用力量需要知识和状态管理，序列不代表财富或社会权限。",
+            "birth_note": "",
+            "aliases": [],
+            "provenance": "source_summary",
+            "source_refs": [
+                "lotm_setting",
+                "lotm_huiji_pathways"
+            ],
+            "source_locator": "sun / 序列9",
+            "review_note": "名称来自官方及百科索引，未标记为逐条原章全文直读；公开职业搭配与权重为游戏设定。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "sun_8",
+            "name": "太阳途径 · 序列8 · 祈光人",
+            "system": "sequence",
+            "path": "sun",
+            "rank": 8,
+            "sequence_name": "祈光人",
+            "acquisition": "非凡特性",
+            "risk": "晋升与使用力量需要知识和状态管理，序列不代表财富或社会权限。",
+            "birth_note": "",
+            "aliases": [],
+            "provenance": "source_summary",
+            "source_refs": [
+                "lotm_setting",
+                "lotm_huiji_pathways"
+            ],
+            "source_locator": "sun / 序列8",
+            "review_note": "名称来自官方及百科索引，未标记为逐条原章全文直读；公开职业搭配与权重为游戏设定。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "tyrant_9",
+            "name": "暴君途径 · 序列9 · 水手",
+            "system": "sequence",
+            "path": "tyrant",
+            "rank": 9,
+            "sequence_name": "水手",
+            "acquisition": "非凡特性",
+            "risk": "晋升与使用力量需要知识和状态管理，序列不代表财富或社会权限。",
+            "birth_note": "",
+            "aliases": [],
+            "provenance": "source_summary",
+            "source_refs": [
+                "lotm_setting",
+                "lotm_huiji_pathways"
+            ],
+            "source_locator": "tyrant / 序列9",
+            "review_note": "名称来自官方及百科索引，未标记为逐条原章全文直读；公开职业搭配与权重为游戏设定。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "tyrant_8",
+            "name": "暴君途径 · 序列8 · 暴怒之民",
+            "system": "sequence",
+            "path": "tyrant",
+            "rank": 8,
+            "sequence_name": "暴怒之民",
+            "acquisition": "非凡特性",
+            "risk": "晋升与使用力量需要知识和状态管理，序列不代表财富或社会权限。",
+            "birth_note": "",
+            "aliases": [],
+            "provenance": "source_summary",
+            "source_refs": [
+                "lotm_setting",
+                "lotm_huiji_pathways"
+            ],
+            "source_locator": "tyrant / 序列8",
+            "review_note": "名称来自官方及百科索引，未标记为逐条原章全文直读；公开职业搭配与权重为游戏设定。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "hanged_man_9",
+            "name": "倒吊人途径 · 序列9 · 秘祈人",
+            "system": "sequence",
+            "path": "hanged_man",
+            "rank": 9,
+            "sequence_name": "秘祈人",
+            "acquisition": "非凡特性",
+            "risk": "秘祈人与倾听者涉及危险的隐秘接触；力量和家庭传承都不等于精神状态稳定。",
+            "birth_note": "",
+            "aliases": [],
+            "provenance": "source_summary",
+            "source_refs": [
+                "lotm_setting",
+                "lotm_huiji_pathways"
+            ],
+            "source_locator": "hanged_man / 序列9",
+            "review_note": "名称来自官方及百科索引，未标记为逐条原章全文直读；公开职业搭配与权重为游戏设定。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "hanged_man_8",
+            "name": "倒吊人途径 · 序列8 · 倾听者",
+            "system": "sequence",
+            "path": "hanged_man",
+            "rank": 8,
+            "sequence_name": "倾听者",
+            "acquisition": "非凡特性",
+            "risk": "秘祈人与倾听者涉及危险的隐秘接触；力量和家庭传承都不等于精神状态稳定。",
+            "birth_note": "",
+            "aliases": [],
+            "provenance": "source_summary",
+            "source_refs": [
+                "lotm_setting",
+                "lotm_huiji_pathways"
+            ],
+            "source_locator": "hanged_man / 序列8",
+            "review_note": "名称来自官方及百科索引，未标记为逐条原章全文直读；公开职业搭配与权重为游戏设定。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "death_9",
+            "name": "死神途径 · 序列9 · 收尸人",
+            "system": "sequence",
+            "path": "death",
+            "rank": 9,
+            "sequence_name": "收尸人",
+            "acquisition": "非凡特性",
+            "risk": "晋升与使用力量需要知识和状态管理，序列不代表财富或社会权限。",
+            "birth_note": "",
+            "aliases": [],
+            "provenance": "source_summary",
+            "source_refs": [
+                "lotm_setting",
+                "lotm_huiji_pathways"
+            ],
+            "source_locator": "death / 序列9",
+            "review_note": "名称来自官方及百科索引，未标记为逐条原章全文直读；公开职业搭配与权重为游戏设定。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "death_8",
+            "name": "死神途径 · 序列8 · 掘墓人",
+            "system": "sequence",
+            "path": "death",
+            "rank": 8,
+            "sequence_name": "掘墓人",
+            "acquisition": "非凡特性",
+            "risk": "晋升与使用力量需要知识和状态管理，序列不代表财富或社会权限。",
+            "birth_note": "",
+            "aliases": [],
+            "provenance": "source_summary",
+            "source_refs": [
+                "lotm_setting",
+                "lotm_huiji_pathways"
+            ],
+            "source_locator": "death / 序列8",
+            "review_note": "名称来自官方及百科索引，未标记为逐条原章全文直读；公开职业搭配与权重为游戏设定。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "darkness_9",
+            "name": "黑暗途径 · 序列9 · 不眠者",
+            "system": "sequence",
+            "path": "darkness",
+            "rank": 9,
+            "sequence_name": "不眠者",
+            "acquisition": "非凡特性",
+            "risk": "晋升与使用力量需要知识和状态管理，序列不代表财富或社会权限。",
+            "birth_note": "",
+            "aliases": [],
+            "provenance": "source_summary",
+            "source_refs": [
+                "lotm_setting",
+                "lotm_huiji_pathways"
+            ],
+            "source_locator": "darkness / 序列9",
+            "review_note": "名称来自官方及百科索引，未标记为逐条原章全文直读；公开职业搭配与权重为游戏设定。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "darkness_8",
+            "name": "黑暗途径 · 序列8 · 午夜诗人",
+            "system": "sequence",
+            "path": "darkness",
+            "rank": 8,
+            "sequence_name": "午夜诗人",
+            "acquisition": "非凡特性",
+            "risk": "晋升与使用力量需要知识和状态管理，序列不代表财富或社会权限。",
+            "birth_note": "",
+            "aliases": [],
+            "provenance": "source_summary",
+            "source_refs": [
+                "lotm_setting",
+                "lotm_huiji_pathways"
+            ],
+            "source_locator": "darkness / 序列8",
+            "review_note": "名称来自官方及百科索引，未标记为逐条原章全文直读；公开职业搭配与权重为游戏设定。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "twilight_giant_9",
+            "name": "黄昏巨人途径 · 序列9 · 战士",
+            "system": "sequence",
+            "path": "twilight_giant",
+            "rank": 9,
+            "sequence_name": "战士",
+            "acquisition": "非凡特性",
+            "risk": "晋升与使用力量需要知识和状态管理，序列不代表财富或社会权限。",
+            "birth_note": "",
+            "aliases": [],
+            "provenance": "source_summary",
+            "source_refs": [
+                "lotm_setting",
+                "lotm_huiji_pathways"
+            ],
+            "source_locator": "twilight_giant / 序列9",
+            "review_note": "名称来自官方及百科索引，未标记为逐条原章全文直读；公开职业搭配与权重为游戏设定。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "twilight_giant_8",
+            "name": "黄昏巨人途径 · 序列8 · 格斗家",
+            "system": "sequence",
+            "path": "twilight_giant",
+            "rank": 8,
+            "sequence_name": "格斗家",
+            "acquisition": "非凡特性",
+            "risk": "晋升与使用力量需要知识和状态管理，序列不代表财富或社会权限。",
+            "birth_note": "",
+            "aliases": [],
+            "provenance": "source_summary",
+            "source_refs": [
+                "lotm_setting",
+                "lotm_huiji_pathways"
+            ],
+            "source_locator": "twilight_giant / 序列8",
+            "review_note": "名称来自官方及百科索引，未标记为逐条原章全文直读；公开职业搭配与权重为游戏设定。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "black_emperor_9",
+            "name": "黑皇帝途径 · 序列9 · 律师",
+            "system": "sequence",
+            "path": "black_emperor",
+            "rank": 9,
+            "sequence_name": "律师",
+            "acquisition": "非凡特性",
+            "risk": "晋升与使用力量需要知识和状态管理，序列不代表财富或社会权限。",
+            "birth_note": "",
+            "aliases": [],
+            "provenance": "source_summary",
+            "source_refs": [
+                "lotm_setting",
+                "lotm_huiji_pathways"
+            ],
+            "source_locator": "black_emperor / 序列9",
+            "review_note": "名称来自官方及百科索引，未标记为逐条原章全文直读；公开职业搭配与权重为游戏设定。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "black_emperor_8",
+            "name": "黑皇帝途径 · 序列8 · 野蛮人",
+            "system": "sequence",
+            "path": "black_emperor",
+            "rank": 8,
+            "sequence_name": "野蛮人",
+            "acquisition": "非凡特性",
+            "risk": "晋升与使用力量需要知识和状态管理，序列不代表财富或社会权限。",
+            "birth_note": "",
+            "aliases": [],
+            "provenance": "source_summary",
+            "source_refs": [
+                "lotm_setting",
+                "lotm_huiji_pathways"
+            ],
+            "source_locator": "black_emperor / 序列8",
+            "review_note": "名称来自官方及百科索引，未标记为逐条原章全文直读；公开职业搭配与权重为游戏设定。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "justiciar_9",
+            "name": "审判者途径 · 序列9 · 仲裁人",
+            "system": "sequence",
+            "path": "justiciar",
+            "rank": 9,
+            "sequence_name": "仲裁人",
+            "acquisition": "非凡特性",
+            "risk": "晋升与使用力量需要知识和状态管理，序列不代表财富或社会权限。",
+            "birth_note": "",
+            "aliases": [],
+            "provenance": "source_summary",
+            "source_refs": [
+                "lotm_setting",
+                "lotm_huiji_pathways"
+            ],
+            "source_locator": "justiciar / 序列9",
+            "review_note": "名称来自官方及百科索引，未标记为逐条原章全文直读；公开职业搭配与权重为游戏设定。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "justiciar_8",
+            "name": "审判者途径 · 序列8 · 治安官",
+            "system": "sequence",
+            "path": "justiciar",
+            "rank": 8,
+            "sequence_name": "治安官",
+            "acquisition": "非凡特性",
+            "risk": "晋升与使用力量需要知识和状态管理，序列不代表财富或社会权限。",
+            "birth_note": "",
+            "aliases": [],
+            "provenance": "source_summary",
+            "source_refs": [
+                "lotm_setting",
+                "lotm_huiji_pathways"
+            ],
+            "source_locator": "justiciar / 序列8",
+            "review_note": "名称来自官方及百科索引，未标记为逐条原章全文直读；公开职业搭配与权重为游戏设定。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "red_priest_9",
+            "name": "红祭司途径 · 序列9 · 猎人",
+            "system": "sequence",
+            "path": "red_priest",
+            "rank": 9,
+            "sequence_name": "猎人",
+            "acquisition": "非凡特性",
+            "risk": "晋升与使用力量需要知识和状态管理，序列不代表财富或社会权限。",
+            "birth_note": "",
+            "aliases": [],
+            "provenance": "source_summary",
+            "source_refs": [
+                "lotm_setting",
+                "lotm_huiji_pathways"
+            ],
+            "source_locator": "red_priest / 序列9",
+            "review_note": "名称来自官方及百科索引，未标记为逐条原章全文直读；公开职业搭配与权重为游戏设定。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "red_priest_8",
+            "name": "红祭司途径 · 序列8 · 挑衅者",
+            "system": "sequence",
+            "path": "red_priest",
+            "rank": 8,
+            "sequence_name": "挑衅者",
+            "acquisition": "非凡特性",
+            "risk": "晋升与使用力量需要知识和状态管理，序列不代表财富或社会权限。",
+            "birth_note": "",
+            "aliases": [],
+            "provenance": "source_summary",
+            "source_refs": [
+                "lotm_setting",
+                "lotm_huiji_pathways"
+            ],
+            "source_locator": "red_priest / 序列8",
+            "review_note": "名称来自官方及百科索引，未标记为逐条原章全文直读；公开职业搭配与权重为游戏设定。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "demoness_9",
+            "name": "魔女途径 · 序列9 · 刺客",
+            "system": "sequence",
+            "path": "demoness",
+            "rank": 9,
+            "sequence_name": "刺客",
+            "acquisition": "非凡特性",
+            "risk": "晋升与使用力量需要知识和状态管理，序列不代表财富或社会权限。",
+            "birth_note": "",
+            "aliases": [],
+            "provenance": "source_summary",
+            "source_refs": [
+                "lotm_setting",
+                "lotm_huiji_pathways"
+            ],
+            "source_locator": "demoness / 序列9",
+            "review_note": "名称来自官方及百科索引，未标记为逐条原章全文直读；公开职业搭配与权重为游戏设定。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "demoness_8",
+            "name": "魔女途径 · 序列8 · 教唆者",
+            "system": "sequence",
+            "path": "demoness",
+            "rank": 8,
+            "sequence_name": "教唆者",
+            "acquisition": "非凡特性",
+            "risk": "晋升与使用力量需要知识和状态管理，序列不代表财富或社会权限。",
+            "birth_note": "",
+            "aliases": [],
+            "provenance": "source_summary",
+            "source_refs": [
+                "lotm_setting",
+                "lotm_huiji_pathways"
+            ],
+            "source_locator": "demoness / 序列8",
+            "review_note": "名称来自官方及百科索引，未标记为逐条原章全文直读；公开职业搭配与权重为游戏设定。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "abyss_9",
+            "name": "深渊途径 · 序列9 · 罪犯",
+            "system": "sequence",
+            "path": "abyss",
+            "rank": 9,
+            "sequence_name": "罪犯",
+            "acquisition": "非凡特性",
+            "risk": "该途径涉及明显的隐秘危险，家庭渠道不能提供对失控或污染的免疫。",
+            "birth_note": "",
+            "aliases": [],
+            "provenance": "source_summary",
+            "source_refs": [
+                "lotm_setting",
+                "lotm_huiji_pathways"
+            ],
+            "source_locator": "abyss / 序列9",
+            "review_note": "名称来自官方及百科索引，未标记为逐条原章全文直读；公开职业搭配与权重为游戏设定。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "chained_9",
+            "name": "被缚者途径 · 序列9 · 囚犯",
+            "system": "sequence",
+            "path": "chained",
+            "rank": 9,
+            "sequence_name": "囚犯",
+            "acquisition": "非凡特性",
+            "risk": "该途径涉及明显的隐秘危险，家庭渠道不能提供对失控或污染的免疫。",
+            "birth_note": "",
+            "aliases": [],
+            "provenance": "source_summary",
+            "source_refs": [
+                "lotm_setting",
+                "lotm_huiji_pathways"
+            ],
+            "source_locator": "chained / 序列9",
+            "review_note": "名称来自官方及百科索引，未标记为逐条原章全文直读；公开职业搭配与权重为游戏设定。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "chained_8",
+            "name": "被缚者途径 · 序列8 · 疯子",
+            "system": "sequence",
+            "path": "chained",
+            "rank": 8,
+            "sequence_name": "疯子",
+            "acquisition": "非凡特性",
+            "risk": "该途径涉及明显的隐秘危险，家庭渠道不能提供对失控或污染的免疫。",
+            "birth_note": "",
+            "aliases": [],
+            "provenance": "source_summary",
+            "source_refs": [
+                "lotm_setting",
+                "lotm_huiji_pathways"
+            ],
+            "source_locator": "chained / 序列8",
+            "review_note": "名称来自官方及百科索引，未标记为逐条原章全文直读；公开职业搭配与权重为游戏设定。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "hermit_9",
+            "name": "隐者途径 · 序列9 · 窥秘人",
+            "system": "sequence",
+            "path": "hermit",
+            "rank": 9,
+            "sequence_name": "窥秘人",
+            "acquisition": "非凡特性",
+            "risk": "该途径涉及明显的隐秘危险，家庭渠道不能提供对失控或污染的免疫。",
+            "birth_note": "",
+            "aliases": [],
+            "provenance": "source_summary",
+            "source_refs": [
+                "lotm_setting",
+                "lotm_huiji_pathways"
+            ],
+            "source_locator": "hermit / 序列9",
+            "review_note": "名称来自官方及百科索引，未标记为逐条原章全文直读；公开职业搭配与权重为游戏设定。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "hermit_8",
+            "name": "隐者途径 · 序列8 · 格斗学者",
+            "system": "sequence",
+            "path": "hermit",
+            "rank": 8,
+            "sequence_name": "格斗学者",
+            "acquisition": "非凡特性",
+            "risk": "该途径涉及明显的隐秘危险，家庭渠道不能提供对失控或污染的免疫。",
+            "birth_note": "",
+            "aliases": [],
+            "provenance": "source_summary",
+            "source_refs": [
+                "lotm_setting",
+                "lotm_huiji_pathways"
+            ],
+            "source_locator": "hermit / 序列8",
+            "review_note": "名称来自官方及百科索引，未标记为逐条原章全文直读；公开职业搭配与权重为游戏设定。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "paragon_9",
+            "name": "完美者途径 · 序列9 · 通识者",
+            "system": "sequence",
+            "path": "paragon",
+            "rank": 9,
+            "sequence_name": "通识者",
+            "acquisition": "非凡特性",
+            "risk": "晋升与使用力量需要知识和状态管理，序列不代表财富或社会权限。",
+            "birth_note": "",
+            "aliases": [],
+            "provenance": "source_summary",
+            "source_refs": [
+                "lotm_setting",
+                "lotm_huiji_pathways"
+            ],
+            "source_locator": "paragon / 序列9",
+            "review_note": "名称来自官方及百科索引，未标记为逐条原章全文直读；公开职业搭配与权重为游戏设定。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "paragon_8",
+            "name": "完美者途径 · 序列8 · 考古学家",
+            "system": "sequence",
+            "path": "paragon",
+            "rank": 8,
+            "sequence_name": "考古学家",
+            "acquisition": "非凡特性",
+            "risk": "晋升与使用力量需要知识和状态管理，序列不代表财富或社会权限。",
+            "birth_note": "",
+            "aliases": [],
+            "provenance": "source_summary",
+            "source_refs": [
+                "lotm_setting",
+                "lotm_huiji_pathways"
+            ],
+            "source_locator": "paragon / 序列8",
+            "review_note": "名称来自官方及百科索引，未标记为逐条原章全文直读；公开职业搭配与权重为游戏设定。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "mother_9",
+            "name": "母亲途径 · 序列9 · 耕种者",
+            "system": "sequence",
+            "path": "mother",
+            "rank": 9,
+            "sequence_name": "耕种者",
+            "acquisition": "非凡特性",
+            "risk": "晋升与使用力量需要知识和状态管理，序列不代表财富或社会权限。",
+            "birth_note": "",
+            "aliases": [],
+            "provenance": "source_summary",
+            "source_refs": [
+                "lotm_setting",
+                "lotm_huiji_pathways"
+            ],
+            "source_locator": "mother / 序列9",
+            "review_note": "名称来自官方及百科索引，未标记为逐条原章全文直读；公开职业搭配与权重为游戏设定。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "mother_8",
+            "name": "母亲途径 · 序列8 · 医师",
+            "system": "sequence",
+            "path": "mother",
+            "rank": 8,
+            "sequence_name": "医师",
+            "acquisition": "非凡特性",
+            "risk": "晋升与使用力量需要知识和状态管理，序列不代表财富或社会权限。",
+            "birth_note": "",
+            "aliases": [],
+            "provenance": "source_summary",
+            "source_refs": [
+                "lotm_setting",
+                "lotm_huiji_pathways"
+            ],
+            "source_locator": "mother / 序列8",
+            "review_note": "名称来自官方及百科索引，未标记为逐条原章全文直读；公开职业搭配与权重为游戏设定。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "moon_9",
+            "name": "月亮途径 · 序列9 · 药师",
+            "system": "sequence",
+            "path": "moon",
+            "rank": 9,
+            "sequence_name": "药师",
+            "acquisition": "非凡特性",
+            "risk": "晋升与使用力量需要知识和状态管理，序列不代表财富或社会权限。",
+            "birth_note": "",
+            "aliases": [],
+            "provenance": "source_summary",
+            "source_refs": [
+                "lotm_setting",
+                "lotm_huiji_pathways"
+            ],
+            "source_locator": "moon / 序列9",
+            "review_note": "名称来自官方及百科索引，未标记为逐条原章全文直读；公开职业搭配与权重为游戏设定。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "moon_8",
+            "name": "月亮途径 · 序列8 · 驯兽师",
+            "system": "sequence",
+            "path": "moon",
+            "rank": 8,
+            "sequence_name": "驯兽师",
+            "acquisition": "非凡特性",
+            "risk": "晋升与使用力量需要知识和状态管理，序列不代表财富或社会权限。",
+            "birth_note": "",
+            "aliases": [],
+            "provenance": "source_summary",
+            "source_refs": [
+                "lotm_setting",
+                "lotm_huiji_pathways"
+            ],
+            "source_locator": "moon / 序列8",
+            "review_note": "名称来自官方及百科索引，未标记为逐条原章全文直读；公开职业搭配与权重为游戏设定。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "wheel_of_fortune_9",
+            "name": "命运之轮途径 · 序列9 · 怪物",
+            "system": "sequence",
+            "path": "wheel_of_fortune",
+            "rank": 9,
+            "sequence_name": "怪物",
+            "acquisition": "非凡特性",
+            "risk": "晋升与使用力量需要知识和状态管理，序列不代表财富或社会权限。",
+            "birth_note": "",
+            "aliases": [],
+            "provenance": "source_summary",
+            "source_refs": [
+                "lotm_setting",
+                "lotm_huiji_pathways"
+            ],
+            "source_locator": "wheel_of_fortune / 序列9",
+            "review_note": "名称来自官方及百科索引，未标记为逐条原章全文直读；公开职业搭配与权重为游戏设定。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "wheel_of_fortune_8",
+            "name": "命运之轮途径 · 序列8 · 机器",
+            "system": "sequence",
+            "path": "wheel_of_fortune",
+            "rank": 8,
+            "sequence_name": "机器",
+            "acquisition": "非凡特性",
+            "risk": "晋升与使用力量需要知识和状态管理，序列不代表财富或社会权限。",
+            "birth_note": "",
+            "aliases": [],
+            "provenance": "source_summary",
+            "source_refs": [
+                "lotm_setting",
+                "lotm_huiji_pathways"
+            ],
+            "source_locator": "wheel_of_fortune / 序列8",
+            "review_note": "名称来自官方及百科索引，未标记为逐条原章全文直读；公开职业搭配与权重为游戏设定。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "white_tower_9",
+            "name": "白塔途径 · 序列9 · 阅读者",
+            "system": "sequence",
+            "path": "white_tower",
+            "rank": 9,
+            "sequence_name": "阅读者",
+            "acquisition": "非凡特性",
+            "risk": "晋升与使用力量需要知识和状态管理，序列不代表财富或社会权限。",
+            "birth_note": "",
+            "aliases": [],
+            "provenance": "source_summary",
+            "source_refs": [
+                "lotm_setting",
+                "lotm_huiji_pathways"
+            ],
+            "source_locator": "white_tower / 序列9",
+            "review_note": "名称来自官方及百科索引，未标记为逐条原章全文直读；公开职业搭配与权重为游戏设定。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "white_tower_8",
+            "name": "白塔途径 · 序列8 · 推理学员",
+            "system": "sequence",
+            "path": "white_tower",
+            "rank": 8,
+            "sequence_name": "推理学员",
+            "acquisition": "非凡特性",
+            "risk": "晋升与使用力量需要知识和状态管理，序列不代表财富或社会权限。",
+            "birth_note": "",
+            "aliases": [],
+            "provenance": "source_summary",
+            "source_refs": [
+                "lotm_setting",
+                "lotm_huiji_pathways"
+            ],
+            "source_locator": "white_tower / 序列8",
+            "review_note": "名称来自官方及百科索引，未标记为逐条原章全文直读；公开职业搭配与权重为游戏设定。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "sun_7",
+            "name": "太阳途径 · 序列7 · 太阳神官",
+            "system": "sequence",
+            "path": "sun",
+            "rank": 7,
+            "sequence_name": "太阳神官",
+            "acquisition": "非凡特性",
+            "risk": "晋升与使用力量需要知识和状态管理，序列不代表财富或社会权限。",
+            "birth_note": "",
+            "aliases": [],
+            "provenance": "source_summary",
+            "source_refs": [
+                "lotm_setting",
+                "lotm_huiji_pathways"
+            ],
+            "source_locator": "sun / 序列7",
+            "review_note": "名称来自官方及百科索引，未标记为逐条原章全文直读；公开职业搭配与权重为游戏设定。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "sun_6",
+            "name": "太阳途径 · 序列6 · 公证人",
+            "system": "sequence",
+            "path": "sun",
+            "rank": 6,
+            "sequence_name": "公证人",
+            "acquisition": "非凡特性",
+            "risk": "晋升与使用力量需要知识和状态管理，序列不代表财富或社会权限。",
+            "birth_note": "双亲中有人当前处于序列6，存在传递少量特性的可能；受孕时状态未记录，不能据此认定孩子已有完整序列9。",
+            "aliases": [],
+            "provenance": "source_summary",
+            "source_refs": [
+                "lotm_setting",
+                "lotm_huiji_pathways",
+                "lotm_fandom_inheritance"
+            ],
+            "source_locator": "sun / 序列6",
+            "review_note": "名称来自官方及百科索引，未标记为逐条原章全文直读；公开职业搭配与权重为游戏设定。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "death_7",
+            "name": "死神途径 · 序列7 · 通灵者",
+            "system": "sequence",
+            "path": "death",
+            "rank": 7,
+            "sequence_name": "通灵者",
+            "acquisition": "非凡特性",
+            "risk": "晋升与使用力量需要知识和状态管理，序列不代表财富或社会权限。",
+            "birth_note": "",
+            "aliases": [],
+            "provenance": "source_summary",
+            "source_refs": [
+                "lotm_setting",
+                "lotm_huiji_pathways"
+            ],
+            "source_locator": "death / 序列7",
+            "review_note": "名称来自官方及百科索引，未标记为逐条原章全文直读；公开职业搭配与权重为游戏设定。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "death_6",
+            "name": "死神途径 · 序列6 · 死灵导师",
+            "system": "sequence",
+            "path": "death",
+            "rank": 6,
+            "sequence_name": "死灵导师",
+            "acquisition": "非凡特性",
+            "risk": "晋升与使用力量需要知识和状态管理，序列不代表财富或社会权限。",
+            "birth_note": "双亲中有人当前处于序列6，存在传递少量特性的可能；受孕时状态未记录，不能据此认定孩子已有完整序列9。",
+            "aliases": [],
+            "provenance": "source_summary",
+            "source_refs": [
+                "lotm_setting",
+                "lotm_huiji_pathways",
+                "lotm_fandom_inheritance"
+            ],
+            "source_locator": "death / 序列6",
+            "review_note": "名称来自官方及百科索引，未标记为逐条原章全文直读；公开职业搭配与权重为游戏设定。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "darkness_7",
+            "name": "黑暗途径 · 序列7 · 梦魇",
+            "system": "sequence",
+            "path": "darkness",
+            "rank": 7,
+            "sequence_name": "梦魇",
+            "acquisition": "非凡特性",
+            "risk": "晋升与使用力量需要知识和状态管理，序列不代表财富或社会权限。",
+            "birth_note": "",
+            "aliases": [],
+            "provenance": "source_summary",
+            "source_refs": [
+                "lotm_setting",
+                "lotm_huiji_pathways"
+            ],
+            "source_locator": "darkness / 序列7",
+            "review_note": "名称来自官方及百科索引，未标记为逐条原章全文直读；公开职业搭配与权重为游戏设定。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "darkness_6",
+            "name": "黑暗途径 · 序列6 · 安魂师",
+            "system": "sequence",
+            "path": "darkness",
+            "rank": 6,
+            "sequence_name": "安魂师",
+            "acquisition": "非凡特性",
+            "risk": "晋升与使用力量需要知识和状态管理，序列不代表财富或社会权限。",
+            "birth_note": "双亲中有人当前处于序列6，存在传递少量特性的可能；受孕时状态未记录，不能据此认定孩子已有完整序列9。",
+            "aliases": [],
+            "provenance": "source_summary",
+            "source_refs": [
+                "lotm_setting",
+                "lotm_huiji_pathways",
+                "lotm_fandom_inheritance"
+            ],
+            "source_locator": "darkness / 序列6",
+            "review_note": "名称来自官方及百科索引，未标记为逐条原章全文直读；公开职业搭配与权重为游戏设定。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "paragon_7",
+            "name": "完美者途径 · 序列7 · 鉴定师",
+            "system": "sequence",
+            "path": "paragon",
+            "rank": 7,
+            "sequence_name": "鉴定师",
+            "acquisition": "非凡特性",
+            "risk": "晋升与使用力量需要知识和状态管理，序列不代表财富或社会权限。",
+            "birth_note": "",
+            "aliases": [],
+            "provenance": "source_summary",
+            "source_refs": [
+                "lotm_setting",
+                "lotm_huiji_pathways"
+            ],
+            "source_locator": "paragon / 序列7",
+            "review_note": "名称来自官方及百科索引，未标记为逐条原章全文直读；公开职业搭配与权重为游戏设定。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "paragon_6",
+            "name": "完美者途径 · 序列6 · 机械专家",
+            "system": "sequence",
+            "path": "paragon",
+            "rank": 6,
+            "sequence_name": "机械专家",
+            "acquisition": "非凡特性",
+            "risk": "晋升与使用力量需要知识和状态管理，序列不代表财富或社会权限。",
+            "birth_note": "双亲中有人当前处于序列6，存在传递少量特性的可能；受孕时状态未记录，不能据此认定孩子已有完整序列9。",
+            "aliases": [
+                "工匠"
+            ],
+            "provenance": "source_summary",
+            "source_refs": [
+                "lotm_setting",
+                "lotm_huiji_pathways",
+                "lotm_fandom_inheritance"
+            ],
+            "source_locator": "paragon / 序列6",
+            "review_note": "名称来自官方及百科索引，未标记为逐条原章全文直读；公开职业搭配与权重为游戏设定。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "inevitability_boon_9",
+            "name": "宿命之环恩赐 · 序列9 · 舞蹈家",
+            "system": "boon_sequence",
+            "path": "inevitability_boon",
+            "rank": 9,
+            "sequence_name": "舞蹈家",
+            "original_term": "Dancer",
+            "aliases": [],
+            "acquisition": "外神恩赐",
+            "bestower_id": "circle_of_inevitability",
+            "bestower_name": "宿命之环",
+            "setting_ids": [
+                "fifth_1358"
+            ],
+            "risk": "恩赐依赖外来力量并伴随污染与代价，不能视为安全的家族福利。",
+            "birth_note": "父母的恩赐不作为孩子已经继承对应非凡特性的依据。",
+            "provenance": "source_summary",
+            "source_refs": [
+                "coi_ch60",
+                "coi_ch72"
+            ],
+            "source_locator": "宿命之环 / 第60章 / 序列9",
+            "review_note": "地球受赐身份；不推广为宇宙所有同源生命都通过恩赐晋升。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "inevitability_boon_8",
+            "name": "宿命之环恩赐 · 序列8 · 托钵僧侣",
+            "system": "boon_sequence",
+            "path": "inevitability_boon",
+            "rank": 8,
+            "sequence_name": "托钵僧侣",
+            "original_term": "Alms Monk",
+            "aliases": [],
+            "acquisition": "外神恩赐",
+            "bestower_id": "circle_of_inevitability",
+            "bestower_name": "宿命之环",
+            "setting_ids": [
+                "fifth_1358"
+            ],
+            "risk": "恩赐依赖外来力量并伴随污染与代价，不能视为安全的家族福利。",
+            "birth_note": "父母的恩赐不作为孩子已经继承对应非凡特性的依据。",
+            "provenance": "source_summary",
+            "source_refs": [
+                "coi_ch60",
+                "coi_ch72"
+            ],
+            "source_locator": "宿命之环 / 第60章 / 序列8",
+            "review_note": "地球受赐身份；不推广为宇宙所有同源生命都通过恩赐晋升。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "inevitability_boon_7",
+            "name": "宿命之环恩赐 · 序列7 · 受契之人",
+            "system": "boon_sequence",
+            "path": "inevitability_boon",
+            "rank": 7,
+            "sequence_name": "受契之人",
+            "original_term": "Contractee",
+            "aliases": [],
+            "acquisition": "外神恩赐",
+            "bestower_id": "circle_of_inevitability",
+            "bestower_name": "宿命之环",
+            "setting_ids": [
+                "fifth_1358"
+            ],
+            "risk": "恩赐依赖外来力量并伴随污染与代价，不能视为安全的家族福利。",
+            "birth_note": "父母的恩赐不作为孩子已经继承对应非凡特性的依据。",
+            "provenance": "source_summary",
+            "source_refs": [
+                "coi_ch60",
+                "coi_ch72"
+            ],
+            "source_locator": "宿命之环 / 第60章 / 序列7",
+            "review_note": "地球受赐身份；不推广为宇宙所有同源生命都通过恩赐晋升。",
+            "reviewed_on": "2026-10-19"
+        }
+    ],
+    "traits": [
+        {
+            "id": "observant",
+            "name": "观察细致",
+            "weight": 24,
+            "description": "对细微变化较敏感，可能适合日后培养观察和记录习惯。",
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "诡秘之主 / traits / observant",
+            "review_note": "成长倾向属于游戏叙事，不作新生儿认知诊断，不推断未来职业、原作能力或必然成就。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "memory",
+            "name": "记忆有序",
+            "weight": 18,
+            "description": "较容易形成熟悉的反应，成长中可逐渐培养知识积累。",
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "诡秘之主 / traits / memory",
+            "review_note": "成长倾向属于游戏叙事，不作新生儿认知诊断，不推断未来职业、原作能力或必然成就。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "calm",
+            "name": "心性安稳",
+            "weight": 20,
+            "description": "容易在照护中建立稳定节奏，并不代表能够免疫非凡危险。",
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "诡秘之主 / traits / calm",
+            "review_note": "成长倾向属于游戏叙事，不作新生儿认知诊断，不推断未来职业、原作能力或必然成就。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "sensitive",
+            "name": "感受敏锐",
+            "weight": 12,
+            "description": "对声音与环境较敏感，不能据此判断拥有某条途径。",
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "诡秘之主 / traits / sensitive",
+            "review_note": "成长倾向属于游戏叙事，不作新生儿认知诊断，不推断未来职业、原作能力或必然成就。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "dexterous",
+            "name": "动作协调",
+            "weight": 16,
+            "description": "体能基础较协调，适合在成长中逐步学习手艺。",
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "诡秘之主 / traits / dexterous",
+            "review_note": "成长倾向属于游戏叙事，不作新生儿认知诊断，不推断未来职业、原作能力或必然成就。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "ordinary",
+            "name": "未记录额外特征",
+            "weight": 10,
+            "description": "目前没有额外的行为倾向记录，不能据此排除遗传特性。",
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "诡秘之主 / traits / ordinary",
+            "review_note": "成长倾向属于游戏叙事，不作新生儿认知诊断，不推断未来职业、原作能力或必然成就。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "language",
+            "name": "语气感受细腻",
+            "weight": 10,
+            "description": "对熟悉的声音和语气反应鲜明，表达仍需成长与教育。",
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "诡秘之主 / traits / language",
+            "review_note": "成长倾向属于游戏叙事，不作新生儿认知诊断，不推断未来职业、原作能力或必然成就。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "rhythm",
+            "name": "节奏感良好",
+            "weight": 10,
+            "description": "容易对有规律的声音产生回应，未来可能喜欢音乐与表演。",
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "诡秘之主 / traits / rhythm",
+            "review_note": "成长倾向属于游戏叙事，不作新生儿认知诊断，不推断未来职业、原作能力或必然成就。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "patient",
+            "name": "耐心安静",
+            "weight": 10,
+            "description": "在稳定照护下较容易保持专注，适合循序培养学习习惯。",
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "诡秘之主 / traits / patient",
+            "review_note": "成长倾向属于游戏叙事，不作新生儿认知诊断，不推断未来职业、原作能力或必然成就。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "spatial",
+            "name": "形状兴趣突出",
+            "weight": 10,
+            "description": "对形状和位置变化容易保持注意，未来可逐步培养制作兴趣。",
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "诡秘之主 / traits / spatial",
+            "review_note": "成长倾向属于游戏叙事，不作新生儿认知诊断，不推断未来职业、原作能力或必然成就。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "imaginative",
+            "name": "想象灵动",
+            "weight": 10,
+            "description": "对故事与新事物反应活跃，不能据此推断拥有神秘学天赋。",
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "诡秘之主 / traits / imaginative",
+            "review_note": "成长倾向属于游戏叙事，不作新生儿认知诊断，不推断未来职业、原作能力或必然成就。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "resilient",
+            "name": "日常适应较稳",
+            "weight": 10,
+            "description": "在照护中能够逐渐适应环境变化，不代表对污染或异常免疫。",
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "诡秘之主 / traits / resilient",
+            "review_note": "成长倾向属于游戏叙事，不作新生儿认知诊断，不推断未来职业、原作能力或必然成就。",
+            "reviewed_on": "2026-10-19"
+        }
+    ],
+    "content_note": "原作名词、二手整理和游戏改编逐条标注。地区组合、岗位搭配、资源与权重为游戏设计，不表示人口统计；普通同族家庭不推导通用遗传规律。",
+    "dataset_version": "2026.10.19-v4",
+    "birth_notes": [
+        "未服魔药不等于必然没有遗传特性；低序列亲代也不能被当作绝对无遗传例外。"
+    ],
+    "trait_label": "成长倾向",
+    "settings": [
+        {
+            "id": "fifth_1349",
+            "name": "第五纪 · 1349年",
+            "description": "蒸汽工业与都市生活迅速发展，非凡者隐藏在普通职业与社会关系之后。",
+            "weight": 3,
+            "provenance": "mixed",
+            "source_refs": [
+                "lotm_loen_society",
+                "lotm_setting",
+                "project_isekai_v3"
+            ],
+            "source_locator": "世界范围",
+            "review_note": "时代抽取权重为游戏设定。",
+            "reviewed_on": "2026-10-19",
+            "canon_scope": "第一部开端附近；不抽取第二部新增恩赐身份和终局后的组织状态。"
+        },
+        {
+            "id": "fifth_1358",
+            "name": "第五纪 · 1358年",
+            "description": "外神对屏障的渗透加剧，受赐现象增长，普通家庭也需要谨慎辨别隐秘接触。",
+            "weight": 2,
+            "provenance": "mixed",
+            "source_refs": [
+                "lotm_official_society",
+                "coi_ch60",
+                "project_isekai_v3"
+            ],
+            "source_locator": "世界范围",
+            "review_note": "时代抽取权重为游戏设定。",
+            "reviewed_on": "2026-10-19",
+            "canon_scope": "第二部开端附近；本版只纳入有原章依据的有限恩赐组合。"
+        }
+    ],
+    "birth_axes": [
+        {
+            "id": "knowledge_access",
+            "label": "家庭知识渠道",
+            "options": [
+                {
+                    "id": "daily",
+                    "name": "普通生活知识",
+                    "description": "家中首先提供识字与谋生见闻，未安排主动接触非凡仪式。",
+                    "weight": 6,
+                    "provenance": "adaptation",
+                    "source_refs": [
+                        "project_isekai_v3"
+                    ],
+                    "source_locator": "出生条件",
+                    "review_note": "抽取与家庭限制属于项目设计。",
+                    "reviewed_on": "2026-10-19"
+                },
+                {
+                    "id": "church",
+                    "name": "教会教育渠道",
+                    "description": "可接触当地教会的基础教育，不等于已获魔药或恩赐。",
+                    "weight": 3,
+                    "provenance": "adaptation",
+                    "source_refs": [
+                        "project_isekai_v3"
+                    ],
+                    "source_locator": "出生条件",
+                    "review_note": "抽取与家庭限制属于项目设计。",
+                    "reviewed_on": "2026-10-19"
+                },
+                {
+                    "id": "private",
+                    "name": "私人藏书接触",
+                    "description": "家中可能有神秘学知识，接触前需要辨别来源与风险。",
+                    "weight": 2,
+                    "provenance": "adaptation",
+                    "source_refs": [
+                        "project_isekai_v3"
+                    ],
+                    "source_locator": "出生条件",
+                    "review_note": "抽取与家庭限制属于项目设计。",
+                    "reviewed_on": "2026-10-19"
+                },
+                {
+                    "id": "restricted",
+                    "name": "隐秘知识需要隔离",
+                    "description": "家中存在危险线索，照护者需要将其与幼儿日常隔离。",
+                    "weight": 1,
+                    "provenance": "adaptation",
+                    "source_refs": [
+                        "project_isekai_v3"
+                    ],
+                    "source_locator": "出生条件",
+                    "review_note": "抽取与家庭限制属于项目设计。",
+                    "reviewed_on": "2026-10-19"
+                }
+            ],
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "家庭知识渠道",
+            "review_note": "",
+            "reviewed_on": "2026-10-19"
+        }
+    ],
+    "power_sets": [
+        {
+            "id": "single_ordinary",
+            "weight": 1,
+            "power_ids": [
+                "ordinary"
+            ],
+            "notes": [],
+            "provenance": "mixed",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "力量组合 / ordinary",
+            "review_note": "单力量组合沿用原有抽取权重。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "single_fool_9",
+            "weight": 4,
+            "power_ids": [
+                "fool_9"
+            ],
+            "notes": [],
+            "provenance": "mixed",
+            "source_refs": [
+                "lotm_setting",
+                "lotm_huiji_pathways",
+                "project_isekai_v3"
+            ],
+            "source_locator": "力量组合 / fool_9",
+            "review_note": "单力量组合沿用原有抽取权重。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "single_fool_8",
+            "weight": 1,
+            "power_ids": [
+                "fool_8"
+            ],
+            "notes": [],
+            "provenance": "mixed",
+            "source_refs": [
+                "lotm_setting",
+                "lotm_huiji_pathways",
+                "project_isekai_v3"
+            ],
+            "source_locator": "力量组合 / fool_8",
+            "review_note": "单力量组合沿用原有抽取权重。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "single_door_9",
+            "weight": 4,
+            "power_ids": [
+                "door_9"
+            ],
+            "notes": [],
+            "provenance": "mixed",
+            "source_refs": [
+                "lotm_setting",
+                "lotm_huiji_pathways",
+                "project_isekai_v3"
+            ],
+            "source_locator": "力量组合 / door_9",
+            "review_note": "单力量组合沿用原有抽取权重。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "single_door_8",
+            "weight": 1,
+            "power_ids": [
+                "door_8"
+            ],
+            "notes": [],
+            "provenance": "mixed",
+            "source_refs": [
+                "lotm_setting",
+                "lotm_huiji_pathways",
+                "project_isekai_v3"
+            ],
+            "source_locator": "力量组合 / door_8",
+            "review_note": "单力量组合沿用原有抽取权重。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "single_error_9",
+            "weight": 4,
+            "power_ids": [
+                "error_9"
+            ],
+            "notes": [],
+            "provenance": "mixed",
+            "source_refs": [
+                "lotm_setting",
+                "lotm_huiji_pathways",
+                "project_isekai_v3"
+            ],
+            "source_locator": "力量组合 / error_9",
+            "review_note": "单力量组合沿用原有抽取权重。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "single_error_8",
+            "weight": 1,
+            "power_ids": [
+                "error_8"
+            ],
+            "notes": [],
+            "provenance": "mixed",
+            "source_refs": [
+                "lotm_setting",
+                "lotm_huiji_pathways",
+                "project_isekai_v3"
+            ],
+            "source_locator": "力量组合 / error_8",
+            "review_note": "单力量组合沿用原有抽取权重。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "single_visionary_9",
+            "weight": 4,
+            "power_ids": [
+                "visionary_9"
+            ],
+            "notes": [],
+            "provenance": "mixed",
+            "source_refs": [
+                "lotm_setting",
+                "lotm_huiji_pathways",
+                "project_isekai_v3"
+            ],
+            "source_locator": "力量组合 / visionary_9",
+            "review_note": "单力量组合沿用原有抽取权重。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "single_visionary_8",
+            "weight": 1,
+            "power_ids": [
+                "visionary_8"
+            ],
+            "notes": [],
+            "provenance": "mixed",
+            "source_refs": [
+                "lotm_setting",
+                "lotm_huiji_pathways",
+                "project_isekai_v3"
+            ],
+            "source_locator": "力量组合 / visionary_8",
+            "review_note": "单力量组合沿用原有抽取权重。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "single_sun_9",
+            "weight": 4,
+            "power_ids": [
+                "sun_9"
+            ],
+            "notes": [],
+            "provenance": "mixed",
+            "source_refs": [
+                "lotm_setting",
+                "lotm_huiji_pathways",
+                "project_isekai_v3"
+            ],
+            "source_locator": "力量组合 / sun_9",
+            "review_note": "单力量组合沿用原有抽取权重。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "single_sun_8",
+            "weight": 1,
+            "power_ids": [
+                "sun_8"
+            ],
+            "notes": [],
+            "provenance": "mixed",
+            "source_refs": [
+                "lotm_setting",
+                "lotm_huiji_pathways",
+                "project_isekai_v3"
+            ],
+            "source_locator": "力量组合 / sun_8",
+            "review_note": "单力量组合沿用原有抽取权重。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "single_tyrant_9",
+            "weight": 4,
+            "power_ids": [
+                "tyrant_9"
+            ],
+            "notes": [],
+            "provenance": "mixed",
+            "source_refs": [
+                "lotm_setting",
+                "lotm_huiji_pathways",
+                "project_isekai_v3"
+            ],
+            "source_locator": "力量组合 / tyrant_9",
+            "review_note": "单力量组合沿用原有抽取权重。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "single_tyrant_8",
+            "weight": 1,
+            "power_ids": [
+                "tyrant_8"
+            ],
+            "notes": [],
+            "provenance": "mixed",
+            "source_refs": [
+                "lotm_setting",
+                "lotm_huiji_pathways",
+                "project_isekai_v3"
+            ],
+            "source_locator": "力量组合 / tyrant_8",
+            "review_note": "单力量组合沿用原有抽取权重。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "single_hanged_man_9",
+            "weight": 4,
+            "power_ids": [
+                "hanged_man_9"
+            ],
+            "notes": [],
+            "provenance": "mixed",
+            "source_refs": [
+                "lotm_setting",
+                "lotm_huiji_pathways",
+                "project_isekai_v3"
+            ],
+            "source_locator": "力量组合 / hanged_man_9",
+            "review_note": "单力量组合沿用原有抽取权重。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "single_hanged_man_8",
+            "weight": 1,
+            "power_ids": [
+                "hanged_man_8"
+            ],
+            "notes": [],
+            "provenance": "mixed",
+            "source_refs": [
+                "lotm_setting",
+                "lotm_huiji_pathways",
+                "project_isekai_v3"
+            ],
+            "source_locator": "力量组合 / hanged_man_8",
+            "review_note": "单力量组合沿用原有抽取权重。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "single_death_9",
+            "weight": 4,
+            "power_ids": [
+                "death_9"
+            ],
+            "notes": [],
+            "provenance": "mixed",
+            "source_refs": [
+                "lotm_setting",
+                "lotm_huiji_pathways",
+                "project_isekai_v3"
+            ],
+            "source_locator": "力量组合 / death_9",
+            "review_note": "单力量组合沿用原有抽取权重。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "single_death_8",
+            "weight": 1,
+            "power_ids": [
+                "death_8"
+            ],
+            "notes": [],
+            "provenance": "mixed",
+            "source_refs": [
+                "lotm_setting",
+                "lotm_huiji_pathways",
+                "project_isekai_v3"
+            ],
+            "source_locator": "力量组合 / death_8",
+            "review_note": "单力量组合沿用原有抽取权重。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "single_darkness_9",
+            "weight": 4,
+            "power_ids": [
+                "darkness_9"
+            ],
+            "notes": [],
+            "provenance": "mixed",
+            "source_refs": [
+                "lotm_setting",
+                "lotm_huiji_pathways",
+                "project_isekai_v3"
+            ],
+            "source_locator": "力量组合 / darkness_9",
+            "review_note": "单力量组合沿用原有抽取权重。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "single_darkness_8",
+            "weight": 1,
+            "power_ids": [
+                "darkness_8"
+            ],
+            "notes": [],
+            "provenance": "mixed",
+            "source_refs": [
+                "lotm_setting",
+                "lotm_huiji_pathways",
+                "project_isekai_v3"
+            ],
+            "source_locator": "力量组合 / darkness_8",
+            "review_note": "单力量组合沿用原有抽取权重。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "single_twilight_giant_9",
+            "weight": 4,
+            "power_ids": [
+                "twilight_giant_9"
+            ],
+            "notes": [],
+            "provenance": "mixed",
+            "source_refs": [
+                "lotm_setting",
+                "lotm_huiji_pathways",
+                "project_isekai_v3"
+            ],
+            "source_locator": "力量组合 / twilight_giant_9",
+            "review_note": "单力量组合沿用原有抽取权重。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "single_twilight_giant_8",
+            "weight": 1,
+            "power_ids": [
+                "twilight_giant_8"
+            ],
+            "notes": [],
+            "provenance": "mixed",
+            "source_refs": [
+                "lotm_setting",
+                "lotm_huiji_pathways",
+                "project_isekai_v3"
+            ],
+            "source_locator": "力量组合 / twilight_giant_8",
+            "review_note": "单力量组合沿用原有抽取权重。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "single_black_emperor_9",
+            "weight": 4,
+            "power_ids": [
+                "black_emperor_9"
+            ],
+            "notes": [],
+            "provenance": "mixed",
+            "source_refs": [
+                "lotm_setting",
+                "lotm_huiji_pathways",
+                "project_isekai_v3"
+            ],
+            "source_locator": "力量组合 / black_emperor_9",
+            "review_note": "单力量组合沿用原有抽取权重。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "single_black_emperor_8",
+            "weight": 1,
+            "power_ids": [
+                "black_emperor_8"
+            ],
+            "notes": [],
+            "provenance": "mixed",
+            "source_refs": [
+                "lotm_setting",
+                "lotm_huiji_pathways",
+                "project_isekai_v3"
+            ],
+            "source_locator": "力量组合 / black_emperor_8",
+            "review_note": "单力量组合沿用原有抽取权重。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "single_justiciar_9",
+            "weight": 4,
+            "power_ids": [
+                "justiciar_9"
+            ],
+            "notes": [],
+            "provenance": "mixed",
+            "source_refs": [
+                "lotm_setting",
+                "lotm_huiji_pathways",
+                "project_isekai_v3"
+            ],
+            "source_locator": "力量组合 / justiciar_9",
+            "review_note": "单力量组合沿用原有抽取权重。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "single_justiciar_8",
+            "weight": 1,
+            "power_ids": [
+                "justiciar_8"
+            ],
+            "notes": [],
+            "provenance": "mixed",
+            "source_refs": [
+                "lotm_setting",
+                "lotm_huiji_pathways",
+                "project_isekai_v3"
+            ],
+            "source_locator": "力量组合 / justiciar_8",
+            "review_note": "单力量组合沿用原有抽取权重。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "single_red_priest_9",
+            "weight": 4,
+            "power_ids": [
+                "red_priest_9"
+            ],
+            "notes": [],
+            "provenance": "mixed",
+            "source_refs": [
+                "lotm_setting",
+                "lotm_huiji_pathways",
+                "project_isekai_v3"
+            ],
+            "source_locator": "力量组合 / red_priest_9",
+            "review_note": "单力量组合沿用原有抽取权重。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "single_red_priest_8",
+            "weight": 1,
+            "power_ids": [
+                "red_priest_8"
+            ],
+            "notes": [],
+            "provenance": "mixed",
+            "source_refs": [
+                "lotm_setting",
+                "lotm_huiji_pathways",
+                "project_isekai_v3"
+            ],
+            "source_locator": "力量组合 / red_priest_8",
+            "review_note": "单力量组合沿用原有抽取权重。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "single_demoness_9",
+            "weight": 4,
+            "power_ids": [
+                "demoness_9"
+            ],
+            "notes": [],
+            "provenance": "mixed",
+            "source_refs": [
+                "lotm_setting",
+                "lotm_huiji_pathways",
+                "project_isekai_v3"
+            ],
+            "source_locator": "力量组合 / demoness_9",
+            "review_note": "单力量组合沿用原有抽取权重。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "single_demoness_8",
+            "weight": 1,
+            "power_ids": [
+                "demoness_8"
+            ],
+            "notes": [],
+            "provenance": "mixed",
+            "source_refs": [
+                "lotm_setting",
+                "lotm_huiji_pathways",
+                "project_isekai_v3"
+            ],
+            "source_locator": "力量组合 / demoness_8",
+            "review_note": "单力量组合沿用原有抽取权重。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "single_abyss_9",
+            "weight": 4,
+            "power_ids": [
+                "abyss_9"
+            ],
+            "notes": [],
+            "provenance": "mixed",
+            "source_refs": [
+                "lotm_setting",
+                "lotm_huiji_pathways",
+                "project_isekai_v3"
+            ],
+            "source_locator": "力量组合 / abyss_9",
+            "review_note": "单力量组合沿用原有抽取权重。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "single_chained_9",
+            "weight": 4,
+            "power_ids": [
+                "chained_9"
+            ],
+            "notes": [],
+            "provenance": "mixed",
+            "source_refs": [
+                "lotm_setting",
+                "lotm_huiji_pathways",
+                "project_isekai_v3"
+            ],
+            "source_locator": "力量组合 / chained_9",
+            "review_note": "单力量组合沿用原有抽取权重。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "single_chained_8",
+            "weight": 1,
+            "power_ids": [
+                "chained_8"
+            ],
+            "notes": [],
+            "provenance": "mixed",
+            "source_refs": [
+                "lotm_setting",
+                "lotm_huiji_pathways",
+                "project_isekai_v3"
+            ],
+            "source_locator": "力量组合 / chained_8",
+            "review_note": "单力量组合沿用原有抽取权重。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "single_hermit_9",
+            "weight": 4,
+            "power_ids": [
+                "hermit_9"
+            ],
+            "notes": [],
+            "provenance": "mixed",
+            "source_refs": [
+                "lotm_setting",
+                "lotm_huiji_pathways",
+                "project_isekai_v3"
+            ],
+            "source_locator": "力量组合 / hermit_9",
+            "review_note": "单力量组合沿用原有抽取权重。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "single_hermit_8",
+            "weight": 1,
+            "power_ids": [
+                "hermit_8"
+            ],
+            "notes": [],
+            "provenance": "mixed",
+            "source_refs": [
+                "lotm_setting",
+                "lotm_huiji_pathways",
+                "project_isekai_v3"
+            ],
+            "source_locator": "力量组合 / hermit_8",
+            "review_note": "单力量组合沿用原有抽取权重。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "single_paragon_9",
+            "weight": 4,
+            "power_ids": [
+                "paragon_9"
+            ],
+            "notes": [],
+            "provenance": "mixed",
+            "source_refs": [
+                "lotm_setting",
+                "lotm_huiji_pathways",
+                "project_isekai_v3"
+            ],
+            "source_locator": "力量组合 / paragon_9",
+            "review_note": "单力量组合沿用原有抽取权重。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "single_paragon_8",
+            "weight": 1,
+            "power_ids": [
+                "paragon_8"
+            ],
+            "notes": [],
+            "provenance": "mixed",
+            "source_refs": [
+                "lotm_setting",
+                "lotm_huiji_pathways",
+                "project_isekai_v3"
+            ],
+            "source_locator": "力量组合 / paragon_8",
+            "review_note": "单力量组合沿用原有抽取权重。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "single_mother_9",
+            "weight": 4,
+            "power_ids": [
+                "mother_9"
+            ],
+            "notes": [],
+            "provenance": "mixed",
+            "source_refs": [
+                "lotm_setting",
+                "lotm_huiji_pathways",
+                "project_isekai_v3"
+            ],
+            "source_locator": "力量组合 / mother_9",
+            "review_note": "单力量组合沿用原有抽取权重。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "single_mother_8",
+            "weight": 1,
+            "power_ids": [
+                "mother_8"
+            ],
+            "notes": [],
+            "provenance": "mixed",
+            "source_refs": [
+                "lotm_setting",
+                "lotm_huiji_pathways",
+                "project_isekai_v3"
+            ],
+            "source_locator": "力量组合 / mother_8",
+            "review_note": "单力量组合沿用原有抽取权重。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "single_moon_9",
+            "weight": 4,
+            "power_ids": [
+                "moon_9"
+            ],
+            "notes": [],
+            "provenance": "mixed",
+            "source_refs": [
+                "lotm_setting",
+                "lotm_huiji_pathways",
+                "project_isekai_v3"
+            ],
+            "source_locator": "力量组合 / moon_9",
+            "review_note": "单力量组合沿用原有抽取权重。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "single_moon_8",
+            "weight": 1,
+            "power_ids": [
+                "moon_8"
+            ],
+            "notes": [],
+            "provenance": "mixed",
+            "source_refs": [
+                "lotm_setting",
+                "lotm_huiji_pathways",
+                "project_isekai_v3"
+            ],
+            "source_locator": "力量组合 / moon_8",
+            "review_note": "单力量组合沿用原有抽取权重。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "single_wheel_of_fortune_9",
+            "weight": 4,
+            "power_ids": [
+                "wheel_of_fortune_9"
+            ],
+            "notes": [],
+            "provenance": "mixed",
+            "source_refs": [
+                "lotm_setting",
+                "lotm_huiji_pathways",
+                "project_isekai_v3"
+            ],
+            "source_locator": "力量组合 / wheel_of_fortune_9",
+            "review_note": "单力量组合沿用原有抽取权重。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "single_wheel_of_fortune_8",
+            "weight": 1,
+            "power_ids": [
+                "wheel_of_fortune_8"
+            ],
+            "notes": [],
+            "provenance": "mixed",
+            "source_refs": [
+                "lotm_setting",
+                "lotm_huiji_pathways",
+                "project_isekai_v3"
+            ],
+            "source_locator": "力量组合 / wheel_of_fortune_8",
+            "review_note": "单力量组合沿用原有抽取权重。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "single_white_tower_9",
+            "weight": 4,
+            "power_ids": [
+                "white_tower_9"
+            ],
+            "notes": [],
+            "provenance": "mixed",
+            "source_refs": [
+                "lotm_setting",
+                "lotm_huiji_pathways",
+                "project_isekai_v3"
+            ],
+            "source_locator": "力量组合 / white_tower_9",
+            "review_note": "单力量组合沿用原有抽取权重。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "single_white_tower_8",
+            "weight": 1,
+            "power_ids": [
+                "white_tower_8"
+            ],
+            "notes": [],
+            "provenance": "mixed",
+            "source_refs": [
+                "lotm_setting",
+                "lotm_huiji_pathways",
+                "project_isekai_v3"
+            ],
+            "source_locator": "力量组合 / white_tower_8",
+            "review_note": "单力量组合沿用原有抽取权重。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "single_sun_7",
+            "weight": 3,
+            "power_ids": [
+                "sun_7"
+            ],
+            "notes": [],
+            "provenance": "mixed",
+            "source_refs": [
+                "lotm_setting",
+                "lotm_huiji_pathways",
+                "project_isekai_v3"
+            ],
+            "source_locator": "力量组合 / sun_7",
+            "review_note": "单力量组合沿用原有抽取权重。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "single_sun_6",
+            "weight": 1,
+            "power_ids": [
+                "sun_6"
+            ],
+            "notes": [],
+            "provenance": "mixed",
+            "source_refs": [
+                "lotm_setting",
+                "lotm_huiji_pathways",
+                "lotm_fandom_inheritance",
+                "project_isekai_v3"
+            ],
+            "source_locator": "力量组合 / sun_6",
+            "review_note": "单力量组合沿用原有抽取权重。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "single_death_7",
+            "weight": 3,
+            "power_ids": [
+                "death_7"
+            ],
+            "notes": [],
+            "provenance": "mixed",
+            "source_refs": [
+                "lotm_setting",
+                "lotm_huiji_pathways",
+                "project_isekai_v3"
+            ],
+            "source_locator": "力量组合 / death_7",
+            "review_note": "单力量组合沿用原有抽取权重。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "single_death_6",
+            "weight": 1,
+            "power_ids": [
+                "death_6"
+            ],
+            "notes": [],
+            "provenance": "mixed",
+            "source_refs": [
+                "lotm_setting",
+                "lotm_huiji_pathways",
+                "lotm_fandom_inheritance",
+                "project_isekai_v3"
+            ],
+            "source_locator": "力量组合 / death_6",
+            "review_note": "单力量组合沿用原有抽取权重。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "single_darkness_7",
+            "weight": 3,
+            "power_ids": [
+                "darkness_7"
+            ],
+            "notes": [],
+            "provenance": "mixed",
+            "source_refs": [
+                "lotm_setting",
+                "lotm_huiji_pathways",
+                "project_isekai_v3"
+            ],
+            "source_locator": "力量组合 / darkness_7",
+            "review_note": "单力量组合沿用原有抽取权重。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "single_darkness_6",
+            "weight": 1,
+            "power_ids": [
+                "darkness_6"
+            ],
+            "notes": [],
+            "provenance": "mixed",
+            "source_refs": [
+                "lotm_setting",
+                "lotm_huiji_pathways",
+                "lotm_fandom_inheritance",
+                "project_isekai_v3"
+            ],
+            "source_locator": "力量组合 / darkness_6",
+            "review_note": "单力量组合沿用原有抽取权重。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "single_paragon_7",
+            "weight": 3,
+            "power_ids": [
+                "paragon_7"
+            ],
+            "notes": [],
+            "provenance": "mixed",
+            "source_refs": [
+                "lotm_setting",
+                "lotm_huiji_pathways",
+                "project_isekai_v3"
+            ],
+            "source_locator": "力量组合 / paragon_7",
+            "review_note": "单力量组合沿用原有抽取权重。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "single_paragon_6",
+            "weight": 1,
+            "power_ids": [
+                "paragon_6"
+            ],
+            "notes": [],
+            "provenance": "mixed",
+            "source_refs": [
+                "lotm_setting",
+                "lotm_huiji_pathways",
+                "lotm_fandom_inheritance",
+                "project_isekai_v3"
+            ],
+            "source_locator": "力量组合 / paragon_6",
+            "review_note": "单力量组合沿用原有抽取权重。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "single_inevitability_boon_9",
+            "weight": 6,
+            "power_ids": [
+                "inevitability_boon_9"
+            ],
+            "notes": [],
+            "setting_ids": [
+                "fifth_1358"
+            ],
+            "provenance": "mixed",
+            "source_refs": [
+                "coi_ch60",
+                "coi_ch72",
+                "project_isekai_v3"
+            ],
+            "source_locator": "力量组合 / inevitability_boon_9",
+            "review_note": "单力量组合沿用原有抽取权重。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "single_inevitability_boon_8",
+            "weight": 3,
+            "power_ids": [
+                "inevitability_boon_8"
+            ],
+            "notes": [],
+            "setting_ids": [
+                "fifth_1358"
+            ],
+            "provenance": "mixed",
+            "source_refs": [
+                "coi_ch60",
+                "coi_ch72",
+                "project_isekai_v3"
+            ],
+            "source_locator": "力量组合 / inevitability_boon_8",
+            "review_note": "单力量组合沿用原有抽取权重。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "single_inevitability_boon_7",
+            "weight": 1,
+            "power_ids": [
+                "inevitability_boon_7"
+            ],
+            "notes": [],
+            "setting_ids": [
+                "fifth_1358"
+            ],
+            "provenance": "mixed",
+            "source_refs": [
+                "coi_ch60",
+                "coi_ch72",
+                "project_isekai_v3"
+            ],
+            "source_locator": "力量组合 / inevitability_boon_7",
+            "review_note": "单力量组合沿用原有抽取权重。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "hunter_dancer_protected",
+            "weight": 1,
+            "power_ids": [
+                "red_priest_9",
+                "inevitability_boon_9"
+            ],
+            "setting_ids": [
+                "fifth_1358"
+            ],
+            "notes": [
+                "该身份预设具有庇护与污染控制条件；这不是任意途径都可安全组合的规则。"
+            ],
+            "provenance": "mixed",
+            "source_refs": [
+                "coi_ch72",
+                "project_isekai_v3"
+            ],
+            "source_locator": "第72章 / 猎人特性与舞蹈家恩赐并存",
+            "review_note": "不复制角色或具体庇护者，仅保留有原作例证的有限组合。",
+            "reviewed_on": "2026-10-19"
+        }
+    ],
+    "provenance": "mixed",
+    "source_locator": "诡秘之主 / 第三版",
+    "review_note": "原作名词、二手整理和游戏改编逐条标注。地区组合、岗位搭配、资源与权重为游戏设计，不表示人口统计；普通同族家庭不推导通用遗传规律。",
+    "reviewed_on": "2026-10-19"
+}

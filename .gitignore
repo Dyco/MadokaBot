@@ -18,8 +18,15 @@ __pycache__/
 /assets/data/
 
 
-/assets/json
+/assets/json/*
+!/assets/json/daily_reborn/
+/assets/json/daily_reborn/*
+!/assets/json/daily_reborn/*.json
+!/assets/json/daily_reborn/isekai/
+!/assets/json/daily_reborn/anime/
+!/assets/json/daily_reborn/games/
 /assets/image/csteam
 /assets/image/group
 /assets/image/maimai
 /assets/image/chunithm
+/assets/参考资料

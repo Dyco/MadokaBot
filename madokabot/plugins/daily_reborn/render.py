@@ -56,7 +56,11 @@ def recent_history(result: dict) -> list[dict]:
 
 
 def render_reborn_html(result: dict, name: str) -> str:
-    """生成包含投胎次数、历史与项目版本的离线星级卡片，兼容旧记录。"""
+    """按模式生成离线卡片，作品身份使用配置字段，现实模式保留地图与星级。"""
+    if result.get("mode") in {"anime", "games"}:
+        return render_anime_html(result, name)
+    if result.get("mode") == "isekai":
+        return render_isekai_html(result, name)
     result = display_result(result)
     font = get_file(ResourceType.FONT, ResourceFolder.SIGN, "font.ttf")
     country = result["country"]
@@ -91,6 +95,19 @@ def render_reborn_html(result: dict, name: str) -> str:
     )
 
 
+def render_isekai_html(result: dict, name: str) -> str:
+    """使用已保存的世界标题、父母身份与最近历史生成异世界卡片。"""
+    font = get_file(ResourceType.FONT, ResourceFolder.SIGN, "font.ttf")
+    history = list(reversed(result["reborn_history"][-10:]))
+    return _environment.get_template("isekai.html").render(
+        result=result,
+        name=name,
+        bot_version=get_bot_version(),
+        font_uri=font.resolve().as_uri() if font else "",
+        history_slots=history + [None] * (10 - len(history)),
+    )
+
+
 async def render_reborn_card(result: dict, name: str) -> MessageSegment:
     """使用公共浏览器渲染能力生成 PNG 图片消息。"""
     async with _render_limit:
@@ -103,8 +120,23 @@ async def render_reborn_card(result: dict, name: str) -> MessageSegment:
     return MessageSegment.image(picture)
 
 
+def render_anime_html(result: dict, name: str) -> str:
+    """使用保存的字段、评级与历史生成作品卡片，图片不展示资料说明与引用。"""
+    font = get_file(ResourceType.FONT, ResourceFolder.SIGN, "font.ttf")
+    history = list(reversed(result["reborn_history"][-10:]))
+    return _environment.get_template("anime.html").render(
+        result=result, name=name, mode_name=MODE_NAMES[result["mode"]],
+        font_uri=font.resolve().as_uri() if font else "",
+        history_slots=history + [None] * (10 - len(history)),
+    )
+
+
 def result_text(result: dict, *, prefix: str, name: str = "") -> str:
-    """图片不可用时返回次数、出生信息、星级评分及最近十次历史。"""
+    """图片不可用时按模式返回完整档案及最近十次历史。"""
+    if result.get("mode") in {"anime", "games"}:
+        return anime_result_text(result, prefix=prefix, name=name)
+    if result.get("mode") == "isekai":
+        return isekai_result_text(result, prefix=prefix, name=name)
     result = display_result(result)
     country = result["country"]
     attributes = "\n".join(
@@ -132,4 +164,87 @@ def result_text(result: dict, *, prefix: str, name: str = "") -> str:
         f"人口数据：{result['source']} / {result['data_year']} 年，{note}\n"
         "星级与潜力均为游戏设定。上海时间明日零点可再次免费投胎。\n"
         f"最近十次投胎：\n{history_text}"
+    )
+
+
+def isekai_result_text(result: dict, *, prefix: str, name: str) -> str:
+    """按已保存快照展示时代、父母力量与出生条件，同时支持既有档案。"""
+    child = result["child"]
+    household = result["household"]
+    lineage = f" · {child['lineage']}" if child["lineage"] else ""
+    parent_lines = []
+    for parent in result["parents"]:
+        powers = "；".join(power["name"] for power in parent.get("powers", [parent["power"]]))
+        parent_lines.append(
+            f"{parent['role']}：{parent['species']}"
+            f"{(' · ' + parent['lineage']) if parent['lineage'] else ''} · {parent['occupation']}\n"
+            f"身份：{parent['identity']} ｜ 实力：{powers}"
+        )
+        if parent.get("affiliation"):
+            parent_lines.append(f"关系：{parent['affiliation']}")
+        parent_lines.extend(parent.get("notes", []))
+    parents = "\n".join(parent_lines)
+    setting = f"背景：{result['setting']['name']}\n{result['setting']['description']}\n" if "setting" in result else ""
+    birthplace_context = f"{result['birthplace']['context']}\n" if "context" in result["birthplace"] else ""
+    details = []
+    if child.get("features"):
+        details.append("物种背景：" + "、".join(child["features"]))
+    if child.get("life_span"):
+        details.append(child["life_span"])
+    details.extend(f"{row['label']}：{row['name']}\n{row['description']}" for row in child.get("aspects", []))
+    details.extend(child.get("notes", []))
+    birth_details = "\n".join(details) + "\n" if details else ""
+    history = "\n".join(
+        f"第{row['count']}次 {row['date'][5:]} {row['world']} · {row['species']} · {row['gender']} · {row['family']}"
+        for row in reversed(result["reborn_history"][-10:])
+    )
+    return (
+        f"{prefix}\n{result['title']} · {result['date']}\n"
+        f"{name}，这是你的第{result['reborn_count']}次异世界投胎\n"
+        f"世界：{result['world']['title']}\n{result['world']['description']}\n{setting}"
+        f"出生地：{result['birthplace']['name']}\n{result['birthplace']['description']}\n"
+        f"{birthplace_context}"
+        f"种族：{child['species']}{lineage} ｜ 性别：{result['gender']}\n"
+        f"出生状态：{child['birth_state']}\n"
+        f"家庭：{household['name']}（{household['rarity']}）\n{household['description']}\n"
+        f"{parents}\n家庭资源：{'、'.join(household['resources'])}\n"
+        f"{child.get('trait_label', '先天特征')}：{child['trait']['name']}\n{child['trait']['description']}\n{birth_details}"
+        f"成长方向：{'、'.join(household['directions'])}\n"
+        f"成长课题：{household['challenge']}\n{result['notice']}\n"
+        f"最近十次异世界投胎：\n{history}"
+    )
+
+
+def anime_result_text(result: dict, *, prefix: str, name: str) -> str:
+    """按作品分区输出身份、投胎评级、资料或玩法说明及历史摘要。"""
+    numbers = {source["id"]: index for index, source in enumerate(result["sources"], 1)}
+    sections = []
+    for section in result["sections"]:
+        lines = []
+        for row in section["rows"]:
+            refs = "".join(f"[{numbers[ref]}]" for ref in row["source_refs"])
+            description = f"\n  {row['description']}" if row["description"] else ""
+            lines.append(f"{row['label']}：{row['value']}{refs}{description}")
+        sections.append(f"——{section['title']}——\n" + "\n".join(lines))
+    fields = "\n\n".join(sections)
+    rating = result["rating"]
+    rating_refs = "".join(f"[{numbers[ref]}]" for ref in rating["source_refs"])
+    sources = "\n".join(
+        f"[{index}] {source['title']}（{source['checked_at']}）\n{source['url']}"
+        for index, source in enumerate(result["sources"], 1)
+    )
+    history = "\n".join(
+        f"第{row['count']}次 {row['date'][5:]} {row['world']} · {row['gender']} · {row['rating']} · {row['summary']}"
+        for row in reversed(result["reborn_history"][-10:])
+    )
+    introduction = f"{name}，" if name else ""
+    mode_name = MODE_NAMES[result["mode"]]
+    return (
+        f"{prefix}\n{result['title']} · {result['date']}\n"
+        f"{introduction}这是你的第{result['reborn_count']}次{mode_name}投胎\n"
+        f"世界：{result['world']['title']} ｜ 性别：{result['gender']}\n"
+        f"{result['world']['description']}\n资料范围：{result['world']['scope']}\n\n{fields}\n\n"
+        f"{rating['label']}：{rating['value']}{rating_refs}\n{rating['description']}\n"
+        f"{result['notice']}\n资料版本：{result['dataset_version']}\n"
+        f"资料来源：\n{sources}\n最近十次{mode_name}投胎：\n{history}"
     )

@@ -1,0 +1,2335 @@
+{
+    "id": "cyberpunk",
+    "title": "赛博未来",
+    "weight": 1,
+    "description": "企业、社区与流动车队共同维系的原创未来社会，轨道居住区依赖生命保障和补给。",
+    "source_refs": [
+        "red_overview",
+        "red_lifepath",
+        "nasa_eclss",
+        "bci_study",
+        "project_isekai_v3",
+        "project_lower_power_ranges"
+    ],
+    "species": [
+        {
+            "id": "human",
+            "name": "人类",
+            "weight": 1,
+            "birth_state": "人类新生，尚未接受义体改造",
+            "features": [
+                "自然出生的人类",
+                "照护、医疗和技术接入由家庭与地区决定"
+            ],
+            "life_span": "寿命受到健康、环境与生活条件影响。",
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "原创未来 / 自然出生的人类",
+            "review_note": "",
+            "reviewed_on": "2026-10-19"
+        }
+    ],
+    "regions": [
+        {
+            "id": "industrial",
+            "name": "工业街区",
+            "weight": 28,
+            "description": "产线与维修站构成这里的工作节奏。",
+            "species_ids": [
+                "human"
+            ],
+            "family_ids": [
+                "worker",
+                "technical",
+                "street",
+                "infrastructure",
+                "fabrication",
+                "recycling",
+                "relocation"
+            ],
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "赛博未来 / regions / industrial",
+            "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。",
+            "reviewed_on": "2026-10-19",
+            "context": "地表聚落 · 原创未来",
+            "birth_options": {
+                "medical": [
+                    "community",
+                    "contract",
+                    "corporate"
+                ]
+            }
+        },
+        {
+            "id": "residential",
+            "name": "老旧居住区",
+            "weight": 27,
+            "description": "拥挤住宅与街边商铺相邻，社区关系提供有限支持。",
+            "species_ids": [
+                "human"
+            ],
+            "family_ids": [
+                "worker",
+                "street",
+                "medical",
+                "education",
+                "relocation",
+                "recycling",
+                "public_service"
+            ],
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "赛博未来 / regions / residential",
+            "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。",
+            "reviewed_on": "2026-10-19",
+            "context": "地表聚落 · 原创未来",
+            "birth_options": {
+                "medical": [
+                    "community",
+                    "contract",
+                    "corporate"
+                ]
+            }
+        },
+        {
+            "id": "corporate",
+            "name": "企业居住区",
+            "weight": 18,
+            "description": "住房和生活服务与雇佣关系紧密相连。",
+            "species_ids": [
+                "human"
+            ],
+            "family_ids": [
+                "technical",
+                "corporate",
+                "elite",
+                "education",
+                "fabrication",
+                "infrastructure"
+            ],
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "赛博未来 / regions / corporate",
+            "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。",
+            "reviewed_on": "2026-10-19",
+            "context": "地表聚落 · 原创未来",
+            "birth_options": {
+                "medical": [
+                    "community",
+                    "contract",
+                    "corporate"
+                ]
+            }
+        },
+        {
+            "id": "commercial",
+            "name": "商贸街区",
+            "weight": 14,
+            "description": "运输、交易和媒体活动交织，机会与竞争同时存在。",
+            "species_ids": [
+                "human"
+            ],
+            "family_ids": [
+                "street",
+                "technical",
+                "medical",
+                "corporate",
+                "entertainment",
+                "education",
+                "relocation",
+                "public_service"
+            ],
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "赛博未来 / regions / commercial",
+            "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。",
+            "reviewed_on": "2026-10-19",
+            "context": "地表聚落 · 原创未来",
+            "birth_options": {
+                "medical": [
+                    "community",
+                    "contract",
+                    "corporate"
+                ]
+            }
+        },
+        {
+            "id": "transport",
+            "name": "流动运输聚落",
+            "weight": 10,
+            "description": "家庭围绕车队与运输站点生活，迁移是日常的一部分。",
+            "species_ids": [
+                "human"
+            ],
+            "family_ids": [
+                "nomad",
+                "technical",
+                "street",
+                "relocation",
+                "infrastructure"
+            ],
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "赛博未来 / regions / transport",
+            "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。",
+            "reviewed_on": "2026-10-19",
+            "context": "地表聚落 · 原创未来",
+            "birth_options": {
+                "medical": [
+                    "community",
+                    "contract",
+                    "corporate"
+                ]
+            }
+        },
+        {
+            "id": "orbital",
+            "name": "轨道居住区",
+            "weight": 3,
+            "description": "居住设施依靠生命保障、维护供应与严密管理。",
+            "species_ids": [
+                "human"
+            ],
+            "family_ids": [
+                "technical",
+                "medical",
+                "corporate",
+                "elite",
+                "orbital_support",
+                "education",
+                "food_supply"
+            ],
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "赛博未来 / regions / orbital",
+            "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。",
+            "reviewed_on": "2026-10-19",
+            "context": "轨道设施 · 原创未来",
+            "birth_options": {
+                "medical": [
+                    "orbital"
+                ]
+            }
+        },
+        {
+            "id": "waterworks",
+            "name": "水循环设施区",
+            "weight": 9,
+            "description": "水处理设施与职工住宅相邻，供应维护支撑周边城区。",
+            "species_ids": [
+                "human"
+            ],
+            "family_ids": [
+                "infrastructure",
+                "worker",
+                "technical"
+            ],
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "赛博未来 / regions / waterworks",
+            "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。",
+            "reviewed_on": "2026-10-19",
+            "context": "地表聚落 · 原创未来",
+            "birth_options": {
+                "medical": [
+                    "community",
+                    "contract",
+                    "corporate"
+                ]
+            }
+        },
+        {
+            "id": "agri_dome",
+            "name": "设施农业聚落",
+            "weight": 9,
+            "description": "受控种植设施与物流节点形成相对独立的生产社区。",
+            "species_ids": [
+                "human"
+            ],
+            "family_ids": [
+                "food_supply",
+                "technical",
+                "relocation"
+            ],
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "赛博未来 / regions / agri_dome",
+            "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。",
+            "reviewed_on": "2026-10-19",
+            "context": "地表聚落 · 原创未来",
+            "birth_options": {
+                "medical": [
+                    "community",
+                    "contract",
+                    "corporate"
+                ]
+            }
+        },
+        {
+            "id": "reclamation",
+            "name": "旧设备回收区",
+            "weight": 12,
+            "description": "拆解场、维修铺与二手交易围绕材料再利用运转。",
+            "species_ids": [
+                "human"
+            ],
+            "family_ids": [
+                "recycling",
+                "street",
+                "relocation"
+            ],
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "赛博未来 / regions / reclamation",
+            "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。",
+            "reviewed_on": "2026-10-19",
+            "context": "地表聚落 · 原创未来",
+            "birth_options": {
+                "medical": [
+                    "community",
+                    "contract",
+                    "corporate"
+                ]
+            }
+        },
+        {
+            "id": "education_quarter",
+            "name": "公共学区",
+            "weight": 8,
+            "description": "学校、档案服务与居民社区共享有限的公共资源。",
+            "species_ids": [
+                "human"
+            ],
+            "family_ids": [
+                "education",
+                "medical",
+                "worker",
+                "public_service"
+            ],
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "赛博未来 / regions / education_quarter",
+            "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。",
+            "reviewed_on": "2026-10-19",
+            "context": "地表聚落 · 原创未来",
+            "birth_options": {
+                "medical": [
+                    "community",
+                    "contract",
+                    "corporate"
+                ]
+            }
+        },
+        {
+            "id": "entertainment",
+            "name": "夜间演出街区",
+            "weight": 8,
+            "description": "演出和内容工作繁忙，居民依靠不规则的项目安排生活。",
+            "species_ids": [
+                "human"
+            ],
+            "family_ids": [
+                "entertainment",
+                "street",
+                "technical"
+            ],
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "赛博未来 / regions / entertainment",
+            "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。",
+            "reviewed_on": "2026-10-19",
+            "context": "地表聚落 · 原创未来",
+            "birth_options": {
+                "medical": [
+                    "community",
+                    "contract",
+                    "corporate"
+                ]
+            }
+        },
+        {
+            "id": "orbital_transfer",
+            "name": "轨道转运站",
+            "weight": 2,
+            "description": "居住舱与货运设施相连，维护、调度和应急工作贯穿日常。",
+            "species_ids": [
+                "human"
+            ],
+            "family_ids": [
+                "orbital_support",
+                "corporate",
+                "technical"
+            ],
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "赛博未来 / regions / orbital_transfer",
+            "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。",
+            "reviewed_on": "2026-10-19",
+            "context": "轨道设施 · 原创未来",
+            "birth_options": {
+                "medical": [
+                    "orbital"
+                ]
+            }
+        }
+    ],
+    "families": [
+        {
+            "id": "worker",
+            "name": "产业工人家庭",
+            "weight": 34,
+            "rarity": "普通",
+            "description": "家庭收入依靠固定班次，生活保障有限但有清晰的社区联系。",
+            "parent_profile_ids": [
+                "worker",
+                "courier",
+                "guard"
+            ],
+            "resources": [
+                "基础社区支持",
+                "日常劳动经验"
+            ],
+            "directions": [
+                "职业技能学习",
+                "社区服务"
+            ],
+            "challenge": "教育和高阶医疗需要额外积累。",
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "赛博未来 / families / worker",
+            "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。",
+            "reviewed_on": "2026-10-19",
+            "birth_options": {
+                "medical": [
+                    "community",
+                    "contract",
+                    "orbital"
+                ],
+                "registration": [
+                    "resident",
+                    "dependent"
+                ],
+                "network": [
+                    "shared",
+                    "household"
+                ]
+            }
+        },
+        {
+            "id": "street",
+            "name": "街区谋生家庭",
+            "weight": 25,
+            "rarity": "常见",
+            "description": "家中依靠零散工作和街区联系维持生活。",
+            "parent_profile_ids": [
+                "vendor",
+                "repairer",
+                "courier",
+                "fixer",
+                "media",
+                "musician"
+            ],
+            "resources": [
+                "街区见闻",
+                "灵活谋生经验"
+            ],
+            "directions": [
+                "维修与交易",
+                "媒体与内容创作"
+            ],
+            "challenge": "收入与居住条件容易受到街区变动影响。",
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "赛博未来 / families / street",
+            "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。",
+            "reviewed_on": "2026-10-19",
+            "birth_options": {
+                "medical": [
+                    "community",
+                    "contract",
+                    "orbital"
+                ],
+                "registration": [
+                    "resident",
+                    "dependent"
+                ],
+                "network": [
+                    "shared",
+                    "household"
+                ]
+            }
+        },
+        {
+            "id": "technical",
+            "name": "技术从业家庭",
+            "weight": 18,
+            "rarity": "少见",
+            "description": "家中有人掌握维护或工程技术，能够提供较稳定的学习渠道。",
+            "parent_profile_ids": [
+                "engineer",
+                "repairer",
+                "networker",
+                "tech"
+            ],
+            "resources": [
+                "技术启蒙",
+                "设备接触",
+                "基础教育"
+            ],
+            "directions": [
+                "工程与维护",
+                "网络技术"
+            ],
+            "challenge": "设备权限和维护成本限制了可使用的技术。",
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "赛博未来 / families / technical",
+            "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。",
+            "reviewed_on": "2026-10-19",
+            "birth_options": {
+                "medical": [
+                    "community",
+                    "contract",
+                    "orbital"
+                ],
+                "registration": [
+                    "resident",
+                    "dependent"
+                ],
+                "network": [
+                    "shared",
+                    "household"
+                ]
+            }
+        },
+        {
+            "id": "medical",
+            "name": "社区医疗家庭",
+            "weight": 10,
+            "rarity": "少见",
+            "description": "家中与诊所或医疗服务保持联系，照护经验较丰富。",
+            "parent_profile_ids": [
+                "doctor",
+                "medtech",
+                "repairer"
+            ],
+            "resources": [
+                "基础医疗",
+                "健康照护知识",
+                "社区联系"
+            ],
+            "directions": [
+                "医疗服务",
+                "辅助设备技术"
+            ],
+            "challenge": "接触医疗不意味着能够获得所有高端治疗。",
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "赛博未来 / families / medical",
+            "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。",
+            "reviewed_on": "2026-10-19",
+            "birth_options": {
+                "medical": [
+                    "community",
+                    "contract",
+                    "orbital"
+                ],
+                "registration": [
+                    "resident",
+                    "dependent"
+                ],
+                "network": [
+                    "shared",
+                    "household"
+                ]
+            }
+        },
+        {
+            "id": "nomad",
+            "name": "运输车队家庭",
+            "weight": 9,
+            "rarity": "少见",
+            "description": "家中依靠运输协作，成长经历伴随不同聚落间的往来。",
+            "parent_profile_ids": [
+                "driver",
+                "guard",
+                "repairer",
+                "courier"
+            ],
+            "resources": [
+                "车队支持",
+                "运输见闻",
+                "基础维护指导"
+            ],
+            "directions": [
+                "运输与驾驶",
+                "车队维护"
+            ],
+            "challenge": "流动生活可能打断稳定教育和照护。",
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "赛博未来 / families / nomad",
+            "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。",
+            "reviewed_on": "2026-10-19",
+            "birth_options": {
+                "medical": [
+                    "community",
+                    "contract",
+                    "orbital"
+                ],
+                "registration": [
+                    "mobile"
+                ],
+                "network": [
+                    "shared",
+                    "household"
+                ]
+            }
+        },
+        {
+            "id": "corporate",
+            "name": "企业专业家庭",
+            "weight": 3,
+            "rarity": "罕见",
+            "description": "家中在企业系统内有稳定岗位和受管理的资源。",
+            "parent_profile_ids": [
+                "engineer",
+                "networker",
+                "manager"
+            ],
+            "resources": [
+                "系统教育",
+                "企业医疗渠道",
+                "较稳定住房"
+            ],
+            "directions": [
+                "企业专业岗位",
+                "技术研究"
+            ],
+            "challenge": "家庭资源与雇佣和身份权限紧密绑定。",
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "赛博未来 / families / corporate",
+            "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。",
+            "reviewed_on": "2026-10-19",
+            "birth_options": {
+                "medical": [
+                    "contract",
+                    "corporate",
+                    "orbital"
+                ],
+                "registration": [
+                    "dependent"
+                ],
+                "network": [
+                    "household",
+                    "managed"
+                ]
+            }
+        },
+        {
+            "id": "elite",
+            "name": "企业管理家庭",
+            "weight": 1,
+            "rarity": "稀有",
+            "description": "家中有较多资源，也处在更复杂的企业关系之中。",
+            "parent_profile_ids": [
+                "executive",
+                "researcher"
+            ],
+            "resources": [
+                "优质教育",
+                "专业医疗",
+                "广泛的信息渠道"
+            ],
+            "directions": [
+                "企业管理",
+                "专业研究"
+            ],
+            "challenge": "家庭地位伴随责任与利益关系，不能替代个人能力。",
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "赛博未来 / families / elite",
+            "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。",
+            "reviewed_on": "2026-10-19",
+            "birth_options": {
+                "medical": [
+                    "contract",
+                    "corporate",
+                    "orbital"
+                ],
+                "registration": [
+                    "dependent"
+                ],
+                "network": [
+                    "household",
+                    "managed"
+                ]
+            }
+        },
+        {
+            "id": "infrastructure",
+            "name": "基础设施维护家庭",
+            "weight": 15,
+            "rarity": "常见",
+            "description": "家庭围绕供水、电力和公共设施的运转安排生活。",
+            "parent_profile_ids": [
+                "water_operator",
+                "grid_operator",
+                "engineer"
+            ],
+            "resources": [
+                "设施维护见闻",
+                "实用技术指导"
+            ],
+            "directions": [
+                "基础设施运维",
+                "工程学艺"
+            ],
+            "challenge": "轮班与故障应急可能挤占家庭生活时间。",
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "赛博未来 / families / infrastructure",
+            "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。",
+            "reviewed_on": "2026-10-19",
+            "birth_options": {
+                "medical": [
+                    "community",
+                    "contract",
+                    "orbital"
+                ],
+                "registration": [
+                    "resident",
+                    "dependent"
+                ],
+                "network": [
+                    "shared",
+                    "household"
+                ]
+            }
+        },
+        {
+            "id": "food_supply",
+            "name": "食物生产家庭",
+            "weight": 15,
+            "rarity": "常见",
+            "description": "家中从事设施农业与食品供应，熟悉生产和流通的基础环节。",
+            "parent_profile_ids": [
+                "greenhouse_worker",
+                "driver",
+                "worker"
+            ],
+            "resources": [
+                "生产实践见闻",
+                "供应社区联系"
+            ],
+            "directions": [
+                "设施农业",
+                "供应链岗位"
+            ],
+            "challenge": "环境与供货合同变化会影响收入。",
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "赛博未来 / families / food_supply",
+            "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。",
+            "reviewed_on": "2026-10-19",
+            "birth_options": {
+                "medical": [
+                    "community",
+                    "contract",
+                    "orbital"
+                ],
+                "registration": [
+                    "resident",
+                    "dependent"
+                ],
+                "network": [
+                    "shared",
+                    "household"
+                ]
+            }
+        },
+        {
+            "id": "recycling",
+            "name": "资源回收家庭",
+            "weight": 18,
+            "rarity": "常见",
+            "description": "家庭从旧材料和废弃设备中寻找可用资源。",
+            "parent_profile_ids": [
+                "recycler",
+                "salvage_tech",
+                "repairer"
+            ],
+            "resources": [
+                "拆解维修接触",
+                "节约和再利用经验"
+            ],
+            "directions": [
+                "设备修复",
+                "资源回收经营"
+            ],
+            "challenge": "工作环境和零件质量限制了可使用的设备。",
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "赛博未来 / families / recycling",
+            "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。",
+            "reviewed_on": "2026-10-19",
+            "birth_options": {
+                "medical": [
+                    "community",
+                    "contract",
+                    "orbital"
+                ],
+                "registration": [
+                    "resident",
+                    "dependent"
+                ],
+                "network": [
+                    "shared",
+                    "household"
+                ]
+            }
+        },
+        {
+            "id": "education",
+            "name": "社区教育家庭",
+            "weight": 10,
+            "rarity": "少见",
+            "description": "家中从事教学或档案事务，重视长期学习与信息整理。",
+            "parent_profile_ids": [
+                "teacher",
+                "archive_worker",
+                "community_worker"
+            ],
+            "resources": [
+                "稳定学习指导",
+                "基础信息检索",
+                "社区支持"
+            ],
+            "directions": [
+                "教育与信息服务",
+                "自主技术学习"
+            ],
+            "challenge": "公共教育资源不等同于企业专属的设备权限。",
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "赛博未来 / families / education",
+            "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。",
+            "reviewed_on": "2026-10-19",
+            "birth_options": {
+                "medical": [
+                    "community",
+                    "contract",
+                    "orbital"
+                ],
+                "registration": [
+                    "resident",
+                    "dependent"
+                ],
+                "network": [
+                    "shared",
+                    "household"
+                ]
+            }
+        },
+        {
+            "id": "fabrication",
+            "name": "精密制造家庭",
+            "weight": 10,
+            "rarity": "少见",
+            "description": "家庭参与小规模制造和设备校准，实践技能较丰富。",
+            "parent_profile_ids": [
+                "fabricator",
+                "tech",
+                "engineer"
+            ],
+            "resources": [
+                "制造工坊接触",
+                "工具使用指导"
+            ],
+            "directions": [
+                "精密制造",
+                "设备维护"
+            ],
+            "challenge": "生产资料与认证权限需要持续投入。",
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "赛博未来 / families / fabrication",
+            "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。",
+            "reviewed_on": "2026-10-19",
+            "birth_options": {
+                "medical": [
+                    "community",
+                    "contract",
+                    "orbital"
+                ],
+                "registration": [
+                    "resident",
+                    "dependent"
+                ],
+                "network": [
+                    "shared",
+                    "household"
+                ]
+            }
+        },
+        {
+            "id": "entertainment",
+            "name": "文化演出家庭",
+            "weight": 8,
+            "rarity": "少见",
+            "description": "家中靠演出、内容和设备服务谋生，日常节奏随项目变化。",
+            "parent_profile_ids": [
+                "musician",
+                "media",
+                "entertainment_tech"
+            ],
+            "resources": [
+                "创作启蒙",
+                "演出技术接触"
+            ],
+            "directions": [
+                "内容与表演",
+                "文化技术服务"
+            ],
+            "challenge": "项目收入不稳定，关注度不能保证生活保障。",
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "赛博未来 / families / entertainment",
+            "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。",
+            "reviewed_on": "2026-10-19",
+            "birth_options": {
+                "medical": [
+                    "community",
+                    "contract",
+                    "orbital"
+                ],
+                "registration": [
+                    "resident",
+                    "dependent"
+                ],
+                "network": [
+                    "shared",
+                    "household"
+                ]
+            }
+        },
+        {
+            "id": "relocation",
+            "name": "迁居务工家庭",
+            "weight": 18,
+            "rarity": "普通",
+            "description": "家庭正在新的居住区建立生计，依赖合同工作与社区互助。",
+            "parent_profile_ids": [
+                "courier",
+                "worker",
+                "contract_clerk"
+            ],
+            "resources": [
+                "务实谋生经验",
+                "有限互助网络"
+            ],
+            "directions": [
+                "稳定职业技能",
+                "社区安居"
+            ],
+            "challenge": "身份登记和住房条件可能限制学习与就医。",
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "赛博未来 / families / relocation",
+            "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。",
+            "reviewed_on": "2026-10-19",
+            "birth_options": {
+                "medical": [
+                    "community",
+                    "contract",
+                    "orbital"
+                ],
+                "registration": [
+                    "mobile"
+                ],
+                "network": [
+                    "shared",
+                    "household"
+                ]
+            }
+        },
+        {
+            "id": "orbital_support",
+            "name": "轨道生命保障家庭",
+            "weight": 3,
+            "rarity": "罕见",
+            "description": "家中承担居住设施的维护与应急职责。",
+            "parent_profile_ids": [
+                "habitat_tech",
+                "air_operator",
+                "rescue_operator"
+            ],
+            "resources": [
+                "生命保障见闻",
+                "系统化安全教育",
+                "设施技术指导"
+            ],
+            "directions": [
+                "居住设施运维",
+                "应急技术"
+            ],
+            "challenge": "生活依赖设施可靠性与持续补给，技术经验不等于资源无限。",
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "赛博未来 / families / orbital_support",
+            "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。",
+            "reviewed_on": "2026-10-19",
+            "birth_options": {
+                "medical": [
+                    "orbital"
+                ],
+                "registration": [
+                    "dependent",
+                    "resident"
+                ],
+                "network": [
+                    "household",
+                    "managed"
+                ]
+            }
+        },
+        {
+            "id": "public_service",
+            "name": "公共服务家庭",
+            "weight": 8,
+            "rarity": "少见",
+            "description": "家中从事执法、社区或合同事务，权限受岗位职责约束。",
+            "parent_profile_ids": [
+                "lawman",
+                "community_worker",
+                "contract_clerk"
+            ],
+            "resources": [
+                "公共事务见闻"
+            ],
+            "directions": [
+                "社区服务",
+                "事务与职业技能"
+            ],
+            "challenge": "岗位权限不能当作可继承的私人资源。",
+            "birth_options": {
+                "medical": [
+                    "community",
+                    "contract"
+                ],
+                "registration": [
+                    "resident"
+                ],
+                "network": [
+                    "shared",
+                    "household"
+                ]
+            },
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "原创未来 / 公共服务家庭",
+            "review_note": "",
+            "reviewed_on": "2026-10-19"
+        }
+    ],
+    "parent_profiles": [
+        {
+            "id": "worker",
+            "occupation": "产线工人",
+            "identity": "企业雇员",
+            "weight": 4,
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3",
+                "project_lower_power_ranges"
+            ],
+            "source_locator": "赛博未来 / parent_profiles / worker",
+            "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。 本轮较低实力范围：补入较低岗位熟练度；岗位、专业资格和技能熟练度分别看待，不把管理职位固定等同最高能力。",
+            "reviewed_on": "2026-10-19",
+            "affiliation": "所在社区、承包机构或雇主",
+            "resources": [
+                "产线工人相关的职业指导机会"
+            ],
+            "power_set_ids": [
+                "single_trainee",
+                "single_basic"
+            ]
+        },
+        {
+            "id": "courier",
+            "occupation": "物流配送员",
+            "identity": "合同从业者",
+            "weight": 3,
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3",
+                "project_lower_power_ranges"
+            ],
+            "source_locator": "赛博未来 / parent_profiles / courier",
+            "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。 本轮较低实力范围：补入较低岗位熟练度；岗位、专业资格和技能熟练度分别看待，不把管理职位固定等同最高能力。",
+            "reviewed_on": "2026-10-19",
+            "affiliation": "所在社区、承包机构或雇主",
+            "resources": [
+                "物流配送员相关的职业指导机会"
+            ],
+            "power_set_ids": [
+                "single_trainee",
+                "single_basic",
+                "single_experienced"
+            ]
+        },
+        {
+            "id": "guard",
+            "occupation": "安保人员",
+            "identity": "受雇安保",
+            "weight": 2,
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3",
+                "project_lower_power_ranges"
+            ],
+            "source_locator": "赛博未来 / parent_profiles / guard",
+            "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。 本轮较低实力范围：补入较低岗位熟练度；岗位、专业资格和技能熟练度分别看待，不把管理职位固定等同最高能力。",
+            "reviewed_on": "2026-10-19",
+            "affiliation": "所在社区、承包机构或雇主",
+            "resources": [
+                "安保人员相关的职业指导机会"
+            ],
+            "power_set_ids": [
+                "single_basic",
+                "single_experienced"
+            ]
+        },
+        {
+            "id": "vendor",
+            "occupation": "街区商贩",
+            "identity": "独立经营者",
+            "weight": 3,
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3",
+                "project_lower_power_ranges"
+            ],
+            "source_locator": "赛博未来 / parent_profiles / vendor",
+            "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。 本轮较低实力范围：补入较低岗位熟练度；岗位、专业资格和技能熟练度分别看待，不把管理职位固定等同最高能力。",
+            "reviewed_on": "2026-10-19",
+            "affiliation": "所在社区、承包机构或雇主",
+            "resources": [
+                "街区商贩相关的职业指导机会"
+            ],
+            "power_set_ids": [
+                "single_trainee",
+                "single_basic",
+                "single_experienced"
+            ]
+        },
+        {
+            "id": "repairer",
+            "occupation": "维修技工",
+            "identity": "独立技术从业者",
+            "weight": 3,
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3",
+                "project_lower_power_ranges"
+            ],
+            "source_locator": "赛博未来 / parent_profiles / repairer",
+            "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。 本轮较低实力范围：补入较低岗位熟练度；岗位、专业资格和技能熟练度分别看待，不把管理职位固定等同最高能力。",
+            "reviewed_on": "2026-10-19",
+            "affiliation": "所在社区、承包机构或雇主",
+            "resources": [
+                "维修技工相关的职业指导机会"
+            ],
+            "power_set_ids": [
+                "single_basic",
+                "single_experienced",
+                "single_specialist"
+            ]
+        },
+        {
+            "id": "fixer",
+            "occupation": "中间人",
+            "identity": "街区交易联系人",
+            "weight": 1,
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3",
+                "project_lower_power_ranges"
+            ],
+            "source_locator": "赛博未来 / parent_profiles / fixer",
+            "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。 本轮较低实力范围：补入较低岗位熟练度；岗位、专业资格和技能熟练度分别看待，不把管理职位固定等同最高能力。",
+            "reviewed_on": "2026-10-19",
+            "affiliation": "所在社区、承包机构或雇主",
+            "resources": [
+                "中间人相关的职业指导机会"
+            ],
+            "power_set_ids": [
+                "single_basic",
+                "single_experienced",
+                "single_specialist"
+            ]
+        },
+        {
+            "id": "media",
+            "occupation": "媒体人",
+            "identity": "独立内容从业者",
+            "weight": 1,
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3",
+                "project_lower_power_ranges"
+            ],
+            "source_locator": "赛博未来 / parent_profiles / media",
+            "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。 本轮较低实力范围：补入较低岗位熟练度；岗位、专业资格和技能熟练度分别看待，不把管理职位固定等同最高能力。",
+            "reviewed_on": "2026-10-19",
+            "affiliation": "所在社区、承包机构或雇主",
+            "resources": [
+                "媒体人相关的职业指导机会"
+            ],
+            "power_set_ids": [
+                "single_basic",
+                "single_experienced"
+            ]
+        },
+        {
+            "id": "musician",
+            "occupation": "演出者",
+            "identity": "独立文艺从业者",
+            "weight": 1,
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3",
+                "project_lower_power_ranges"
+            ],
+            "source_locator": "赛博未来 / parent_profiles / musician",
+            "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。 本轮较低实力范围：补入较低岗位熟练度；岗位、专业资格和技能熟练度分别看待，不把管理职位固定等同最高能力。",
+            "reviewed_on": "2026-10-19",
+            "affiliation": "所在社区、承包机构或雇主",
+            "resources": [
+                "演出者相关的职业指导机会"
+            ],
+            "power_set_ids": [
+                "single_basic",
+                "single_experienced"
+            ]
+        },
+        {
+            "id": "engineer",
+            "occupation": "企业工程师",
+            "identity": "企业专业雇员",
+            "weight": 3,
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3",
+                "project_lower_power_ranges"
+            ],
+            "source_locator": "赛博未来 / parent_profiles / engineer",
+            "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。 本轮较低实力范围：补入较低岗位熟练度；岗位、专业资格和技能熟练度分别看待，不把管理职位固定等同最高能力。",
+            "reviewed_on": "2026-10-19",
+            "affiliation": "所在社区、承包机构或雇主",
+            "resources": [
+                "企业工程师相关的职业指导机会"
+            ],
+            "power_set_ids": [
+                "single_experienced",
+                "single_specialist"
+            ]
+        },
+        {
+            "id": "networker",
+            "occupation": "网络安全人员",
+            "identity": "技术雇员",
+            "weight": 2,
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3",
+                "project_lower_power_ranges"
+            ],
+            "source_locator": "赛博未来 / parent_profiles / networker",
+            "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。 本轮较低实力范围：补入较低岗位熟练度；岗位、专业资格和技能熟练度分别看待，不把管理职位固定等同最高能力。",
+            "reviewed_on": "2026-10-19",
+            "affiliation": "所在社区、承包机构或雇主",
+            "resources": [
+                "网络安全人员相关的职业指导机会"
+            ],
+            "power_set_ids": [
+                "single_experienced",
+                "single_specialist"
+            ]
+        },
+        {
+            "id": "tech",
+            "occupation": "设备技术员",
+            "identity": "技术服务人员",
+            "weight": 2,
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3",
+                "project_lower_power_ranges"
+            ],
+            "source_locator": "赛博未来 / parent_profiles / tech",
+            "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。 本轮较低实力范围：补入较低岗位熟练度；岗位、专业资格和技能熟练度分别看待，不把管理职位固定等同最高能力。",
+            "reviewed_on": "2026-10-19",
+            "affiliation": "所在社区、承包机构或雇主",
+            "resources": [
+                "设备技术员相关的职业指导机会"
+            ],
+            "power_set_ids": [
+                "single_basic",
+                "single_experienced",
+                "single_specialist"
+            ]
+        },
+        {
+            "id": "doctor",
+            "occupation": "诊所医师",
+            "identity": "社区医疗从业者",
+            "weight": 2,
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "赛博未来 / parent_profiles / doctor",
+            "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。",
+            "reviewed_on": "2026-10-19",
+            "affiliation": "所在社区、承包机构或雇主",
+            "resources": [
+                "诊所医师相关的职业指导机会"
+            ],
+            "power_set_ids": [
+                "single_specialist"
+            ]
+        },
+        {
+            "id": "medtech",
+            "occupation": "医疗技师",
+            "identity": "医疗技术从业者",
+            "weight": 2,
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "赛博未来 / parent_profiles / medtech",
+            "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。",
+            "reviewed_on": "2026-10-19",
+            "affiliation": "所在社区、承包机构或雇主",
+            "resources": [
+                "医疗技师相关的职业指导机会"
+            ],
+            "power_set_ids": [
+                "single_experienced",
+                "single_specialist"
+            ]
+        },
+        {
+            "id": "driver",
+            "occupation": "车队驾驶员",
+            "identity": "运输车队成员",
+            "weight": 3,
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3",
+                "project_lower_power_ranges"
+            ],
+            "source_locator": "赛博未来 / parent_profiles / driver",
+            "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。 本轮较低实力范围：补入较低岗位熟练度；岗位、专业资格和技能熟练度分别看待，不把管理职位固定等同最高能力。",
+            "reviewed_on": "2026-10-19",
+            "affiliation": "所在社区、承包机构或雇主",
+            "resources": [
+                "车队驾驶员相关的职业指导机会"
+            ],
+            "power_set_ids": [
+                "single_basic",
+                "single_experienced",
+                "single_specialist"
+            ]
+        },
+        {
+            "id": "manager",
+            "occupation": "部门管理者",
+            "identity": "企业管理人员",
+            "weight": 1,
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3",
+                "project_lower_power_ranges"
+            ],
+            "source_locator": "赛博未来 / parent_profiles / manager",
+            "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。 本轮较低实力范围：补入较低岗位熟练度；岗位、专业资格和技能熟练度分别看待，不把管理职位固定等同最高能力。",
+            "reviewed_on": "2026-10-19",
+            "affiliation": "所在社区、承包机构或雇主",
+            "resources": [
+                "部门管理者相关的职业指导机会"
+            ],
+            "power_set_ids": [
+                "single_experienced",
+                "single_specialist",
+                "single_senior"
+            ]
+        },
+        {
+            "id": "lawman",
+            "occupation": "执法人员",
+            "identity": "公共执法人员，不等同于企业管理层",
+            "weight": 1,
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3",
+                "project_lower_power_ranges"
+            ],
+            "source_locator": "赛博未来 / parent_profiles / lawman",
+            "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。 本轮较低实力范围：补入较低岗位熟练度；岗位、专业资格和技能熟练度分别看待，不把管理职位固定等同最高能力。",
+            "reviewed_on": "2026-10-19",
+            "affiliation": "公共执法机构",
+            "resources": [
+                "执法人员相关的职业指导机会"
+            ],
+            "power_set_ids": [
+                "single_basic",
+                "single_experienced",
+                "single_specialist"
+            ]
+        },
+        {
+            "id": "executive",
+            "occupation": "企业高管",
+            "identity": "企业管理层",
+            "weight": 1,
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3",
+                "project_lower_power_ranges"
+            ],
+            "source_locator": "赛博未来 / parent_profiles / executive",
+            "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。 本轮较低实力范围：补入较低岗位熟练度；岗位、专业资格和技能熟练度分别看待，不把管理职位固定等同最高能力。",
+            "reviewed_on": "2026-10-19",
+            "affiliation": "所在社区、承包机构或雇主",
+            "resources": [
+                "企业高管相关的职业指导机会"
+            ],
+            "power_set_ids": [
+                "single_specialist",
+                "single_senior"
+            ]
+        },
+        {
+            "id": "researcher",
+            "occupation": "研究负责人",
+            "identity": "企业研究部门",
+            "weight": 1,
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3",
+                "project_lower_power_ranges"
+            ],
+            "source_locator": "赛博未来 / parent_profiles / researcher",
+            "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。 本轮较低实力范围：补入较低岗位熟练度；岗位、专业资格和技能熟练度分别看待，不把管理职位固定等同最高能力。",
+            "reviewed_on": "2026-10-19",
+            "affiliation": "所在社区、承包机构或雇主",
+            "resources": [
+                "研究负责人相关的职业指导机会"
+            ],
+            "power_set_ids": [
+                "single_specialist",
+                "single_senior"
+            ]
+        },
+        {
+            "id": "water_operator",
+            "occupation": "水循环维护员",
+            "identity": "基础设施雇员",
+            "weight": 3,
+            "provenance": "mixed",
+            "source_refs": [
+                "nasa_eclss",
+                "project_isekai_v3",
+                "project_lower_power_ranges"
+            ],
+            "source_locator": "NASA ECLSS / 原创岗位",
+            "review_note": "现实资料支持技术维度，未来岗位与家庭安排属于外推。 本轮较低实力范围：补入较低岗位熟练度；岗位、专业资格和技能熟练度分别看待，不把管理职位固定等同最高能力。",
+            "reviewed_on": "2026-10-19",
+            "affiliation": "所在社区、承包机构或雇主",
+            "resources": [
+                "水循环维护员相关的职业指导机会"
+            ],
+            "power_set_ids": [
+                "single_basic",
+                "single_experienced",
+                "single_specialist"
+            ]
+        },
+        {
+            "id": "grid_operator",
+            "occupation": "电网调度员",
+            "identity": "能源系统雇员",
+            "weight": 2,
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "赛博未来 / parent_profiles / grid_operator",
+            "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。",
+            "reviewed_on": "2026-10-19",
+            "affiliation": "所在社区、承包机构或雇主",
+            "resources": [
+                "电网调度员相关的职业指导机会"
+            ],
+            "power_set_ids": [
+                "single_specialist"
+            ]
+        },
+        {
+            "id": "greenhouse_worker",
+            "occupation": "设施农业工人",
+            "identity": "食物生产从业者",
+            "weight": 3,
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3",
+                "project_lower_power_ranges"
+            ],
+            "source_locator": "赛博未来 / parent_profiles / greenhouse_worker",
+            "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。 本轮较低实力范围：补入较低岗位熟练度；岗位、专业资格和技能熟练度分别看待，不把管理职位固定等同最高能力。",
+            "reviewed_on": "2026-10-19",
+            "affiliation": "所在社区、承包机构或雇主",
+            "resources": [
+                "设施农业工人相关的职业指导机会"
+            ],
+            "power_set_ids": [
+                "single_trainee",
+                "single_basic",
+                "single_experienced"
+            ]
+        },
+        {
+            "id": "recycler",
+            "occupation": "回收分拣员",
+            "identity": "资源回收从业者",
+            "weight": 3,
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3",
+                "project_lower_power_ranges"
+            ],
+            "source_locator": "赛博未来 / parent_profiles / recycler",
+            "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。 本轮较低实力范围：补入较低岗位熟练度；岗位、专业资格和技能熟练度分别看待，不把管理职位固定等同最高能力。",
+            "reviewed_on": "2026-10-19",
+            "affiliation": "所在社区、承包机构或雇主",
+            "resources": [
+                "回收分拣员相关的职业指导机会"
+            ],
+            "power_set_ids": [
+                "single_trainee",
+                "single_basic",
+                "single_experienced"
+            ]
+        },
+        {
+            "id": "teacher",
+            "occupation": "社区教师",
+            "identity": "教育服务人员",
+            "weight": 2,
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3",
+                "project_lower_power_ranges"
+            ],
+            "source_locator": "赛博未来 / parent_profiles / teacher",
+            "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。 本轮较低实力范围：补入较低岗位熟练度；岗位、专业资格和技能熟练度分别看待，不把管理职位固定等同最高能力。",
+            "reviewed_on": "2026-10-19",
+            "affiliation": "所在社区、承包机构或雇主",
+            "resources": [
+                "社区教师相关的职业指导机会"
+            ],
+            "power_set_ids": [
+                "single_basic",
+                "single_experienced",
+                "single_specialist"
+            ]
+        },
+        {
+            "id": "archive_worker",
+            "occupation": "信息档案员",
+            "identity": "文书服务人员",
+            "weight": 2,
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3",
+                "project_lower_power_ranges"
+            ],
+            "source_locator": "赛博未来 / parent_profiles / archive_worker",
+            "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。 本轮较低实力范围：补入较低岗位熟练度；岗位、专业资格和技能熟练度分别看待，不把管理职位固定等同最高能力。",
+            "reviewed_on": "2026-10-19",
+            "affiliation": "所在社区、承包机构或雇主",
+            "resources": [
+                "信息档案员相关的职业指导机会"
+            ],
+            "power_set_ids": [
+                "single_basic",
+                "single_experienced"
+            ]
+        },
+        {
+            "id": "fabricator",
+            "occupation": "精密制造技工",
+            "identity": "制造工坊雇员",
+            "weight": 2,
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3",
+                "project_lower_power_ranges"
+            ],
+            "source_locator": "赛博未来 / parent_profiles / fabricator",
+            "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。 本轮较低实力范围：补入较低岗位熟练度；岗位、专业资格和技能熟练度分别看待，不把管理职位固定等同最高能力。",
+            "reviewed_on": "2026-10-19",
+            "affiliation": "所在社区、承包机构或雇主",
+            "resources": [
+                "精密制造技工相关的职业指导机会"
+            ],
+            "power_set_ids": [
+                "single_experienced",
+                "single_specialist"
+            ]
+        },
+        {
+            "id": "entertainment_tech",
+            "occupation": "演出设备技师",
+            "identity": "文化服务从业者",
+            "weight": 2,
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3",
+                "project_lower_power_ranges"
+            ],
+            "source_locator": "赛博未来 / parent_profiles / entertainment_tech",
+            "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。 本轮较低实力范围：补入较低岗位熟练度；岗位、专业资格和技能熟练度分别看待，不把管理职位固定等同最高能力。",
+            "reviewed_on": "2026-10-19",
+            "affiliation": "所在社区、承包机构或雇主",
+            "resources": [
+                "演出设备技师相关的职业指导机会"
+            ],
+            "power_set_ids": [
+                "single_basic",
+                "single_experienced",
+                "single_specialist"
+            ]
+        },
+        {
+            "id": "rescue_operator",
+            "occupation": "应急救援人员",
+            "identity": "公共救援人员",
+            "weight": 2,
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "赛博未来 / parent_profiles / rescue_operator",
+            "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。",
+            "reviewed_on": "2026-10-19",
+            "affiliation": "所在社区、承包机构或雇主",
+            "resources": [
+                "应急救援人员相关的职业指导机会"
+            ],
+            "region_ids": [
+                "orbital",
+                "orbital_transfer"
+            ],
+            "power_set_ids": [
+                "single_specialist"
+            ]
+        },
+        {
+            "id": "habitat_tech",
+            "occupation": "居住舱维护员",
+            "identity": "轨道设施雇员",
+            "weight": 2,
+            "provenance": "mixed",
+            "source_refs": [
+                "nasa_eclss",
+                "project_isekai_v3"
+            ],
+            "source_locator": "NASA ECLSS / 原创岗位",
+            "review_note": "现实资料支持技术维度，未来岗位与家庭安排属于外推。",
+            "reviewed_on": "2026-10-19",
+            "affiliation": "所在社区、承包机构或雇主",
+            "resources": [
+                "居住舱维护员相关的职业指导机会"
+            ],
+            "region_ids": [
+                "orbital",
+                "orbital_transfer"
+            ],
+            "power_set_ids": [
+                "single_specialist"
+            ]
+        },
+        {
+            "id": "air_operator",
+            "occupation": "空气循环技术员",
+            "identity": "生命保障从业者",
+            "weight": 2,
+            "provenance": "mixed",
+            "source_refs": [
+                "nasa_eclss",
+                "project_isekai_v3"
+            ],
+            "source_locator": "NASA ECLSS / 原创岗位",
+            "review_note": "现实资料支持技术维度，未来岗位与家庭安排属于外推。",
+            "reviewed_on": "2026-10-19",
+            "affiliation": "所在社区、承包机构或雇主",
+            "resources": [
+                "空气循环技术员相关的职业指导机会"
+            ],
+            "region_ids": [
+                "orbital",
+                "orbital_transfer"
+            ],
+            "power_set_ids": [
+                "single_specialist"
+            ]
+        },
+        {
+            "id": "contract_clerk",
+            "occupation": "合同文书",
+            "identity": "受雇事务人员",
+            "weight": 2,
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3",
+                "project_lower_power_ranges"
+            ],
+            "source_locator": "赛博未来 / parent_profiles / contract_clerk",
+            "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。 本轮较低实力范围：补入较低岗位熟练度；岗位、专业资格和技能熟练度分别看待，不把管理职位固定等同最高能力。",
+            "reviewed_on": "2026-10-19",
+            "affiliation": "所在社区、承包机构或雇主",
+            "resources": [
+                "合同文书相关的职业指导机会"
+            ],
+            "power_set_ids": [
+                "single_basic",
+                "single_experienced"
+            ]
+        },
+        {
+            "id": "community_worker",
+            "occupation": "社区事务协理员",
+            "identity": "社区服务人员",
+            "weight": 2,
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3",
+                "project_lower_power_ranges"
+            ],
+            "source_locator": "赛博未来 / parent_profiles / community_worker",
+            "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。 本轮较低实力范围：补入较低岗位熟练度；岗位、专业资格和技能熟练度分别看待，不把管理职位固定等同最高能力。",
+            "reviewed_on": "2026-10-19",
+            "affiliation": "所在社区、承包机构或雇主",
+            "resources": [
+                "社区事务协理员相关的职业指导机会"
+            ],
+            "power_set_ids": [
+                "single_basic",
+                "single_experienced"
+            ]
+        },
+        {
+            "id": "salvage_tech",
+            "occupation": "旧设备拆解员",
+            "identity": "独立回收从业者",
+            "weight": 2,
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3",
+                "project_lower_power_ranges"
+            ],
+            "source_locator": "赛博未来 / parent_profiles / salvage_tech",
+            "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。 本轮较低实力范围：补入较低岗位熟练度；岗位、专业资格和技能熟练度分别看待，不把管理职位固定等同最高能力。",
+            "reviewed_on": "2026-10-19",
+            "affiliation": "所在社区、承包机构或雇主",
+            "resources": [
+                "旧设备拆解员相关的职业指导机会"
+            ],
+            "power_set_ids": [
+                "single_basic",
+                "single_experienced",
+                "single_specialist"
+            ]
+        }
+    ],
+    "powers": [
+        {
+            "id": "basic",
+            "name": "基础岗位技能",
+            "system": "technology",
+            "rank": "basic",
+            "acquisition": "岗位训练与实践",
+            "risk": "",
+            "birth_note": "",
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "原创岗位技能分层",
+            "review_note": "不是RED的Role Ability、战斗等级或跨职业能力排名。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "experienced",
+            "name": "熟练职业技能",
+            "system": "technology",
+            "rank": "experienced",
+            "acquisition": "岗位训练与实践",
+            "risk": "",
+            "birth_note": "",
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "原创岗位技能分层",
+            "review_note": "不是RED的Role Ability、战斗等级或跨职业能力排名。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "specialist",
+            "name": "专业技术能力",
+            "system": "technology",
+            "rank": "specialist",
+            "acquisition": "岗位训练与实践",
+            "risk": "",
+            "birth_note": "",
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "原创岗位技能分层",
+            "review_note": "不是RED的Role Ability、战斗等级或跨职业能力排名。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "senior",
+            "name": "资深专业与管理能力",
+            "system": "technology",
+            "rank": "senior",
+            "acquisition": "岗位训练与实践",
+            "risk": "",
+            "birth_note": "",
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "原创岗位技能分层",
+            "review_note": "不是RED的Role Ability、战斗等级或跨职业能力排名。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "trainee",
+            "name": "岗位入门 · 培训阶段",
+            "system": "technology",
+            "rank": "trainee",
+            "acquisition": "岗位培训与带教",
+            "risk": "仍在学习岗位流程，尚不能独立承担超出训练和授权的工作。",
+            "birth_note": "",
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_lower_power_ranges"
+            ],
+            "source_locator": "原创岗位技能 / 低于基础岗位技能",
+            "review_note": "仅用于适合岗位入门的身份，不代表RED的官方等级。",
+            "reviewed_on": "2026-10-19"
+        }
+    ],
+    "traits": [
+        {
+            "id": "analytical",
+            "name": "善于观察",
+            "weight": 22,
+            "description": "对规则和模式较敏感，未来可能喜欢拆解问题。",
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "赛博未来 / traits / analytical",
+            "review_note": "成长倾向属于游戏叙事，不作新生儿认知诊断，不推断未来职业、原作能力或必然成就。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "dexterous",
+            "name": "动作协调",
+            "weight": 18,
+            "description": "动作学习的基础较好，仍需要练习与照护。",
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "赛博未来 / traits / dexterous",
+            "review_note": "成长倾向属于游戏叙事，不作新生儿认知诊断，不推断未来职业、原作能力或必然成就。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "steady",
+            "name": "情绪平稳",
+            "weight": 18,
+            "description": "较容易建立稳定节奏，适合循序适应新环境。",
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "赛博未来 / traits / steady",
+            "review_note": "成长倾向属于游戏叙事，不作新生儿认知诊断，不推断未来职业、原作能力或必然成就。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "sociable",
+            "name": "亲近他人",
+            "weight": 16,
+            "description": "容易回应他人的声音与表情，可能喜欢交流。",
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "赛博未来 / traits / sociable",
+            "review_note": "成长倾向属于游戏叙事，不作新生儿认知诊断，不推断未来职业、原作能力或必然成就。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "persistent",
+            "name": "专注耐心",
+            "weight": 16,
+            "description": "面对重复任务能够保持兴趣，成长中可能擅长持续练习。",
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "赛博未来 / traits / persistent",
+            "review_note": "成长倾向属于游戏叙事，不作新生儿认知诊断，不推断未来职业、原作能力或必然成就。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "ordinary",
+            "name": "自然新生",
+            "weight": 10,
+            "description": "没有额外改造或特殊技术赋予，未来由教育和经历塑造。",
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "赛博未来 / traits / ordinary",
+            "review_note": "成长倾向属于游戏叙事，不作新生儿认知诊断，不推断未来职业、原作能力或必然成就。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "pattern",
+            "name": "模式感敏锐",
+            "weight": 10,
+            "description": "容易注意到重复的声音和变化，未来可通过学习培养分析能力。",
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "赛博未来 / traits / pattern",
+            "review_note": "成长倾向属于游戏叙事，不作新生儿认知诊断，不推断未来职业、原作能力或必然成就。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "creative",
+            "name": "想象活跃",
+            "weight": 10,
+            "description": "对新鲜刺激保持兴趣，可能喜欢故事、设计或制作活动。",
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "赛博未来 / traits / creative",
+            "review_note": "成长倾向属于游戏叙事，不作新生儿认知诊断，不推断未来职业、原作能力或必然成就。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "rhythm",
+            "name": "节奏回应灵敏",
+            "weight": 10,
+            "description": "对节奏变化反应鲜明，相关兴趣仍需要实践与教育发展。",
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "赛博未来 / traits / rhythm",
+            "review_note": "成长倾向属于游戏叙事，不作新生儿认知诊断，不推断未来职业、原作能力或必然成就。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "adaptive",
+            "name": "环境适应较稳",
+            "weight": 10,
+            "description": "在照护下较容易建立新节奏，不表示能够忽略环境风险。",
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "赛博未来 / traits / adaptive",
+            "review_note": "成长倾向属于游戏叙事，不作新生儿认知诊断，不推断未来职业、原作能力或必然成就。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "spatial",
+            "name": "空间兴趣突出",
+            "weight": 10,
+            "description": "对位置和形状容易保持注意，未来可能喜欢搭建与动手探索。",
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "赛博未来 / traits / spatial",
+            "review_note": "成长倾向属于游戏叙事，不作新生儿认知诊断，不推断未来职业、原作能力或必然成就。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "patient_learning",
+            "name": "乐于反复尝试",
+            "weight": 10,
+            "description": "面对熟悉任务愿意继续尝试，长期练习可能成为优势。",
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "赛博未来 / traits / patient_learning",
+            "review_note": "成长倾向属于游戏叙事，不作新生儿认知诊断，不推断未来职业、原作能力或必然成就。",
+            "reviewed_on": "2026-10-19"
+        }
+    ],
+    "content_note": "原作名词、二手整理和游戏改编逐条标注。地区组合、岗位搭配、资源与权重为游戏设计，不表示人口统计；普通同族家庭不推导通用遗传规律。",
+    "dataset_version": "2026.10.19-v4",
+    "birth_notes": [
+        "岗位技能、义体、网络权限和企业地位不会自动遗传给孩子。"
+    ],
+    "trait_label": "成长倾向",
+    "settings": [
+        {
+            "id": "original_future",
+            "name": "企业与社区并存的未来",
+            "description": "企业合同、社区互助和技术权限影响家庭生活，轨道聚落依赖持续补给。",
+            "weight": 1,
+            "provenance": "mixed",
+            "source_refs": [
+                "red_lifepath",
+                "nasa_eclss",
+                "project_isekai_v3"
+            ],
+            "source_locator": "世界范围",
+            "review_note": "时代抽取权重为游戏设定。",
+            "reviewed_on": "2026-10-19",
+            "canon_scope": "原创未来；RED、现实技术仅作结构与技术维度参考，不标为2045或2077正史。"
+        }
+    ],
+    "birth_axes": [
+        {
+            "id": "medical",
+            "label": "照护渠道",
+            "options": [
+                {
+                    "id": "community",
+                    "name": "社区诊所",
+                    "description": "可接触基础照护，专科服务取决于费用与排期。",
+                    "weight": 5,
+                    "provenance": "adaptation",
+                    "source_refs": [
+                        "project_isekai_v3"
+                    ],
+                    "source_locator": "出生条件",
+                    "review_note": "抽取与家庭限制属于项目设计。",
+                    "reviewed_on": "2026-10-19"
+                },
+                {
+                    "id": "contract",
+                    "name": "合同医疗",
+                    "description": "医疗项目受合同范围、续约与雇佣关系限制。",
+                    "weight": 3,
+                    "provenance": "adaptation",
+                    "source_refs": [
+                        "project_isekai_v3"
+                    ],
+                    "source_locator": "出生条件",
+                    "review_note": "抽取与家庭限制属于项目设计。",
+                    "reviewed_on": "2026-10-19"
+                },
+                {
+                    "id": "corporate",
+                    "name": "企业医疗网络",
+                    "description": "家属可以申请企业服务，权限不等于无限医疗。",
+                    "weight": 1,
+                    "provenance": "adaptation",
+                    "source_refs": [
+                        "project_isekai_v3"
+                    ],
+                    "source_locator": "出生条件",
+                    "review_note": "抽取与家庭限制属于项目设计。",
+                    "reviewed_on": "2026-10-19"
+                },
+                {
+                    "id": "orbital",
+                    "name": "轨道医务站",
+                    "description": "基础照护由站内设施承担，复杂治疗可能需要转运。",
+                    "weight": 2,
+                    "provenance": "adaptation",
+                    "source_refs": [
+                        "project_isekai_v3"
+                    ],
+                    "source_locator": "出生条件",
+                    "review_note": "抽取与家庭限制属于项目设计。",
+                    "reviewed_on": "2026-10-19"
+                }
+            ],
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "照护渠道",
+            "review_note": "",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "registration",
+            "label": "身份登记",
+            "options": [
+                {
+                    "id": "resident",
+                    "name": "社区居民登记",
+                    "description": "已有当地居住记录，服务资格依具体社区规则。",
+                    "weight": 6,
+                    "provenance": "adaptation",
+                    "source_refs": [
+                        "project_isekai_v3"
+                    ],
+                    "source_locator": "出生条件",
+                    "review_note": "抽取与家庭限制属于项目设计。",
+                    "reviewed_on": "2026-10-19"
+                },
+                {
+                    "id": "dependent",
+                    "name": "雇员家属登记",
+                    "description": "家庭资格与雇佣关系相连，离职可能影响服务。",
+                    "weight": 3,
+                    "provenance": "adaptation",
+                    "source_refs": [
+                        "project_isekai_v3"
+                    ],
+                    "source_locator": "出生条件",
+                    "review_note": "抽取与家庭限制属于项目设计。",
+                    "reviewed_on": "2026-10-19"
+                },
+                {
+                    "id": "mobile",
+                    "name": "迁居或车队登记",
+                    "description": "流动身份便于迁移，稳定学籍和服务可能需要衔接。",
+                    "weight": 3,
+                    "provenance": "adaptation",
+                    "source_refs": [
+                        "project_isekai_v3"
+                    ],
+                    "source_locator": "出生条件",
+                    "review_note": "抽取与家庭限制属于项目设计。",
+                    "reviewed_on": "2026-10-19"
+                }
+            ],
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "身份登记",
+            "review_note": "",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "network",
+            "label": "信息接入",
+            "options": [
+                {
+                    "id": "shared",
+                    "name": "公共共享终端",
+                    "description": "使用社区或学校终端，接入时段与隐私保障有限。",
+                    "weight": 5,
+                    "provenance": "adaptation",
+                    "source_refs": [
+                        "project_isekai_v3"
+                    ],
+                    "source_locator": "出生条件",
+                    "review_note": "抽取与家庭限制属于项目设计。",
+                    "reviewed_on": "2026-10-19"
+                },
+                {
+                    "id": "household",
+                    "name": "家庭基础接入",
+                    "description": "可以使用基础网络，不包含企业数据库权限。",
+                    "weight": 4,
+                    "provenance": "adaptation",
+                    "source_refs": [
+                        "project_isekai_v3"
+                    ],
+                    "source_locator": "出生条件",
+                    "review_note": "抽取与家庭限制属于项目设计。",
+                    "reviewed_on": "2026-10-19"
+                },
+                {
+                    "id": "managed",
+                    "name": "受管理的专属接入",
+                    "description": "设备和内容由机构管理，认证权限仍需另行取得。",
+                    "weight": 1,
+                    "provenance": "adaptation",
+                    "source_refs": [
+                        "project_isekai_v3"
+                    ],
+                    "source_locator": "出生条件",
+                    "review_note": "抽取与家庭限制属于项目设计。",
+                    "reviewed_on": "2026-10-19"
+                }
+            ],
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "信息接入",
+            "review_note": "",
+            "reviewed_on": "2026-10-19"
+        }
+    ],
+    "power_sets": [
+        {
+            "id": "single_basic",
+            "weight": 4,
+            "power_ids": [
+                "basic"
+            ],
+            "notes": [],
+            "provenance": "mixed",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "力量组合 / basic",
+            "review_note": "单力量组合沿用原有抽取权重。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "single_experienced",
+            "weight": 3,
+            "power_ids": [
+                "experienced"
+            ],
+            "notes": [],
+            "provenance": "mixed",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "力量组合 / experienced",
+            "review_note": "单力量组合沿用原有抽取权重。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "single_specialist",
+            "weight": 2,
+            "power_ids": [
+                "specialist"
+            ],
+            "notes": [],
+            "provenance": "mixed",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "力量组合 / specialist",
+            "review_note": "单力量组合沿用原有抽取权重。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "single_senior",
+            "weight": 1,
+            "power_ids": [
+                "senior"
+            ],
+            "notes": [],
+            "provenance": "mixed",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "力量组合 / senior",
+            "review_note": "单力量组合沿用原有抽取权重。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "single_trainee",
+            "weight": 4,
+            "power_ids": [
+                "trainee"
+            ],
+            "notes": [],
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_lower_power_ranges"
+            ],
+            "source_locator": "原创技能入门档",
+            "review_note": "权重为游戏设定，不表示现实职业能力分布。",
+            "reviewed_on": "2026-10-19"
+        }
+    ],
+    "provenance": "mixed",
+    "source_locator": "赛博未来 / 第三版",
+    "review_note": "原作名词、二手整理和游戏改编逐条标注。地区组合、岗位搭配、资源与权重为游戏设计，不表示人口统计；普通同族家庭不推导通用遗传规律。",
+    "reviewed_on": "2026-10-19"
+}

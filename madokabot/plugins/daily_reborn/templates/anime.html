@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <style>
+    {% if font_uri %}@font-face { font-family: Reborn; src: url('{{ font_uri }}'); }{% endif %}
+    * { box-sizing: border-box; }
+    body { width: 1080px; margin: 0; padding: 42px; background: #101b26; color: #edf2f4; font-family: Reborn, 'Microsoft YaHei', sans-serif; }
+    header { display: flex; justify-content: space-between; gap: 24px; }
+    .eyebrow { font-size: 17px; letter-spacing: 4px; color: #82c9c8; }
+    h1 { margin: 10px 0 14px; font-size: 52px; letter-spacing: 3px; }
+    .date { text-align: right; flex: none; color: #9cabb8; font-size: 17px; line-height: 1.9; }
+    .intro { color: #aebdca; font-size: 18px; line-height: 1.8; margin: 8px 0; }
+    .identity { border-top: 1px solid #334757; margin-top: 20px; padding-top: 19px; font-size: 21px; line-height: 1.8; overflow-wrap: anywhere; }
+    .identity strong { color: #a8e4dd; }
+    section { margin-top: 20px; }
+    h2 { margin: 0 0 13px; color: #9ddbd7; font-size: 23px; letter-spacing: 2px; }
+    .fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+    .field { background: #182938; border: 1px solid #344d5f; border-radius: 11px; padding: 17px 20px; overflow-wrap: anywhere; }
+    .label { color: #91a9b9; font-size: 15px; margin-bottom: 7px; }
+    .value { font-size: 25px; line-height: 1.5; }
+    .rating { margin-top: 20px; border: 1px solid #527c79; background: #203b43; padding: 21px 24px; border-radius: 12px; }
+    .rating-value { font-size: 32px; color: #d6f2dc; line-height: 1.5; }
+    .history { border-top: 1px solid #334757; padding-top: 22px; margin-top: 26px; }
+    .history h2 { font-size: 19px; }
+    .history-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; }
+    .history-item { border: 1px solid #334c5b; background: #162632; border-radius: 8px; padding: 10px; min-height: 110px; overflow-wrap: anywhere; }
+    .latest { border-color: #70b8ac; }
+    .history-meta { display: flex; justify-content: space-between; font-size: 11px; color: #89a1b1; }
+    .history-world { margin: 7px 0 5px; font-size: 16px; color: #b6dfd9; }
+    .history-detail { font-size: 12px; color: #adbec9; line-height: 1.7; }
+    .empty { display: flex; align-items: center; justify-content: center; border-style: dashed; color: #405d6c; background: transparent; }
+  </style>
+</head>
+<body>
+  <header>
+    <div><div class="eyebrow">{{ result.title }}</div><h1>{{ result.world.title }}</h1></div>
+    <div class="date">{{ result.date }}<br>第 {{ result.reborn_count }} 次{{ mode_name }}投胎</div>
+  </header>
+  <div class="identity"><strong>{{ name }}</strong>，你的随机身份档案 · 性别 {{ result.gender }}</div>
+  {% for section in result.sections %}
+  <section>
+    <h2>{{ section.title }}</h2>
+    <div class="fields">
+      {% for row in section.rows %}
+      <div class="field">
+        <div class="label">{{ row.label }}</div>
+        <div class="value">{{ row.value }}</div>
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+  {% endfor %}
+  <div class="rating">
+    <div class="label">{{ result.rating.label }}</div>
+    <div class="rating-value">{{ result.rating.value }}</div>
+  </div>
+  <section class="history">
+    <h2>最近十次{{ mode_name }}投胎</h2>
+    <div class="history-grid">
+      {% for entry in history_slots %}
+      {% if entry %}<div class="history-item{% if loop.first %} latest{% endif %}">
+        <div class="history-meta"><span>第{{ entry.count }}次</span><span>{{ entry.date[5:] }}</span></div>
+        <div class="history-world">{{ entry.world }}</div><div class="history-detail">{{ entry.gender }} · {{ entry.rating }}<br>{{ entry.summary }}</div>
+      </div>{% else %}<div class="history-item empty">—</div>{% endif %}
+      {% endfor %}
+    </div>
+  </section>
+</body>
+</html>

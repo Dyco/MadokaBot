@@ -1,0 +1,90 @@
+{
+  "id": "attack_on_titan",
+  "title": "进击的巨人",
+  "weight": 1,
+  "description": "训练兵在完成实技与座学后选择兵团，立体机动、城防和内地秩序维护各有不同职责。",
+  "scope": "第一季墙内兵团的人类常规身份；不含巨人继承、阿克曼特殊血统或后期武器。",
+  "history_fields": ["faction", "duty"],
+  "sections": [
+    {"title": "基础属性", "fields": ["identity", "faction", "region", "entry"]},
+    {"title": "兵团档案", "fields": ["duty", "equipment", "training", "constraint"]}
+  ],
+  "pools": [
+    {
+      "id": "identity", "label": "种族 / 身份",
+      "options": [
+        {"id": "human", "value": "人类 · 兵团成员", "weight": 1, "source_refs": ["aot_official_terms", "aot_wiki_setting"]}
+      ]
+    },
+    {
+      "id": "faction", "label": "所属兵团",
+      "options": [
+        {"id": "cadet", "value": "训练兵团", "weight": 35, "source_refs": ["aot_official_terms"]},
+        {"id": "scouts", "value": "调查兵团", "weight": 25, "source_refs": ["aot_wiki_setting"]},
+        {"id": "garrison", "value": "驻扎兵团", "weight": 30, "source_refs": ["aot_official_terms"]},
+        {"id": "police", "value": "宪兵团", "weight": 10, "source_refs": ["aot_baidu_military_police"]}
+      ]
+    },
+    {
+      "id": "region", "label": "主要活动范围",
+      "options": [
+        {"id": "training", "value": "墙内训练场所", "weight": 1, "requires": {"faction": ["cadet"]}, "source_refs": ["aot_official_terms"]},
+        {"id": "expedition", "value": "壁外调查路线与兵团驻地", "weight": 1, "requires": {"faction": ["scouts"]}, "source_refs": ["aot_wiki_setting"]},
+        {"id": "walls", "value": "城墙与墙内城市", "weight": 1, "requires": {"faction": ["garrison"]}, "source_refs": ["aot_official_terms"]},
+        {"id": "interior", "value": "内地", "weight": 1, "requires": {"faction": ["police"]}, "source_refs": ["aot_baidu_military_police"]}
+      ]
+    },
+    {
+      "id": "entry", "label": "入团经历",
+      "options": [
+        {"id": "training", "value": "正在接受训练", "weight": 1, "requires": {"faction": ["cadet"]}, "source_refs": ["aot_official_terms"]},
+        {"id": "graduate", "value": "完成训练后选择所属兵团", "weight": 1, "requires": {"faction": ["scouts", "garrison"]}, "source_refs": ["aot_official_terms"]},
+        {"id": "top_ten", "value": "训练兵综合成绩前十名的新兵", "weight": 1, "requires": {"faction": ["police"]}, "description": "使用早期常规新兵招募原型，不概括后续调任与特殊情况。", "source_refs": ["aot_baidu_military_police"]}
+      ]
+    },
+    {
+      "id": "duty", "label": "职责方向",
+      "options": [
+        {"id": "cadet", "value": "实技与座学训练", "weight": 1, "requires": {"faction": ["cadet"]}, "source_refs": ["aot_official_terms"]},
+        {"id": "scouts", "value": "壁外调查与情报获取", "weight": 1, "requires": {"faction": ["scouts"]}, "source_refs": ["aot_wiki_setting"]},
+        {"id": "defense", "value": "城墙加固与城市守备", "weight": 65, "requires": {"faction": ["garrison"]}, "source_refs": ["aot_official_terms"]},
+        {"id": "artillery", "value": "壁上固定炮防卫", "weight": 35, "requires": {"faction": ["garrison"]}, "source_refs": ["aot_official_terms"]},
+        {"id": "police", "value": "内地秩序维护", "weight": 1, "requires": {"faction": ["police"]}, "source_refs": ["aot_baidu_military_police"]}
+      ]
+    },
+    {
+      "id": "equipment", "label": "装备 / 作业器材",
+      "options": [
+        {"id": "training", "value": "立体机动训练装备", "weight": 1, "requires": {"faction": ["cadet"]}, "source_refs": ["aot_official_terms"]},
+        {"id": "mobility", "value": "立体机动装置与超硬质钢刀刃", "weight": 1, "requires": {"duty": ["scouts", "defense"]}, "source_refs": ["aot_official_terms"]},
+        {"id": "cannon", "value": "壁上固定炮", "weight": 1, "requires": {"duty": ["artillery"]}, "source_refs": ["aot_official_terms"]},
+        {"id": "police", "value": "兵团配发装备（未细分）", "weight": 1, "requires": {"faction": ["police"]}, "source_refs": ["aot_wiki_setting", "aot_baidu_military_police"]}
+      ]
+    },
+    {
+      "id": "training", "label": "训练重点",
+      "options": [
+        {"id": "foundation", "value": "体能、实技与军事知识", "weight": 1, "requires": {"faction": ["cadet"]}, "source_refs": ["aot_official_terms"]},
+        {"id": "mobility", "value": "立体机动与对巨人作战", "weight": 1, "requires": {"duty": ["scouts", "defense"]}, "source_refs": ["aot_official_terms", "aot_wiki_setting"]},
+        {"id": "artillery", "value": "固定炮防卫作业", "weight": 1, "requires": {"duty": ["artillery"]}, "source_refs": ["aot_official_terms"]},
+        {"id": "police", "value": "秩序维护相关职责", "weight": 1, "requires": {"faction": ["police"]}, "source_refs": ["aot_baidu_military_police"]}
+      ]
+    },
+    {
+      "id": "constraint", "label": "装备与任务限制",
+      "options": [
+        {"id": "training", "value": "仍处于受训阶段", "weight": 1, "requires": {"faction": ["cadet"]}, "source_refs": ["aot_official_terms"]},
+        {"id": "mobility", "value": "依靠立体机动装备完成空间机动", "weight": 1, "requires": {"duty": ["scouts", "defense"]}, "description": "属于器械与训练体系，不是额外的超自然能量。", "source_refs": ["aot_official_terms"]},
+        {"id": "fixed", "value": "固定炮机动性有限", "weight": 1, "requires": {"duty": ["artillery"]}, "source_refs": ["aot_official_terms"]},
+        {"id": "interior", "value": "以常规内地任务为职责原型", "weight": 1, "requires": {"faction": ["police"]}, "source_refs": ["aot_baidu_military_police"]}
+      ]
+    },
+    {
+      "id": "rating", "label": "资格 / 职务参考",
+      "options": [
+        {"id": "cadet", "value": "训练兵", "weight": 1, "requires": {"faction": ["cadet"]}, "source_refs": ["aot_official_terms"]},
+        {"id": "soldier", "value": "兵团士兵", "weight": 1, "requires": {"faction": ["scouts", "garrison", "police"]}, "description": "组织身份不换算为巨人击杀数、兵长实力或战力分数。", "source_refs": ["aot_official_terms", "aot_wiki_setting"]}
+      ]
+    }
+  ]
+}

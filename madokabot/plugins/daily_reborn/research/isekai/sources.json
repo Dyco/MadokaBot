@@ -1,0 +1,242 @@
+{
+    "research_date": "2026-10-19",
+    "description": "异世界投胎资料来源登记；只记可核验结论，不保存长篇原文。",
+    "access_status_help": {
+        "page_read": "已读取网页相关正文",
+        "excerpt_read": "只读取公开节选或摘要",
+        "search_index": "只读取搜索引擎索引内容"
+    },
+    "sources": [
+        {
+            "id": "dnd_srd",
+            "title": "D&D SRD 5.2.1 官方入口",
+            "url": "https://www.dndbeyond.com/srd",
+            "publisher": "Wizards of the Coast",
+            "authority": "primary",
+            "access_status": "page_read",
+            "checked_on": "2026-10-19",
+            "supports": "版本、SRD 与免费规则及战役设定的边界",
+            "limitations": "未逐页抽取 SRD；最终生产条目须核对该版本正文。"
+        },
+        {
+            "id": "dnd_origins",
+            "title": "D&D 2024 免费规则：角色起源",
+            "url": "https://www.dndbeyond.com/sources/dnd/br-2024/character-origins",
+            "publisher": "D&D Beyond",
+            "authority": "primary",
+            "access_status": "page_read",
+            "checked_on": "2026-10-19",
+            "supports": "9个基础物种、背景、祖源；本轮补充歌利亚六类巨人祖源与提夫林三类传承",
+            "limitations": "名称与分类来自官方免费规则；中文为项目工作译名，不推导遗传概率，生产内容不复制规则正文。"
+        },
+        {
+            "id": "dnd_classes",
+            "title": "D&D 2024 免费规则：职业",
+            "url": "https://www.dndbeyond.com/sources/dnd/br-2024/character-classes",
+            "publisher": "D&D Beyond",
+            "authority": "primary",
+            "access_status": "page_read",
+            "checked_on": "2026-10-19",
+            "supports": "12 个基础职业；职业与血统不是同一个字段",
+            "limitations": "未收集全部子职、法术、专长。"
+        },
+        {
+            "id": "dnd_creation",
+            "title": "D&D 2024 免费规则：创建角色",
+            "url": "https://www.dndbeyond.com/sources/dnd/br-2024/creating-a-character",
+            "publisher": "D&D Beyond",
+            "authority": "primary",
+            "access_status": "page_read",
+            "checked_on": "2026-10-19",
+            "supports": "1—20 级及四个冒险层次",
+            "limitations": "冒险等级分层不能当成全世界人口比例。"
+        },
+        {
+            "id": "dnd_equipment",
+            "title": "D&D 2024 免费规则：装备与生活开支",
+            "url": "https://www.dndbeyond.com/sources/dnd/br-2024/equipment",
+            "publisher": "D&D Beyond",
+            "authority": "primary",
+            "access_status": "page_read",
+            "checked_on": "2026-10-19",
+            "supports": "7 档生活水平",
+            "limitations": "生活开支不等于爵位、政治权力或战斗力。"
+        },
+        {
+            "id": "red_overview",
+            "title": "Cyberpunk RED Alert：规则书结构",
+            "url": "https://rtalsoriangames.com/2020/10/09/cyberpunk-red-alert/",
+            "publisher": "R. Talsorian Games",
+            "authority": "primary",
+            "access_status": "page_read",
+            "checked_on": "2026-10-19",
+            "supports": "10 个 Role；职业、装备和人生背景分开",
+            "limitations": "不扩写为世界人口、组织全表或科技发展预测。"
+        },
+        {
+            "id": "red_lifepath",
+            "title": "Cyberpunk RED Alert：Lifepath",
+            "url": "https://rtalsoriangames.com/2020/10/16/cyberpunk-red-alert-lifepath/",
+            "publisher": "R. Talsorian Games",
+            "authority": "primary",
+            "access_status": "page_read",
+            "checked_on": "2026-10-19",
+            "supports": "家庭背景、成长环境、家庭危机与职业背景联动",
+            "limitations": "官方示例只能支持结构，不能证明本项目原创职业的完整清单。"
+        },
+        {
+            "id": "red_downloads",
+            "title": "Cyberpunk 官方下载目录",
+            "url": "https://rtalsoriangames.com/downloadable-content/",
+            "publisher": "R. Talsorian Games",
+            "authority": "primary",
+            "access_status": "search_index",
+            "checked_on": "2026-10-19",
+            "supports": "未来补充角色表、扩展资料的入口",
+            "limitations": "尚未逐份整理其下载文件，不计入已收集细目。"
+        },
+        {
+            "id": "ep_game",
+            "title": "Eclipse Phase：The Game",
+            "url": "https://eclipsephase.com/game/",
+            "publisher": "Posthuman Studios",
+            "authority": "primary",
+            "access_status": "page_read",
+            "checked_on": "2026-10-19",
+            "supports": "心智与躯体分离、合成躯体、数字形态等远期科幻维度",
+            "limitations": "独立设定参考；不能直接混入 Cyberpunk RED 正史。"
+        },
+        {
+            "id": "rmji_127",
+            "title": "凡人修仙传：第127章（英文发行页）",
+            "url": "https://www.wuxiaworld.com/novel/rmji/rmji-chapter-127",
+            "publisher": "Wuxiaworld",
+            "authority": "primary",
+            "access_status": "excerpt_read",
+            "checked_on": "2026-10-19",
+            "supports": "从炼气至大乘的八个境界层次",
+            "limitations": "公开页为节选，未读到本章所有灵根细节。"
+        },
+        {
+            "id": "rmji_1609",
+            "title": "凡人修仙传：第1609章（英文发行页）",
+            "url": "https://lite.wuxiaworld.com/novel/rmji/rmji-chapter-1609",
+            "publisher": "Wuxiaworld",
+            "authority": "primary",
+            "access_status": "excerpt_read",
+            "checked_on": "2026-10-19",
+            "supports": "炼虚、合体、大乘相邻关系；渡劫划分的特殊性",
+            "limitations": "只采用公开节选能够支持的结论。"
+        },
+        {
+            "id": "rmji_2270",
+            "title": "凡人修仙传：第2270章（英文发行页）",
+            "url": "https://www.wuxiaworld.com/novel/rmji/rmji-chapter-2270",
+            "publisher": "Wuxiaworld",
+            "authority": "primary",
+            "access_status": "excerpt_read",
+            "checked_on": "2026-10-19",
+            "supports": "高阶境界之间存在明显实力差距",
+            "limitations": "不能推导亲子资质、寿命和境界人口分布。"
+        },
+        {
+            "id": "rmji_roots_wiki",
+            "title": "RMJI.WIKI：天灵根",
+            "url": "https://rmji.wiki/special-constitutions/heavenly-spiritual-roots",
+            "publisher": "RMJI.WIKI 社区",
+            "authority": "secondary",
+            "access_status": "search_index",
+            "checked_on": "2026-10-19",
+            "supports": "单属性天灵根及前后期适用差异的二手线索",
+            "limitations": "二手资料；细节待原著复核，未纳入正式概率规则。"
+        },
+        {
+            "id": "rmji_energy_wiki",
+            "title": "RMJI Fandom：Energy / Qi",
+            "url": "https://rmji.fandom.com/wiki/Energy_/_Qi",
+            "publisher": "RMJI Fandom 社区",
+            "authority": "secondary",
+            "access_status": "search_index",
+            "checked_on": "2026-10-19",
+            "supports": "真灵根、伪灵根和变异灵根分类线索",
+            "limitations": "搜索索引可读，直接打开失败；不冒充原著核验。"
+        },
+        {
+            "id": "lotm_setting",
+            "title": "起点《诡秘之主》设定集：力量体系",
+            "url": "https://h5.if.qidian.com/h5/workSet/main?albumId=131&bookId=1010868264&catelogId=69153",
+            "publisher": "起点中文网",
+            "authority": "primary",
+            "access_status": "search_index",
+            "checked_on": "2026-10-19",
+            "supports": "22条途径、序列9至0的结构；本轮补齐现有开放池51个非凡条目的序列名称",
+            "limitations": "采用官方站点搜索索引核对名称，直开仅得动态页面壳；未整理全部220个序列细目、遗传和相邻途径规则。"
+        },
+        {
+            "id": "blades_home",
+            "title": "Blades in the Dark 官方介绍",
+            "url": "https://bladesinthedark.com/",
+            "publisher": "Blades in the Dark",
+            "authority": "primary",
+            "access_status": "page_read",
+            "checked_on": "2026-10-19",
+            "supports": "工业城市、阶层势力与神秘危险结合的设计参照",
+            "limitations": "独立设定；不与诡秘正史混用专名。"
+        },
+        {
+            "id": "blades_creation",
+            "title": "Blades in the Dark：Character Creation",
+            "url": "https://bladesinthedark.com/character-creation",
+            "publisher": "Blades in the Dark",
+            "authority": "primary",
+            "access_status": "page_read",
+            "checked_on": "2026-10-19",
+            "supports": "家族来源与个人背景分别建模",
+            "limitations": "借鉴结构，不照搬完整建卡流程。"
+        },
+        {
+            "id": "blades_basics",
+            "title": "Blades in the Dark：The Basics",
+            "url": "https://bladesinthedark.com/basics",
+            "publisher": "Blades in the Dark",
+            "authority": "primary",
+            "access_status": "page_read",
+            "checked_on": "2026-10-19",
+            "supports": "叙事与规则基本结构的参考入口",
+            "limitations": "非本项目投胎概率依据。"
+        },
+        {
+            "id": "nasa_eclss",
+            "title": "NASA：Environmental Control and Life Support Systems",
+            "url": "https://www.nasa.gov/reference/environmental-control-and-life-support-systems-eclss/",
+            "publisher": "NASA",
+            "authority": "primary",
+            "access_status": "page_read",
+            "checked_on": "2026-10-19",
+            "supports": "空气、水循环、氧气供应等生命保障维度",
+            "limitations": "来源说明现实系统；轨道城市家庭和岗位为项目外推。"
+        },
+        {
+            "id": "nasa_hab",
+            "title": "NASA：Deep Space Habitation Overview",
+            "url": "https://www.nasa.gov/humans-in-space/deep-space-habitation-overview/",
+            "publisher": "NASA",
+            "authority": "primary",
+            "access_status": "excerpt_read",
+            "checked_on": "2026-10-19",
+            "supports": "深空居住涉及生命保障、防辐射和健康维护",
+            "limitations": "概念与研发目标不代表成熟殖民社会已经存在。"
+        },
+        {
+            "id": "bci_study",
+            "title": "触觉反馈改善脑机接口机械臂控制研究",
+            "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC8715714/",
+            "publisher": "研究论文 / PMC",
+            "authority": "primary",
+            "access_status": "excerpt_read",
+            "checked_on": "2026-10-19",
+            "supports": "感觉反馈和神经接口是可区分的技术轴",
+            "limitations": "实验研究不能支持全民义体、意识上传等已实现结论。"
+        }
+    ]
+}

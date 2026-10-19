@@ -1,25 +1,22 @@
 """按出生人数加权抽样并生成游戏属性。"""
 
-import json
 import math
 import random
 from functools import lru_cache
-from pathlib import Path
 
 from .attributes import ATTRIBUTES, STAR_SYSTEM, attribute_stars, draw_star
 from .geography import random_location
 from .modes import RebornMode
 from .potential import EVALUATION_SYSTEM, evaluate_life
 from .potential import score_label as score_label
-
-DATA_DIR = Path(__file__).parent / "data"
+from .resources import load_json_resource
 
 
 @lru_cache(maxsize=4)
 def load_population(mode: RebornMode = "world") -> dict:
-    """读取所选模式的人口快照，拒绝无效的抽样权重与出生性别比。"""
+    """通过核心 JSON 工具读取人口快照，拒绝无效的权重与出生性别比。"""
     filename = "population.json" if mode == "world" else f"{mode}_population.json"
-    dataset = json.loads((DATA_DIR / filename).read_text(encoding="utf-8"))
+    dataset = load_json_resource(filename)
     countries = dataset["countries"]
     if not countries or len({row["code"] for row in countries}) != len(countries):
         raise ValueError("出生人口数据为空或存在重复地区")

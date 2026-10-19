@@ -1,0 +1,39 @@
+{
+    "version": "2026.10.19-v4",
+    "title": "异世界出生档案",
+    "notice": "出身、成长倾向与抽取权重均为游戏设定，不代表人口统计或未来成就。上海时间明日零点可再次免费投胎。",
+    "genders": [
+        {
+            "id": "male",
+            "name": "男",
+            "weight": 1,
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "性别游戏权重",
+            "review_note": "等权抽取不代表原著或现实出生比例。",
+            "reviewed_on": "2026-10-19"
+        },
+        {
+            "id": "female",
+            "name": "女",
+            "weight": 1,
+            "provenance": "adaptation",
+            "source_refs": [
+                "project_isekai_v3"
+            ],
+            "source_locator": "性别游戏权重",
+            "review_note": "等权抽取不代表原著或现实出生比例。",
+            "reviewed_on": "2026-10-19"
+        }
+    ],
+    "world_files": [
+        "fantasy.json",
+        "cyberpunk.json",
+        "cultivation.json",
+        "mysteries.json"
+    ],
+    "source_catalog": "sources.json",
+    "schema_version": 2
+}

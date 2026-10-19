@@ -2,14 +2,15 @@
 
 import argparse
 import hashlib
-import json
 import math
 from datetime import datetime, timezone
 from pathlib import Path
 
 import httpx
 
-DATA_DIR = Path(__file__).parent / "data"
+from madokabot.core.storage.json_store import JsonDataStore
+
+DATA_DIR = Path(__file__).resolve().parents[3] / "assets" / "json" / "daily_reborn"
 MAP_URL = "https://geo.datav.aliyun.com/areas_v3/bound/100000_full.json"
 NAME_ALIASES = {"中国台湾": "台湾省", "中国香港": "香港特别行政区", "中国澳门": "澳门特别行政区"}
 
@@ -107,23 +108,25 @@ def prepare_map(source: dict, population: dict) -> dict:
 
 
 def main() -> None:
-    """下载或复用 GeoJSON，校验完成后原子替换地图，不修改人口和每日结果。"""
+    """下载或复用 GeoJSON，通过核心 JSON 工具原子更新资源目录中的地图。"""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--map", type=Path, help="复用已下载的 DataV GeoJSON")
+    parser.add_argument("--data-dir", type=Path, default=DATA_DIR, help="投胎 JSON 资源目录")
     args = parser.parse_args()
     if args.map:
         content = args.map.read_bytes()
+        source = JsonDataStore(args.map).content
     else:
         response = httpx.get(MAP_URL, follow_redirects=True, timeout=60)
         response.raise_for_status()
         content = response.content
-    source = json.loads(content.decode("utf-8"))
-    population = json.loads((DATA_DIR / "china_population.json").read_text(encoding="utf-8"))
+        source = response.json()
+    population = JsonDataStore(args.data_dir / "china_population.json").content
     result = prepare_map(source, population)
     result.update(source_sha256=hashlib.sha256(content).hexdigest(), retrieved_at=datetime.now(timezone.utc).isoformat())
-    path = DATA_DIR / "china_map.json"
+    path = args.data_dir / "china_map.json"
     temporary = path.with_suffix(".tmp")
-    temporary.write_text(json.dumps(result, ensure_ascii=False, separators=(",", ":")) + "\n", encoding="utf-8")
+    JsonDataStore(temporary).write(result)
     temporary.replace(path)
     print(f"已更新中国 SVG 地图：{len(result['regions'])} 个省级地区，含南海诸岛附图与港澳放大图")
 

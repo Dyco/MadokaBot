@@ -1,0 +1,920 @@
+{
+  "id": "arknights",
+  "title": "明日方舟",
+  "weight": 1,
+  "description": "泰拉的罗德岛干员档案，以职业分支、精英化、技能与信赖体现成长。",
+  "scope": "采用2至6星干员成长模板，八职业及18类基础分支；低星与全部分支的组合属于插件玩法，不表示原作实装名单。2星仅精英0且最高30级、无主动技能，3星最高精英1且上限40/55级，4至6星维持原范围。种族和出身地为精选子集；不分配个人源石技艺、感染指标与专属技能，不纳入一星机器人。",
+  "history_fields": [
+    "region",
+    "species",
+    "branch",
+    "level"
+  ],
+  "sections": [
+    {
+      "title": "基础属性",
+      "fields": [
+        "faction",
+        "region",
+        "species",
+        "profession",
+        "branch"
+      ]
+    },
+    {
+      "title": "养成数值",
+      "fields": [
+        "stage",
+        "level",
+        "skill",
+        "potential",
+        "trust"
+      ]
+    }
+  ],
+  "pools": [
+    {
+      "id": "faction",
+      "label": "所属",
+      "options": [
+        {
+          "id": "faction_0",
+          "value": "罗德岛",
+          "weight": 1,
+          "source_refs": [
+            "ark_moegirl"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "region",
+      "label": "出身地区",
+      "options": [
+        {
+          "id": "region_0",
+          "value": "炎",
+          "weight": 1,
+          "source_refs": [
+            "ark_moegirl"
+          ]
+        },
+        {
+          "id": "region_1",
+          "value": "维多利亚",
+          "weight": 1,
+          "source_refs": [
+            "ark_moegirl"
+          ]
+        },
+        {
+          "id": "region_2",
+          "value": "乌萨斯",
+          "weight": 1,
+          "source_refs": [
+            "ark_moegirl"
+          ]
+        },
+        {
+          "id": "region_3",
+          "value": "哥伦比亚",
+          "weight": 1,
+          "source_refs": [
+            "ark_moegirl"
+          ]
+        },
+        {
+          "id": "region_4",
+          "value": "莱塔尼亚",
+          "weight": 1,
+          "source_refs": [
+            "ark_moegirl"
+          ]
+        },
+        {
+          "id": "region_5",
+          "value": "卡兹戴尔",
+          "weight": 1,
+          "source_refs": [
+            "ark_moegirl"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "species",
+      "label": "种族",
+      "options": [
+        {
+          "id": "species_0",
+          "value": "菲林",
+          "weight": 1,
+          "source_refs": [
+            "ark_moegirl"
+          ]
+        },
+        {
+          "id": "species_1",
+          "value": "鲁珀",
+          "weight": 1,
+          "source_refs": [
+            "ark_moegirl"
+          ]
+        },
+        {
+          "id": "species_2",
+          "value": "黎博利",
+          "weight": 1,
+          "source_refs": [
+            "ark_moegirl"
+          ]
+        },
+        {
+          "id": "species_3",
+          "value": "卡特斯",
+          "weight": 1,
+          "source_refs": [
+            "ark_moegirl"
+          ]
+        },
+        {
+          "id": "species_4",
+          "value": "佩洛",
+          "weight": 1,
+          "source_refs": [
+            "ark_moegirl"
+          ]
+        },
+        {
+          "id": "species_5",
+          "value": "萨卡兹",
+          "weight": 1,
+          "source_refs": [
+            "ark_moegirl"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "profession",
+      "label": "职业",
+      "options": [
+        {
+          "id": "profession_0",
+          "value": "先锋",
+          "weight": 1,
+          "source_refs": [
+            "ark_baidu",
+            "ark_professions"
+          ]
+        },
+        {
+          "id": "profession_1",
+          "value": "近卫",
+          "weight": 1,
+          "source_refs": [
+            "ark_baidu",
+            "ark_professions"
+          ]
+        },
+        {
+          "id": "profession_2",
+          "value": "重装",
+          "weight": 1,
+          "source_refs": [
+            "ark_baidu",
+            "ark_professions"
+          ]
+        },
+        {
+          "id": "profession_3",
+          "value": "狙击",
+          "weight": 1,
+          "source_refs": [
+            "ark_baidu",
+            "ark_professions"
+          ]
+        },
+        {
+          "id": "profession_4",
+          "value": "术师",
+          "weight": 1,
+          "source_refs": [
+            "ark_baidu",
+            "ark_professions"
+          ]
+        },
+        {
+          "id": "profession_5",
+          "value": "医疗",
+          "weight": 1,
+          "source_refs": [
+            "ark_baidu",
+            "ark_professions"
+          ]
+        },
+        {
+          "id": "profession_6",
+          "value": "辅助",
+          "weight": 1,
+          "source_refs": [
+            "ark_baidu",
+            "ark_professions"
+          ]
+        },
+        {
+          "id": "profession_7",
+          "value": "特种",
+          "weight": 1,
+          "source_refs": [
+            "ark_baidu",
+            "ark_professions"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "branch",
+      "label": "职业分支",
+      "options": [
+        {
+          "id": "branch_0_0",
+          "value": "尖兵",
+          "weight": 1,
+          "source_refs": [
+            "ark_professions"
+          ],
+          "requires": {
+            "profession": [
+              "profession_0"
+            ]
+          }
+        },
+        {
+          "id": "branch_0_1",
+          "value": "冲锋手",
+          "weight": 1,
+          "source_refs": [
+            "ark_professions"
+          ],
+          "requires": {
+            "profession": [
+              "profession_0"
+            ]
+          }
+        },
+        {
+          "id": "branch_0_2",
+          "value": "执旗手",
+          "weight": 1,
+          "source_refs": [
+            "ark_professions"
+          ],
+          "requires": {
+            "profession": [
+              "profession_0"
+            ]
+          }
+        },
+        {
+          "id": "branch_1_0",
+          "value": "领主",
+          "weight": 1,
+          "source_refs": [
+            "ark_professions"
+          ],
+          "requires": {
+            "profession": [
+              "profession_1"
+            ]
+          }
+        },
+        {
+          "id": "branch_1_1",
+          "value": "无畏者",
+          "weight": 1,
+          "source_refs": [
+            "ark_professions"
+          ],
+          "requires": {
+            "profession": [
+              "profession_1"
+            ]
+          }
+        },
+        {
+          "id": "branch_1_2",
+          "value": "强攻手",
+          "weight": 1,
+          "source_refs": [
+            "ark_professions"
+          ],
+          "requires": {
+            "profession": [
+              "profession_1"
+            ]
+          }
+        },
+        {
+          "id": "branch_2_0",
+          "value": "铁卫",
+          "weight": 1,
+          "source_refs": [
+            "ark_professions"
+          ],
+          "requires": {
+            "profession": [
+              "profession_2"
+            ]
+          }
+        },
+        {
+          "id": "branch_2_1",
+          "value": "守护者",
+          "weight": 1,
+          "source_refs": [
+            "ark_professions"
+          ],
+          "requires": {
+            "profession": [
+              "profession_2"
+            ]
+          }
+        },
+        {
+          "id": "branch_3_0",
+          "value": "速射手",
+          "weight": 1,
+          "source_refs": [
+            "ark_professions"
+          ],
+          "requires": {
+            "profession": [
+              "profession_3"
+            ]
+          }
+        },
+        {
+          "id": "branch_3_1",
+          "value": "炮手",
+          "weight": 1,
+          "source_refs": [
+            "ark_professions"
+          ],
+          "requires": {
+            "profession": [
+              "profession_3"
+            ]
+          }
+        },
+        {
+          "id": "branch_4_0",
+          "value": "中坚术师",
+          "weight": 1,
+          "source_refs": [
+            "ark_professions"
+          ],
+          "requires": {
+            "profession": [
+              "profession_4"
+            ]
+          }
+        },
+        {
+          "id": "branch_4_1",
+          "value": "扩散术师",
+          "weight": 1,
+          "source_refs": [
+            "ark_professions"
+          ],
+          "requires": {
+            "profession": [
+              "profession_4"
+            ]
+          }
+        },
+        {
+          "id": "branch_5_0",
+          "value": "医师",
+          "weight": 1,
+          "source_refs": [
+            "ark_professions"
+          ],
+          "requires": {
+            "profession": [
+              "profession_5"
+            ]
+          }
+        },
+        {
+          "id": "branch_5_1",
+          "value": "群愈师",
+          "weight": 1,
+          "source_refs": [
+            "ark_professions"
+          ],
+          "requires": {
+            "profession": [
+              "profession_5"
+            ]
+          }
+        },
+        {
+          "id": "branch_6_0",
+          "value": "凝滞师",
+          "weight": 1,
+          "source_refs": [
+            "ark_professions"
+          ],
+          "requires": {
+            "profession": [
+              "profession_6"
+            ]
+          }
+        },
+        {
+          "id": "branch_6_1",
+          "value": "召唤师",
+          "weight": 1,
+          "source_refs": [
+            "ark_professions"
+          ],
+          "requires": {
+            "profession": [
+              "profession_6"
+            ]
+          }
+        },
+        {
+          "id": "branch_7_0",
+          "value": "处决者",
+          "weight": 1,
+          "source_refs": [
+            "ark_professions"
+          ],
+          "requires": {
+            "profession": [
+              "profession_7"
+            ]
+          }
+        },
+        {
+          "id": "branch_7_1",
+          "value": "推击手",
+          "weight": 1,
+          "source_refs": [
+            "ark_professions"
+          ],
+          "requires": {
+            "profession": [
+              "profession_7"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "rating",
+      "label": "投胎星级",
+      "options": [
+        {
+          "id": "r2",
+          "value": "2星",
+          "weight": 1,
+          "basis": "gameplay",
+          "source_refs": [
+            "ark_growth"
+          ],
+          "description": "2星及其成长范围取自原作；允许与本池全部职业分支组合属于插件玩法，不表示原作存在对应实装干员。"
+        },
+        {
+          "id": "r3",
+          "value": "3星",
+          "weight": 1,
+          "basis": "gameplay",
+          "source_refs": [
+            "ark_growth"
+          ],
+          "description": "3星及其成长范围取自原作；允许与本池全部职业分支组合属于插件玩法，不表示原作存在对应实装干员。"
+        },
+        {
+          "id": "r4",
+          "value": "4星",
+          "weight": 1,
+          "source_refs": [
+            "ark_baidu",
+            "ark_growth"
+          ]
+        },
+        {
+          "id": "r5",
+          "value": "5星",
+          "weight": 1,
+          "source_refs": [
+            "ark_baidu",
+            "ark_growth"
+          ]
+        },
+        {
+          "id": "r6",
+          "value": "6星",
+          "weight": 1,
+          "source_refs": [
+            "ark_baidu",
+            "ark_growth"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "stage",
+      "label": "精英化",
+      "options": [
+        {
+          "id": "stage_0",
+          "value": "精英0",
+          "weight": 1,
+          "source_refs": [
+            "ark_growth"
+          ]
+        },
+        {
+          "id": "stage_1",
+          "value": "精英1",
+          "weight": 1,
+          "source_refs": [
+            "ark_growth"
+          ],
+          "requires": {
+            "rating": [
+              "r3",
+              "r4",
+              "r5",
+              "r6"
+            ]
+          }
+        },
+        {
+          "id": "stage_2",
+          "value": "精英2",
+          "weight": 1,
+          "source_refs": [
+            "ark_growth"
+          ],
+          "requires": {
+            "rating": [
+              "r4",
+              "r5",
+              "r6"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "level",
+      "label": "当前等级",
+      "options": [
+        {
+          "id": "lv2_0",
+          "range": [
+            1,
+            30
+          ],
+          "unit": "级",
+          "weight": 1,
+          "source_refs": [
+            "ark_growth"
+          ],
+          "requires": {
+            "rating": [
+              "r2"
+            ],
+            "stage": [
+              "stage_0"
+            ]
+          }
+        },
+        {
+          "id": "lv3_0",
+          "range": [
+            1,
+            40
+          ],
+          "unit": "级",
+          "weight": 1,
+          "source_refs": [
+            "ark_growth"
+          ],
+          "requires": {
+            "rating": [
+              "r3"
+            ],
+            "stage": [
+              "stage_0"
+            ]
+          }
+        },
+        {
+          "id": "lv3_1",
+          "range": [
+            1,
+            55
+          ],
+          "unit": "级",
+          "weight": 1,
+          "source_refs": [
+            "ark_growth"
+          ],
+          "requires": {
+            "rating": [
+              "r3"
+            ],
+            "stage": [
+              "stage_1"
+            ]
+          }
+        },
+        {
+          "id": "lv4_0",
+          "weight": 1,
+          "source_refs": [
+            "ark_growth"
+          ],
+          "requires": {
+            "rating": [
+              "r4"
+            ],
+            "stage": [
+              "stage_0"
+            ]
+          },
+          "range": [
+            1,
+            45
+          ],
+          "unit": "级"
+        },
+        {
+          "id": "lv4_1",
+          "weight": 1,
+          "source_refs": [
+            "ark_growth"
+          ],
+          "requires": {
+            "rating": [
+              "r4"
+            ],
+            "stage": [
+              "stage_1"
+            ]
+          },
+          "range": [
+            1,
+            60
+          ],
+          "unit": "级"
+        },
+        {
+          "id": "lv4_2",
+          "weight": 1,
+          "source_refs": [
+            "ark_growth"
+          ],
+          "requires": {
+            "rating": [
+              "r4"
+            ],
+            "stage": [
+              "stage_2"
+            ]
+          },
+          "range": [
+            1,
+            70
+          ],
+          "unit": "级"
+        },
+        {
+          "id": "lv5_0",
+          "weight": 1,
+          "source_refs": [
+            "ark_growth"
+          ],
+          "requires": {
+            "rating": [
+              "r5"
+            ],
+            "stage": [
+              "stage_0"
+            ]
+          },
+          "range": [
+            1,
+            50
+          ],
+          "unit": "级"
+        },
+        {
+          "id": "lv5_1",
+          "weight": 1,
+          "source_refs": [
+            "ark_growth"
+          ],
+          "requires": {
+            "rating": [
+              "r5"
+            ],
+            "stage": [
+              "stage_1"
+            ]
+          },
+          "range": [
+            1,
+            70
+          ],
+          "unit": "级"
+        },
+        {
+          "id": "lv5_2",
+          "weight": 1,
+          "source_refs": [
+            "ark_growth"
+          ],
+          "requires": {
+            "rating": [
+              "r5"
+            ],
+            "stage": [
+              "stage_2"
+            ]
+          },
+          "range": [
+            1,
+            80
+          ],
+          "unit": "级"
+        },
+        {
+          "id": "lv6_0",
+          "weight": 1,
+          "source_refs": [
+            "ark_growth"
+          ],
+          "requires": {
+            "rating": [
+              "r6"
+            ],
+            "stage": [
+              "stage_0"
+            ]
+          },
+          "range": [
+            1,
+            50
+          ],
+          "unit": "级"
+        },
+        {
+          "id": "lv6_1",
+          "weight": 1,
+          "source_refs": [
+            "ark_growth"
+          ],
+          "requires": {
+            "rating": [
+              "r6"
+            ],
+            "stage": [
+              "stage_1"
+            ]
+          },
+          "range": [
+            1,
+            80
+          ],
+          "unit": "级"
+        },
+        {
+          "id": "lv6_2",
+          "weight": 1,
+          "source_refs": [
+            "ark_growth"
+          ],
+          "requires": {
+            "rating": [
+              "r6"
+            ],
+            "stage": [
+              "stage_2"
+            ]
+          },
+          "range": [
+            1,
+            90
+          ],
+          "unit": "级"
+        }
+      ]
+    },
+    {
+      "id": "skill",
+      "label": "基础技能等级",
+      "options": [
+        {
+          "id": "none",
+          "value": "无主动技能",
+          "weight": 1,
+          "basis": "gameplay",
+          "source_refs": [
+            "ark_durin"
+          ],
+          "requires": {
+            "rating": [
+              "r2"
+            ]
+          },
+          "description": "二星模拟身份沿用杜林等低星干员的无主动技能模型；不把缺少技能写作负等级，不涵盖后勤技能。"
+        },
+        {
+          "id": "skill0",
+          "weight": 1,
+          "source_refs": [
+            "ark_skills"
+          ],
+          "requires": {
+            "stage": [
+              "stage_0"
+            ],
+            "rating": [
+              "r3",
+              "r4",
+              "r5",
+              "r6"
+            ]
+          },
+          "range": [
+            1,
+            4
+          ],
+          "unit": "级"
+        },
+        {
+          "id": "skill12",
+          "weight": 1,
+          "source_refs": [
+            "ark_skills"
+          ],
+          "requires": {
+            "stage": [
+              "stage_1",
+              "stage_2"
+            ]
+          },
+          "range": [
+            1,
+            7
+          ],
+          "unit": "级"
+        }
+      ]
+    },
+    {
+      "id": "potential",
+      "label": "潜能",
+      "options": [
+        {
+          "id": "potential",
+          "weight": 1,
+          "source_refs": [
+            "ark_baidu"
+          ],
+          "range": [
+            1,
+            6
+          ],
+          "unit": "级"
+        }
+      ]
+    },
+    {
+      "id": "trust",
+      "label": "信赖",
+      "options": [
+        {
+          "id": "trust",
+          "weight": 1,
+          "source_refs": [
+            "ark_trust"
+          ],
+          "description": "达到100%时本体信赖属性加成已满。",
+          "range": [
+            0,
+            200
+          ],
+          "unit": "%"
+        }
+      ]
+    }
+  ]
+}

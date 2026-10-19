@@ -1,7 +1,6 @@
 """手动更新人口快照与地图：直接运行本文件，不需启动机器人。"""
 
 import argparse
-import json
 import math
 import tempfile
 from datetime import datetime, timezone
@@ -11,7 +10,9 @@ from zipfile import ZipFile
 
 import httpx
 
-DATA_DIR = Path(__file__).parent / "data"
+from madokabot.core.storage.json_store import JsonDataStore
+
+DATA_DIR = Path(__file__).resolve().parents[3] / "assets" / "json" / "daily_reborn"
 POPULATION_URL = (
     "https://population.un.org/wpp/assets/Excel%20Files/1_Indicator%20(Standard)/"
     "EXCEL_FILES/1_General/WPP2024_GEN_F01_DEMOGRAPHIC_INDICATORS_COMPACT.xlsx"
@@ -148,18 +149,19 @@ def prepare_map(world: dict) -> tuple[list[dict], dict]:
 def write_json(path: Path, value: dict) -> None:
     """先写入临时文件再替换，避免中断更新损坏已有资源。"""
     temporary = path.with_suffix(".tmp")
-    temporary.write_text(json.dumps(value, ensure_ascii=False, separators=(",", ":")) + "\n", encoding="utf-8")
+    JsonDataStore(temporary).write(value)
     temporary.replace(path)
 
 
 def main() -> None:
-    """下载或复用原始文件，校验后更新插件附带的离线数据。"""
+    """下载或复用原始文件，校验后更新公共 JSON 资源目录中的离线数据。"""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--year", type=int, default=datetime.now(timezone.utc).year)
     parser.add_argument("--workbook", type=Path)
     parser.add_argument("--map", type=Path)
+    parser.add_argument("--data-dir", type=Path, default=DATA_DIR, help="投胎 JSON 资源目录")
     args = parser.parse_args()
-    DATA_DIR.mkdir(parents=True, exist_ok=True)
+    args.data_dir.mkdir(parents=True, exist_ok=True)
     # 原始下载使用临时目录，正式资源只保存所需年份与地图路径。
     with tempfile.TemporaryDirectory() as temporary:
         workbook = args.workbook
@@ -171,7 +173,7 @@ def main() -> None:
                     for chunk in response.iter_bytes():
                         output.write(chunk)
         if args.map:
-            world = json.loads(args.map.read_text(encoding="utf-8"))
+            world = JsonDataStore(args.map).content
         else:
             response = httpx.get(MAP_URL, follow_redirects=True, timeout=120)
             response.raise_for_status()
@@ -192,8 +194,8 @@ def main() -> None:
             "retrieved_at": datetime.now(timezone.utc).isoformat(),
             "countries": countries,
         }
-        write_json(DATA_DIR / "population.json", metadata)
-        write_json(DATA_DIR / "world_map.json", {"source_url": MAP_URL, "license": "Public domain", "regions": regions})
+        write_json(args.data_dir / "population.json", metadata)
+        write_json(args.data_dir / "world_map.json", {"source_url": MAP_URL, "license": "Public domain", "regions": regions})
         print(f"已更新 {args.year} 年数据：{len(countries)} 个国家/地区，年出生人数 {sum(c['births'] for c in countries):,.0f}")
 
 

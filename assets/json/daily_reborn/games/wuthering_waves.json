@@ -1,0 +1,440 @@
+{
+  "id": "wuthering_waves",
+  "title": "鸣潮",
+  "weight": 1,
+  "description": "索拉里斯的共鸣者档案，属性、武器、共鸣等阶与共鸣链分别抽取。",
+  "scope": "收录六属性、五类武器及今州、黑海岸、拉古那、拉海洛；拉海洛已核对至星炬学院；不分配特定人物专属的共鸣能力或声痕位置。 投胎星级向下扩展为1至5星，1至3星为插件自定义档；低星沿用已收录的成长模板，不新增更高星级或额外数值上限。",
+  "history_fields": [
+    "region",
+    "element",
+    "weapon",
+    "level"
+  ],
+  "sections": [
+    {
+      "title": "基础属性",
+      "fields": [
+        "faction",
+        "region",
+        "element",
+        "weapon"
+      ]
+    },
+    {
+      "title": "养成数值",
+      "fields": [
+        "stage",
+        "level",
+        "chain"
+      ]
+    }
+  ],
+  "pools": [
+    {
+      "id": "faction",
+      "label": "身份",
+      "options": [
+        {
+          "id": "faction_0",
+          "value": "共鸣者",
+          "weight": 1,
+          "source_refs": [
+            "wuwa_baidu",
+            "wuwa_moegirl"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "region",
+      "label": "活动地区",
+      "options": [
+        {
+          "id": "jinzhou",
+          "value": "瑝珑 · 今州",
+          "weight": 1,
+          "source_refs": [
+            "wuwa_baidu"
+          ]
+        },
+        {
+          "id": "black_shores",
+          "value": "黑海岸",
+          "weight": 1,
+          "source_refs": [
+            "wuwa_baidu"
+          ]
+        },
+        {
+          "id": "ragunna",
+          "value": "黎那汐塔 · 拉古那",
+          "weight": 1,
+          "source_refs": [
+            "wuwa_baidu"
+          ]
+        },
+        {
+          "id": "lahairoi",
+          "value": "拉海洛",
+          "weight": 1,
+          "source_refs": [
+            "wuwa_baidu",
+            "wuwa_lahairoi"
+          ],
+          "description": "罗伊冰原下的地区，星炬学院与研究院在此。"
+        }
+      ]
+    },
+    {
+      "id": "element",
+      "label": "共鸣属性",
+      "options": [
+        {
+          "id": "element_0",
+          "value": "冷凝",
+          "weight": 1,
+          "source_refs": [
+            "wuwa_baidu"
+          ]
+        },
+        {
+          "id": "element_1",
+          "value": "热熔",
+          "weight": 1,
+          "source_refs": [
+            "wuwa_baidu"
+          ]
+        },
+        {
+          "id": "element_2",
+          "value": "气动",
+          "weight": 1,
+          "source_refs": [
+            "wuwa_baidu"
+          ]
+        },
+        {
+          "id": "element_3",
+          "value": "导电",
+          "weight": 1,
+          "source_refs": [
+            "wuwa_baidu"
+          ]
+        },
+        {
+          "id": "element_4",
+          "value": "衍射",
+          "weight": 1,
+          "source_refs": [
+            "wuwa_baidu"
+          ]
+        },
+        {
+          "id": "element_5",
+          "value": "湮灭",
+          "weight": 1,
+          "source_refs": [
+            "wuwa_baidu"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "weapon",
+      "label": "武器类型",
+      "options": [
+        {
+          "id": "weapon_0",
+          "value": "迅刀",
+          "weight": 1,
+          "source_refs": [
+            "wuwa_baidu"
+          ]
+        },
+        {
+          "id": "weapon_1",
+          "value": "长刃",
+          "weight": 1,
+          "source_refs": [
+            "wuwa_baidu"
+          ]
+        },
+        {
+          "id": "weapon_2",
+          "value": "佩枪",
+          "weight": 1,
+          "source_refs": [
+            "wuwa_baidu"
+          ]
+        },
+        {
+          "id": "weapon_3",
+          "value": "臂铠",
+          "weight": 1,
+          "source_refs": [
+            "wuwa_baidu"
+          ]
+        },
+        {
+          "id": "weapon_4",
+          "value": "音感仪",
+          "weight": 1,
+          "source_refs": [
+            "wuwa_baidu"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "rating",
+      "label": "投胎星级",
+      "options": [
+        {
+          "id": "r1",
+          "value": "1星",
+          "weight": 1,
+          "basis": "gameplay",
+          "source_refs": [],
+          "description": "插件向下扩展的投胎星级，非原作可抽取角色稀有度；成长沿用本游戏已收录的基础模板。"
+        },
+        {
+          "id": "r2",
+          "value": "2星",
+          "weight": 1,
+          "basis": "gameplay",
+          "source_refs": [],
+          "description": "插件向下扩展的投胎星级，非原作可抽取角色稀有度；成长沿用本游戏已收录的基础模板。"
+        },
+        {
+          "id": "r3",
+          "value": "3星",
+          "weight": 1,
+          "basis": "gameplay",
+          "source_refs": [],
+          "description": "插件向下扩展的投胎星级，非原作可抽取角色稀有度；成长沿用本游戏已收录的基础模板。"
+        },
+        {
+          "id": "r4",
+          "value": "4星",
+          "weight": 1,
+          "source_refs": [
+            "wuwa_baidu"
+          ]
+        },
+        {
+          "id": "r5",
+          "value": "5星",
+          "weight": 1,
+          "source_refs": [
+            "wuwa_baidu"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "stage",
+      "label": "共鸣等阶",
+      "options": [
+        {
+          "id": "s0",
+          "value": "0阶",
+          "weight": 1,
+          "source_refs": [
+            "wuwa_growth"
+          ]
+        },
+        {
+          "id": "s1",
+          "value": "1阶",
+          "weight": 1,
+          "source_refs": [
+            "wuwa_growth"
+          ]
+        },
+        {
+          "id": "s2",
+          "value": "2阶",
+          "weight": 1,
+          "source_refs": [
+            "wuwa_growth"
+          ]
+        },
+        {
+          "id": "s3",
+          "value": "3阶",
+          "weight": 1,
+          "source_refs": [
+            "wuwa_growth"
+          ]
+        },
+        {
+          "id": "s4",
+          "value": "4阶",
+          "weight": 1,
+          "source_refs": [
+            "wuwa_growth"
+          ]
+        },
+        {
+          "id": "s5",
+          "value": "5阶",
+          "weight": 1,
+          "source_refs": [
+            "wuwa_growth"
+          ]
+        },
+        {
+          "id": "s6",
+          "value": "6阶",
+          "weight": 1,
+          "source_refs": [
+            "wuwa_growth"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "level",
+      "label": "当前等级",
+      "options": [
+        {
+          "id": "lv0",
+          "weight": 1,
+          "source_refs": [
+            "wuwa_growth"
+          ],
+          "requires": {
+            "stage": [
+              "s0"
+            ]
+          },
+          "range": [
+            1,
+            20
+          ],
+          "unit": "级"
+        },
+        {
+          "id": "lv1",
+          "weight": 1,
+          "source_refs": [
+            "wuwa_growth"
+          ],
+          "requires": {
+            "stage": [
+              "s1"
+            ]
+          },
+          "range": [
+            20,
+            40
+          ],
+          "unit": "级"
+        },
+        {
+          "id": "lv2",
+          "weight": 1,
+          "source_refs": [
+            "wuwa_growth"
+          ],
+          "requires": {
+            "stage": [
+              "s2"
+            ]
+          },
+          "range": [
+            40,
+            50
+          ],
+          "unit": "级"
+        },
+        {
+          "id": "lv3",
+          "weight": 1,
+          "source_refs": [
+            "wuwa_growth"
+          ],
+          "requires": {
+            "stage": [
+              "s3"
+            ]
+          },
+          "range": [
+            50,
+            60
+          ],
+          "unit": "级"
+        },
+        {
+          "id": "lv4",
+          "weight": 1,
+          "source_refs": [
+            "wuwa_growth"
+          ],
+          "requires": {
+            "stage": [
+              "s4"
+            ]
+          },
+          "range": [
+            60,
+            70
+          ],
+          "unit": "级"
+        },
+        {
+          "id": "lv5",
+          "weight": 1,
+          "source_refs": [
+            "wuwa_growth"
+          ],
+          "requires": {
+            "stage": [
+              "s5"
+            ]
+          },
+          "range": [
+            70,
+            80
+          ],
+          "unit": "级"
+        },
+        {
+          "id": "lv6",
+          "weight": 1,
+          "source_refs": [
+            "wuwa_growth"
+          ],
+          "requires": {
+            "stage": [
+              "s6"
+            ]
+          },
+          "range": [
+            80,
+            90
+          ],
+          "unit": "级"
+        }
+      ]
+    },
+    {
+      "id": "chain",
+      "label": "共鸣链解锁",
+      "options": [
+        {
+          "id": "chain",
+          "weight": 1,
+          "source_refs": [
+            "wuwa_baidu"
+          ],
+          "range": [
+            0,
+            6
+          ],
+          "unit": "层"
+        }
+      ]
+    }
+  ]
+}

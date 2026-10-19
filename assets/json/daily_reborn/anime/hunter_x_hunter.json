@@ -1,0 +1,95 @@
+{
+  "id": "hunter_x_hunter",
+  "title": "全职猎人 / HUNTER×HUNTER",
+  "weight": 1,
+  "description": "猎人资格、念的系别与修行进度分别决定身份和成长方向，个人的发需要进一步开发。",
+  "scope": "人类考生、持照猎人与未持照念修习者；只使用六大系和基础修行，不生成个人必杀技或星级。",
+  "history_fields": ["faction", "nen_type"],
+  "sections": [
+    {"title": "基础属性", "fields": ["identity", "faction", "license", "region"]},
+    {"title": "念能力档案", "fields": ["nen_type", "practice", "aura", "constraint"]}
+  ],
+  "pools": [
+    {
+      "id": "route", "label": "成长阶段", "hidden": true,
+      "options": [
+        {"id": "candidate", "value": "尚未系统修习念的猎人考生", "weight": 35, "source_refs": ["hxh_official_dictionary"]},
+        {"id": "new_license", "value": "持照后的初学阶段", "weight": 25, "source_refs": ["hxh_official_dictionary", "hxh_official_training"]},
+        {"id": "hunter", "value": "持照且修习念的猎人", "weight": 30, "source_refs": ["hxh_official_dictionary", "hxh_moegirl_nen"]},
+        {"id": "independent", "value": "没有猎人执照的念修习者", "weight": 10, "source_refs": ["hxh_official_dictionary", "hxh_moegirl_nen"]}
+      ]
+    },
+    {
+      "id": "identity", "label": "种族",
+      "options": [
+        {"id": "human", "value": "人类", "weight": 1, "source_refs": ["hxh_official_dictionary"]}
+      ]
+    },
+    {
+      "id": "faction", "label": "身份 / 所属",
+      "options": [
+        {"id": "candidate", "value": "猎人考试考生", "weight": 1, "requires": {"route": ["candidate"]}, "source_refs": ["hxh_official_dictionary"]},
+        {"id": "association", "value": "猎人协会 · 持照猎人", "weight": 1, "requires": {"route": ["new_license", "hunter"]}, "source_refs": ["hxh_official_dictionary"]},
+        {"id": "independent", "value": "独立念修习者", "weight": 1, "requires": {"route": ["independent"]}, "source_refs": ["hxh_moegirl_nen"]}
+      ]
+    },
+    {
+      "id": "license", "label": "猎人执照",
+      "options": [
+        {"id": "none", "value": "尚未取得", "weight": 1, "requires": {"route": ["candidate", "independent"]}, "source_refs": ["hxh_official_dictionary"]},
+        {"id": "licensed", "value": "已取得", "weight": 1, "requires": {"route": ["new_license", "hunter"]}, "description": "执照记录职业资格，念的情况另列。", "source_refs": ["hxh_official_dictionary", "hxh_official_training"]}
+      ]
+    },
+    {
+      "id": "region", "label": "活动环境",
+      "options": [
+        {"id": "exam", "value": "当届猎人考试场地", "weight": 1, "requires": {"route": ["candidate"]}, "source_refs": ["hxh_official_dictionary"]},
+        {"id": "training", "value": "修行场所与探索地点", "weight": 1, "requires": {"route": ["new_license", "hunter", "independent"]}, "description": "采用原作的修行与探索活动环境，不虚构固定出生地。", "source_refs": ["hxh_official_dictionary", "hxh_official_training"]}
+      ]
+    },
+    {
+      "id": "nen_type", "label": "念系",
+      "options": [
+        {"id": "unknown", "value": "尚未确认", "weight": 1, "requires": {"route": ["candidate", "new_license"]}, "source_refs": ["hxh_official_dictionary"]},
+        {"id": "enhancement", "value": "强化系", "weight": 20, "requires": {"route": ["hunter", "independent"]}, "description": "强化身体、物品原有的性质或作用。", "source_refs": ["hxh_official_dictionary", "hxh_moegirl_nen"]},
+        {"id": "emission", "value": "放出系", "weight": 20, "requires": {"route": ["hunter", "independent"]}, "description": "使气离开身体发挥作用。", "source_refs": ["hxh_official_dictionary"]},
+        {"id": "transmutation", "value": "变化系", "weight": 20, "requires": {"route": ["hunter", "independent"]}, "description": "改变气的性质。", "source_refs": ["hxh_official_dictionary"]},
+        {"id": "conjuration", "value": "具现化系", "weight": 20, "requires": {"route": ["hunter", "independent"]}, "description": "将气具现成物体。", "source_refs": ["hxh_official_dictionary"]},
+        {"id": "manipulation", "value": "操作系", "weight": 20, "requires": {"route": ["hunter", "independent"]}, "description": "以念操纵物体或生物。", "source_refs": ["hxh_official_dictionary"]},
+        {"id": "specialization", "value": "特质系", "weight": 5, "requires": {"route": ["hunter", "independent"]}, "description": "不属于其余五系的特殊能力方向，具体能力未指定。", "source_refs": ["hxh_official_dictionary"]}
+      ]
+    },
+    {
+      "id": "practice", "label": "当前修行重点",
+      "options": [
+        {"id": "foundation", "value": "基础体能与学习", "weight": 1, "requires": {"route": ["candidate", "new_license"]}, "description": "当前档案未记录系统念修行。", "source_refs": ["hxh_official_dictionary", "hxh_official_training"]},
+        {"id": "ten", "value": "缠", "weight": 35, "requires": {"route": ["hunter", "independent"]}, "description": "使气维持在身体周围。", "source_refs": ["hxh_official_dictionary"]},
+        {"id": "zetsu", "value": "绝", "weight": 25, "requires": {"route": ["hunter", "independent"]}, "description": "收束气以隐藏气息。", "source_refs": ["hxh_official_dictionary"]},
+        {"id": "ren", "value": "练", "weight": 25, "requires": {"route": ["hunter", "independent"]}, "description": "提高气的输出。", "source_refs": ["hxh_official_dictionary"]},
+        {"id": "hatsu", "value": "发的开发", "weight": 15, "requires": {"route": ["hunter", "independent"]}, "description": "发展符合个人条件的运用方式，具体招式未指定。", "source_refs": ["hxh_official_dictionary", "hxh_moegirl_nen"]}
+      ]
+    },
+    {
+      "id": "aura", "label": "气",
+      "options": [
+        {"id": "unquantified", "value": "生命能量 · 未量化", "weight": 1, "description": "气的储量与修行重点分开，不用猎人星级换算。", "source_refs": ["hxh_official_dictionary"]}
+      ]
+    },
+    {
+      "id": "constraint", "label": "能力开发条件",
+      "options": [
+        {"id": "learning", "value": "需要进一步学习念的基础", "weight": 1, "requires": {"route": ["candidate", "new_license"]}, "source_refs": ["hxh_official_dictionary"]},
+        {"id": "vows", "value": "可通过制约与誓约塑造能力", "weight": 1, "requires": {"route": ["hunter", "independent"]}, "description": "这是开发机制，不表示本身份已订立特定誓约。", "source_refs": ["hxh_official_dictionary"]}
+      ]
+    },
+    {
+      "id": "rating", "label": "资格 / 成长阶段",
+      "options": [
+        {"id": "candidate", "value": "猎人考生", "weight": 1, "requires": {"route": ["candidate"]}, "source_refs": ["hxh_official_dictionary"]},
+        {"id": "new_license", "value": "持照初学者", "weight": 1, "requires": {"route": ["new_license"]}, "description": "记录执照与学习阶段，不作为原作正式战力等级。", "source_refs": ["hxh_official_dictionary", "hxh_official_training"]},
+        {"id": "hunter", "value": "职业猎人 · 念修习中", "weight": 1, "requires": {"route": ["hunter"]}, "description": "未指定协会功绩星级。", "source_refs": ["hxh_official_dictionary"]},
+        {"id": "independent", "value": "念修习者 · 未持猎人执照", "weight": 1, "requires": {"route": ["independent"]}, "source_refs": ["hxh_official_dictionary", "hxh_moegirl_nen"]}
+      ]
+    }
+  ]
+}

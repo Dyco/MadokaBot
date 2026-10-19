@@ -2,7 +2,6 @@
 
 import argparse
 import hashlib
-import json
 import math
 from datetime import datetime, timezone
 from pathlib import Path
@@ -12,7 +11,9 @@ from zipfile import ZipFile
 from bs4 import BeautifulSoup
 from shapely.geometry import Polygon
 
-DATA_DIR = Path(__file__).parent / "data"
+from madokabot.core.storage.json_store import JsonDataStore
+
+DATA_DIR = Path(__file__).resolve().parents[3] / "assets" / "json" / "daily_reborn"
 POPULATION_URL = "https://www.cdc.gov/nchs/fastats/state-and-territorial-data.htm"
 MAP_URL = "https://www2.census.gov/geo/tiger/GENZ2025/kml/cb_2025_us_state_20m.zip"
 XML = {"k": "http://www.opengis.net/kml/2.2"}
@@ -129,13 +130,13 @@ def prepare_map(states: dict) -> dict:
 
 
 def write_snapshot(path: Path, dataset: dict, source_path: Path) -> None:
-    """保存来源摘要和生成时间，以 UTF-8 原子替换离线快照。"""
+    """保存来源摘要和生成时间，通过核心 JSON 工具原子替换快照。"""
     dataset.update(
         source_sha256=hashlib.sha256(source_path.read_bytes()).hexdigest(),
         retrieved_at=datetime.now(timezone.utc).isoformat(),
     )
     temporary = path.with_suffix(".tmp")
-    temporary.write_text(json.dumps(dataset, ensure_ascii=False, separators=(",", ":")) + "\n", encoding="utf-8")
+    JsonDataStore(temporary).write(dataset)
     temporary.replace(path)
 
 
@@ -144,12 +145,13 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--population", type=Path, required=True, help="CDC 2024 年州级出生统计网页")
     parser.add_argument("--map", type=Path, required=True, help="Census 2025 年简化州界 KML 压缩包")
+    parser.add_argument("--data-dir", type=Path, default=DATA_DIR, help="投胎 JSON 资源目录")
     args = parser.parse_args()
     states = read_states(args.map)
     population = read_population(args.population, states)
     usa_map = prepare_map(states)
-    write_snapshot(DATA_DIR / "usa_population.json", population, args.population)
-    write_snapshot(DATA_DIR / "usa_map.json", usa_map, args.map)
+    write_snapshot(args.data_dir / "usa_population.json", population, args.population)
+    write_snapshot(args.data_dir / "usa_map.json", usa_map, args.map)
     print("已更新美国人口及 SVG 地图：50 州及华盛顿特区")
 
 

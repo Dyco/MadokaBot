@@ -1,27 +1,24 @@
 """离线地图几何、出生地定位与局部取景。"""
 
-import json
 import math
 import random
 import re
 from functools import lru_cache
-from pathlib import Path
 
 from .modes import RebornMode
-
-DATA_DIR = Path(__file__).parent / "data"
+from .resources import load_json_resource
 
 
 @lru_cache(maxsize=1)
 def load_world_map() -> list[dict]:
-    """读取离线地图路径，台湾、香港、澳门与中国共用高亮编号。"""
-    return json.loads((DATA_DIR / "world_map.json").read_text(encoding="utf-8"))["regions"]
+    """通过核心 JSON 工具读取地图，台湾、香港、澳门与中国共用高亮编号。"""
+    return load_json_resource("world_map.json")["regions"]
 
 
 @lru_cache(maxsize=3)
 def load_regional_map(mode: RebornMode) -> dict:
-    """读取各国家模式的行政区域 SVG 路径及地区定位。"""
-    return json.loads((DATA_DIR / f"{mode}_map.json").read_text(encoding="utf-8"))
+    """通过核心 JSON 工具读取各国家模式的 SVG 路径及地区定位。"""
+    return load_json_resource(f"{mode}_map.json")
 
 
 @lru_cache(maxsize=300)

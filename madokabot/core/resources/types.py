@@ -22,6 +22,7 @@ class ResourceFolder(Enum):
     POKE = "poke"
     SIGN = "sign"
     FORTUNE = "fortune"  # 运势静态资源。
+    DAILY_REBORN = "daily_reborn"  # 投胎人口、地图与各模式静态资料。
     CHAR = "madoka"
     STEAM = "steam"
     MAIMAI = "maimai"  # 舞萌曲绘、界面素材、字体与曲目数据。

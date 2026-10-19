@@ -2,7 +2,6 @@
 
 import argparse
 import hashlib
-import json
 import math
 from datetime import datetime, timezone
 from pathlib import Path
@@ -12,7 +11,9 @@ from zipfile import ZipFile
 from shapely.geometry import shape
 from shapely.ops import unary_union
 
-DATA_DIR = Path(__file__).parent / "data"
+from madokabot.core.storage.json_store import JsonDataStore
+
+DATA_DIR = Path(__file__).resolve().parents[3] / "assets" / "json" / "daily_reborn"
 POPULATION_URL = "https://www.mhlw.go.jp/toukei/saikin/hw/jinkou/kakutei25/xls/06_hyoR07.xlsx"
 MAP_URL = "https://nlftp.mlit.go.jp/ksj/gml/datalist/KsjTmplt-N03-2026.html"
 XML = {"m": "http://schemas.openxmlformats.org/spreadsheetml/2006/main"}
@@ -60,9 +61,9 @@ def read_population(workbook: Path) -> dict:
 
 
 def prepare_map(source_path: Path, population: dict) -> dict:
-    """按行政代码合并 N03 边界并简化细小海岸线，生成与现有卡片共用的离线路径。"""
+    """通过核心 JSON 工具读取 N03 边界，按行政代码合并并生成离线路径。"""
     groups = {row["code"]: [] for row in population["countries"]}
-    source = json.loads(source_path.read_text(encoding="utf-8"))
+    source = JsonDataStore(source_path).content
     for feature in source["features"]:
         code = "JP-" + feature["properties"]["N03_007"][:2]
         geometry = shape(feature["geometry"])
@@ -115,14 +116,14 @@ def prepare_map(source_path: Path, population: dict) -> dict:
 
 
 def write_snapshot(path: Path, dataset: dict, source_path: Path) -> None:
-    """记录来源摘要及下载时间，以 UTF-8 原子替换已生成快照。"""
+    """记录来源摘要及下载时间，通过核心 JSON 工具原子替换快照。"""
     with source_path.open("rb") as source:
         digest = hashlib.sha256()
         for chunk in iter(lambda: source.read(1024 * 1024), b""):
             digest.update(chunk)
     dataset.update(source_sha256=digest.hexdigest(), retrieved_at=datetime.now(timezone.utc).isoformat())
     temporary = path.with_suffix(".tmp")
-    temporary.write_text(json.dumps(dataset, ensure_ascii=False, separators=(",", ":")) + "\n", encoding="utf-8")
+    JsonDataStore(temporary).write(dataset)
     temporary.replace(path)
 
 
@@ -131,11 +132,12 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--population", type=Path, required=True, help="厚生劳动省 2025 年确定数 Excel 统计表")
     parser.add_argument("--map", type=Path, required=True, help="N03 2026 年都道府县 GeoJSON")
+    parser.add_argument("--data-dir", type=Path, default=DATA_DIR, help="投胎 JSON 资源目录")
     args = parser.parse_args()
     population = read_population(args.population)
     japan_map = prepare_map(args.map, population)
-    write_snapshot(DATA_DIR / "japan_population.json", population, args.population)
-    write_snapshot(DATA_DIR / "japan_map.json", japan_map, args.map)
+    write_snapshot(args.data_dir / "japan_population.json", population, args.population)
+    write_snapshot(args.data_dir / "japan_map.json", japan_map, args.map)
     print("已更新日本人口及 SVG 地图：47 个都道府县")
 
 
