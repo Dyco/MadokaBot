@@ -134,7 +134,7 @@ def random_location(country: dict, *, mode: RebornMode) -> dict:
 
 
 def result_location(result: dict) -> tuple[dict, float, float]:
-    """读取已保存的随机点；底图更新后越界的位置采用稳定内点。"""
+    """优先读取保存的定位；缺少坐标或底图更新后越界时使用地区内的固定安全点。"""
     mode = result.get("mode", "world")
     region, x, y = birth_region(result["country"], mode=mode)
     point = result.get("map_point")

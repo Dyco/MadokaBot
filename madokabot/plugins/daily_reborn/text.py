@@ -1,39 +1,42 @@
 """一键投胎的纯文字档案，不包含历史、资料来源或说明注释。"""
 
-from .anime import ANIME_VERSION
 from .anime_life import CATEGORY_NAMES, anime_life_rows
-from .attributes import STAR_SYSTEM, attribute_rows
-from .games import GAMES_VERSION, game_detail_rows
-from .isekai_life import VERSION as ISEKAI_VERSION
+from .attributes import attribute_rows
+from .games import game_detail_rows
 from .life import life_rows
 from .modes import MODE_NAMES
-from .potential import EVALUATION_SYSTEM
 
 OLD_RESULT_NOTICE = "这份旧档案已停止展示，请重开或明日重新投胎。"
 
 
 def is_current_result(result: dict) -> bool:
-    """只接受当前档案格式，不转换或补全旧版结果。"""
+    """按展示所需字段识别档案；评分版本或缺少地图坐标不阻止复查。"""
     mode = result.get("mode")
     if mode not in MODE_NAMES:
         return False
-    versions = {"anime": ANIME_VERSION, "games": GAMES_VERSION, "isekai": ISEKAI_VERSION}
-    if mode in versions:
-        return result.get("result_version") == versions[mode]
-    return (
-        result.get("attribute_system") == STAR_SYSTEM
-        and result.get("evaluation_system") == EVALUATION_SYSTEM
-        and all(key in result for key in ("life", "map_point", "score"))
+    required = {"date", "gender", "attributes"}
+    if mode == "games":
+        required.update(("title", "notice", "world", "region", "awakening", "combat_attribute",
+                         "level", "level_cap", "revenue", "players", "rating"))
+    else:
+        required.update(("life", "score"))
+        if mode == "anime":
+            required.update(("title", "notice", "world", "presence", "faction", "rank", "combat"))
+        elif mode == "isekai":
+            required.update(("world", "parents", "body", "birthplace"))
+        else:
+            required.update(("country", "probability"))
+    attributes = result.get("attributes")
+    return all(result.get(key) is not None for key in required) and isinstance(attributes, dict) and bool(attributes) and all(
+        type(value) in (int, float) and 1 <= value <= 5 for value in attributes.values()
     )
 
 
 def recent_records(result: dict, *fields: str) -> list[dict]:
-    """读取最近十次记录，只展示当前评价规则且字段完整的历史。"""
-    version_key = "result_version" if result["mode"] == "games" else "evaluation_system"
+    """展示字段完整的最近十次历史，保留各次投胎保存时的分数与评级。"""
     return [
         entry for entry in reversed(result["reborn_history"][-10:])
         if all(entry.get(key) is not None for key in fields)
-        and entry.get(version_key) == result[version_key]
     ]
 
 

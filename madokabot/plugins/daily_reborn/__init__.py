@@ -23,7 +23,8 @@ __plugin_meta__ = PluginMetadata(
     f"{command_start}投胎二游：随机游戏身份，每日免费一次，展示最近十次历史\n"
     f"{command_start}投胎二游 重开：消耗 5 积分重新随机游戏身份\n"
     f"{command_start}投胎 重开：消耗 5 积分重新随机投胎\n"
-    f"{command_start}一键投胎：全部模式的今日投胎，使用纯文字合并消息发送\n"
+    f"{command_start}一键投胎：领取或复查全部模式的今日结果，重复查看不扣积分、不增加次数\n"
+    "单独发送对应投胎命令，可将一键投胎的今日结果渲染成图片复查\n"
     f"{command_start}一键投胎 重开：消耗 35 积分重新随机全部七种投胎\n",
     type="application",
     supported_adapters=inherit_supported_adapters("nonebot_plugin_alconna"),

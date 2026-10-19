@@ -42,14 +42,14 @@ def history_entry(result: dict, count: int) -> dict:
         return {
             "count": count, "date": result["date"], "world": result["world"]["title"],
             "gender": result["gender"], "score": result["score"],
-            "evaluation_system": result["evaluation_system"],
+            "evaluation_system": result.get("evaluation_system"),
         }
     if result["mode"] == "games":
         return {
             "count": count, "date": result["date"], "world": result["world"]["title"],
             "gender": result["gender"], "rating": result["rating"]["value"],
             "rating_tier": result["rating"]["tier"],
-            "result_version": result["result_version"],
+            "result_version": result.get("result_version"),
         }
     return {
         "count": count,
@@ -59,7 +59,7 @@ def history_entry(result: dict, count: int) -> dict:
         "world_region": result_region(result),
         "gender": result["gender"],
         "score": result["score"],
-        "evaluation_system": result["evaluation_system"],
+        "evaluation_system": result.get("evaluation_system"),
     }
 
 

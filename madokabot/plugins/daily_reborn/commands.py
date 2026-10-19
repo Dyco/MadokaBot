@@ -102,7 +102,7 @@ async def handle_reborn_all(bot: Bot, event: MessageEvent, command: Arparma) -> 
 
 
 async def send_reborn(bot: Bot, event: MessageEvent, command: Arparma, *, mode: RebornMode) -> None:
-    """统一处理投胎与重开，免费领取沿用普通投胎展示，渲染失败时发送文字版。"""
+    """领取或复查同日快照，与一键投胎共用结果；渲染失败时发送文字版。"""
     matcher = {
         "world": reborn, "china": reborn_cn, "japan": reborn_jp,
         "usa": reborn_us, "isekai": reborn_isekai, "anime": reborn_anime, "games": reborn_games,
