@@ -44,7 +44,7 @@ reborn_isekai = on_alconna(
 
 reborn_anime = on_alconna(
     Alconna("rebornAnime", Subcommand("reroll", alias=["重开"], help_text="消耗5积分重新随机二次元身份")),
-    aliases={"投胎二次元"},
+    aliases={"投胎二次元", "投胎动漫"},
     use_cmd_start=True,
     priority=10,
     block=True,

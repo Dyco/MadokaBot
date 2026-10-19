@@ -5,174 +5,161 @@
   <style>
     {% if font_uri %}@font-face { font-family: Reborn; src: url('{{ font_uri }}'); }{% endif %}
     * { box-sizing: border-box; }
-    body { width: 1080px; margin: 0; padding: 44px; background: #091c26; color: #eef7f3; font-family: Reborn, 'Microsoft YaHei', sans-serif; }
-    .eyebrow { font-family: sans-serif; font-size: 15px; letter-spacing: 5px; color: #87c9b0; }
-    header { display: flex; justify-content: space-between; align-items: flex-start; }
-    h1 { font-size: 46px; margin: 10px 0 4px; letter-spacing: 5px; }
-    .date { color: #a5b9bf; text-align: right; line-height: 1.9; font-size: 18px; }
-    .identity { margin-top: 28px; padding-top: 26px; border-top: 1px solid #29424b; }
-    .name { color: #afc5c7; font-size: 20px; line-height: 2; overflow-wrap: anywhere; }
-    .nickname { color: #e0f2c9; font-size: 24px; font-weight: bold; background: #1d3b35; border-bottom: 2px solid #9bcfa1; border-radius: 6px; padding: 2px 8px; box-decoration-break: clone; -webkit-box-decoration-break: clone; }
-    .destination { display: flex; justify-content: space-between; align-items: center; gap: 20px; margin: 6px 0 18px; }
-    h2 { font-size: 48px; margin: 0; line-height: 1.5; max-width: 760px; overflow-wrap: anywhere; }
-    .destination-region { color: #afc5c7; font-size: 28px; font-weight: normal; }
+    html, body { margin: 0; overflow: hidden; }
+    body { --score-color: #a8b8c9; --score-rgb: 168, 184, 201; width: {{ card_size.width }}px; height: {{ card_size.height }}px; padding: 17px; background: radial-gradient(ellipse at 95% 75%, rgba(var(--score-rgb), .055), transparent 45%), linear-gradient(145deg, #101b29, #0a111c 65%); color: #eef3f8; font-family: Reborn, 'Microsoft YaHei', sans-serif; display: grid; grid-template-rows: minmax(0, 1fr) 47px; gap: 8px; }
+    .tone-perfect { --score-color: #fff1bf; --score-rgb: 255, 225, 155; }
+    .tone-prismatic { --score-color: #edcfff; --score-rgb: 214, 171, 255; }
+    .tone-gold { --score-color: #f0cc87; --score-rgb: 240, 204, 135; }
+    .tone-violet { --score-color: #bcabf0; --score-rgb: 188, 171, 240; }
+    .tone-azure { --score-color: #8ac5ee; --score-rgb: 138, 197, 238; }
+    .tone-jade { --score-color: #91cbb5; --score-rgb: 145, 203, 181; }
+    .tone-slate { --score-color: #a8b8c9; --score-rgb: 168, 184, 201; }
+    .tone-copper { --score-color: #cba599; --score-rgb: 203, 165, 153; }
+    .layout { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18.5px; min-height: 0; }
+    .left { display: grid; grid-template-rows: 87px minmax(0, 1fr); gap: 8.5px; min-width: 0; min-height: 0; }
+    .heading, .destination { display: flex; justify-content: space-between; align-items: center; gap: 8.5px; }
+    h1 { font-size: 21px; margin: 0; letter-spacing: 2px; }
+    .date { color: #adbdce; font-size: 9px; flex: none; text-align: right; line-height: 1.5; font-variant-numeric: tabular-nums; }
+    .version { display: block; margin-top: 2px; color: #657b92; font-family: sans-serif; font-size: 6.5px; letter-spacing: .4px; }
+    .eyebrow { margin: 3.5px 0 5.5px; font-size: 10px; color: #91bac3; }
+    .name { display: flex; align-items: baseline; gap: 4px; color: #afc5c7; font-size: 10px; white-space: nowrap; }
+    .nickname { color: #e0f2c9; font-size: 11px; max-width: 161.5px; overflow: hidden; text-overflow: ellipsis; }
+    .destination { margin-top: 4px; }
+    h2 { min-width: 0; margin: 0; font-size: 17.5px; line-height: 1.3; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .destination-region { color: #afc5c7; font-size: 12px; font-weight: normal; }
     .male { --gender-color: #9adaff; --gender-border: #4e9fd0; --gender-bg: #15384b; }
     .female { --gender-color: #ffb5d4; --gender-border: #c6719a; --gender-bg: #432737; }
-    .gender { display: flex; align-items: center; justify-content: center; gap: 12px; flex: none; min-width: 150px; border: 2px solid var(--gender-border); color: var(--gender-color); background: var(--gender-bg); padding: 12px 20px; border-radius: 14px; white-space: nowrap; font-size: 28px; font-weight: bold; }
-    .gender svg { width: 30px; height: 30px; flex: none; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
-    .map { background: #102b37; border: 1px solid #284652; border-radius: 18px; overflow: hidden; padding: 18px 12px 8px; }
-    svg { display: block; width: 100%; height: auto; }
-    .grid { fill: none; stroke: #20424e; stroke-width: .6; }
+    .gender { flex: none; border: 0.5px solid var(--gender-border); color: var(--gender-color); background: var(--gender-bg); padding: 3.5px 7px; border-radius: 5.5px; font-size: 11px; }
+    .map { min-height: 0; display: grid; grid-template-rows: minmax(0, 1fr) 18.5px; background: #101f30; border: .5px solid #304459; border-radius: 10px; overflow: hidden; box-shadow: inset 0 1px 0 #ffffff08; }
+    .map > svg { display: block; width: 100%; height: 100%; }
+    .grid { fill: none; stroke: #26394d; stroke-width: .6; }
     .grid path, .land, .sea-lines { vector-effect: non-scaling-stroke; }
-    .land { fill: #345360; stroke: #102b37; stroke-width: .45; stroke-linejoin: round; }
-    .selected { fill: #a7e8ba; stroke: #d9f7d8; stroke-width: .6; }
-    .map-footer { display: flex; justify-content: space-between; padding: 8px 18px; color: #92b1b8; font-size: 14px; }
-    .map-footer b { color: #b5ebcc; font-weight: normal; }
+    .land { fill: #314b60; stroke: #13283a; stroke-width: .45; stroke-linejoin: round; }
+    .selected { fill: #a3d8d0; stroke: #d7f1ea; stroke-width: .6; }
     .regional-land { stroke-width: .85; }
     .regional-land.selected { stroke-width: 1.2; }
     .sea-lines { fill: #648996; stroke: #648996; stroke-width: .3; }
-    .facts { display: grid; grid-template-columns: 1fr 1fr 1fr; padding: 24px 0; gap: 20px; }
-    .fact { border-right: 1px solid #29424b; }
-    .fact:last-child { border: 0; }
-    .fact-label { font-size: 16px; color: #91aeb7; margin-bottom: 7px; }
-    .fact-value { font-family: Reborn, sans-serif; font-size: 27px; color: #e1f3eb; }
-    .fact-value small { font-size: 16px; color: #91aeb7; }
-    .bottom { display: grid; grid-template-columns: 1fr 280px; gap: 18px 24px; padding: 26px 0; border-top: 1px solid #29424b; }
-    .section-title { font-size: 16px; color: #a5c0c1; letter-spacing: 3px; margin-bottom: 18px; }
-    .bottom > .section-title { grid-column: 1 / -1; margin-bottom: 0; }
-    .attribute { --star-color: #9cc5cc; position: relative; overflow: hidden; margin-top: 10px; padding: 13px 16px; border: 1px solid #2b4853; border-radius: 12px; background: #102b37; }
-    .attribute:first-child { margin-top: 0; }
-    .attribute-head { position: relative; z-index: 1; display: grid; grid-template-columns: 52px 1fr 60px 48px; gap: 12px; align-items: center; }
-    .attribute-name { font-size: 20px; color: #dbeae9; }
-    .stars { display: flex; gap: 8px; }
-    .star { width: 28px; height: 28px; flex: none; overflow: visible; }
+    .map-footer { display: flex; align-items: center; padding: 0 8px; color: #9bb8cb; font-size: 8px; white-space: nowrap; }
+    .history { display: grid; grid-template-columns: 12.5px minmax(0, 1fr); gap: 5.5px; min-height: 0; }
+    .section-title { margin: 0; color: #a5c0c1; font-size: 10px; letter-spacing: 1.5px; }
+    .history .section-title { writing-mode: vertical-rl; align-self: center; font-size: 8.5px; }
+    .history-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); grid-template-rows: repeat(2, minmax(0, 1fr)); gap: 3px 5.5px; }
+    .history-item { display: grid; grid-template-columns: 19.5px minmax(0, 1fr) 45.5px; align-items: center; gap: 3.5px; min-width: 0; padding: 0 5px; border: .5px solid #2b3c50; border-radius: 4px; background: #142031; font-size: 7.5px; }
+    .history-item.latest { border-color: rgba(var(--score-rgb), .5); background: linear-gradient(110deg, rgba(var(--score-rgb), .09), #142031); }
+    .history-count { color: #8eafb3; font-size: 7px; }
+    .history-country { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #d8e9e4; }
+    .history-result { text-align: right; white-space: nowrap; color: var(--score-color); }
+    .history-gender { color: var(--gender-color); }
+    .history-item.empty { display: flex; justify-content: center; background: transparent; border-style: dashed; color: #3e5a65; }
+    .right { display: grid; grid-template-rows: 14px auto minmax(0, 1fr); gap: 7px; min-width: 0; min-height: 0; }
+    .attributes { display: grid; gap: 5.5px; }
+    .attribute { --star-color: #a1bcca; position: relative; height: 34px; padding: 5px 10px; border: .5px solid #2b4053; border-radius: 7px; background: linear-gradient(115deg, #192a3bba, #132032a8); box-shadow: inset 0 1px 0 #ffffff05; overflow: hidden; }
+    .attribute-head { position: relative; z-index: 1; display: grid; grid-template-columns: 34px minmax(0, 1fr) 43.5px 32.5px; gap: 8.5px; align-items: center; }
+    .attribute-name { font-size: 12.5px; color: #dbeae9; }
+    .stars { display: flex; gap: 5px; }
+    .star { display: block; width: 17.5px; height: 17.5px; flex: none; overflow: visible; }
     .star-outline { fill: none; stroke: var(--star-color); stroke-width: 1.2; stroke-linejoin: round; }
     .star.empty .star-outline { stroke: #48616e; }
     .star-filled { fill: var(--star-color); }
-    .star-value { color: var(--star-color); font-family: sans-serif; font-size: 25px; text-align: right; }
-    .star-value small { margin-left: 4px; font-family: Reborn, sans-serif; font-size: 13px; font-weight: normal; }
-    .rarity-badge { color: var(--star-color); border: 1px solid currentColor; border-radius: 5px; padding: 3px 4px; text-align: center; font-size: 12px; }
+    .star-value { color: var(--star-color); font-family: sans-serif; font-size: 16px; text-align: right; }
+    .star-value small { margin-left: 2px; font-family: Reborn, sans-serif; font-size: 7.5px; font-weight: normal; }
+    .rarity-badge { color: var(--star-color); border: 0.5px solid currentColor; border-radius: 3.5px; padding: 2px; text-align: center; font-size: 7.5px; }
     .rarity-fine { --star-color: #8ed0ea; }
-    .attribute.rarity-rare { --star-color: #c49aff; border-color: #725193; background: linear-gradient(110deg, #242c43, #172c3d); box-shadow: inset 0 0 20px #ae74ef12, 0 0 13px #a46bea15; }
-    .attribute.rarity-epic { --star-color: #ffd37e; border-color: #aa8345; background: linear-gradient(110deg, #3c3326, #1b3037); box-shadow: inset 0 0 22px #ffcf7020, 0 0 16px #ffcf7018; }
-    .attribute.rarity-legendary { --star-color: #ffd3ee; border-color: transparent; background: linear-gradient(110deg, #362d42, #20393d) padding-box, linear-gradient(110deg, #ff9ed2, #ffe7a0, #88e6d7, #bda3ff) border-box; box-shadow: 0 0 20px #ff9ed229, inset 0 0 22px #a6f3e216; }
-    .rarity-rare .star-filled { filter: drop-shadow(0 0 4px #b47aff88); }
-    .rarity-epic .star-filled { filter: drop-shadow(0 0 5px #ffc35e99); }
-    .rarity-legendary .star-filled { fill: url(#reborn-rainbow); filter: drop-shadow(0 0 5px #ffb8eab0); }
+    .attribute.rarity-rare { --star-color: #c49aff; border-color: #725193; background: linear-gradient(110deg, #242c43, #172c3d); }
+    .attribute.rarity-epic { --star-color: #ffd37e; border-color: #aa8345; background: linear-gradient(110deg, #3c3326, #1b3037); }
+    .attribute.rarity-legendary { --star-color: #ffd3ee; border-color: transparent; background: linear-gradient(110deg, #362d42, #20393d) padding-box, linear-gradient(110deg, #ff9ed2, #ffe7a0, #88e6d7, #bda3ff) border-box; }
+    .rarity-rare .star-filled { filter: drop-shadow(0 0 3px #b47aff88); }
+    .rarity-epic .star-filled { filter: drop-shadow(0 0 3.5px #ffc35e99); }
+    .rarity-legendary .star-filled { fill: url(#reborn-rainbow); filter: drop-shadow(0 0 3.5px #ffb8eab0); }
     .rarity-effects { position: absolute; inset: 0; pointer-events: none; background: linear-gradient(115deg, transparent 40%, #ffffff08 48%, transparent 57%); color: var(--star-color); }
-    .rarity-effects i { position: absolute; font-style: normal; opacity: .55; font-size: 12px; }
-    .rarity-effects i:nth-child(1) { right: 12px; top: 3px; font-size: 15px; }
-    .rarity-effects i:nth-child(2) { right: 74px; bottom: 5px; }
-    .rarity-effects i:nth-child(3) { left: 8px; bottom: 2px; font-size: 10px; }
-    .rating { display: flex; flex-direction: column; justify-content: center; background: #14332f; border: 1px solid #3a6050; border-radius: 18px; text-align: center; padding: 20px 16px; }
-    .score { font-family: sans-serif; font-size: 96px; line-height: 1.2; font-weight: bold; color: #d8edb8; }
-    .score small { font-size: 20px; color: #87a697; font-weight: normal; }
-    .grade { font-size: 21px; margin: 8px 0; color: #d5e9ca; }
+    .rarity-effects i { position: absolute; right: 8.5px; top: 2px; opacity: .55; font-size: 10px; font-style: normal; }
+    .summary { display: flex; align-items: center; justify-content: space-between; gap: 18px; min-height: 0; }
+    .life-facts { display: grid; gap: 10px; min-width: 0; }
+    .life-label { color: #8099af; font-size: 8.5px; margin-bottom: 3px; letter-spacing: .6px; }
+    .life-value { font-size: 14px; line-height: 1.4; color: #e5edf5; }
+    .rating { width: 148px; flex: none; text-align: center; }
+    .score-circle { position: relative; width: 118px; height: 118px; margin: 0 auto; border: .7px solid rgba(var(--score-rgb), .55); border-radius: 50%; background: radial-gradient(ellipse at 30% 15%, rgba(var(--score-rgb), .08), transparent 65%), linear-gradient(140deg, #1b293a, #101927); display: flex; align-items: center; justify-content: center; box-shadow: inset 0 0 22px rgba(var(--score-rgb), .035); }
+    .score-circle::after { content: ''; position: absolute; inset: 4px; border: .5px solid rgba(var(--score-rgb), .12); border-radius: 50%; pointer-events: none; }
+    .score { font-family: 'Segoe UI', sans-serif; font-size: 43px; font-weight: 600; font-variant-numeric: tabular-nums; letter-spacing: -1px; color: var(--score-color); }
+    .score small { font-family: Reborn, sans-serif; font-size: 13px; font-weight: normal; margin-left: 3px; }
+    .tone-violet .score-circle { box-shadow: 0 0 15px #ac90e312, inset 0 0 22px #bcabf008; }
+    .tone-gold .score-circle { background: radial-gradient(ellipse at 30% 15%, #f4d58d19, transparent 65%), linear-gradient(145deg, #292b31, #141c29); box-shadow: 0 0 23px #e2b65b26, inset 0 0 24px #ffd8890c; }
+    .tone-prismatic .score-circle { border-color: #dfbcf3a0; background: radial-gradient(ellipse at 18% 18%, #dcb7ff32, transparent 60%), radial-gradient(ellipse at 90% 85%, #8be4e51c, transparent 65%), linear-gradient(140deg, #29263d, #122434); box-shadow: 0 0 28px #c69bf633, 10px 6px 34px #80dfe014, inset 0 0 25px #f2d2ff0c; }
+    .tone-perfect .score-circle { border-color: #fff0bdbd; background: radial-gradient(ellipse at 28% 15%, #ffe2a845, transparent 55%), radial-gradient(ellipse at 90% 90%, #addaff26, transparent 60%), linear-gradient(145deg, #303047, #10212b); box-shadow: 0 0 0 3px #ffebb90a, 0 0 34px #ffdb6b42, 0 0 62px #e4c4ff24, inset 0 0 28px #fff0b91a; }
+    .tone-perfect .score { color: #fff1c4; text-shadow: 0 0 18px #ffe29b45, 0 0 35px #f7d8ff22; }
     .star-defs { position: absolute; width: 0; height: 0; overflow: hidden; }
-    .history { border-top: 1px solid #29424b; padding: 16px 0; }
-    .history-heading { margin-bottom: 10px; }
-    .history-heading .section-title { margin: 0; font-size: 14px; }
-    .history-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); grid-template-rows: repeat(2, 1fr); gap: 8px; }
-    .history-item { min-height: 80px; padding: 8px 10px; border: 1px solid #294651; border-radius: 8px; background: #102630; }
-    .history-item.latest { border-color: #527d67; background: #14332f; }
-    .history-meta { display: flex; justify-content: space-between; color: #8eafb3; font-size: 11px; line-height: 1.35; }
-    .history-country { margin: 4px 0; font-size: 14px; line-height: 1.35; color: #d8e9e4; overflow-wrap: anywhere; }
-    .history-result { font-size: 12px; line-height: 1.35; color: #9cbdba; }
-    .history-result b { color: #d8edb8; font-weight: normal; }
-    .history-gender { color: var(--gender-color); font-weight: bold; }
-    .history-item.empty { display: flex; align-items: center; justify-content: center; background: transparent; border-style: dashed; color: #3e5a65; }
-    footer { border-top: 1px solid #29424b; padding-top: 18px; font-size: 13px; color: #819fa9; line-height: 1.9; text-align: right; }
+    {% block extra_styles %}{% endblock %}
   </style>
 </head>
-<body>
+<body class="tone-{{ score_tier }}">
   <svg class="star-defs" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><defs>
     <path id="reborn-star" d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26Z"/>
     <clipPath id="reborn-half"><rect width="12" height="24"/></clipPath>
     <linearGradient id="reborn-rainbow" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#ff9ed2"/><stop offset=".35" stop-color="#ffe7a0"/><stop offset=".7" stop-color="#88e6d7"/><stop offset="1" stop-color="#bda3ff"/></linearGradient>
   </defs></svg>
-  <header>
-    <div><div class="eyebrow">DAILY REBORN / {% if mode == 'world' %}NEW LIFE{% else %}{{ mode|upper }}{% endif %} ARCHIVE</div><h1>{{ title }}</h1></div>
-    <div class="date">{{ result.date }}<br>人生模拟</div>
-  </header>
-  <section class="identity">
-    <div class="name"><strong class="nickname">{{ name }}</strong>，这是你的第{{ reborn_count }}次投胎，这次你出生在</div>
-    <div class="destination"><h2>{{ result.country.name }}{% if world_region %}<span class="destination-region"> - {{ world_region }}</span>{% endif %}</h2>
-      <div class="gender {% if result.gender == '男' %}male{% else %}female{% endif %}" aria-label="{{ result.gender }}婴">
-        <svg viewBox="0 0 24 24" aria-hidden="true">{% if result.gender == '男' %}<circle cx="9" cy="15" r="6"/><path d="M13.3 10.7L21 3M15 3h6v6"/>{% else %}<circle cx="12" cy="8" r="5"/><path d="M12 13v9M8 18h8"/>{% endif %}</svg>
-        <span>{{ result.gender }}婴</span>
+  <main class="layout">
+    <div class="left">
+      {% block left_header %}
+      <header>
+        <div class="heading"><h1>{{ title }}</h1><span class="date">{{ result.date }}<span class="version">MADOKABOT VER.{{ bot_version }}</span></span></div>
+        <div class="eyebrow">{{ mode_name }} · 第 {{ reborn_count }} 次投胎</div>
+        <div class="name"><strong class="nickname">{{ name }}</strong><span>，这次你出生在</span></div>
+        <div class="destination"><h2>{{ result.country.name }}{% if world_region %}<span class="destination-region"> - {{ world_region }}</span>{% endif %}</h2><span class="gender {% if result.gender == '男' %}male{% else %}female{% endif %}">{% if result.gender == '男' %}♂男性{% else %}♀女性{% endif %}</span></div>
+      </header>
+      {% endblock %}
+      {% block birthplace_panel %}
+      <div class="map">
+        <svg viewBox="{{ map_view_box }}" xmlns="http://www.w3.org/2000/svg" aria-label="{{ result.country.name }}及周边出生地图">
+        {% if mode != 'world' %}
+          <g class="grid">{% for path in regional_map.grid %}<path d="{{ path }}"/>{% endfor %}</g>
+          {% for region in regions %}<path data-region="{{ region.code }}" class="land regional-land{% if region.code == result.country.code %} selected{% endif %}" fill-rule="evenodd" d="{{ region.path }}"/>{% endfor %}
+          {% if mode == 'china' %}<path class="sea-lines" d="{{ regional_map.sea_lines }}"/>{% endif %}
+        {% else %}
+          {% for offset in map_offsets %}<g transform="translate({{ offset }}, 0)">
+            <g class="grid">{% for x in range(0, 1001, 125) %}<path d="M{{ x }} 0V440"/>{% endfor %}{% for y in range(69, 440, 83) %}<path d="M0 {{ y }}H1000"/>{% endfor %}</g>
+            {% for region in regions %}<path class="land{% if region.code == result.country.map_code %} selected{% endif %}" fill-rule="evenodd" d="{{ region.path }}"/>{% endfor %}
+          </g>{% endfor %}
+        {% endif %}
+          <circle cx="{{ marker_x }}" cy="{{ marker_y }}" r="{{ 14 * map_scale }}" fill="#eaf7c8" opacity=".15"/>
+          <circle cx="{{ marker_x }}" cy="{{ marker_y }}" r="{{ 6 * map_scale }}" fill="#edf7ca" stroke="#143832" stroke-width="{{ 2 * map_scale }}"/>
+          <circle cx="{{ marker_x }}" cy="{{ marker_y }}" r="{{ 2 * map_scale }}" fill="#205442"/>
+        </svg>
+        <div class="map-footer">概率：{{ probability }}</div>
       </div>
+      {% endblock %}
     </div>
-  </section>
-  <div class="map">
-    <svg viewBox="{{ map_view_box }}" xmlns="http://www.w3.org/2000/svg" aria-label="{{ result.country.name }}及周边出生地图">
-    {% if mode != 'world' %}
-      <g class="grid">{% for path in regional_map.grid %}<path d="{{ path }}"/>{% endfor %}</g>
-      {% for region in regions %}<path data-region="{{ region.code }}" class="land regional-land{% if region.code == result.country.code %} selected{% endif %}" fill-rule="evenodd" d="{{ region.path }}"/>{% endfor %}
-      {% if mode == 'china' %}<path class="sea-lines" d="{{ regional_map.sea_lines }}"/>{% endif %}
-    {% else %}
-      {% for offset in map_offsets %}
-      <g transform="translate({{ offset }}, 0)">
-      <g class="grid">
-        {% for x in range(0, 1001, 125) %}<path d="M{{ x }} 0V440"/>{% endfor %}
-        {% for y in range(69, 440, 83) %}<path d="M0 {{ y }}H1000"/>{% endfor %}
-      </g>
-      {% for region in regions %}<path class="land{% if region.code == result.country.map_code %} selected{% endif %}" fill-rule="evenodd" d="{{ region.path }}"/>{% endfor %}
-      </g>
-      {% endfor %}
-    {% endif %}
-      <circle cx="{{ marker_x }}" cy="{{ marker_y }}" r="{{ 14 * map_scale }}" fill="#eaf7c8" opacity=".15"/>
-      <circle cx="{{ marker_x }}" cy="{{ marker_y }}" r="{{ 6 * map_scale }}" fill="#edf7ca" stroke="#143832" stroke-width="{{ 2 * map_scale }}"/>
-      <circle cx="{{ marker_x }}" cy="{{ marker_y }}" r="{{ 2 * map_scale }}" fill="#205442"/>
-    </svg>
-    <div class="map-footer"><b>● 本次出生地</b><span>{{ mode_name }} · 出生地周边示意图{% if mode == 'japan' %} · 地图：国土交通省（加工）{% elif mode == 'usa' %} · 地图：美国人口普查局（加工）{% endif %}</span></div>
-  </div>
-  <div class="facts">
-    <div class="fact"><div class="fact-label">抽中该地区的概率</div><div class="fact-value">{{ probability }}</div></div>
-    <div class="fact"><div class="fact-label">该地区年度出生人数{% if mode != 'world' %} · {{ result.data_year }}{% endif %}</div><div class="fact-value">{{ births }} <small>人</small></div></div>
-    {% if result.country.get('birth_rate') is not none %}
-    <div class="fact"><div class="fact-label">该地区粗出生率{% if result.country.get('birth_rate_estimated') %}（估算）{% endif %}</div><div class="fact-value">{{ '%.2f'|format(result.country.birth_rate) }} <small>‰</small></div></div>
-    {% else %}
-    <div class="fact"><div class="fact-label">人口数据年份</div><div class="fact-value">{{ result.data_year }} <small>年</small></div></div>
-    {% endif %}
-  </div>
-  <div class="life-analysis">
-  <div class="bottom">
-    <div class="section-title">初始人生属性 · 星级</div>
-    <div class="attributes">
-      {% for row in attribute_rows %}
-      <div class="attribute rarity-{{ row.rarity }}" data-stars="{{ row.value_text }}">
-        {% if row.value >= 4 %}<div class="rarity-effects" aria-hidden="true"><i>✦</i><i>✧</i><i>✦</i></div>{% endif %}
-        <div class="attribute-head">
-          <span class="attribute-name">{{ row.name }}</span>
-          <div class="stars" role="img" aria-label="{{ row.name }} {{ row.value_text }} 星，满星 5 星">
-            {% for slot in row.slots %}<svg class="star {{ slot }}" viewBox="0 0 24 24" aria-hidden="true">
-              {% if slot != 'empty' %}<use href="#reborn-star" class="star-filled"{% if slot == 'half' %} clip-path="url(#reborn-half)"{% endif %}/>{% endif %}
-              <use href="#reborn-star" class="star-outline"/>
-            </svg>{% endfor %}
-          </div>
-          <strong class="star-value">{{ row.value_text }}<small>星</small></strong>
-          <span class="rarity-badge">{{ row.title }}</span>
+    {% block right_panel %}
+    <div class="right">
+      <h3 class="section-title">初始人生属性</h3>
+      <div class="attributes">
+        {% for row in attribute_rows %}
+        <div class="attribute rarity-{{ row.rarity }}" data-stars="{{ row.value_text }}">
+          {% if row.value >= 4 %}<div class="rarity-effects" aria-hidden="true"><i>✦</i></div>{% endif %}
+          <div class="attribute-head"><span class="attribute-name">{{ row.name }}</span><div class="stars" role="img" aria-label="{{ row.name }} {{ row.value_text }} 星，满星 5 星">
+            {% for slot in row.slots %}<svg class="star {{ slot }}" viewBox="0 0 24 24" aria-hidden="true">{% if slot != 'empty' %}<use href="#reborn-star" class="star-filled"{% if slot == 'half' %} clip-path="url(#reborn-half)"{% endif %}/>{% endif %}<use href="#reborn-star" class="star-outline"/></svg>{% endfor %}
+          </div><strong class="star-value">{{ row.value_text }}<small>星</small></strong><span class="rarity-badge">{{ row.title }}</span></div>
         </div>
+        {% endfor %}
       </div>
-      {% endfor %}
+      <div class="summary">
+        <div class="life-facts">
+          {% for row in life_rows %}<div><div class="life-label">{{ row.label }}</div><div class="life-value">{{ row.value }}</div></div>{% endfor %}
+        </div>
+        <div class="rating"><div class="score-circle"><span class="score">{{ result.score }}<small>分</small></span></div></div>
+      </div>
     </div>
-    <div class="rating"><div class="score">{{ result.score }}<small> / 100</small></div><div class="grade">{{ result.label }}</div></div>
-  </div>
-  </div>
+    {% endblock %}
+  </main>
+  {% block history_panel %}
   <section class="history">
-    <div class="history-heading"><div class="section-title">最近十次投胎</div></div>
+    <h3 class="section-title">记录</h3>
     <div class="history-grid">
       {% for entry in history_slots %}
-      {% if entry %}
-      <div class="history-item{% if loop.first %} latest{% endif %}">
-        <div class="history-meta"><span>第{{ entry.count }}次</span><span>{{ entry.date[5:] }}</span></div>
-        <div class="history-country">{{ entry.country }}</div>
-        <div class="history-result"><span class="history-gender {% if entry.gender == '男' %}male{% else %}female{% endif %}">{% if entry.gender == '男' %}♂{% else %}♀{% endif %} {{ entry.gender }}</span> · <b>{{ entry.score }} 分</b> · {{ entry.label.split(' · ')[0] }}</div>
-      </div>
+      {% if entry %}<div class="history-item tone-{{ entry.score_tier }}{% if loop.first %} latest{% endif %}"><span class="history-count">#{{ entry.count }}</span><span class="history-country">{{ entry.country }}</span><span class="history-result">{{ entry.score }}分 <span class="history-gender {% if entry.gender == '男' %}male{% else %}female{% endif %}">{% if entry.gender == '男' %}♂{% else %}♀{% endif %}</span></span></div>
       {% else %}<div class="history-item empty">—</div>{% endif %}
       {% endfor %}
     </div>
   </section>
-  <footer>MADOKABOT VER.{{ bot_version }}</footer>
+  {% endblock %}
 </body>
 </html>

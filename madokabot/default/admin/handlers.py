@@ -2,11 +2,38 @@
 
 import re
 
-from nonebot.adapters.onebot.v11 import MessageSegment
+from nonebot import logger
+from nonebot.adapters.onebot.v11 import (
+    Bot,
+    MessageEvent,
+    MessageSegment,
+    OneBotV11AdapterException,
+)
 from nonebot_plugin_alconna import Arparma, At
 
-from .matchers import MODIFY_USAGE, modify_cmd
+from madokabot.core.group.access import GroupAccessType, group_access
+from madokabot.core.messaging.broadcast import broadcast_message
+
+from .matchers import MODIFY_USAGE, broadcast_cmd, modify_cmd
 from .service import modify_user_stat
+
+
+@broadcast_cmd.handle()
+async def handle_broadcast(bot: Bot, event: MessageEvent) -> None:
+    """将超级用户引用的消息发送到全部白名单群。"""
+    if event.reply is None:
+        await broadcast_cmd.finish("请引用需要发送的消息。")
+
+    groups = group_access.get(GroupAccessType.WHITELIST)
+    if not groups:
+        await broadcast_cmd.finish("当前没有白名单群。")
+
+    try:
+        sent, failed = await broadcast_message(bot, groups, event.reply.message)
+    except (OneBotV11AdapterException, ValueError):
+        logger.exception("全群通告消息准备失败")
+        await broadcast_cmd.finish("通告发送失败。")
+    await broadcast_cmd.finish(f"通告完成：成功 {sent} 群，失败 {len(failed)} 群。")
 
 
 @modify_cmd.handle()

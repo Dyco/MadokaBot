@@ -2,497 +2,81 @@
   "id": "naruto",
   "title": "火影忍者",
   "weight": 1,
-  "description": "忍村接受任务、培养忍者，查克拉控制与不同术的修行构成成长基础。",
-  "scope": "五大忍村的一般人类忍者，以及木叶忍者学校学生原型；学生不授予正式忍者等级，属性表示主要修行方向。",
-  "history_fields": [
-    "faction",
-    "talent"
+  "category": "battle",
+  "danger": "危险",
+  "logo": "naruto.webp",
+  "harem": false,
+  "source_refs": [
+    "naruto_official_ranks",
+    "naruto_baidu_nations",
+    "naruto_event_war",
+    "naruto_event_leaf"
   ],
-  "sections": [
+  "death_causes": [
+    "疾病",
+    "意外",
+    "作战",
+    "暗杀",
+    "任务遇险",
+    "忍术反噬",
+    "中毒",
+    "伤重不治"
+  ],
+  "events": [
     {
-      "title": "基础属性",
-      "fields": [
-        "identity",
-        "faction",
-        "region"
+      "name": "第四次忍界大战",
+      "weight": 5,
+      "age": [
+        16,
+        100
       ]
     },
     {
-      "title": "忍者档案",
-      "fields": [
-        "talent",
-        "nature",
-        "chakra",
-        "practice"
+      "name": "木叶崩坏",
+      "weight": 3,
+      "age": [
+        12,
+        90
+      ],
+      "factions": [
+        "leaf"
       ]
     }
   ],
-  "pools": [
+  "ranks": [
+    ["路人", 20, "D"],
+    ["忍校学生", 25, "D+"],
+    ["下忍", 32, "C"],
+    ["中忍", 17, "B"],
+    ["特别上忍", 4, "A"],
+    ["上忍", 1.7, "A+"],
+    ["影", 0.3, "S"]
+  ],
+  "factions": [
     {
-      "id": "identity",
-      "label": "身份",
-      "options": [
-        {
-          "id": "ninja",
-          "value": "人类 · 忍者",
-          "weight": 75,
-          "source_refs": [
-            "naruto_official_ranks"
-          ]
-        },
-        {
-          "id": "academy_student",
-          "value": "人类 · 忍校学生",
-          "weight": 25,
-          "source_refs": [
-            "naruto_official_academy"
-          ]
-        }
-      ]
+      "id": "leaf",
+      "name": "木叶隐村",
+      "weight": 40
     },
     {
-      "id": "faction",
-      "label": "所属忍村",
-      "options": [
-        {
-          "id": "leaf",
-          "value": "木叶隐村",
-          "weight": 1,
-          "source_refs": [
-            "naruto_baidu_nations"
-          ]
-        },
-        {
-          "id": "sand",
-          "value": "砂隐村",
-          "weight": 1,
-          "source_refs": [
-            "naruto_baidu_nations"
-          ],
-          "requires": {
-            "identity": [
-              "ninja"
-            ]
-          }
-        },
-        {
-          "id": "mist",
-          "value": "雾隐村",
-          "weight": 1,
-          "source_refs": [
-            "naruto_baidu_nations"
-          ],
-          "requires": {
-            "identity": [
-              "ninja"
-            ]
-          }
-        },
-        {
-          "id": "cloud",
-          "value": "云隐村",
-          "weight": 1,
-          "source_refs": [
-            "naruto_baidu_nations"
-          ],
-          "requires": {
-            "identity": [
-              "ninja"
-            ]
-          }
-        },
-        {
-          "id": "stone",
-          "value": "岩隐村",
-          "weight": 1,
-          "source_refs": [
-            "naruto_baidu_nations"
-          ],
-          "requires": {
-            "identity": [
-              "ninja"
-            ]
-          }
-        }
-      ]
+      "id": "sand",
+      "name": "砂隐村",
+      "weight": 15
     },
     {
-      "id": "region",
-      "label": "所属国家",
-      "options": [
-        {
-          "id": "fire",
-          "value": "火之国",
-          "weight": 1,
-          "requires": {
-            "faction": [
-              "leaf"
-            ]
-          },
-          "source_refs": [
-            "naruto_baidu_nations"
-          ]
-        },
-        {
-          "id": "wind",
-          "value": "风之国",
-          "weight": 1,
-          "requires": {
-            "faction": [
-              "sand"
-            ]
-          },
-          "source_refs": [
-            "naruto_baidu_nations"
-          ]
-        },
-        {
-          "id": "water",
-          "value": "水之国",
-          "weight": 1,
-          "requires": {
-            "faction": [
-              "mist"
-            ]
-          },
-          "source_refs": [
-            "naruto_baidu_nations"
-          ]
-        },
-        {
-          "id": "lightning",
-          "value": "雷之国",
-          "weight": 1,
-          "requires": {
-            "faction": [
-              "cloud"
-            ]
-          },
-          "source_refs": [
-            "naruto_baidu_nations"
-          ]
-        },
-        {
-          "id": "earth",
-          "value": "土之国",
-          "weight": 1,
-          "requires": {
-            "faction": [
-              "stone"
-            ]
-          },
-          "source_refs": [
-            "naruto_baidu_nations"
-          ]
-        }
-      ]
+      "id": "mist",
+      "name": "雾隐村",
+      "weight": 15
     },
     {
-      "id": "rating",
-      "label": "评级参考（正式等级）",
-      "options": [
-        {
-          "id": "genin",
-          "value": "下忍",
-          "weight": 65,
-          "description": "正式忍者等级之一，不能据此直接决定战斗胜负。",
-          "source_refs": [
-            "naruto_official_ranks"
-          ],
-          "requires": {
-            "identity": [
-              "ninja"
-            ]
-          }
-        },
-        {
-          "id": "chunin",
-          "value": "中忍",
-          "weight": 28,
-          "source_refs": [
-            "naruto_official_ranks"
-          ],
-          "requires": {
-            "identity": [
-              "ninja"
-            ]
-          }
-        },
-        {
-          "id": "jonin",
-          "value": "上忍",
-          "weight": 7,
-          "description": "正式等级，不自动附带血继限界或影的职位。",
-          "source_refs": [
-            "naruto_official_ranks"
-          ],
-          "requires": {
-            "identity": [
-              "ninja"
-            ]
-          }
-        },
-        {
-          "id": "student",
-          "value": "忍校学生 · 尚未成为下忍",
-          "weight": 1,
-          "source_refs": [
-            "naruto_official_academy"
-          ],
-          "requires": {
-            "identity": [
-              "academy_student"
-            ]
-          },
-          "description": "入门学习阶段，不是下忍以下的新正式军衔。"
-        }
-      ]
+      "id": "cloud",
+      "name": "云隐村",
+      "weight": 15
     },
     {
-      "id": "talent",
-      "label": "修行方向",
-      "options": [
-        {
-          "id": "ninjutsu",
-          "value": "忍术",
-          "weight": 45,
-          "description": "提炼查克拉并通过结印运用不同的术。",
-          "source_refs": [
-            "naruto_official_ninjutsu"
-          ],
-          "requires": {
-            "identity": [
-              "ninja"
-            ]
-          }
-        },
-        {
-          "id": "taijutsu",
-          "value": "体术",
-          "weight": 30,
-          "description": "通过身体训练与近身技巧发展战斗能力。",
-          "source_refs": [
-            "naruto_official_taijutsu"
-          ],
-          "requires": {
-            "identity": [
-              "ninja"
-            ]
-          }
-        },
-        {
-          "id": "genjutsu",
-          "value": "幻术",
-          "weight": 15,
-          "description": "参考原作中的幻术战斗方向。",
-          "source_refs": [
-            "naruto_official_genjutsu"
-          ],
-          "requires": {
-            "identity": [
-              "ninja"
-            ]
-          }
-        },
-        {
-          "id": "medical",
-          "value": "医疗忍术",
-          "weight": 10,
-          "description": "以医疗用途的查克拉控制为成长方向。",
-          "source_refs": [
-            "naruto_official_medical"
-          ],
-          "requires": {
-            "identity": [
-              "ninja"
-            ]
-          }
-        },
-        {
-          "id": "foundation",
-          "value": "忍者学校基础学习",
-          "weight": 1,
-          "source_refs": [
-            "naruto_official_academy"
-          ],
-          "requires": {
-            "identity": [
-              "academy_student"
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "id": "nature",
-      "label": "性质变化修行方向",
-      "options": [
-        {
-          "id": "unconfirmed",
-          "value": "尚未确认",
-          "weight": 25,
-          "source_refs": [
-            "naruto_wiki_chakra"
-          ]
-        },
-        {
-          "id": "fire",
-          "value": "火",
-          "weight": 15,
-          "source_refs": [
-            "naruto_wiki_chakra",
-            "naruto_licensed_natures"
-          ],
-          "requires": {
-            "identity": [
-              "ninja"
-            ]
-          }
-        },
-        {
-          "id": "wind",
-          "value": "风",
-          "weight": 15,
-          "source_refs": [
-            "naruto_wiki_chakra",
-            "naruto_licensed_natures"
-          ],
-          "requires": {
-            "identity": [
-              "ninja"
-            ]
-          }
-        },
-        {
-          "id": "lightning",
-          "value": "雷",
-          "weight": 15,
-          "source_refs": [
-            "naruto_wiki_chakra",
-            "naruto_licensed_natures"
-          ],
-          "requires": {
-            "identity": [
-              "ninja"
-            ]
-          }
-        },
-        {
-          "id": "earth",
-          "value": "土",
-          "weight": 15,
-          "source_refs": [
-            "naruto_wiki_chakra",
-            "naruto_licensed_natures"
-          ],
-          "requires": {
-            "identity": [
-              "ninja"
-            ]
-          }
-        },
-        {
-          "id": "water",
-          "value": "水",
-          "weight": 15,
-          "source_refs": [
-            "naruto_wiki_chakra",
-            "naruto_licensed_natures"
-          ],
-          "requires": {
-            "identity": [
-              "ninja"
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "id": "chakra",
-      "label": "查克拉",
-      "options": [
-        {
-          "id": "unquantified",
-          "value": "储量未量化",
-          "weight": 1,
-          "description": "术的基础能量；本档案不由忍者等级倒推储量。",
-          "source_refs": [
-            "naruto_official_ninjutsu",
-            "naruto_wiki_chakra"
-          ]
-        }
-      ]
-    },
-    {
-      "id": "practice",
-      "label": "训练重点",
-      "options": [
-        {
-          "id": "seals",
-          "value": "查克拉控制与结印",
-          "weight": 1,
-          "requires": {
-            "talent": [
-              "ninjutsu"
-            ]
-          },
-          "source_refs": [
-            "naruto_official_ninjutsu"
-          ]
-        },
-        {
-          "id": "physical",
-          "value": "体能与近身格斗",
-          "weight": 1,
-          "requires": {
-            "talent": [
-              "taijutsu"
-            ]
-          },
-          "source_refs": [
-            "naruto_official_taijutsu"
-          ]
-        },
-        {
-          "id": "illusion",
-          "value": "幻术运用",
-          "weight": 1,
-          "requires": {
-            "talent": [
-              "genjutsu"
-            ]
-          },
-          "source_refs": [
-            "naruto_official_genjutsu"
-          ]
-        },
-        {
-          "id": "healing",
-          "value": "医疗用途的查克拉运用",
-          "weight": 1,
-          "requires": {
-            "talent": [
-              "medical"
-            ]
-          },
-          "source_refs": [
-            "naruto_official_medical"
-          ]
-        },
-        {
-          "id": "foundation",
-          "value": "忍者基础知识与基础术练习",
-          "weight": 1,
-          "source_refs": [
-            "naruto_official_academy"
-          ],
-          "requires": {
-            "talent": [
-              "foundation"
-            ]
-          }
-        }
-      ]
+      "id": "stone",
+      "name": "岩隐村",
+      "weight": 15
     }
   ]
 }

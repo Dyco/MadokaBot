@@ -1,566 +1,79 @@
 {
   "id": "one_piece",
-  "title": "海贼王 / ONE PIECE",
+  "title": "海贼王",
   "weight": 1,
-  "description": "海贼、海军与革命军在海洋世界中活动，恶魔果实与霸气是彼此独立的能力体系。",
-  "scope": "一般人类身份；海军采用本部及伟大航路直属支部体系，其他阵营使用组织身份，不赋予悬赏金额或四皇称号。",
-  "history_fields": [
-    "faction",
-    "fruit"
+  "category": "battle",
+  "danger": "危险",
+  "logo": "one_piece.png",
+  "harem": false,
+  "source_refs": [
+    "onepiece_official_luffy",
+    "onepiece_official_smoker",
+    "onepiece_official_hack",
+    "onepiece_wiki_marines",
+    "onepiece_event_marineford"
   ],
-  "sections": [
+  "death_causes": [
+    "疾病",
+    "瘟疫",
+    "海难",
+    "意外",
+    "作战",
+    "海王类袭击",
+    "探险事故",
+    "伤重不治"
+  ],
+  "events": [
     {
-      "title": "基础属性",
-      "fields": [
-        "identity",
-        "faction",
-        "region"
-      ]
-    },
-    {
-      "title": "航海与能力",
-      "fields": [
-        "fruit",
-        "power",
-        "haki",
-        "constraint"
+      "name": "顶上战争",
+      "weight": 5,
+      "age": [
+        16,
+        100
+      ],
+      "factions": [
+        "pirate",
+        "marine"
       ]
     }
   ],
-  "pools": [
+  "factions": [
     {
-      "id": "identity",
-      "label": "种族 / 身份",
-      "options": [
-        {
-          "id": "human",
-          "value": "人类",
-          "weight": 1,
-          "source_refs": [
-            "onepiece_official_luffy",
-            "onepiece_official_smoker"
-          ]
-        }
+      "id": "pirate",
+      "name": "海贼",
+      "weight": 50,
+      "ranks": [
+        ["路人", 20, "D"],
+        ["海贼见习生", 30, "D+"],
+        ["海贼团成员", 30, "C+"],
+        ["海贼船长", 15, "B+"],
+        ["新世界海贼", 4, "A+"],
+        ["四皇", 1, "S"]
       ]
     },
     {
-      "id": "faction",
-      "label": "阵营",
-      "options": [
-        {
-          "id": "pirate",
-          "value": "海贼",
-          "weight": 50,
-          "source_refs": [
-            "onepiece_official_luffy"
-          ]
-        },
-        {
-          "id": "marine",
-          "value": "海军",
-          "weight": 35,
-          "source_refs": [
-            "onepiece_official_smoker",
-            "onepiece_wiki_marines"
-          ]
-        },
-        {
-          "id": "revolutionary",
-          "value": "革命军",
-          "weight": 15,
-          "source_refs": [
-            "onepiece_official_hack"
-          ]
-        }
+      "id": "marine",
+      "name": "海军",
+      "weight": 35,
+      "ranks": [
+        ["路人", 12, "D"],
+        ["海军杂务兵", 20, "D"],
+        ["海兵", 35, "D+"],
+        ["海军上尉", 18, "C+"],
+        ["海军上校", 10, "B+"],
+        ["海军中将", 4, "A+"],
+        ["海军大将", 1, "S"]
       ]
     },
     {
-      "id": "region",
-      "label": "活动范围",
-      "options": [
-        {
-          "id": "seas",
-          "value": "四海",
-          "weight": 65,
-          "requires": {
-            "faction": [
-              "pirate"
-            ]
-          },
-          "source_refs": [
-            "onepiece_wiki_marines"
-          ]
-        },
-        {
-          "id": "grand_line",
-          "value": "伟大航路沿线",
-          "weight": 35,
-          "requires": {
-            "faction": [
-              "pirate"
-            ]
-          },
-          "source_refs": [
-            "onepiece_official_luffy"
-          ]
-        },
-        {
-          "id": "naval",
-          "value": "海军本部及伟大航路直属支部",
-          "weight": 1,
-          "requires": {
-            "faction": [
-              "marine"
-            ]
-          },
-          "source_refs": [
-            "onepiece_official_smoker",
-            "onepiece_wiki_marines"
-          ]
-        },
-        {
-          "id": "covert",
-          "value": "秘密活动据点与任务地点",
-          "weight": 1,
-          "requires": {
-            "faction": [
-              "revolutionary"
-            ]
-          },
-          "source_refs": [
-            "onepiece_official_hack"
-          ]
-        }
-      ]
-    },
-    {
-      "id": "rating",
-      "label": "评级参考（军衔 / 身份）",
-      "options": [
-        {
-          "id": "pirate_member",
-          "value": "海贼团成员",
-          "weight": 85,
-          "requires": {
-            "faction": [
-              "pirate"
-            ]
-          },
-          "description": "组织成员身份，不对应统一战力等级。",
-          "source_refs": [
-            "onepiece_official_luffy"
-          ]
-        },
-        {
-          "id": "pirate_captain",
-          "value": "海贼船长",
-          "weight": 15,
-          "requires": {
-            "faction": [
-              "pirate"
-            ]
-          },
-          "source_refs": [
-            "onepiece_official_luffy"
-          ]
-        },
-        {
-          "id": "sailor",
-          "value": "海兵 · 军衔未细分",
-          "weight": 10,
-          "requires": {
-            "faction": [
-              "marine"
-            ]
-          },
-          "source_refs": [
-            "onepiece_wiki_marines"
-          ],
-          "description": "保留未明确军衔的身份，不将海兵当作独立军衔。"
-        },
-        {
-          "id": "lieutenant",
-          "value": "海军上尉",
-          "weight": 22,
-          "requires": {
-            "faction": [
-              "marine"
-            ]
-          },
-          "source_refs": [
-            "onepiece_wiki_marines"
-          ]
-        },
-        {
-          "id": "naval_captain",
-          "value": "海军上校",
-          "weight": 10,
-          "requires": {
-            "faction": [
-              "marine"
-            ]
-          },
-          "source_refs": [
-            "onepiece_wiki_marines"
-          ]
-        },
-        {
-          "id": "vice_admiral",
-          "value": "海军中将",
-          "weight": 3,
-          "requires": {
-            "faction": [
-              "marine"
-            ]
-          },
-          "description": "本部体系军衔，不用于与海贼船长身份作等值比较。",
-          "source_refs": [
-            "onepiece_official_smoker",
-            "onepiece_wiki_marines"
-          ]
-        },
-        {
-          "id": "revolutionary",
-          "value": "革命军成员",
-          "weight": 1,
-          "requires": {
-            "faction": [
-              "revolutionary"
-            ]
-          },
-          "source_refs": [
-            "onepiece_official_hack"
-          ]
-        },
-        {
-          "id": "chore",
-          "value": "海军杂务兵",
-          "weight": 10,
-          "source_refs": [
-            "onepiece_wiki_marines",
-            "onepiece_official_coby"
-          ],
-          "requires": {
-            "faction": [
-              "marine"
-            ]
-          },
-          "description": "入伍后的杂务与训练身份，不称为正式军衔，也不预设战斗实力。"
-        },
-        {
-          "id": "seaman_recruit",
-          "value": "海军三等兵",
-          "weight": 12,
-          "source_refs": [
-            "onepiece_wiki_marines"
-          ],
-          "requires": {
-            "faction": [
-              "marine"
-            ]
-          }
-        },
-        {
-          "id": "seaman_apprentice",
-          "value": "海军二等兵",
-          "weight": 10,
-          "source_refs": [
-            "onepiece_wiki_marines"
-          ],
-          "requires": {
-            "faction": [
-              "marine"
-            ]
-          }
-        },
-        {
-          "id": "seaman_first_class",
-          "value": "海军一等兵",
-          "weight": 8,
-          "source_refs": [
-            "onepiece_wiki_marines"
-          ],
-          "requires": {
-            "faction": [
-              "marine"
-            ]
-          }
-        },
-        {
-          "id": "corporal",
-          "value": "海军下士",
-          "weight": 5,
-          "source_refs": [
-            "onepiece_wiki_marines"
-          ],
-          "requires": {
-            "faction": [
-              "marine"
-            ]
-          }
-        },
-        {
-          "id": "sergeant",
-          "value": "海军中士",
-          "weight": 3,
-          "source_refs": [
-            "onepiece_wiki_marines"
-          ],
-          "requires": {
-            "faction": [
-              "marine"
-            ]
-          }
-        },
-        {
-          "id": "chief_petty_officer",
-          "value": "海军上士",
-          "weight": 2,
-          "source_refs": [
-            "onepiece_wiki_marines"
-          ],
-          "requires": {
-            "faction": [
-              "marine"
-            ]
-          }
-        },
-        {
-          "id": "warrant_officer",
-          "value": "海军准尉",
-          "weight": 2,
-          "source_refs": [
-            "onepiece_wiki_marines"
-          ],
-          "requires": {
-            "faction": [
-              "marine"
-            ]
-          }
-        },
-        {
-          "id": "ensign",
-          "value": "海军少尉",
-          "weight": 2,
-          "source_refs": [
-            "onepiece_wiki_marines"
-          ],
-          "requires": {
-            "faction": [
-              "marine"
-            ]
-          }
-        },
-        {
-          "id": "junior_lieutenant",
-          "value": "海军中尉",
-          "weight": 1,
-          "source_refs": [
-            "onepiece_wiki_marines"
-          ],
-          "requires": {
-            "faction": [
-              "marine"
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "id": "fruit",
-      "label": "恶魔果实类别",
-      "options": [
-        {
-          "id": "none",
-          "value": "非果实能力者",
-          "weight": 70,
-          "source_refs": [
-            "onepiece_official_fruits"
-          ]
-        },
-        {
-          "id": "paramecia",
-          "value": "超人系",
-          "weight": 15,
-          "description": "仅抽取能力类别，具体果实未指定。",
-          "source_refs": [
-            "onepiece_official_fruits"
-          ]
-        },
-        {
-          "id": "zoan",
-          "value": "动物系",
-          "weight": 10,
-          "description": "仅抽取基本类别，不默认古代种、幻兽种或觉醒。",
-          "source_refs": [
-            "onepiece_official_fruits"
-          ]
-        },
-        {
-          "id": "logia",
-          "value": "自然系",
-          "weight": 5,
-          "description": "仅抽取能力类别，不随机复制某位角色的果实。",
-          "source_refs": [
-            "onepiece_official_fruits"
-          ]
-        }
-      ]
-    },
-    {
-      "id": "power",
-      "label": "能力机制",
-      "options": [
-        {
-          "id": "none",
-          "value": "依靠自身训练与装备",
-          "weight": 1,
-          "requires": {
-            "fruit": [
-              "none"
-            ]
-          },
-          "source_refs": [
-            "onepiece_wiki_marines",
-            "onepiece_official_haki"
-          ]
-        },
-        {
-          "id": "paramecia",
-          "value": "多样化的特殊能力",
-          "weight": 1,
-          "requires": {
-            "fruit": [
-              "paramecia"
-            ]
-          },
-          "description": "超人系是动物系、自然系之外的多样能力分类。",
-          "source_refs": [
-            "onepiece_official_fruits"
-          ]
-        },
-        {
-          "id": "zoan",
-          "value": "动物形态变化",
-          "weight": 1,
-          "requires": {
-            "fruit": [
-              "zoan"
-            ]
-          },
-          "description": "可使用人型、兽型及兽人型等形态。",
-          "source_refs": [
-            "onepiece_official_fruits"
-          ]
-        },
-        {
-          "id": "logia",
-          "value": "身体转化为自然物或自然现象",
-          "weight": 1,
-          "requires": {
-            "fruit": [
-              "logia"
-            ]
-          },
-          "source_refs": [
-            "onepiece_official_fruits"
-          ]
-        }
-      ]
-    },
-    {
-      "id": "haki",
-      "label": "霸气档案",
-      "options": [
-        {
-          "id": "unrecorded",
-          "value": "未记录修习情况",
-          "weight": 60,
-          "requires": {
-            "rating": [
-              "pirate_member",
-              "pirate_captain",
-              "sailor",
-              "lieutenant",
-              "naval_captain",
-              "revolutionary",
-              "chore",
-              "seaman_recruit",
-              "seaman_apprentice",
-              "seaman_first_class",
-              "corporal",
-              "sergeant",
-              "chief_petty_officer",
-              "warrant_officer",
-              "ensign",
-              "junior_lieutenant"
-            ]
-          },
-          "source_refs": [
-            "onepiece_official_haki"
-          ]
-        },
-        {
-          "id": "observation",
-          "value": "见闻色",
-          "weight": 20,
-          "source_refs": [
-            "onepiece_official_haki"
-          ]
-        },
-        {
-          "id": "armament",
-          "value": "武装色",
-          "weight": 15,
-          "source_refs": [
-            "onepiece_official_haki"
-          ]
-        },
-        {
-          "id": "both",
-          "value": "见闻色与武装色",
-          "weight": 5,
-          "source_refs": [
-            "onepiece_official_haki",
-            "onepiece_wiki_marines"
-          ]
-        }
-      ]
-    },
-    {
-      "id": "constraint",
-      "label": "果实与水域",
-      "options": [
-        {
-          "id": "none",
-          "value": "无恶魔果实特有的浸水弱点",
-          "weight": 1,
-          "requires": {
-            "fruit": [
-              "none"
-            ]
-          },
-          "description": "非能力者身份不代表自动拥有游泳技能。",
-          "source_refs": [
-            "onepiece_official_fruits"
-          ]
-        },
-        {
-          "id": "water",
-          "value": "浸水会使身体无力",
-          "weight": 1,
-          "requires": {
-            "fruit": [
-              "paramecia",
-              "zoan",
-              "logia"
-            ]
-          },
-          "description": "果实能力者的代价不只限于海水，也涉及积水环境。",
-          "source_refs": [
-            "onepiece_official_fruits"
-          ]
-        }
+      "id": "revolutionary",
+      "name": "革命军",
+      "weight": 15,
+      "ranks": [
+        ["路人", 15, "D"],
+        ["革命军成员", 65, "C"],
+        ["革命军干部", 18, "A"],
+        ["革命军军队长", 2, "S"]
       ]
     }
   ]

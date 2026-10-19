@@ -2,534 +2,60 @@
   "id": "fullmetal_alchemist",
   "title": "钢之炼金术师 FA",
   "weight": 1,
-  "description": "理解、分解与再构成构成炼金术的基础，国家资格、军职与机械铠技术则是不同的身份道路。",
-  "scope": "仅采用漫画与 FA 体系中的人类职业原型，活动范围为亚美斯多利斯；不混入2003版设定。包含炼金术与机械铠的学习阶段，学徒不等于国家资格持有者或成熟技师。",
-  "history_fields": [
-    "faction",
-    "profession"
+  "category": "battle",
+  "danger": "危险",
+  "logo": "fullmetal_alchemist.png",
+  "harem": false,
+  "source_refs": [
+    "fma_official_characters",
+    "fma_baidu_certification",
+    "fma_event_promised"
   ],
-  "sections": [
+  "death_causes": [
+    "疾病",
+    "意外",
+    "作战",
+    "炼成事故",
+    "人体炼成反噬",
+    "任务遇险",
+    "伤重不治"
+  ],
+  "events": [
     {
-      "title": "基础属性",
-      "fields": [
-        "identity",
-        "profession",
-        "faction",
-        "region"
-      ]
-    },
-    {
-      "title": "技术与职责",
-      "fields": [
-        "technique",
-        "equipment",
-        "principle",
-        "obligation"
+      "name": "约定之日",
+      "weight": 5,
+      "age": [
+        16,
+        100
       ]
     }
   ],
-  "pools": [
+  "factions": [
     {
-      "id": "identity",
-      "label": "种族",
-      "options": [
-        {
-          "id": "human",
-          "value": "人类",
-          "weight": 1,
-          "source_refs": [
-            "fma_licensed_characters",
-            "fma_baidu_brotherhood"
-          ]
-        }
+      "id": "civilian",
+      "name": "民间炼金术师",
+      "weight": 55,
+      "ranks": [
+        ["路人", 20, "D"],
+        ["炼金术学徒", 40, "D+"],
+        ["炼金术师", 30, "C+"],
+        ["资深炼金术师", 9, "B+"],
+        ["炼金术大师", 1, "A+"]
       ]
     },
     {
-      "id": "profession",
-      "label": "职业",
-      "options": [
-        {
-          "id": "civilian_alchemist",
-          "value": "民间炼金术师",
-          "weight": 40,
-          "source_refs": [
-            "fma_baidu_brotherhood",
-            "fma_baidu_certification"
-          ]
-        },
-        {
-          "id": "state_alchemist",
-          "value": "国家炼金术师",
-          "weight": 15,
-          "source_refs": [
-            "fma_licensed_characters",
-            "fma_baidu_certification"
-          ]
-        },
-        {
-          "id": "soldier",
-          "value": "军人",
-          "weight": 25,
-          "source_refs": [
-            "fma_licensed_characters"
-          ]
-        },
-        {
-          "id": "mechanic",
-          "value": "机械铠技师",
-          "weight": 20,
-          "source_refs": [
-            "fma_licensed_characters"
-          ]
-        },
-        {
-          "id": "alchemy_apprentice",
-          "value": "炼金术学徒",
-          "weight": 25,
-          "source_refs": [
-            "fma_official_apprentices"
-          ]
-        },
-        {
-          "id": "automail_apprentice",
-          "value": "机械铠见习者",
-          "weight": 20,
-          "source_refs": [
-            "fma_official_apprentices"
-          ]
-        }
-      ]
-    },
-    {
-      "id": "faction",
-      "label": "所属",
-      "options": [
-        {
-          "id": "civilian",
-          "value": "民间学习与从业",
-          "weight": 1,
-          "requires": {
-            "profession": [
-              "civilian_alchemist",
-              "mechanic",
-              "alchemy_apprentice",
-              "automail_apprentice"
-            ]
-          },
-          "source_refs": [
-            "fma_licensed_characters",
-            "fma_baidu_certification",
-            "fma_official_apprentices"
-          ]
-        },
-        {
-          "id": "military",
-          "value": "亚美斯多利斯军部",
-          "weight": 1,
-          "requires": {
-            "profession": [
-              "state_alchemist",
-              "soldier"
-            ]
-          },
-          "source_refs": [
-            "fma_licensed_characters",
-            "fma_baidu_brotherhood"
-          ]
-        }
-      ]
-    },
-    {
-      "id": "region",
-      "label": "活动国家",
-      "options": [
-        {
-          "id": "amestris",
-          "value": "亚美斯多利斯",
-          "weight": 1,
-          "source_refs": [
-            "fma_licensed_characters",
-            "fma_baidu_brotherhood"
-          ]
-        }
-      ]
-    },
-    {
-      "id": "technique",
-      "label": "技术方向",
-      "options": [
-        {
-          "id": "alchemy",
-          "value": "物质炼成",
-          "weight": 1,
-          "requires": {
-            "profession": [
-              "civilian_alchemist",
-              "state_alchemist"
-            ]
-          },
-          "description": "理解原料后进行分解与再构成。",
-          "source_refs": [
-            "fma_baidu_brotherhood"
-          ]
-        },
-        {
-          "id": "marksmanship",
-          "value": "枪械与射击训练",
-          "weight": 1,
-          "requires": {
-            "profession": [
-              "soldier"
-            ]
-          },
-          "description": "参考普通军人的射击职责，不自动附加炼金术。",
-          "source_refs": [
-            "fma_licensed_characters",
-            "fma_official_characters"
-          ]
-        },
-        {
-          "id": "automail",
-          "value": "机械铠制作与维护",
-          "weight": 1,
-          "requires": {
-            "profession": [
-              "mechanic"
-            ]
-          },
-          "description": "机械铠是技术义肢；维护能力与炼金术资格分开。",
-          "source_refs": [
-            "fma_licensed_characters",
-            "fma_baidu_brotherhood",
-            "fma_official_characters"
-          ]
-        },
-        {
-          "id": "alchemy_foundation",
-          "value": "炼金术基础学习",
-          "weight": 1,
-          "source_refs": [
-            "fma_official_apprentices"
-          ],
-          "requires": {
-            "profession": [
-              "alchemy_apprentice"
-            ]
-          },
-          "description": "处于拜师学习阶段，不预设成熟炼成技术。"
-        },
-        {
-          "id": "automail_foundation",
-          "value": "机械铠技术学习",
-          "weight": 1,
-          "source_refs": [
-            "fma_official_apprentices"
-          ],
-          "requires": {
-            "profession": [
-              "automail_apprentice"
-            ]
-          },
-          "description": "处于技术学习阶段，不预设独立维修能力。"
-        }
-      ]
-    },
-    {
-      "id": "equipment",
-      "label": "工具 / 身份凭证",
-      "options": [
-        {
-          "id": "circle",
-          "value": "炼成阵与原料",
-          "weight": 1,
-          "requires": {
-            "profession": [
-              "civilian_alchemist"
-            ]
-          },
-          "description": "采用常规炼成路线，不默认免阵炼成。",
-          "source_refs": [
-            "fma_baidu_brotherhood",
-            "fma_official_characters"
-          ]
-        },
-        {
-          "id": "watch",
-          "value": "资格银怀表 · 炼成阵与原料",
-          "weight": 1,
-          "requires": {
-            "profession": [
-              "state_alchemist"
-            ]
-          },
-          "description": "银怀表用于证明国家资格。",
-          "source_refs": [
-            "fma_baidu_certification",
-            "fma_official_characters"
-          ]
-        },
-        {
-          "id": "firearm",
-          "value": "军用枪械",
-          "weight": 1,
-          "requires": {
-            "profession": [
-              "soldier"
-            ]
-          },
-          "source_refs": [
-            "fma_licensed_characters"
-          ]
-        },
-        {
-          "id": "tools",
-          "value": "机械铠维护工具",
-          "weight": 1,
-          "requires": {
-            "profession": [
-              "mechanic"
-            ]
-          },
-          "source_refs": [
-            "fma_licensed_characters"
-          ]
-        },
-        {
-          "id": "learning",
-          "value": "学习用具 · 未细分",
-          "weight": 1,
-          "source_refs": [
-            "fma_official_apprentices"
-          ],
-          "requires": {
-            "profession": [
-              "alchemy_apprentice",
-              "automail_apprentice"
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "id": "principle",
-      "label": "技术前提",
-      "options": [
-        {
-          "id": "exchange",
-          "value": "等价交换",
-          "weight": 1,
-          "requires": {
-            "profession": [
-              "civilian_alchemist",
-              "state_alchemist",
-              "alchemy_apprentice"
-            ]
-          },
-          "description": "物质炼成以原料和相应代价为前提，人体炼成属于禁忌。",
-          "source_refs": [
-            "fma_baidu_brotherhood"
-          ]
-        },
-        {
-          "id": "training",
-          "value": "武器操作与训练",
-          "weight": 1,
-          "requires": {
-            "profession": [
-              "soldier"
-            ]
-          },
-          "source_refs": [
-            "fma_licensed_characters"
-          ]
-        },
-        {
-          "id": "engineering",
-          "value": "机械技术与维护",
-          "weight": 1,
-          "requires": {
-            "profession": [
-              "mechanic",
-              "automail_apprentice"
-            ]
-          },
-          "source_refs": [
-            "fma_licensed_characters"
-          ]
-        }
-      ]
-    },
-    {
-      "id": "obligation",
-      "label": "职业职责",
-      "options": [
-        {
-          "id": "research",
-          "value": "民间研究与炼成",
-          "weight": 1,
-          "requires": {
-            "profession": [
-              "civilian_alchemist"
-            ]
-          },
-          "source_refs": [
-            "fma_baidu_brotherhood",
-            "fma_baidu_certification"
-          ]
-        },
-        {
-          "id": "state",
-          "value": "接受资格查核与国家征召",
-          "weight": 1,
-          "requires": {
-            "profession": [
-              "state_alchemist"
-            ]
-          },
-          "source_refs": [
-            "fma_baidu_certification"
-          ]
-        },
-        {
-          "id": "orders",
-          "value": "军队任务与军事职责",
-          "weight": 1,
-          "requires": {
-            "profession": [
-              "soldier"
-            ]
-          },
-          "source_refs": [
-            "fma_licensed_characters"
-          ]
-        },
-        {
-          "id": "maintenance",
-          "value": "制作、调整与维护机械铠",
-          "weight": 1,
-          "requires": {
-            "profession": [
-              "mechanic"
-            ]
-          },
-          "source_refs": [
-            "fma_licensed_characters"
-          ]
-        },
-        {
-          "id": "alchemy_learning",
-          "value": "跟随老师学习炼金术基础",
-          "weight": 1,
-          "source_refs": [
-            "fma_official_apprentices"
-          ],
-          "requires": {
-            "profession": [
-              "alchemy_apprentice"
-            ]
-          }
-        },
-        {
-          "id": "automail_learning",
-          "value": "学习机械铠制作与维护",
-          "weight": 1,
-          "source_refs": [
-            "fma_official_apprentices"
-          ],
-          "requires": {
-            "profession": [
-              "automail_apprentice"
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "id": "rating",
-      "label": "资格 / 职业定位",
-      "options": [
-        {
-          "id": "civilian",
-          "value": "民间炼金术从业者",
-          "weight": 1,
-          "requires": {
-            "profession": [
-              "civilian_alchemist"
-            ]
-          },
-          "description": "未取得国家炼金术师资格。",
-          "source_refs": [
-            "fma_baidu_certification"
-          ]
-        },
-        {
-          "id": "state",
-          "value": "国家炼金术师资格",
-          "weight": 1,
-          "requires": {
-            "profession": [
-              "state_alchemist"
-            ]
-          },
-          "description": "可享少佐相当待遇，实际军衔并非必然都是少佐。",
-          "source_refs": [
-            "fma_baidu_certification",
-            "fma_licensed_characters"
-          ]
-        },
-        {
-          "id": "soldier",
-          "value": "军人 · 军衔未细分",
-          "weight": 1,
-          "requires": {
-            "profession": [
-              "soldier"
-            ]
-          },
-          "source_refs": [
-            "fma_licensed_characters"
-          ]
-        },
-        {
-          "id": "mechanic",
-          "value": "机械铠技术从业者",
-          "weight": 1,
-          "requires": {
-            "profession": [
-              "mechanic"
-            ]
-          },
-          "source_refs": [
-            "fma_licensed_characters"
-          ]
-        },
-        {
-          "id": "alchemy_apprentice",
-          "value": "炼金术学徒 · 无国家资格",
-          "weight": 1,
-          "source_refs": [
-            "fma_official_apprentices"
-          ],
-          "requires": {
-            "profession": [
-              "alchemy_apprentice"
-            ]
-          }
-        },
-        {
-          "id": "automail_apprentice",
-          "value": "机械铠见习阶段",
-          "weight": 1,
-          "source_refs": [
-            "fma_official_apprentices"
-          ],
-          "requires": {
-            "profession": [
-              "automail_apprentice"
-            ]
-          }
-        }
+      "id": "military",
+      "name": "亚美斯多利斯军部",
+      "weight": 45,
+      "ranks": [
+        ["路人", 15, "D"],
+        ["新兵", 30, "D+"],
+        ["军部士兵", 30, "C"],
+        ["军部军官", 15, "B"],
+        ["国家炼金术师", 9, "A"],
+        ["国家炼金术精锐", 1, "S"]
       ]
     }
-  ]
+  ],
+  "notes": "学徒、资深、大师、精锐为玩法成长描述，不新增原作国家资格或正式军衔。"
 }

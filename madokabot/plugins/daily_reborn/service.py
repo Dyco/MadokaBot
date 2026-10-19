@@ -1,6 +1,5 @@
 """每日次数与投胎结果的事务服务。"""
 
-from datetime import date
 from zoneinfo import ZoneInfo
 
 from nonebot_plugin_datastore import create_session
@@ -11,7 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from madokabot.core.db.base import shanghai_now
 from madokabot.core.user.models import UserStats
 
-from .anime import simulate_anime
+from .anime import ANIME_VERSION, simulate_anime
 from .games import simulate_games
 from .isekai import simulate_isekai
 from .models import (
@@ -24,7 +23,7 @@ from .models import (
     RebornRecord,
     USRebornRecord,
 )
-from .modes import MODE_COMMANDS, RebornMode
+from .modes import RebornMode
 from .regions import result_region
 from .simulation import simulate_rebirth
 
@@ -37,7 +36,13 @@ RECORD_MODELS = {
 
 
 def history_entry(result: dict, count: int) -> dict:
-    """按模式保存历史摘要，现实记录保留世界分区及俄罗斯当次坐标对应的区域。"""
+    """按模式保存历史摘要，动漫新版记录分数，旧作品快照保留原有评级。"""
+    if result.get("result_version") == ANIME_VERSION:
+        return {
+            "count": count, "date": result["date"], "world": result["world"]["title"],
+            "gender": result["gender"], "score": result["score"],
+            "rating": f"{result['score']}分", "summary": result["summary"],
+        }
     if result.get("mode") in {"anime", "games"}:
         return {
             "count": count, "date": result["date"], "world": result["world"]["title"],
@@ -61,7 +66,6 @@ def history_entry(result: dict, count: int) -> dict:
         "world_region": result_region(result),
         "gender": result["gender"],
         "score": result["score"],
-        "label": result["label"],
     }
 
 
@@ -111,30 +115,6 @@ def simulate_result(mode: RebornMode) -> dict:
     return simulate_rebirth(mode=mode)
 
 
-async def save_daily_result(
-    session: AsyncSession, user_id: str, today: date, *, mode: RebornMode, reroll: bool = False,
-) -> tuple[dict, bool]:
-    """在当前事务内读取或抽取一个模式，统一维护每日记录、计数与历史。"""
-    model = RECORD_MODELS[mode]
-    progress = await lock_progress(session, user_id, mode=mode)
-    record = await session.get(model, (user_id, today))
-    if record is not None and not reroll:
-        result = dict(record.result) | {"reborn_count": progress.count, "reborn_history": progress.history}
-        return result, False
-    if record is None and reroll:
-        command = MODE_COMMANDS[mode]
-        raise ValueError(f"今天还没有进行{command}，请先使用{command}命令领取本模式的免费投胎。")
-
-    result = simulate_result(mode)
-    result["date"] = today.isoformat()
-    result = record_birth(progress, result)
-    if record is None:
-        session.add(model(user_id=user_id, reborn_date=today, result=result))
-    else:
-        record.result = result
-    return result, True
-
-
 async def deduct_reroll_points(session: AsyncSession, user_id: str, cost: int) -> int:
     """在当前事务内条件扣款并返回余额，避免并发重开透支。"""
     deduction = await session.execute(
@@ -150,33 +130,38 @@ async def deduct_reroll_points(session: AsyncSession, user_id: str, cost: int) -
     return await session.scalar(select(UserStats.points).where(UserStats.user_id == user_id))
 
 
-async def reborn_today(user_id: str, *, mode: RebornMode = "world") -> tuple[dict, bool]:
-    """返回所选模式当天结果，新抽取才累计次数，重复查看不增加历史。"""
+async def reborn_today(
+    user_id: str, *, mode: RebornMode = "world", reroll: bool = False,
+) -> tuple[dict, bool, int | None]:
+    """领取或查看单个模式；重开时优先使用当天免费次数。"""
+    results, remaining, _ = await reborn_all_today(user_id, modes=(mode,), reroll=reroll)
+    result, created = results[0]
+    return result, created, remaining
+
+
+async def reborn_all_today(
+    user_id: str, *, modes: tuple[RebornMode, ...] = tuple(RECORD_MODELS), reroll: bool = False,
+) -> tuple[list[tuple[dict, bool]], int | None, int]:
+    """统一处理各模式，重开只对已领取的模式扣款，结果与扣款一起提交。"""
     today = shanghai_now().astimezone(ZoneInfo("Asia/Shanghai")).date()
     async with create_session() as session:
-        result, created = await save_daily_result(session, user_id, today, mode=mode)
-        await session.commit()
-        return result, created
-
-
-async def reroll_today(user_id: str, *, mode: RebornMode = "world") -> tuple[dict, int]:
-    """扣款、计数、历史及当天结果一起提交，重开失败时整笔回滚。"""
-    today = shanghai_now().astimezone(ZoneInfo("Asia/Shanghai")).date()
-    async with create_session() as session:
-        remaining = await deduct_reroll_points(session, user_id, REROLL_COST)
-        result, _ = await save_daily_result(session, user_id, today, mode=mode, reroll=True)
-        await session.commit()
-        return result, remaining
-
-
-async def reborn_all_today(user_id: str, *, reroll: bool = False) -> tuple[list[dict], int | None]:
-    """按模式顺序领取或重开全部投胎，任一模式失败时整体回滚。"""
-    today = shanghai_now().astimezone(ZoneInfo("Asia/Shanghai")).date()
-    async with create_session() as session:
-        remaining = await deduct_reroll_points(session, user_id, REROLL_COST * len(RECORD_MODELS)) if reroll else None
+        # 按固定顺序先锁定模式，再统计费用，避免并发重复领取免费次数或交叉扣款死锁。
+        progresses = {mode: await lock_progress(session, user_id, mode=mode) for mode in modes}
+        records = {mode: await session.get(RECORD_MODELS[mode], (user_id, today)) for mode in modes}
+        cost = REROLL_COST * sum(record is not None for record in records.values()) if reroll else 0
+        remaining = await deduct_reroll_points(session, user_id, cost) if cost else None
         results = []
-        for mode in RECORD_MODELS:
-            result, _ = await save_daily_result(session, user_id, today, mode=mode, reroll=reroll)
-            results.append(result)
+        for mode, record in records.items():
+            progress = progresses[mode]
+            if record is not None and not reroll:
+                result = dict(record.result) | {"reborn_count": progress.count, "reborn_history": progress.history}
+                results.append((result, False))
+                continue
+            result = record_birth(progress, simulate_result(mode) | {"date": today.isoformat()})
+            if record is None:
+                session.add(RECORD_MODELS[mode](user_id=user_id, reborn_date=today, result=result))
+            else:
+                record.result = result
+            results.append((result, True))
         await session.commit()
-        return results, remaining
+        return results, remaining, cost

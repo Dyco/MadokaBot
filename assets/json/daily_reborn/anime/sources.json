@@ -5,16 +5,7 @@
     "url": "https://bleach-anime.com/keyword/",
     "publisher": "BLEACH 动画制作委员会",
     "kind": "official",
-    "checked_at": "2026-10-19",
-    "facts": [
-      "死神以斩术、白打、步法、鬼道为基本战斗方式",
-      "破面有归刃、钢皮、响转、虚闪等能力",
-      "虚圈与现世、尸魂界区分，空气中灵子浓度较高",
-      "假面军势由虚化的原死神组成，曾藏身现世",
-      "灭却师以集束外界灵子为基本能力",
-      "护廷十三队通常接纳真央灵术院毕业生，院生与正式队士应区分"
-    ],
-    "limitations": "仅采用关键词中稳定的基础设定，不收录新增剧情、个人绝招或自行推导的灵压数值。"
+    "checked_at": "2026-10-19"
   },
   {
     "id": "bleach_official_characters",
@@ -22,68 +13,7 @@
     "url": "https://bleach-anime.com/character/",
     "publisher": "BLEACH 动画制作委员会",
     "kind": "official",
-    "checked_at": "2026-10-19",
-    "facts": [
-      "护廷十三队存在队长、副队长与队士",
-      "虚圈有破面与原十刃人物",
-      "猿柿日世里为原副队长，爱川罗武为原队长",
-      "无形帝国与星十字骑士团属于灭却师阵营"
-    ],
-    "limitations": "个人资料用于核对身份原型，未把某个角色的专属斩魄刀分配给随机身份。"
-  },
-  {
-    "id": "bleach_baidu_gotei",
-    "title": "百度百科：护廷十三队",
-    "url": "https://bkso.baidu.com/item/护廷十三队/5950731?fromModule=lemma_inlink",
-    "publisher": "百度百科",
-    "kind": "encyclopedia",
-    "checked_at": "2026-10-19",
-    "facts": [
-      "护廷十三队是尸魂界组织",
-      "队长、副队长、席官和普通队士是组织内的不同职级",
-      "真央灵术院是死神培育机构"
-    ],
-    "limitations": "通过搜索返回的百科正文核对；不采用衍生游戏技能数值，也不把职务当作标准战力单位。"
-  },
-  {
-    "id": "bleach_baidu_visored",
-    "title": "百度百科：假面军势",
-    "url": "https://bkso.baidu.com/item/假面军势/0?fromModule=lemma_inlink",
-    "publisher": "百度百科",
-    "kind": "encyclopedia",
-    "checked_at": "2026-10-19",
-    "facts": [
-      "假面军势成员是遭遇虚化的原护廷十三队成员",
-      "曾受浦原喜助等人帮助逃往现世",
-      "虚化可暂时增强战斗能力"
-    ],
-    "limitations": "不把虚圈当作假面军势的常驻地；不将八名正式成员的数量解释成游戏抽取概率。"
-  },
-  {
-    "id": "bleach_moegirl_visored",
-    "title": "萌娘百科镜像：假面军势",
-    "url": "https://moegirl.uk/index.php?title=假面军势&variant=zh-hans",
-    "original_url": "https://zh.moegirl.org.cn/假面军势",
-    "publisher": "moegirl.uk 非官方镜像／萌娘百科原条目贡献者",
-    "kind": "mirror",
-    "checked_at": "2026-10-19",
-    "facts": [
-      "假面军势在现世活动",
-      "其成员能使用虚化"
-    ],
-    "limitations": "萌娘百科主站未能读取完整正文；镜像自述内容可能与原站不同，只采用与官网及百度百科一致的结论。"
-  },
-  {
-    "id": "bleach_baidu_seireitei",
-    "title": "百度百科：瀞灵廷",
-    "url": "https://bkso.baidu.com/item/瀞灵廷/761043?fromModule=lemma_inlink",
-    "publisher": "百度百科",
-    "kind": "encyclopedia",
-    "checked_at": "2026-10-19",
-    "facts": [
-      "护廷十三队各队队舍位于瀞灵廷"
-    ],
-    "limitations": "只用于驻地区域，不推断出生地与家族出身。"
+    "checked_at": "2026-10-19"
   },
   {
     "id": "jjk_official_tokyo",
@@ -91,14 +21,7 @@
     "url": "https://jujutsukaisen.jp/character/shibuyajihen.php",
     "publisher": "咒术回战制作委员会",
     "kind": "official",
-    "checked_at": "2026-10-19",
-    "facts": [
-      "东京校有二级、三级、四级、准一级、一级与特级人物",
-      "狗卷棘是准一级咒言师",
-      "禅院真希为四级咒具使，具有高身体能力",
-      "家入硝子可使用反转术式修复他人身体"
-    ],
-    "limitations": "固定使用该阶段的身份原型；评级不承诺实际胜负。真希的四级不等于其身体能力弱。"
+    "checked_at": "2026-10-19"
   },
   {
     "id": "jjk_official_current",
@@ -106,119 +29,7 @@
     "url": "https://jujutsukaisen.jp/character/?category=jujutsu",
     "publisher": "咒术回战制作委员会",
     "kind": "official",
-    "checked_at": "2026-10-19",
-    "facts": [
-      "伏黑惠使用禅院家相传的十种影法术",
-      "禅院真依的构筑术式以自身咒力创造物质",
-      "乙骨忧太为东京校特级咒术师"
-    ],
-    "limitations": "仅补充既有术式定义，不将后续剧情的强度反向覆盖涩谷事变阶段的身份。"
-  },
-  {
-    "id": "jjk_official_kyoto",
-    "title": "咒术回战动画官网：京都校",
-    "url": "https://jujutsukaisen.jp/character/category2.php",
-    "publisher": "咒术回战制作委员会",
-    "kind": "official",
-    "checked_at": "2026-10-19",
-    "facts": [
-      "东堂葵为一级，禅院真依为三级，加茂宪纪与机械丸为准一级",
-      "机械丸以肉体限制为代价获得大范围术式运用与咒力输出"
-    ],
-    "limitations": "天与咒缚有不同方向，机械丸路线不能与咒力为零的身体强化路线混用。"
-  },
-  {
-    "id": "jjk_official_sorcerers",
-    "title": "咒术回战动画官网：其他咒术师",
-    "url": "https://jujutsukaisen.jp/character/category3.php",
-    "publisher": "咒术回战制作委员会",
-    "kind": "official",
-    "checked_at": "2026-10-19",
-    "facts": [
-      "七海建人与冥冥是一级咒术师",
-      "冥冥以个人身份开展咒术师活动"
-    ],
-    "limitations": "只采用独立活动身份与正式等级，不推断具体任务成功率。"
-  },
-  {
-    "id": "jjk_official_straw",
-    "title": "咒术回战动画官网：芻灵咒法问答",
-    "url": "https://jujutsukaisen.jp/news/20220527_01.php",
-    "publisher": "咒术回战制作委员会",
-    "kind": "official",
-    "checked_at": "2026-10-19",
-    "facts": [
-      "钉崎野蔷薇使用芻灵咒法及共鸣"
-    ],
-    "limitations": "用于确认术式名称，不把问答活动规则当作战斗数值。"
-  },
-  {
-    "id": "jjk_official_past",
-    "title": "咒术回战动画官网：怀玉·玉折人物",
-    "url": "https://jujutsukaisen.jp/character/category6.php",
-    "publisher": "咒术回战制作委员会",
-    "kind": "official",
-    "checked_at": "2026-10-19",
-    "facts": [
-      "夏油杰的咒灵操术可收服并操纵咒灵",
-      "五条悟使用无下限咒术",
-      "家入硝子掌握反转术式"
-    ],
-    "limitations": "不把高专时期身份与叛逃后的所属混淆。"
-  },
-  {
-    "id": "jjk_baidu_geto",
-    "title": "百度百科：夏油杰",
-    "url": "https://bkso.baidu.com/item/夏油杰/24304379?fromModule=lemma_inlink",
-    "publisher": "百度百科",
-    "kind": "encyclopedia",
-    "checked_at": "2026-10-19",
-    "facts": [
-      "夏油杰在高专三年级已获得特级咒术师评级"
-    ],
-    "limitations": "只用于高专时期特级咒灵操术原型；不把随机身份写作夏油杰本人。"
-  },
-  {
-    "id": "jjk_baidu_meimei",
-    "title": "百度百科：冥冥",
-    "url": "https://bkso.baidu.com/item/冥冥/50602420?fromModule=lemma_inlink",
-    "publisher": "百度百科",
-    "kind": "encyclopedia",
-    "checked_at": "2026-10-19",
-    "facts": [
-      "冥冥为独立活动的一级咒术师",
-      "黑鸟操术可以操控乌鸦并共享视野"
-    ],
-    "limitations": "只采用基础术式定义，不把束缚产生的必杀技直接当作每次攻击。"
-  },
-  {
-    "id": "jjk_baidu",
-    "title": "百度百科：咒术回战（电视动画）",
-    "url": "https://wapbaike.baidu.com/item/咒术回战/23172245",
-    "publisher": "百度百科",
-    "kind": "encyclopedia",
-    "checked_at": "2026-10-19",
-    "facts": [
-      "东京与京都咒术高专属于咒术教育机构",
-      "各角色有正式咒术师等级",
-      "反转术式生成正能量，用于治疗"
-    ],
-    "limitations": "只收录与官网一致的机构、等级和基础术语，不采用百科自动拼接的剧情推断。"
-  },
-  {
-    "id": "jjk_moegirl",
-    "title": "萌娘百科镜像：咒术回战·设定术语",
-    "url": "https://moegirl.uk/index.php?title=咒术回战&variant=zh-hant",
-    "original_url": "https://zh.moegirl.org.cn/咒术回战",
-    "publisher": "moegirl.uk 非官方镜像／萌娘百科原条目贡献者",
-    "kind": "mirror",
-    "checked_at": "2026-10-19",
-    "facts": [
-      "咒力与术式属于不同概念",
-      "反转术式不属于生得术式",
-      "领域展开与天与咒缚是不同机制"
-    ],
-    "limitations": "主站完整正文不可读，镜像只作辅助核对；不采用每位术师必有领域、反转术式或统一咒力量表等说法。"
+    "checked_at": "2026-10-19"
   },
   {
     "id": "kimetsu_official_training",
@@ -226,27 +37,7 @@
     "url": "https://kimetsu.com/anime/hashirageikohen/character/",
     "publisher": "鬼灭之刃动画制作方",
     "kind": "official",
-    "checked_at": "2026-10-19",
-    "facts": [
-      "柱为鬼杀队最高位剑士",
-      "有水柱、霞柱、虫柱、恋柱、蛇柱、风柱、岩柱",
-      "炭治郎使用水之呼吸，善逸使用雷之呼吸，伊之助使用兽之呼吸",
-      "胡蝶忍使用特殊毒作战"
-    ],
-    "limitations": "不把呼吸法视觉效果当作凭空制造元素，不向人类路线添加咒力、灵压或血鬼术。"
-  },
-  {
-    "id": "kimetsu_official_books",
-    "title": "集英社鬼灭之刃官网：呼吸法出版物",
-    "url": "https://kimetsu.com/comics/",
-    "publisher": "集英社",
-    "kind": "official",
-    "checked_at": "2026-10-19",
-    "facts": [
-      "官方呼吸法读物列有水、炎、音、虫、霞、恋、风、蛇、岩等呼吸法",
-      "呼吸法名称与官网人物档案中的对应柱名交叉核对"
-    ],
-    "limitations": "只核对流派名称，不把学习读物的知识或测验规则当作原作战斗机制。"
+    "checked_at": "2026-10-19"
   },
   {
     "id": "kimetsu_baidu_corps",
@@ -254,41 +45,7 @@
     "url": "https://bkso.baidu.com/item/鬼杀队/23409585?fromModule=lemma_inlink",
     "publisher": "百度百科",
     "kind": "encyclopedia",
-    "checked_at": "2026-10-19",
-    "facts": [
-      "普通队员依次分为癸、壬、辛、庚、己、戊、丁、丙、乙、甲十级",
-      "最终选拔后从癸级开始",
-      "继子为柱培养的优秀队员，不是独立天干阶级",
-      "隐承担善后与支援，培育者负责新秀训练",
-      "最终选拔在藤袭山举行，合格者领取队服、传令鸟并选取刀材"
-    ],
-    "limitations": "不把任意天干阶级与固定呼吸熟练度或杀鬼数量绑定。"
-  },
-  {
-    "id": "kimetsu_baidu_water",
-    "title": "百度百科：水之呼吸",
-    "url": "https://bkso.baidu.com/item/水之呼吸/64635909?fromModule=lemma_inlink",
-    "publisher": "百度百科",
-    "kind": "encyclopedia",
-    "checked_at": "2026-10-19",
-    "facts": [
-      "水之呼吸属于作品中的呼吸法，使用者有炭治郎、富冈义勇及鳞泷左近次"
-    ],
-    "limitations": "不把某个角色自创的剑型默认分配给所有水之呼吸使用者。"
-  },
-  {
-    "id": "kimetsu_moegirl_hashira",
-    "title": "萌娘百科镜像：柱",
-    "url": "https://moegirl.uk/index.php?title=柱&variant=zh-sg",
-    "original_url": "https://zh.moegirl.org.cn/柱",
-    "publisher": "moegirl.uk 非官方镜像／萌娘百科原条目贡献者",
-    "kind": "mirror",
-    "checked_at": "2026-10-19",
-    "facts": [
-      "柱是鬼杀队最高位剑士的总称",
-      "继子是柱培养的后继者身份"
-    ],
-    "limitations": "主站未读到完整正文；只采用与官网、百度百科一致的结论，不采用推算成长年限与生存率。"
+    "checked_at": "2026-10-19"
   },
   {
     "id": "naruto_baidu_nations",
@@ -296,11 +53,7 @@
     "url": "https://bkso.baidu.com/item/五大国/65175044?fromModule=lemma_inlink",
     "publisher": "百度百科",
     "kind": "encyclopedia",
-    "checked_at": "2026-10-19",
-    "facts": [
-      "木叶、砂隐、雾隐、云隐、岩隐分别对应火、风、水、雷、土之国"
-    ],
-    "limitations": "只核对忍村与国家映射，不采用对政治或实力的推测。"
+    "checked_at": "2026-10-19"
   },
   {
     "id": "naruto_official_ranks",
@@ -308,112 +61,7 @@
     "url": "https://naruto-official.com/anime/naruto2/list/01_877",
     "publisher": "NARUTO 官方网站",
     "kind": "official",
-    "checked_at": "2026-10-19",
-    "facts": [
-      "原作忍者体系存在下忍、中忍、上忍"
-    ],
-    "limitations": "正式等级与战斗方向分开，不随机授予影的职位。"
-  },
-  {
-    "id": "naruto_official_ninjutsu",
-    "title": "NARUTO 官网资料库：忍术",
-    "url": "https://naruto-official.com/news/01_1684",
-    "publisher": "集英社／NARUTO 官方网站",
-    "kind": "official",
-    "checked_at": "2026-10-19",
-    "facts": [
-      "忍术通过提炼查克拉与结印运用"
-    ],
-    "limitations": "只使用既有忍术定义，不引入博人传的神术或官网同人投稿。"
-  },
-  {
-    "id": "naruto_wiki_chakra",
-    "title": "维基百科：查克拉（火影忍者）",
-    "url": "https://zh.wikipedia.org/wiki/查克拉_(火影忍者)",
-    "publisher": "维基百科条目贡献者",
-    "kind": "encyclopedia",
-    "checked_at": "2026-10-19",
-    "facts": [
-      "查克拉为术的基础能量",
-      "五大性质变化为火、风、雷、土、水"
-    ],
-    "limitations": "只记录基础能量和五种性质，并与官方资料交叉核对；不采用条目中阴阳能量比例、血继组合表或原创研究内容。"
-  },
-  {
-    "id": "naruto_licensed_natures",
-    "title": "NARUTO 授权忍里活动：五大性质变化",
-    "url": "https://nijigennomori.com/2026/02/17/narutoboruto-973/",
-    "publisher": "二次元之森（授权 NARUTO 忍里运营方）",
-    "kind": "licensed",
-    "checked_at": "2026-10-19",
-    "facts": [
-      "火、水、土、雷、风为五种基本性质"
-    ],
-    "limitations": "只交叉核对属性名称，不采用活动胜负规则作为原作设定。"
-  },
-  {
-    "id": "naruto_official_taijutsu",
-    "title": "NARUTO 官网：体术专栏",
-    "url": "https://naruto-official.com/news/01_1489",
-    "publisher": "NARUTO 官方网站",
-    "kind": "official",
-    "checked_at": "2026-10-19",
-    "facts": [
-      "体术是原作中的战斗方向",
-      "不能使用忍术的角色也可走体术路线"
-    ],
-    "limitations": "不把真人运动员的成绩换算为忍者战力，不默认获得八门遁甲。"
-  },
-  {
-    "id": "naruto_official_genjutsu",
-    "title": "NARUTO 官网：夕日红能力介绍",
-    "url": "https://naruto-official.com/news/01_1798",
-    "publisher": "NARUTO 官方网站",
-    "kind": "official",
-    "checked_at": "2026-10-19",
-    "facts": [
-      "幻术与体术是不同的能力方向"
-    ],
-    "limitations": "只使用原作人物的幻术方向，不收录游戏原创合体奥义。"
-  },
-  {
-    "id": "naruto_official_medical",
-    "title": "NARUTO 官网：纲手原作回顾",
-    "url": "https://naruto-official.com/news/01_1868",
-    "publisher": "NARUTO 官方网站",
-    "kind": "official",
-    "checked_at": "2026-10-19",
-    "facts": [
-      "医疗忍术与查克拉运用有关"
-    ],
-    "limitations": "只作为医疗修行方向的依据，不给随机身份复制纲手的专属能力。"
-  },
-  {
-    "id": "onepiece_official_fruits",
-    "title": "ONE PIECE 官网：恶魔果实",
-    "url": "https://one-piece.com/devilfruit/",
-    "publisher": "ONE PIECE.com",
-    "kind": "official",
-    "checked_at": "2026-10-19",
-    "facts": [
-      "恶魔果实有超人系、动物系、自然系三大分类",
-      "食用者会在浸水时失去力气",
-      "同一时刻同种能力的果实不会同时出现"
-    ],
-    "limitations": "只抽单一能力类别，不创造果实名或分配原作独占果实；不采用网页旧版的飞行种数量和最强类别断言。"
-  },
-  {
-    "id": "onepiece_official_haki",
-    "title": "ONE PIECE 官网：汉库克原作回顾",
-    "url": "https://one-piece.com/news/o20200902_11463/index.html",
-    "publisher": "ONE PIECE.com",
-    "kind": "official",
-    "checked_at": "2026-10-19",
-    "facts": [
-      "霸气包括见闻色、武装色、霸王色",
-      "并非所有人都能使用三类霸气"
-    ],
-    "limitations": "不把汉库克个人的三色霸气视作所有身份的默认配置。"
+    "checked_at": "2026-10-19"
   },
   {
     "id": "onepiece_official_luffy",
@@ -421,12 +69,7 @@
     "url": "https://one-piece.com/character/luffy/index.html",
     "publisher": "ONE PIECE.com",
     "kind": "official",
-    "checked_at": "2026-10-19",
-    "facts": [
-      "海贼团存在船长身份",
-      "伟大航路是海贼航行的重要区域"
-    ],
-    "limitations": "只核对海贼船长与航行背景，不使用路飞个人能力作为通用模板。"
+    "checked_at": "2026-10-19"
   },
   {
     "id": "onepiece_official_smoker",
@@ -434,12 +77,7 @@
     "url": "https://one-piece.com/character/smoker/index.html",
     "publisher": "ONE PIECE.com",
     "kind": "official",
-    "checked_at": "2026-10-19",
-    "facts": [
-      "海军存在中将职级与伟大航路支部",
-      "海军成员也可拥有恶魔果实能力"
-    ],
-    "limitations": "按读取到的人物页及官方第587集介绍核对，不假定军衔能换算固定战力。"
+    "checked_at": "2026-10-19"
   },
   {
     "id": "onepiece_official_hack",
@@ -447,11 +85,7 @@
     "url": "https://one-piece.com/character/hack/index.html",
     "publisher": "ONE PIECE.com",
     "kind": "official",
-    "checked_at": "2026-10-19",
-    "facts": [
-      "革命军成员有秘密活动与情报任务"
-    ],
-    "limitations": "仅核对阵营与活动方式，不把鱼人空手道分配给所有人类身份。"
+    "checked_at": "2026-10-19"
   },
   {
     "id": "onepiece_wiki_marines",
@@ -459,14 +93,7 @@
     "url": "https://zh.wikipedia.org/wiki/海軍_(ONE_PIECE)",
     "publisher": "维基百科条目贡献者",
     "kind": "encyclopedia",
-    "checked_at": "2026-10-19",
-    "facts": [
-      "海军军衔包含上尉、上校、少将、中将",
-      "海军有本部与各地支部",
-      "海军中将具备霸气使用能力",
-      "上尉之下有中尉、少尉、准尉、上士、中士、下士、一等兵、二等兵、三等兵，另有杂务兵身份"
-    ],
-    "limitations": "仅采用军衔表、本部支部区分及中将使用霸气的基本条件；职务与官网交叉核对，排除缺乏出处的技能描述和现实北约军衔类比，不推断每位中将的具体霸气类别。"
+    "checked_at": "2026-10-19"
   },
   {
     "id": "hxh_official_dictionary",
@@ -474,14 +101,7 @@
     "url": "https://www.ntv.co.jp/hunterhunter/dictionary/index.html",
     "publisher": "日本电视台",
     "kind": "official",
-    "checked_at": "2026-10-19",
-    "facts": [
-      "职业猎人需通过考试取得执照",
-      "念有强化、放出、变化、具现化、操作、特质六系",
-      "缠、绝、练、发是四大行",
-      "水见式用于辨认系别，制约与誓约会影响能力"
-    ],
-    "limitations": "不生成个人念能力、强度分数或星级，也不把念系解释为独占其他五系的绝对限制。"
+    "checked_at": "2026-10-19"
   },
   {
     "id": "hxh_official_training",
@@ -489,54 +109,7 @@
     "url": "https://www.ntv.co.jp/hunterhunter/story/027.html",
     "publisher": "日本电视台",
     "kind": "official",
-    "checked_at": "2026-10-19",
-    "facts": [
-      "小杰与奇犽在天空竞技场进行后续修行"
-    ],
-    "limitations": "结合用语辞典对执照与念的独立定义，配置中分别记录职业资格和修行阶段；该页本身不提供统一能力等级。"
-  },
-  {
-    "id": "hxh_moegirl_nen",
-    "title": "萌娘百科镜像：念能力",
-    "url": "https://moegirl.uk/index.php?title=念能力&variant=zh-hk",
-    "publisher": "moegirl.uk 非官方镜像／萌娘百科原条目贡献者",
-    "kind": "mirror",
-    "checked_at": "2026-10-19",
-    "facts": [
-      "念能力为全职猎人的能力体系",
-      "气与修行有关，系别与熟练程度需区分"
-    ],
-    "limitations": "主站未读取完整正文；仅辅助核对与日本电视台用语辞典一致的基础概念。",
-    "original_url": "https://zh.moegirl.org.cn/念能力"
-  },
-  {
-    "id": "fma_licensed_characters",
-    "title": "钢炼 FA 官方授权联动：人物介绍",
-    "url": "https://www.monster-strike.com/promotion/hagaren/",
-    "publisher": "MIXI／钢之炼金术师 FA 授权联动",
-    "kind": "licensed",
-    "checked_at": "2026-10-19",
-    "facts": [
-      "国家炼金术师与普通军人、机械铠技师是不同身份",
-      "温莉负责机械铠维护",
-      "马斯坦为大佐，阿姆斯特朗为少佐",
-      "亚美斯多利斯与新国是不同国家背景"
-    ],
-    "limitations": "只使用 FA 原作人物简介，不采用联动游戏稀有度、抽卡属性或战斗数值。"
-  },
-  {
-    "id": "fma_baidu_brotherhood",
-    "title": "百度百科：钢之炼金术师 FULLMETAL ALCHEMIST",
-    "url": "https://bkso.baidu.com/item/钢之炼金术师%20FULLMETAL%20ALCHEMIST/4934836?fromModule=lemma_inlink",
-    "publisher": "百度百科",
-    "kind": "encyclopedia",
-    "checked_at": "2026-10-19",
-    "facts": [
-      "FA 使用原作漫画剧情，与2003版不同",
-      "炼金术包含理解、分解、再构成，遵循等价交换",
-      "人体炼成为禁忌，机械铠为义肢"
-    ],
-    "limitations": "排除跨版本混合的地理、人物身份和能源解释；不赋予贤者之石。"
+    "checked_at": "2026-10-19"
   },
   {
     "id": "fma_baidu_certification",
@@ -544,13 +117,7 @@
     "url": "https://bkso.baidu.com/item/国家炼金术师/7583861?fromModule=lemma_inlink",
     "publisher": "百度百科",
     "kind": "encyclopedia",
-    "checked_at": "2026-10-19",
-    "facts": [
-      "国家炼金术师是一种资格，享有少佐相当待遇",
-      "资格持有者可获得研究经费，须接受查核与国家征召",
-      "银怀表为资格证明"
-    ],
-    "limitations": "少佐相当待遇不等于人人实际军衔都是少佐；不采用年录取人数、怀表增幅传言或未核实的角色趣闻。"
+    "checked_at": "2026-10-19"
   },
   {
     "id": "aot_official_terms",
@@ -558,54 +125,7 @@
     "url": "https://shingeki.tv/season1/yougo/",
     "publisher": "进击的巨人动画制作委员会",
     "kind": "official",
-    "checked_at": "2026-10-19",
-    "facts": [
-      "训练兵团在分配各兵团前负责实技与座学",
-      "驻扎兵团负责加固城墙与守卫城市",
-      "立体机动装置用于高速空间机动",
-      "超硬质钢刀刃与壁上固定炮是不同装备"
-    ],
-    "limitations": "限定早期墙内兵团体系，不混入后期雷枪、反人员立体机动装置或现代枪械。"
-  },
-  {
-    "id": "aot_baidu_military_police",
-    "title": "百度百科：宪兵团",
-    "url": "https://bkso.baidu.com/item/宪兵团/4880459?fromModule=lemma_inlink",
-    "publisher": "百度百科",
-    "kind": "encyclopedia",
-    "checked_at": "2026-10-19",
-    "facts": [
-      "宪兵团在内地维持秩序",
-      "训练兵综合成绩前十名的新兵拥有加入资格"
-    ],
-    "limitations": "只记录新兵常规入团资格，不将后期调任和特例概括为绝无例外的限制。"
-  },
-  {
-    "id": "aot_wiki_setting",
-    "title": "维基百科：进击的巨人世界观设定及专有名词",
-    "url": "https://zh.wikipedia.org/wiki/進擊的巨人世界觀設定及專有名詞列表",
-    "publisher": "维基百科条目贡献者",
-    "kind": "encyclopedia",
-    "checked_at": "2026-10-19",
-    "facts": [
-      "三大兵团为调查、驻扎、宪兵，另有训练兵团",
-      "调查兵团执行壁外调查",
-      "装备与职责任务因兵团及时期而异"
-    ],
-    "limitations": "只采用早期墙内兵团职责，不转用后期政治事件、巨人继承或战果统计。"
-  },
-  {
-    "id": "kimetsu_moegirl_gyomei",
-    "title": "萌娘百科镜像：悲鸣屿行冥·武器",
-    "url": "https://moegirl.uk/index.php?title=悲鸣屿行冥&variant=zh-sg",
-    "publisher": "moegirl.uk 非官方镜像／萌娘百科原条目贡献者",
-    "kind": "mirror",
-    "checked_at": "2026-10-19",
-    "facts": [
-      "岩柱使用由锁链连接的斧与流星锤，而非常规刀形武器"
-    ],
-    "limitations": "仅用于修正通用装备措辞；不把岩柱个人的武器尺寸、体质或独占经历赋给全部岩之呼吸身份。",
-    "original_url": "https://zh.moegirl.org.cn/悲鸣屿行冥"
+    "checked_at": "2026-10-19"
   },
   {
     "id": "fma_official_characters",
@@ -613,88 +133,62 @@
     "url": "https://www.hagaren.jp/fa/characters/index01.html",
     "publisher": "钢之炼金术师 FULLMETAL ALCHEMIST 动画制作方",
     "kind": "official",
-    "checked_at": "2026-10-19",
-    "facts": [
-      "马斯坦与阿姆斯特朗使用绘有炼成阵的装备施术",
-      "阿尔恢复真理之门记忆后才可免画炼成阵，不能视为常规能力",
-      "温莉是机械铠技师，霍克艾是擅长射击的军人"
-    ],
-    "limitations": "仅采用 FA 路径下的人物页；常规炼成使用阵与原料，不复制角色的免阵特例、特定火焰技术或个人射击水平。"
+    "checked_at": "2026-10-19"
   },
   {
-    "id": "bleach_baidu_academy",
-    "title": "百度百科：真央灵术院",
-    "url": "https://bkso.baidu.com/item/真央灵术院/1648751?fromModule=lemma_inlink",
-    "publisher": "百度百科",
-    "kind": "encyclopedia",
+    "id": "jjk_event_shibuya",
+    "title": "咒术回战官网：第32话涩谷事变",
+    "url": "https://jujutsukaisen.jp/episodes/32.php",
     "checked_at": "2026-10-19",
-    "facts": [
-      "真央灵术院是死神培育机构，学生在入队前学习斩拳走鬼",
-      "基础课程包含斩术训练与现世魂葬实习"
-    ],
-    "limitations": "仅采用教育机构与基础课程，并与动画官网毕业入队说明交叉核对；不采用报名地址、精确创办时间或个人提前毕业年限。"
+    "kind": "official"
   },
   {
-    "id": "naruto_official_academy",
-    "title": "东京电视台：NARUTO 作品介绍",
-    "url": "https://www.tv-tokyo.co.jp/anime/naruto2002/naruto.html",
-    "publisher": "东京电视台",
-    "kind": "official",
+    "id": "kimetsu_event_castle",
+    "title": "鬼灭之刃官网：无限城篇故事介绍",
+    "url": "https://kimetsu.com/anime/mugenjyohen_movie/intro/",
     "checked_at": "2026-10-19",
-    "facts": [
-      "木叶存在忍者学校，鸣人在成为正式忍者前于此学习"
-    ],
-    "limitations": "仅添加木叶忍校学生原型，不推定五大忍村所有学校的课程相同；学生不是新增的正式忍者军衔。"
+    "kind": "official"
   },
   {
-    "id": "onepiece_official_coby",
-    "title": "ONE PIECE 官网：克比的入伍经历",
-    "url": "https://one-piece.com/character/Coby/index.html",
-    "publisher": "ONE PIECE.com",
-    "kind": "official",
+    "id": "naruto_event_war",
+    "title": "NARUTO 官网：第四次忍界大战开战",
+    "url": "https://naruto-official.com/comics/01_137",
     "checked_at": "2026-10-19",
-    "facts": [
-      "克比入伍后在海军本部从事杂务并接受训练"
-    ],
-    "limitations": "根据搜索返回的官方人物正文核对入伍后杂务经历；不复制克比后续的六式、霸气觉醒或 SWORD 身份，杂务兵不称作正式军衔。"
+    "kind": "official"
   },
   {
-    "id": "fma_official_apprentices",
-    "title": "钢之炼金术师 FA 官网：第11、12话",
-    "url": "https://www.hagaren.jp/fa/about/story01.html",
-    "publisher": "钢之炼金术师 FULLMETAL ALCHEMIST 动画制作方",
-    "kind": "official",
+    "id": "naruto_event_leaf",
+    "title": "NARUTO 官网：木叶崩坏回顾",
+    "url": "https://naruto-official.com/anime/naruto2/list/01_902",
     "checked_at": "2026-10-19",
-    "facts": [
-      "第12话回顾兄弟在成为国家炼金术师之前拜师修行",
-      "第11话中温莉向机械铠技师提出拜师请求"
-    ],
-    "limitations": "用以建立炼金术和机械铠的学习阶段，不为学徒赋予国家资格、独立执业水平或指定导师；不将人物的生存试炼强制设为所有学徒的课程。"
+    "kind": "official"
   },
   {
-    "id": "kimetsu_official_basic_training",
-    "title": "鬼灭之刃官网：立志篇第3话",
-    "url": "https://kimetsu.com/anime/story/detail/?ep=3&series=risshi",
-    "publisher": "鬼灭之刃动画制作方",
-    "kind": "official",
+    "id": "onepiece_event_marineford",
+    "title": "ONE PIECE 官网：顶上战争",
+    "url": "https://one-piece.com/story/marineford/index.html",
     "checked_at": "2026-10-19",
-    "facts": [
-      "参加最终选拔前存在育手培养阶段",
-      "训练包括山路、挥刀、瀑布修行与呼吸法"
-    ],
-    "limitations": "只添加入队前的基础学习阶段，不把主角训练时长和斩岩条件推广给所有受训者。"
+    "kind": "official"
   },
   {
-    "id": "kimetsu_official_selection",
-    "title": "鬼灭之刃官网：立志篇第4话",
-    "url": "https://kimetsu.com/anime/story/detail/?ep=4&series=risshi",
-    "publisher": "鬼灭之刃动画制作方",
-    "kind": "official",
+    "id": "hxh_event_ants",
+    "title": "全职猎人官网：嵌合蚁篇",
+    "url": "https://www.ntv.co.jp/hunterhunter/story/079.html",
     "checked_at": "2026-10-19",
-    "facts": [
-      "最终选拔在藤袭山进行，需在有鬼的山中生存七天",
-      "参试者使用此前训练的呼吸法与剑型"
-    ],
-    "limitations": "参试不等于合格入队，不授予癸级、柱或正式队服与传令鸟；不模拟生还概率。"
+    "kind": "official"
+  },
+  {
+    "id": "fma_event_promised",
+    "title": "钢炼 FA 官网：第41至50话、约定之日",
+    "url": "https://www.hagaren.jp/fa/about/story04.html",
+    "checked_at": "2026-10-19",
+    "kind": "official"
+  },
+  {
+    "id": "aot_event_trost",
+    "title": "进击的巨人官网：托洛斯特区初阵",
+    "url": "https://shingeki.tv/season1/story/episode_05.php",
+    "checked_at": "2026-10-19",
+    "kind": "official"
   }
 ]

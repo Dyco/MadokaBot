@@ -25,7 +25,7 @@ from .matchers import (
 )
 from .modes import MODE_COMMANDS, RebornMode
 from .render import render_reborn_card, result_text
-from .service import REROLL_COST, reborn_all_today, reborn_today, reroll_today
+from .service import REROLL_COST, reborn_all_today, reborn_today
 from .text import combined_result_text
 
 
@@ -73,7 +73,7 @@ async def handle_reborn_all(bot: Bot, event: MessageEvent, command: Arparma) -> 
     """将全部模式的当天投胎或重开结果按顺序作为纯文字合并发送。"""
     await respond(bot, event)
     try:
-        results, remaining = await reborn_all_today(event.get_user_id(), reroll="reroll" in command.subcommands)
+        results, remaining, cost = await reborn_all_today(event.get_user_id(), reroll="reroll" in command.subcommands)
     except ValueError as exc:
         await reborn_all.finish(str(exc))
     except Exception:
@@ -81,7 +81,7 @@ async def handle_reborn_all(bot: Bot, event: MessageEvent, command: Arparma) -> 
         await reborn_all.finish("投胎结果暂时无法读取，请稍后重试。")
 
     name = event.sender.card or event.sender.nickname or event.get_user_id()
-    messages = [f"{name} 的今日投胎", *(combined_result_text(result) for result in results)]
+    messages = [f"{name} 的今日投胎", *(combined_result_text(result) for result, _ in results)]
     nodes = [
         MessageSegment.node_custom(
             user_id=bot.self_id, nickname="每日投胎", content=Message(MessageSegment.text(text)),
@@ -97,12 +97,12 @@ async def handle_reborn_all(bot: Bot, event: MessageEvent, command: Arparma) -> 
         logger.exception("一键投胎合并消息发送失败")
         await reborn_all.finish("合并消息发送失败，可使用一键投胎查看已保存的结果。")
     if remaining is not None:
-        await reborn_all.finish(f"全部重开成功，消耗{REROLL_COST * len(results)}积分，剩余{remaining}积分")
+        await reborn_all.finish(f"重开成功，消耗{cost}积分，剩余{remaining}积分")
     await reborn_all.finish()
 
 
 async def send_reborn(bot: Bot, event: MessageEvent, command: Arparma, *, mode: RebornMode) -> None:
-    """处理所选模式的免费投胎与重开，渲染失败时提供已保存结果的文字版。"""
+    """统一处理投胎与重开，免费领取沿用普通投胎展示，渲染失败时发送文字版。"""
     matcher = {
         "world": reborn, "china": reborn_cn, "japan": reborn_jp,
         "usa": reborn_us, "isekai": reborn_isekai, "anime": reborn_anime, "games": reborn_games,
@@ -110,15 +110,15 @@ async def send_reborn(bot: Bot, event: MessageEvent, command: Arparma, *, mode: 
     command_name = MODE_COMMANDS[mode]
     await respond(bot, event)
     try:
-        if "reroll" in command.subcommands:
-            result, remaining = await reroll_today(event.get_user_id(), mode=mode)
-            prefix = f"重开成功，消耗{REROLL_COST}积分，剩余{remaining}积分"
-        else:
-            result, created = await reborn_today(event.get_user_id(), mode=mode)
-            prefix = "新的人生已开启" if created else (
+        result, created, remaining = await reborn_today(
+            event.get_user_id(), mode=mode, reroll="reroll" in command.subcommands,
+        )
+        prefix = f"重开成功，消耗{REROLL_COST}积分，剩余{remaining}积分" if remaining is not None else (
+            "新的人生已开启" if created else (
                 f"今天已经投胎过啦，这是结果。\n"
                 f"可使用“{command_start}{command_name} 重开”消耗{REROLL_COST}积分重新投胎。"
             )
+        )
     except ValueError as exc:
         await matcher.finish(str(exc), reply_message=True)
     except Exception:

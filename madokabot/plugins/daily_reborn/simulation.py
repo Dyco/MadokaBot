@@ -4,11 +4,11 @@ import math
 import random
 from functools import lru_cache
 
-from .attributes import ATTRIBUTES, STAR_SYSTEM, attribute_stars, draw_star
+from .attributes import STAR_SYSTEM, attribute_stars, draw_attributes
 from .geography import random_location
+from .life import simulate_life
 from .modes import RebornMode
 from .potential import EVALUATION_SYSTEM, evaluate_life
-from .potential import score_label as score_label
 from .resources import load_json_resource
 
 
@@ -29,7 +29,7 @@ def load_population(mode: RebornMode = "world") -> dict:
 
 
 def display_result(result: dict) -> dict:
-    """补全旧潜力评价并纠正误标为非军事区的朝韩结果，不修改原记录或重抽。"""
+    """保留原星级并按新规则展示评分，旧档案的人生结果稳定补全，不写回或重新抽取。"""
     country = result.get("country", {})
     if country.get("code") in ("PRK", "KOR") and country.get("name") == "朝韩非军事区":
         current = next(row for row in load_population()["countries"] if row["code"] == country["code"])
@@ -37,18 +37,22 @@ def display_result(result: dict) -> dict:
             "country": country | {key: current[key] for key in ("name", "longitude", "latitude", "map_code")},
             "map_point": None,
         }
-    if result.get("attribute_system") == STAR_SYSTEM and result.get("evaluation_system") == EVALUATION_SYSTEM:
+    if result.get("attribute_system") == STAR_SYSTEM and result.get("evaluation_system") == EVALUATION_SYSTEM and "life" in result:
         return result
     stars = attribute_stars(result)
-    return result | {"attributes": stars, "attribute_system": STAR_SYSTEM} | evaluate_life(stars)
+    view = result | {"attributes": stars, "attribute_system": STAR_SYSTEM} | evaluate_life(stars)
+    if "life" not in view:
+        seed = f"{view.get('mode', 'world')}|{view.get('date', '')}|{country.get('code', '')}|{view.get('gender', '')}|{sorted(stars.items())}"
+        view["life"] = simulate_life(stars, seed=seed)
+    return view
 
 
 def simulate_rebirth(*, mode: RebornMode = "world") -> dict:
-    """按出生人数与性别比抽样，生成星级潜力并保存地区内的随机定位。"""
+    """抽取出生地、联动星级与人生结果，一并保存固定评分及地区内定位。"""
     dataset = load_population(mode)
     countries = dataset["countries"]
     country = random.choices(countries, weights=[row["births"] for row in countries])[0]
-    attributes = {name: draw_star() for name in ATTRIBUTES}
+    attributes = draw_attributes()
     # 出生性别比统一为每 100 名女婴对应的男婴数量，不使用总人口性别比。
     ratio = country["sex_ratio"]
     gender = "男" if random.random() < ratio / (ratio + 100) else "女"
@@ -63,5 +67,6 @@ def simulate_rebirth(*, mode: RebornMode = "world") -> dict:
         "map_point": random_location(country, mode=mode),
         "attributes": attributes,
         "attribute_system": STAR_SYSTEM,
+        "life": simulate_life(attributes),
         **evaluate_life(attributes),
     }

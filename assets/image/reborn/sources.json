@@ -1,0 +1,210 @@
+{
+  "checked_at": "2026-10-19",
+  "assets": [
+    {
+      "id": "bleach",
+      "title": "死神",
+      "mode": "anime",
+      "file": "bleach.png",
+      "page": "https://bleach-anime.com/",
+      "url": "https://bleach-anime.com/assets/img/common/logo.png",
+      "status": "ready",
+      "bytes": 11718,
+      "size": [
+        670,
+        238
+      ]
+    },
+    {
+      "id": "jujutsu_kaisen",
+      "title": "咒术回战",
+      "mode": "anime",
+      "file": "jujutsu_kaisen.png",
+      "page": null,
+      "url": null,
+      "note": "用户提供的作品标题图。",
+      "status": "ready",
+      "bytes": 60489,
+      "size": [
+        402,
+        196
+      ]
+    },
+    {
+      "id": "demon_slayer",
+      "title": "鬼灭之刃",
+      "mode": "anime",
+      "file": "demon_slayer.png",
+      "page": "https://kimetsu.com/anime/",
+      "url": "https://kimetsu.com/anime/portal/assets/img/logo.png",
+      "status": "ready",
+      "bytes": 10412,
+      "size": [
+        200,
+        164
+      ]
+    },
+    {
+      "id": "naruto",
+      "title": "火影忍者",
+      "mode": "anime",
+      "file": "naruto.webp",
+      "page": "https://naruto-official.com/en/anime/naruto1",
+      "url": "https://naruto-official.com/anime/series/naruto1_logo.webp",
+      "status": "ready",
+      "bytes": 29954,
+      "size": [
+        612,
+        270
+      ]
+    },
+    {
+      "id": "one_piece",
+      "title": "海贼王",
+      "mode": "anime",
+      "file": "one_piece.png",
+      "page": null,
+      "url": null,
+      "note": "用户提供的作品标题图。",
+      "status": "ready",
+      "bytes": 495292,
+      "size": [
+        1199,
+        466
+      ]
+    },
+    {
+      "id": "hunter_x_hunter",
+      "title": "全职猎人",
+      "mode": "anime",
+      "file": "hunter_x_hunter.png",
+      "page": "https://www.ntv.co.jp/hunterhunter/index.html",
+      "url": "https://www.ntv.co.jp/hunterhunter/images/top/logo.png",
+      "status": "ready",
+      "bytes": 42545,
+      "size": [
+        336,
+        145
+      ]
+    },
+    {
+      "id": "fullmetal_alchemist",
+      "title": "钢之炼金术师 FA",
+      "mode": "anime",
+      "file": "fullmetal_alchemist.png",
+      "page": "https://www.hagaren.jp/fa/",
+      "url": "https://www.hagaren.jp/fa/images/pages_logo.png",
+      "status": "ready",
+      "bytes": 26251,
+      "size": [
+        290,
+        92
+      ]
+    },
+    {
+      "id": "attack_on_titan",
+      "title": "进击的巨人",
+      "mode": "anime",
+      "file": "attack_on_titan.png",
+      "page": "https://shingeki.tv/final/",
+      "url": "https://shingeki.tv/final/img/common/logo.png",
+      "status": "ready",
+      "bytes": 89274,
+      "size": [
+        850,
+        305
+      ]
+    },
+    {
+      "id": "genshin",
+      "title": "原神",
+      "mode": "games",
+      "file": "genshin.png",
+      "page": "https://ys.mihoyo.com/main/",
+      "url": "https://ys.mihoyo.com/main/_nuxt/img/logo-header-full.a71d70a.png",
+      "status": "ready",
+      "bytes": 27035,
+      "size": [
+        354,
+        266
+      ]
+    },
+    {
+      "id": "wuthering_waves",
+      "title": "鸣潮",
+      "mode": "games",
+      "file": "wuthering_waves.png",
+      "page": "https://mc.kurogames.com/main/",
+      "url": "https://mc.kurogames.com/static4.0/assets/logo-small-906f14d9.png",
+      "status": "ready",
+      "bytes": 8489,
+      "size": [
+        200,
+        80
+      ]
+    },
+    {
+      "id": "star_rail",
+      "title": "崩坏：星穹铁道",
+      "mode": "games",
+      "file": "star_rail.png",
+      "page": "https://sr.mihoyo.com/",
+      "url": "https://act-webstatic.mihoyo.com/puzzle/hkrpg/pz_sEswxe8sSg/resource/puzzle/2026/09/04/a7a4cbdf89b8f2cc36a3ac39275be1d7_5682774768935248497.png",
+      "status": "ready",
+      "bytes": 63869,
+      "size": [
+        238,
+        137
+      ]
+    },
+    {
+      "id": "zenless",
+      "title": "绝区零",
+      "mode": "games",
+      "file": "zenless.svg",
+      "page": "https://zzz.mihoyo.com/main/",
+      "url": "https://zzz.mihoyo.com/_nuxt/img/logo-sm.1b88313.svg",
+      "status": "ready",
+      "bytes": 12017
+    },
+    {
+      "id": "arknights",
+      "title": "明日方舟",
+      "mode": "games",
+      "file": "arknights.svg",
+      "page": "https://ak.hypergryph.com/",
+      "url": "https://ak.hypergryph.com/",
+      "note": "官网内嵌标题路径 svg_def-title_arknights，保留矢量并使用白色呈现。",
+      "status": "ready",
+      "bytes": 31811
+    },
+    {
+      "id": "neverness_to_everness",
+      "title": "异环",
+      "mode": "games",
+      "file": "neverness_to_everness.png",
+      "page": "https://yh.wanmei.com/",
+      "url": "https://yh.wanmei.com/images/cover260226/logo.png",
+      "status": "ready",
+      "bytes": 87811,
+      "size": [
+        251,
+        176
+      ]
+    },
+    {
+      "id": "fate_grand_order",
+      "title": "Fate/Grand Order",
+      "mode": "games",
+      "file": "fate_grand_order.png",
+      "page": "https://www.fate-go.jp/",
+      "url": "https://www.fate-go.jp/assets/img/pc/top/main/slide01/logo.png",
+      "status": "ready",
+      "bytes": 13987,
+      "size": [
+        314,
+        140
+      ]
+    }
+  ]
+}

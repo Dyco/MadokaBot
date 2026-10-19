@@ -18,7 +18,7 @@ __plugin_meta__ = PluginMetadata(
     f"{command_start}投胎美国：美国投胎，每日免费一次（50 州及华盛顿特区）\n"
     f"{command_start}投胎异世界：随机异世界出身，每日免费一次\n"
     f"{command_start}投胎异世界 重开：消耗 5 积分重新随机异世界出身\n"
-    f"{command_start}投胎二次元：随机作品身份，每日免费一次，展示最近十次历史\n"
+    f"{command_start}投胎二次元 / {command_start}投胎动漫：按动漫题材模拟人生，每日免费一次\n"
     f"{command_start}投胎二次元 重开：消耗 5 积分重新随机作品身份\n"
     f"{command_start}投胎二游：随机游戏身份，每日免费一次，展示最近十次历史\n"
     f"{command_start}投胎二游 重开：消耗 5 积分重新随机游戏身份\n"

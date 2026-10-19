@@ -1,0 +1,86 @@
+{% extends "reborn.html" %}
+
+{% block extra_styles %}
+    .anime-media { display: grid; grid-template-rows: minmax(0, 1fr) 56px; gap: 9px; min-height: 0; }
+    .title-art { display: flex; align-items: center; justify-content: center; padding: 20px; min-height: 0; border: .5px solid #304459; border-radius: 10px; background: radial-gradient(ellipse at center, #263b4e, #101f30); overflow: hidden; }
+    .title-art img { display: block; width: 100%; height: 100%; object-fit: contain; }
+    .world-facts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; }
+    .world-fact { display: flex; flex-direction: column; justify-content: center; gap: 3px; padding: 8px 12px; min-width: 0; border: .5px solid #345064; border-radius: 7px; background: linear-gradient(115deg, #192a3b, #132032); }
+    .world-label { color: #90aabd; font-size: 8.5px; }
+    .world-value { color: #b4e6e2; font-size: 16px; line-height: 1.2; }
+    .danger-安全 { color: #a4dec7; }
+    .danger-和平 { color: #a9d8e5; }
+    .danger-动荡 { color: #e7cb8b; }
+    .danger-危险 { color: #f1ab89; }
+    .danger-灾难 { color: #f19eb8; }
+    .anime-field { display: grid; grid-template-columns: 40px minmax(0, 1fr); align-items: center; gap: 8px; }
+    .anime-field-name { color: #a6bec9; font-size: 11px; }
+    .anime-field-value { color: #e4edf5; font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .combat-value { color: var(--score-color); font-family: 'Segoe UI', sans-serif; font-size: 18px; font-weight: 600; }
+    .life-facts { gap: 8px; flex: 1; }
+    .life-label { margin-bottom: 2px; }
+    .life-value { font-size: 12px; line-height: 1.35; overflow-wrap: anywhere; }
+    .life-presence { color: var(--score-color); font-size: 16px; }
+    .rating { width: 125px; }
+    .history-result { display: flex; align-items: center; justify-content: flex-end; gap: 3px; }
+    .history-score { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+    .history-gender { flex: none; }
+{% endblock %}
+
+{% block left_header %}
+      <header>
+        <div class="heading"><h1>每日投胎</h1><span class="date">{{ result.date }}<span class="version">MADOKABOT VER.{{ bot_version }}</span></span></div>
+        <div class="eyebrow">二次元 · 第 {{ result.reborn_count }} 次投胎</div>
+        <div class="name"><strong class="nickname">{{ name }}</strong><span>，这次你出生在</span></div>
+        <div class="destination"><h2>{{ result.world.title }}</h2><span class="gender {% if result.gender == '男' %}male{% else %}female{% endif %}">{% if result.gender == '男' %}♂男性{% else %}♀女性{% endif %}</span></div>
+      </header>
+{% endblock %}
+
+{% block birthplace_panel %}
+      <div class="anime-media">
+        <div class="title-art"><img src="{{ title_image_uri }}" alt="{{ result.world.title }}标题图"></div>
+        <div class="world-facts">
+          <div class="world-fact"><span class="world-label">世界危险度</span><strong class="world-value danger-{{ result.world.danger }}">{{ result.world.danger }}</strong></div>
+          <div class="world-fact"><span class="world-label">作品分类</span><strong class="world-value">{{ category_name }}</strong></div>
+        </div>
+      </div>
+{% endblock %}
+
+{% block right_panel %}
+    <div class="right">
+      <h3 class="section-title">{% if result.world.category == 'battle' %}人物与战斗档案{% else %}初始人生属性{% endif %}</h3>
+      <div class="attributes">
+        {% for row in attribute_rows %}
+        <div class="attribute rarity-{{ row.rarity }}" data-stars="{{ row.value_text }}">
+          {% if row.value >= 4 %}<div class="rarity-effects" aria-hidden="true"><i>✦</i></div>{% endif %}
+          <div class="attribute-head"><span class="attribute-name">{{ row.name }}</span><div class="stars" role="img" aria-label="{{ row.name }} {{ row.value_text }} 星，满星 5 星">
+            {% for slot in row.slots %}<svg class="star {{ slot }}" viewBox="0 0 24 24" aria-hidden="true">{% if slot != 'empty' %}<use href="#reborn-star" class="star-filled"{% if slot == 'half' %} clip-path="url(#reborn-half)"{% endif %}/>{% endif %}<use href="#reborn-star" class="star-outline"/></svg>{% endfor %}
+          </div><strong class="star-value">{{ row.value_text }}<small>星</small></strong><span class="rarity-badge">{{ row.title }}</span></div>
+        </div>
+        {% endfor %}
+        {% if result.world.category == 'battle' %}
+        <div class="attribute anime-field"><span class="anime-field-name">评级</span><span class="anime-field-value">{{ result.rank }}</span></div>
+        <div class="attribute anime-field"><span class="anime-field-name">阵营</span><span class="anime-field-value">{{ result.faction }}</span></div>
+        <div class="attribute anime-field"><span class="anime-field-name">战力</span><span class="anime-field-value combat-value">{{ result.combat }}</span></div>
+        {% endif %}
+      </div>
+      <div class="summary">
+        <div class="life-facts">
+          {% for row in life_rows %}<div><div class="life-label">{{ row.label }}</div><div class="life-value{% if loop.first %} life-presence{% endif %}">{{ row.value }}</div></div>{% endfor %}
+        </div>
+        <div class="rating"><div class="score-circle"><span class="score">{{ result.score }}<small>分</small></span></div></div>
+      </div>
+    </div>
+{% endblock %}
+
+{% block history_panel %}
+  <section class="history">
+    <h3 class="section-title">记录</h3>
+    <div class="history-grid">
+      {% for entry in history_slots %}
+      {% if entry %}<div class="history-item tone-{{ entry.score_tier }}{% if loop.first %} latest{% endif %}"><span class="history-count">#{{ entry.count }}</span><span class="history-country">{{ entry.world }}</span><span class="history-result"><span class="history-score">{{ entry.score_text }}</span><span class="history-gender {% if entry.gender == '男' %}male{% else %}female{% endif %}">{% if entry.gender == '男' %}♂{% else %}♀{% endif %}</span></span></div>
+      {% else %}<div class="history-item empty">—</div>{% endif %}
+      {% endfor %}
+    </div>
+  </section>
+{% endblock %}

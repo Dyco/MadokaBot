@@ -1,715 +1,86 @@
 {
   "id": "bleach",
-  "title": "死神 / BLEACH",
+  "title": "死神",
   "weight": 1,
-  "description": "现世、尸魂界与虚圈之间，灵魂以不同的力量体系参与战斗。",
-  "scope": "原作基础体系与组织身份；地区表示阵营活动地，假面采用隐居现世阶段。包含真央灵术院入队前的培养阶段，不将院生写成正式队士。",
-  "history_fields": [
-    "faction",
-    "talent"
+  "category": "battle",
+  "danger": "危险",
+  "logo": "bleach.png",
+  "harem": false,
+  "source_refs": [
+    "bleach_official_terms",
+    "bleach_official_characters"
   ],
-  "sections": [
+  "death_causes": [
+    "作战",
+    "虚袭击",
+    "灵力失控",
+    "任务遇险",
+    "伤重不治"
+  ],
+  "events": [
     {
-      "title": "基础属性",
-      "fields": [
-        "identity",
-        "faction",
-        "region"
-      ]
-    },
-    {
-      "title": "能力档案",
-      "fields": [
-        "talent",
-        "combat",
-        "energy",
-        "release"
+      "name": "千年血战",
+      "weight": 5,
+      "age": [
+        15,
+        1500
       ]
     }
   ],
-  "pools": [
+  "factions": [
     {
-      "id": "identity",
-      "label": "种族 / 身份",
-      "options": [
-        {
-          "id": "shinigami",
-          "value": "死神",
-          "weight": 55,
-          "source_refs": [
-            "bleach_official_terms"
-          ]
-        },
-        {
-          "id": "visored",
-          "value": "虚化死神",
-          "weight": 10,
-          "source_refs": [
-            "bleach_official_terms",
-            "bleach_baidu_visored"
-          ]
-        },
-        {
-          "id": "arrancar",
-          "value": "破面",
-          "weight": 25,
-          "source_refs": [
-            "bleach_official_terms"
-          ]
-        },
-        {
-          "id": "quincy",
-          "value": "灭却师",
-          "weight": 10,
-          "source_refs": [
-            "bleach_official_terms"
-          ]
-        },
-        {
-          "id": "academy_student",
-          "value": "死神候补 · 灵术院生",
-          "weight": 30,
-          "source_refs": [
-            "bleach_baidu_academy",
-            "bleach_official_terms"
-          ]
-        }
+      "id": "shinigami",
+      "name": "死神",
+      "weight": 60,
+      "lifespan": [
+        150,
+        1200
+      ],
+      "natural_death": "灵体衰竭",
+      "ranks": [
+        ["路人", 18, "D"],
+        ["真央灵术院生", 24, "D+"],
+        ["普通队士", 30, "C"],
+        ["席官", 18, "B"],
+        ["副队长", 8, "A"],
+        ["队长", 2, "S"]
       ]
     },
     {
-      "id": "faction",
-      "label": "阵营",
-      "options": [
-        {
-          "id": "gotei",
-          "value": "护廷十三队",
-          "weight": 1,
-          "requires": {
-            "identity": [
-              "shinigami"
-            ]
-          },
-          "source_refs": [
-            "bleach_official_terms",
-            "bleach_baidu_gotei"
-          ]
-        },
-        {
-          "id": "visored",
-          "value": "假面军势",
-          "weight": 1,
-          "requires": {
-            "identity": [
-              "visored"
-            ]
-          },
-          "source_refs": [
-            "bleach_official_terms",
-            "bleach_baidu_visored",
-            "bleach_moegirl_visored"
-          ]
-        },
-        {
-          "id": "hueco",
-          "value": "虚圈破面",
-          "weight": 1,
-          "requires": {
-            "identity": [
-              "arrancar"
-            ]
-          },
-          "source_refs": [
-            "bleach_official_characters"
-          ]
-        },
-        {
-          "id": "wandenreich",
-          "value": "无形帝国",
-          "weight": 1,
-          "requires": {
-            "identity": [
-              "quincy"
-            ]
-          },
-          "source_refs": [
-            "bleach_official_terms"
-          ]
-        },
-        {
-          "id": "academy",
-          "value": "真央灵术院",
-          "weight": 1,
-          "source_refs": [
-            "bleach_baidu_academy",
-            "bleach_official_terms"
-          ],
-          "requires": {
-            "identity": [
-              "academy_student"
-            ]
-          }
-        }
+      "id": "quincy",
+      "name": "灭却师",
+      "weight": 20,
+      "ranks": [
+        ["路人", 20, "D"],
+        ["见习灭却师", 35, "D+"],
+        ["灭却师士兵", 30, "C+"],
+        ["星十字骑士团成员", 13, "A+"],
+        ["亲卫队成员", 2, "S"]
       ]
     },
     {
-      "id": "region",
-      "label": "活动地区",
-      "options": [
-        {
-          "id": "seireitei",
-          "value": "尸魂界 · 瀞灵廷",
-          "weight": 1,
-          "requires": {
-            "faction": [
-              "gotei"
-            ]
-          },
-          "source_refs": [
-            "bleach_baidu_seireitei"
-          ]
-        },
-        {
-          "id": "living_world",
-          "value": "现世",
-          "weight": 1,
-          "requires": {
-            "faction": [
-              "visored"
-            ]
-          },
-          "source_refs": [
-            "bleach_official_terms",
-            "bleach_moegirl_visored"
-          ]
-        },
-        {
-          "id": "hueco_mundo",
-          "value": "虚圈",
-          "weight": 1,
-          "requires": {
-            "faction": [
-              "hueco"
-            ]
-          },
-          "description": "虚活动的空间，空气中的灵子浓度高于现世。",
-          "source_refs": [
-            "bleach_official_terms"
-          ]
-        },
-        {
-          "id": "shadow",
-          "value": "影之领域",
-          "weight": 1,
-          "requires": {
-            "faction": [
-              "wandenreich"
-            ]
-          },
-          "description": "灭却师藏身于瀞灵廷之影中形成的灵子空间。",
-          "source_refs": [
-            "bleach_official_terms"
-          ]
-        },
-        {
-          "id": "academy",
-          "value": "尸魂界 · 真央灵术院",
-          "weight": 1,
-          "source_refs": [
-            "bleach_baidu_academy",
-            "bleach_official_terms"
-          ],
-          "requires": {
-            "faction": [
-              "academy"
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "id": "rating",
-      "label": "评级参考（组织职级）",
-      "options": [
-        {
-          "id": "member",
-          "value": "普通队士",
-          "weight": 60,
-          "requires": {
-            "identity": [
-              "shinigami"
-            ]
-          },
-          "description": "护廷十三队的一般成员。",
-          "source_refs": [
-            "bleach_official_characters",
-            "bleach_baidu_gotei"
-          ]
-        },
-        {
-          "id": "seated",
-          "value": "席官",
-          "weight": 25,
-          "requires": {
-            "identity": [
-              "shinigami"
-            ]
-          },
-          "description": "番队内的席位身份，具体实力因个人而异。",
-          "source_refs": [
-            "bleach_baidu_gotei"
-          ]
-        },
-        {
-          "id": "lieutenant",
-          "value": "副队长",
-          "weight": 12,
-          "requires": {
-            "identity": [
-              "shinigami"
-            ]
-          },
-          "description": "护廷十三队各番队的副职。",
-          "source_refs": [
-            "bleach_official_characters"
-          ]
-        },
-        {
-          "id": "captain",
-          "value": "队长",
-          "weight": 3,
-          "requires": {
-            "identity": [
-              "shinigami"
-            ]
-          },
-          "description": "护廷十三队各番队的队长身份。",
-          "source_refs": [
-            "bleach_official_characters"
-          ]
-        },
-        {
-          "id": "former_lieutenant",
-          "value": "原副队长",
-          "weight": 60,
-          "requires": {
-            "identity": [
-              "visored"
-            ]
-          },
-          "description": "参考假面军势中原副队长成员的组织经历。",
-          "source_refs": [
-            "bleach_official_characters"
-          ]
-        },
-        {
-          "id": "former_captain",
-          "value": "原队长",
-          "weight": 40,
-          "requires": {
-            "identity": [
-              "visored"
-            ]
-          },
-          "description": "参考假面军势中原队长成员的组织经历。",
-          "source_refs": [
-            "bleach_official_characters"
-          ]
-        },
-        {
-          "id": "arrancar",
-          "value": "破面",
-          "weight": 95,
-          "requires": {
-            "identity": [
-              "arrancar"
-            ]
-          },
-          "description": "脱下面具并获得死神力量的虚。",
-          "source_refs": [
-            "bleach_official_terms"
-          ]
-        },
-        {
-          "id": "espada",
-          "value": "十刃",
-          "weight": 5,
-          "requires": {
-            "identity": [
-              "arrancar"
-            ]
-          },
-          "description": "破面阵营中的精锐组织身份。",
-          "source_refs": [
-            "bleach_official_characters"
-          ]
-        },
-        {
-          "id": "quincy",
-          "value": "灭却师（不细分职级）",
-          "weight": 90,
-          "requires": {
-            "identity": [
-              "quincy"
-            ]
-          },
-          "description": "无形帝国阵营中的灭却师。",
-          "source_refs": [
-            "bleach_official_terms"
-          ]
-        },
-        {
-          "id": "sternritter",
-          "value": "星十字骑士团",
-          "weight": 10,
-          "requires": {
-            "identity": [
-              "quincy"
-            ]
-          },
-          "description": "无形帝国的灭却师精锐部队。",
-          "source_refs": [
-            "bleach_official_terms",
-            "bleach_official_characters"
-          ]
-        },
-        {
-          "id": "student",
-          "value": "灵术院生 · 尚未入队",
-          "weight": 1,
-          "source_refs": [
-            "bleach_baidu_academy",
-            "bleach_official_terms"
-          ],
-          "requires": {
-            "identity": [
-              "academy_student"
-            ]
-          },
-          "description": "入队前的培养阶段，不是护廷十三队职级。"
-        }
-      ]
-    },
-    {
-      "id": "talent",
-      "label": "能力方向",
-      "options": [
-        {
-          "id": "sword",
-          "value": "斩术",
-          "weight": 40,
-          "requires": {
-            "identity": [
-              "shinigami"
-            ]
-          },
-          "description": "斩拳走鬼中的刀剑战斗方向。",
-          "source_refs": [
-            "bleach_official_terms"
-          ]
-        },
-        {
-          "id": "hakuda",
-          "value": "白打",
-          "weight": 20,
-          "requires": {
-            "identity": [
-              "shinigami"
-            ]
-          },
-          "description": "斩拳走鬼中的徒手战斗方向。",
-          "source_refs": [
-            "bleach_official_terms"
-          ]
-        },
-        {
-          "id": "hoho",
-          "value": "步法",
-          "weight": 20,
-          "requires": {
-            "identity": [
-              "shinigami"
-            ]
-          },
-          "description": "斩拳走鬼中的移动战技方向。",
-          "source_refs": [
-            "bleach_official_terms"
-          ]
-        },
-        {
-          "id": "kido",
-          "value": "鬼道",
-          "weight": 20,
-          "requires": {
-            "identity": [
-              "shinigami"
-            ]
-          },
-          "description": "以自身灵压施术，包括破道、缚道。",
-          "source_refs": [
-            "bleach_official_terms"
-          ]
-        },
-        {
-          "id": "hollowfication",
-          "value": "虚化",
-          "weight": 1,
-          "requires": {
-            "identity": [
-              "visored"
-            ]
-          },
-          "description": "原死神获得虚的能力，以面具体现虚化力量。",
-          "source_refs": [
-            "bleach_official_terms",
-            "bleach_baidu_visored"
-          ]
-        },
-        {
-          "id": "resurreccion",
-          "value": "归刃",
-          "weight": 1,
-          "requires": {
-            "identity": [
-              "arrancar"
-            ]
-          },
-          "description": "解放封存在破面斩魄刀中的本来能力与形态。",
-          "source_refs": [
-            "bleach_official_terms"
-          ]
-        },
-        {
-          "id": "reishi",
-          "value": "灵子集束",
-          "weight": 1,
-          "requires": {
-            "identity": [
-              "quincy"
-            ]
-          },
-          "description": "灭却师集束周围灵子并形成灵子兵装的能力。",
-          "source_refs": [
-            "bleach_official_terms"
-          ]
-        },
-        {
-          "id": "fundamentals",
-          "value": "斩拳走鬼基础学习",
-          "weight": 1,
-          "source_refs": [
-            "bleach_baidu_academy",
-            "bleach_official_terms"
-          ],
-          "requires": {
-            "identity": [
-              "academy_student"
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "id": "combat",
-      "label": "战斗方式",
-      "options": [
-        {
-          "id": "zanjutsu",
-          "value": "斩魄刀近战",
-          "weight": 1,
-          "requires": {
-            "talent": [
-              "sword"
-            ]
-          },
-          "source_refs": [
-            "bleach_official_terms"
-          ]
-        },
-        {
-          "id": "hand_to_hand",
-          "value": "徒手格斗",
-          "weight": 1,
-          "requires": {
-            "talent": [
-              "hakuda"
-            ]
-          },
-          "source_refs": [
-            "bleach_official_terms"
-          ]
-        },
-        {
-          "id": "movement",
-          "value": "步法与近战配合",
-          "weight": 1,
-          "requires": {
-            "talent": [
-              "hoho"
-            ]
-          },
-          "source_refs": [
-            "bleach_official_terms"
-          ]
-        },
-        {
-          "id": "spells",
-          "value": "破道 / 缚道",
-          "weight": 1,
-          "requires": {
-            "talent": [
-              "kido"
-            ]
-          },
-          "source_refs": [
-            "bleach_official_terms"
-          ]
-        },
-        {
-          "id": "mask",
-          "value": "死神战技与虚化结合",
-          "weight": 1,
-          "requires": {
-            "talent": [
-              "hollowfication"
-            ]
-          },
-          "source_refs": [
-            "bleach_official_terms"
-          ]
-        },
-        {
-          "id": "cero",
-          "value": "虚闪 / 钢皮 / 响转",
-          "weight": 1,
-          "requires": {
-            "talent": [
-              "resurreccion"
-            ]
-          },
-          "source_refs": [
-            "bleach_official_terms"
-          ]
-        },
-        {
-          "id": "arrows",
-          "value": "神圣灭矢",
-          "weight": 1,
-          "requires": {
-            "talent": [
-              "reishi"
-            ]
-          },
-          "description": "由集束灵子形成的射击攻击。",
-          "source_refs": [
-            "bleach_official_terms"
-          ]
-        },
-        {
-          "id": "training",
-          "value": "斩术基础训练与魂葬实习",
-          "weight": 1,
-          "source_refs": [
-            "bleach_baidu_academy",
-            "bleach_official_terms"
-          ],
-          "requires": {
-            "talent": [
-              "fundamentals"
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "id": "energy",
-      "label": "灵压",
-      "options": [
-        {
-          "id": "unquantified",
-          "value": "未量化",
-          "weight": 1,
-          "description": "所引资料未提供适用于随机身份的统一灵压量表。",
-          "source_refs": [
-            "bleach_official_terms"
-          ]
-        }
-      ]
-    },
-    {
-      "id": "release",
-      "label": "力量机制",
-      "options": [
-        {
-          "id": "zanpakuto",
-          "value": "斩魄刀",
-          "weight": 1,
-          "requires": {
-            "identity": [
-              "shinigami"
-            ]
-          },
-          "description": "死神使用的刀，个体有不同的能力与解放状态。",
-          "source_refs": [
-            "bleach_official_terms"
-          ]
-        },
-        {
-          "id": "mask",
-          "value": "虚化面具",
-          "weight": 1,
-          "requires": {
-            "identity": [
-              "visored"
-            ]
-          },
-          "description": "使用虚化能力时显现的面具。",
-          "source_refs": [
-            "bleach_baidu_visored"
-          ]
-        },
-        {
-          "id": "core",
-          "value": "归刃解放",
-          "weight": 1,
-          "requires": {
-            "identity": [
-              "arrancar"
-            ]
-          },
-          "description": "解放破面斩魄刀中封存的能力与形态。",
-          "source_refs": [
-            "bleach_official_terms"
-          ]
-        },
-        {
-          "id": "reishi",
-          "value": "外界灵子操作",
-          "weight": 1,
-          "requires": {
-            "identity": [
-              "quincy"
-            ]
-          },
-          "description": "集束环境灵子形成自身的灵子兵装。",
-          "source_refs": [
-            "bleach_official_terms"
-          ]
-        },
-        {
-          "id": "training",
-          "value": "斩魄刀基础修习",
-          "weight": 1,
-          "source_refs": [
-            "bleach_baidu_academy",
-            "bleach_official_terms"
-          ],
-          "requires": {
-            "identity": [
-              "academy_student"
-            ]
-          },
-          "description": "解放修习情况未指定。"
-        }
+      "id": "hollow",
+      "name": "虚",
+      "weight": 20,
+      "lifespan": [
+        80,
+        600
+      ],
+      "natural_death": "灵体消散",
+      "marriage": false,
+      "antagonist": true,
+      "death_causes": [
+        "被死神斩杀",
+        "同类吞噬",
+        "灵体崩溃",
+        "作战"
+      ],
+      "ranks": [
+        ["普通虚", 55, "D+"],
+        ["基力安", 25, "C+"],
+        ["亚丘卡斯", 13, "B+"],
+        ["瓦史托德", 5, "A+"],
+        ["十刃", 2, "S"]
       ]
     }
   ]

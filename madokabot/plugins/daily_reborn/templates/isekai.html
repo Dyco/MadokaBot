@@ -5,114 +5,106 @@
   <style>
     {% if font_uri %}@font-face { font-family: Reborn; src: url('{{ font_uri }}'); }{% endif %}
     * { box-sizing: border-box; }
-    body { width: 1080px; margin: 0; padding: 44px; background: #111822; color: #edf0ed; font-family: Reborn, 'Microsoft YaHei', sans-serif; }
-    header { display: flex; justify-content: space-between; align-items: flex-start; gap: 24px; }
-    .eyebrow { color: #b4aa8c; font-size: 17px; letter-spacing: 4px; }
-    h1 { margin: 10px 0 12px; font-size: 56px; letter-spacing: 5px; }
-    .date { color: #a2aab3; font-size: 17px; line-height: 1.9; text-align: right; flex: none; }
-    .intro { color: #aeb6c0; font-size: 19px; line-height: 1.8; margin: 0; }
-    .identity { margin-top: 25px; padding-top: 25px; border-top: 1px solid #35404b; }
-    .name { font-size: 20px; color: #bcc4ca; line-height: 1.9; overflow-wrap: anywhere; }
-    .name strong { color: #edddb3; }
-    .birthplace { margin: 14px 0 6px; font-size: 37px; color: #efdfb7; }
-    .place-description { color: #aeb6c0; line-height: 1.8; font-size: 18px; }
-    .facts { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; margin: 20px 0; }
-    .fact { padding: 17px 20px; background: #1a2430; border: 1px solid #34404e; border-radius: 12px; }
-    .label { font-size: 15px; color: #9faeba; margin-bottom: 8px; letter-spacing: 2px; }
-    .value { font-size: 26px; line-height: 1.5; }
-    .lineage { color: #c7c1ad; font-size: 16px; line-height: 1.6; margin-top: 5px; }
-    section.panel { background: #19232e; border: 1px solid #34404d; padding: 23px 25px; border-radius: 15px; margin-top: 17px; }
-    .section-head { display: flex; align-items: center; justify-content: space-between; gap: 20px; }
-    h2 { font-size: 25px; margin: 0; color: #e5dcc7; }
-    .badge { font-size: 15px; color: #d8c999; border: 1px solid #746949; border-radius: 6px; padding: 4px 11px; white-space: nowrap; }
-    .description { margin: 12px 0 0; color: #bac3cb; font-size: 18px; line-height: 1.8; }
-    .parents { display: grid; grid-template-columns: 1fr 1fr; gap: 17px; margin: 19px 0; }
-    .parent { background: #121c26; border: 1px solid #354351; border-radius: 12px; padding: 18px 20px; }
-    .role { color: #a8c9cd; font-size: 16px; letter-spacing: 3px; }
-    .occupation { font-size: 26px; margin: 9px 0; line-height: 1.5; }
-    .detail { color: #b5c0c8; font-size: 17px; line-height: 1.9; overflow-wrap: anywhere; }
-    .power { margin-top: 12px; padding-top: 10px; border-top: 1px solid #34404e; color: #d6d5be; font-size: 18px; line-height: 1.7; }
-    .chips { display: flex; flex-wrap: wrap; gap: 9px; margin-top: 12px; }
-    .chip { background: #263340; border: 1px solid #465362; border-radius: 7px; padding: 7px 12px; color: #d6e0e0; font-size: 17px; }
-    .trait-name { font-size: 28px; color: #c0d8c1; margin: 13px 0 6px; }
-    .birth-state { font-size: 17px; color: #a5b4bc; line-height: 1.8; margin-top: 13px; }
-    .aspects { display: grid; grid-template-columns: 1fr 1fr; gap: 13px; margin-top: 18px; }
-    .aspect { background: #121c26; border: 1px solid #354351; border-radius: 10px; padding: 15px 18px; }
-    .aspect-name { font-size: 21px; color: #d4dcc7; line-height: 1.6; }
-    .note { color: #acaeaa; font-size: 15px; line-height: 1.8; margin-top: 8px; }
-    .challenge { margin-top: 17px; padding-top: 15px; border-top: 1px solid #35414d; font-size: 18px; color: #c5bdad; line-height: 1.8; }
-    .history { margin-top: 26px; padding-top: 22px; border-top: 1px solid #35404b; }
-    .history h2 { font-size: 19px; margin-bottom: 13px; }
-    .history-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; }
-    .history-item { background: #18212c; border: 1px solid #35404d; border-radius: 8px; padding: 10px; min-height: 105px; overflow-wrap: anywhere; }
+    html, body { margin: 0; overflow: hidden; }
+    body { width: {{ card_size.width }}px; height: {{ card_size.height }}px; padding: 13px; background: #111822; color: #edf0ed; font-family: Reborn, 'Microsoft YaHei', sans-serif; display: grid; grid-template-rows: 41px minmax(0, 1fr) 51px 21px; gap: 7px; }
+    header { display: flex; justify-content: space-between; gap: 12px; min-width: 0; }
+    .heading { min-width: 0; }
+    .eyebrow { color: #b4aa8c; font-size: 7px; letter-spacing: 1.5px; }
+    h1 { margin: 2.5px 0; font-size: 17px; line-height: 1.2; }
+    .date { color: #a2aab3; font-size: 7px; line-height: 1.8; text-align: right; flex: none; }
+    .name { display: flex; align-items: baseline; gap: 3px; font-size: 7px; color: #bcc4ca; white-space: nowrap; }
+    .name strong { max-width: 165px; overflow: hidden; text-overflow: ellipsis; color: #edddb3; }
+    .content { display: grid; grid-template-columns: 1fr 1.25fr 1fr; gap: 9px; min-height: 0; }
+    .panel { min-width: 0; min-height: 0; background: #19232e; border: 0.5px solid #34404d; padding: 9px; border-radius: 7px; }
+    h2 { font-size: 10.5px; margin: 0 0 5px; color: #e5dcc7; }
+    .birthplace { font-size: 12.5px; margin: 4.5px 0 2px; color: #efdfb7; }
+    .description { margin: 3px 0; color: #bac3cb; font-size: 7px; line-height: 1.55; overflow-wrap: anywhere; }
+    .setting { color: #b4aa8c; font-size: 7px; line-height: 1.5; margin: 3.5px 0; }
+    .facts { display: grid; grid-template-columns: 1fr .6fr 1fr; gap: 5px; margin: 6px 0; }
+    .fact { padding: 4.5px; background: #121c26; border: 0.5px solid #34404e; border-radius: 4px; }
+    .label { font-size: 6px; color: #9faeba; margin-bottom: 2.5px; }
+    .value { font-size: 9px; line-height: 1.4; }
+    .lineage { color: #c7c1ad; font-size: 6px; line-height: 1.5; margin-top: 2px; }
+    .family { margin-top: 6.5px; padding-top: 6px; border-top: 0.5px solid #35414d; }
+    .family h2 { font-size: 9.5px; margin-bottom: 3px; }
+    .chips { display: flex; flex-wrap: wrap; gap: 3px; margin-top: 3.5px; }
+    .chip { background: #263340; border: 0.5px solid #465362; border-radius: 3px; padding: 2px 3.5px; color: #d6e0e0; font-size: 6px; line-height: 1.4; }
+    .growth { margin-top: 6px; }
+    .challenge { margin-top: 4.5px; color: #c5bdad; font-size: 6.5px; line-height: 1.5; }
+    .parents { display: grid; grid-template-rows: repeat(2, minmax(0, 1fr)); gap: 5px; height: calc(100% - 18px); }
+    .parent { background: #121c26; border: 0.5px solid #354351; border-radius: 5px; padding: 6px 7px; min-height: 0; }
+    .parent-heading { display: flex; align-items: baseline; gap: 5px; margin-bottom: 2.5px; }
+    .role { color: #a8c9cd; font-size: 6.5px; flex: none; }
+    .occupation { font-size: 10.5px; color: #e5dcc7; }
+    .detail { color: #b5c0c8; font-size: 7px; line-height: 1.55; overflow-wrap: anywhere; }
+    .power { margin-top: 3.5px; padding-top: 3px; border-top: 0.5px solid #34404e; color: #d6d5be; font-size: 7px; line-height: 1.5; }
+    .note { color: #acaeaa; font-size: 6px; line-height: 1.5; margin-top: 2.5px; }
+    .trait-name { font-size: 11.5px; color: #c0d8c1; margin: 3.5px 0; }
+    .birth-state { font-size: 6.5px; color: #a5b4bc; line-height: 1.55; margin-top: 4px; }
+    .aspects { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4.5px; margin-top: 6px; }
+    .aspect { background: #121c26; border: 0.5px solid #354351; border-radius: 4px; padding: 4.5px 5.5px; }
+    .aspect-name { font-size: 8.5px; color: #d4dcc7; line-height: 1.4; }
+    .history { display: grid; grid-template-columns: 9px minmax(0, 1fr); gap: 5px; min-height: 0; }
+    .history h2 { writing-mode: vertical-rl; align-self: center; font-size: 6px; margin: 0; }
+    .history-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); grid-template-rows: repeat(2, minmax(0, 1fr)); gap: 3px; }
+    .history-item { background: #18212c; border: 0.5px solid #35404d; border-radius: 3px; padding: 2.5px 4.5px; min-width: 0; overflow: hidden; }
     .history-item.latest { border-color: #827454; }
-    .history-meta { display: flex; justify-content: space-between; font-size: 11px; color: #93a1ae; }
-    .history-world { font-size: 16px; color: #decfa9; margin: 8px 0 5px; }
-    .history-detail { font-size: 12px; color: #b2bdc5; line-height: 1.7; }
+    .history-world { font-size: 6px; color: #decfa9; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .history-detail { font-size: 5.5px; color: #b2bdc5; margin-top: 1.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .empty { display: flex; justify-content: center; align-items: center; color: #4a5763; border-style: dashed; background: transparent; }
-    footer { color: #8999a5; font-size: 13px; line-height: 1.9; margin-top: 22px; padding-top: 17px; border-top: 1px solid #35404b; }
-    .version { margin-top: 8px; text-align: right; font-family: sans-serif; }
+    footer { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: start; gap: 10px; color: #8999a5; font-size: 5px; line-height: 1.5; padding-top: 3px; border-top: 0.5px solid #35404b; }
+    .version { display: block; white-space: nowrap; color: #657b92; font-family: sans-serif; font-size: 6px; line-height: 1.5; margin-top: 1px; }
   </style>
 </head>
 <body>
   <header>
-    <div><div class="eyebrow">{{ result.title }}</div><h1>{{ result.world.title }}</h1></div>
-    <div class="date">{{ result.date }}<br>第 {{ result.reborn_count }} 次异世界投胎</div>
+    <div class="heading"><div class="eyebrow">{{ result.title }}</div><h1>{{ result.world.title }}</h1><div class="name"><strong>{{ name }}</strong><span>，这次你出生在异世界</span></div></div>
+    <div class="date">{{ result.date }}<span class="version">MADOKABOT VER.{{ bot_version }}</span>第 {{ result.reborn_count }} 次异世界投胎</div>
   </header>
-  <p class="intro">{{ result.world.description }}</p>
-  {% if result.setting is defined %}<div class="birth-state">{{ result.setting.name }} · {{ result.setting.description }}</div>{% endif %}
-  <div class="identity">
-    <div class="name"><strong>{{ name }}</strong>，这次你出生在</div>
-    <div class="birthplace">{{ result.birthplace.name }}</div>
-    <div class="place-description">{{ result.birthplace.description }}</div>
-    {% if result.birthplace.context is defined %}<div class="note">{{ result.birthplace.context }}</div>{% endif %}
-    <div class="facts">
-      <div class="fact"><div class="label">种族 / 祖源</div><div class="value">{{ result.child.species }}</div>{% if result.child.lineage %}<div class="lineage">{{ result.child.lineage }}</div>{% endif %}</div>
-      <div class="fact"><div class="label">出生性别</div><div class="value">{{ result.gender }}婴</div></div>
-      <div class="fact"><div class="label">家庭出身</div><div class="value">{{ result.household.rarity }}</div><div class="lineage">{{ result.household.name }}</div></div>
-    </div>
-  </div>
-  <section class="panel">
-    <div class="section-head"><h2>{{ result.household.name }}</h2><span class="badge">家庭档案</span></div>
-    <p class="description">{{ result.household.description }}</p>
-    <div class="parents">
-      {% for parent in result.parents %}
-      <div class="parent">
-        <div class="role">{{ parent.role }}</div><div class="occupation">{{ parent.occupation }}</div>
-        <div class="detail">{{ parent.species }}{% if parent.lineage %} · {{ parent.lineage }}{% endif %}<br>{{ parent.identity }}</div>
-        {% if parent.affiliation is defined %}<div class="note">{{ parent.affiliation }}</div>{% endif %}
-        <div class="power">{% if parent.powers is defined %}{% for power in parent.powers %}{{ power.name }}{% if not loop.last %}<br>{% endif %}{% endfor %}{% else %}{{ parent.power.name }}{% endif %}</div>
-        {% for note in parent.notes | default([]) %}<div class="note">{{ note }}</div>{% endfor %}
+  <main class="content">
+    <section class="panel">
+      <h2>出生与家庭</h2>
+      <div class="description">{{ result.world.description }}</div>
+      {% if result.setting is defined %}<div class="setting">{{ result.setting.name }} · {{ result.setting.description }}</div>{% endif %}
+      <div class="birthplace">{{ result.birthplace.name }}</div><div class="description">{{ result.birthplace.description }}</div>
+      {% if result.birthplace.context is defined %}<div class="note">{{ result.birthplace.context }}</div>{% endif %}
+      <div class="facts">
+        <div class="fact"><div class="label">种族 / 祖源</div><div class="value">{{ result.child.species }}</div>{% if result.child.lineage %}<div class="lineage">{{ result.child.lineage }}</div>{% endif %}</div>
+        <div class="fact"><div class="label">性别</div><div class="value">{{ result.gender }}婴</div></div>
+        <div class="fact"><div class="label">家庭出身</div><div class="value">{{ result.household.rarity }}</div></div>
       </div>
-      {% endfor %}
-    </div>
-    <div class="label">成长资源</div>
-    <div class="chips">{% for resource in result.household.resources %}<span class="chip">{{ resource }}</span>{% endfor %}</div>
-  </section>
-  <section class="panel">
-    <h2>{{ result.child.trait_label | default('先天条件') }}</h2><div class="trait-name">{{ result.child.trait.name }}</div>
-    <p class="description">{{ result.child.trait.description }}</p><div class="birth-state">{{ result.child.birth_state }}</div>
-    {% if result.child.features is defined %}<div class="chips">{% for feature in result.child.features %}<span class="chip">{{ feature }}</span>{% endfor %}</div>{% endif %}
-    {% if result.child.life_span is defined %}<div class="note">{{ result.child.life_span }}</div>{% endif %}
-    {% if result.child.aspects is defined %}<div class="aspects">{% for aspect in result.child.aspects %}<div class="aspect"><div class="label">{{ aspect.label }}</div><div class="aspect-name">{{ aspect.name }}</div><div class="note">{{ aspect.description }}</div></div>{% endfor %}</div>{% endif %}
-    {% for note in result.child.notes | default([]) %}<div class="note">{{ note }}</div>{% endfor %}
-  </section>
-  <section class="panel">
-    <h2>可能的成长方向</h2>
-    <div class="chips">{% for direction in result.household.directions %}<span class="chip">{{ direction }}</span>{% endfor %}</div>
-    <div class="challenge">{{ result.household.challenge }}</div>
-  </section>
-  <section class="history">
-    <h2>最近十次异世界投胎</h2>
-    <div class="history-grid">
-      {% for entry in history_slots %}
-      {% if entry %}<div class="history-item{% if loop.first %} latest{% endif %}">
-        <div class="history-meta"><span>第{{ entry.count }}次</span><span>{{ entry.date[5:] }}</span></div>
-        <div class="history-world">{{ entry.world }}</div><div class="history-detail">{{ entry.species }} · {{ entry.gender }}<br>{{ entry.family }}</div>
-      </div>{% else %}<div class="history-item empty">—</div>{% endif %}
-      {% endfor %}
-    </div>
-  </section>
-  <footer>{{ result.notice }}<div class="version">MADOKABOT VER.{{ bot_version }}</div></footer>
+      <div class="family"><h2>{{ result.household.name }}</h2><p class="description">{{ result.household.description }}</p><div class="label">成长资源</div><div class="chips">{% for resource in result.household.resources %}<span class="chip">{{ resource }}</span>{% endfor %}</div></div>
+      <div class="growth"><div class="label">可能的成长方向</div><div class="chips">{% for direction in result.household.directions %}<span class="chip">{{ direction }}</span>{% endfor %}</div><div class="challenge">{{ result.household.challenge }}</div></div>
+    </section>
+    <section class="panel">
+      <h2>父母档案</h2>
+      <div class="parents">
+        {% for parent in result.parents %}
+        <div class="parent">
+          <div class="parent-heading"><span class="role">{{ parent.role }}</span><span class="occupation">{{ parent.occupation }}</span></div>
+          <div class="detail">{{ parent.species }}{% if parent.lineage %} · {{ parent.lineage }}{% endif %}<br>{{ parent.identity }}</div>
+          {% if parent.affiliation is defined %}<div class="note">{{ parent.affiliation }}</div>{% endif %}
+          <div class="power">{% if parent.powers is defined %}{% for power in parent.powers %}{{ power.name }}{% if not loop.last %} · {% endif %}{% endfor %}{% else %}{{ parent.power.name }}{% endif %}</div>
+          {% for note in parent.notes | default([]) %}<div class="note">{{ note }}</div>{% endfor %}
+        </div>
+        {% endfor %}
+      </div>
+    </section>
+    <section class="panel">
+      <h2>{{ result.child.trait_label | default('先天条件') }}</h2><div class="trait-name">{{ result.child.trait.name }}</div>
+      <p class="description">{{ result.child.trait.description }}</p><div class="birth-state">{{ result.child.birth_state }}</div>
+      {% if result.child.features is defined %}<div class="chips">{% for feature in result.child.features %}<span class="chip">{{ feature }}</span>{% endfor %}</div>{% endif %}
+      {% if result.child.life_span is defined %}<div class="note">{{ result.child.life_span }}</div>{% endif %}
+      {% if result.child.aspects is defined %}<div class="aspects">{% for aspect in result.child.aspects %}<div class="aspect"><div class="label">{{ aspect.label }}</div><div class="aspect-name">{{ aspect.name }}</div><div class="note">{{ aspect.description }}</div></div>{% endfor %}</div>{% endif %}
+      {% for note in result.child.notes | default([]) %}<div class="note">{{ note }}</div>{% endfor %}
+    </section>
+  </main>
+  <section class="history"><h2>记录</h2><div class="history-grid">
+    {% for entry in history_slots %}
+    {% if entry %}<div class="history-item{% if loop.first %} latest{% endif %}"><div class="history-world">#{{ entry.count }} {{ entry.world }}</div><div class="history-detail">{{ entry.species }} · {{ entry.gender }} · {{ entry.family }}</div></div>
+    {% else %}<div class="history-item empty">—</div>{% endif %}
+    {% endfor %}
+  </div></section>
+  <footer><span>{{ result.notice }}</span></footer>
 </body>
 </html>
