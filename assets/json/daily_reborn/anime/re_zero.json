@@ -1,0 +1,39 @@
+{
+  "id": "re_zero",
+  "title": "Re：从零开始的异世界生活",
+  "category": "isekai",
+  "danger": "危险",
+  "harem": false,
+  "death_causes": [
+    "疾病",
+    "意外",
+    "魔兽袭击",
+    "暗杀",
+    "战乱",
+    "诅咒"
+  ],
+  "events": [
+    {
+      "name": "魔女教袭击",
+      "weight": 3,
+      "age": [
+        1,
+        100
+      ]
+    },
+    {
+      "name": "白鲸讨伐",
+      "weight": 2,
+      "age": [
+        16,
+        100
+      ]
+    }
+  ],
+  "notes": "采用存在魔兽与魔女教威胁的异世界居民视角；不赋予昴的死亡回归。事件是否波及及遇难年龄均为玩法模拟。",
+  "weight": 1,
+  "logo": "re_zero.webp",
+  "source_refs": [
+    "re_zero_official"
+  ]
+}

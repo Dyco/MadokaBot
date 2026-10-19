@@ -1,0 +1,18 @@
+{
+  "id": "bang_dream_mygo",
+  "title": "BanG Dream! It's MyGO!!!!!",
+  "category": "daily",
+  "danger": "和平",
+  "harem": false,
+  "death_causes": [
+    "疾病",
+    "意外"
+  ],
+  "events": [],
+  "notes": "采用MyGO篇的现代校园与Live House背景；组队、解散及成员关系变化不作为致命事件。",
+  "weight": 1,
+  "logo": "bang_dream_mygo.svg",
+  "source_refs": [
+    "bang_dream_mygo_official"
+  ]
+}

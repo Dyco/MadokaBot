@@ -1,0 +1,18 @@
+{
+  "id": "yama_no_susume",
+  "title": "向山进发",
+  "category": "daily",
+  "danger": "和平",
+  "harem": false,
+  "death_causes": [
+    "疾病",
+    "意外"
+  ],
+  "events": [],
+  "notes": "少女登山与校园日常；保留普通户外意外的低风险，不编造具名登山灾难。",
+  "weight": 1,
+  "logo": "yama_no_susume.png",
+  "source_refs": [
+    "yama_no_susume_official"
+  ]
+}

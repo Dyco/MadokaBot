@@ -1,0 +1,18 @@
+{
+  "id": "non_non_biyori",
+  "title": "悠哉日常大王",
+  "category": "daily",
+  "danger": "安全",
+  "harem": false,
+  "death_causes": [
+    "疾病",
+    "意外"
+  ],
+  "events": [],
+  "notes": "乡村学校与四季生活的轻松日常，不额外编造乡村灾难事件。",
+  "weight": 1,
+  "logo": "non_non_biyori.svg",
+  "source_refs": [
+    "non_non_biyori_official"
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "id": "bocchi_the_rock",
+  "title": "孤独摇滚！",
+  "category": "daily",
+  "danger": "安全",
+  "harem": false,
+  "death_causes": [
+    "疾病",
+    "意外"
+  ],
+  "events": [],
+  "notes": "校园与Live House乐队日常；不将社交焦虑、舞台紧张或成员矛盾配置为致命事件。",
+  "weight": 1,
+  "logo": "bocchi_the_rock.svg",
+  "source_refs": [
+    "bocchi_the_rock_official"
+  ]
+}

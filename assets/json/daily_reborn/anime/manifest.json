@@ -1,6 +1,6 @@
 {
   "schema_version": 2,
-  "version": "2026.10.19.5",
+  "version": "2026.10.19.6",
   "title": "投胎二次元",
   "notice": "按作品题材模拟匿名人物的成长与人生结局。星级、存在感、危险度、战力字母、寿命及婚育均为游戏设定；人物评级按本作品阵营抽取。上海时间明日零点可再次免费投胎。",
   "genders": [
@@ -36,6 +36,26 @@
     "akashic_records.json",
     "overlord.json",
     "high_school_dxd.json",
-    "akame_ga_kill.json"
+    "akame_ga_kill.json",
+    "bocchi_the_rock.json",
+    "k_on.json",
+    "girls_band_cry.json",
+    "bang_dream_mygo.json",
+    "jellyfish.json",
+    "euphonium.json",
+    "non_non_biyori.json",
+    "gochiusa.json",
+    "yuru_yuri.json",
+    "yama_no_susume.json",
+    "assassin_aristocrat.json",
+    "konosuba.json",
+    "re_zero.json",
+    "mushoku_tensei.json",
+    "tensura.json",
+    "shield_hero.json",
+    "eminence_in_shadow.json",
+    "hamefura.json",
+    "bookworm.json",
+    "isekai_farming.json"
   ]
 }

@@ -1,0 +1,18 @@
+{
+  "id": "euphonium",
+  "title": "吹响！上低音号",
+  "category": "daily",
+  "danger": "安全",
+  "harem": false,
+  "death_causes": [
+    "疾病",
+    "意外"
+  ],
+  "events": [],
+  "notes": "北宇治高中吹奏乐部的校园与竞赛日常；吹奏乐属于音乐题材，不等同于摇滚乐队。",
+  "weight": 1,
+  "logo": "euphonium.webp",
+  "source_refs": [
+    "euphonium_official"
+  ]
+}

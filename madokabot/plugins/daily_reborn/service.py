@@ -52,7 +52,7 @@ def history_entry(result: dict, count: int) -> dict:
             entry["rating_tier"] = result["rating"]["tier"]
         return entry
     if result.get("mode") == "isekai":
-        return {
+        entry = {
             "count": count,
             "date": result["date"],
             "world": result["world"]["title"],
@@ -61,6 +61,9 @@ def history_entry(result: dict, count: int) -> dict:
             "gender": result["gender"],
             "family": result["household"]["name"],
         }
+        if "score" in result:
+            entry["score"] = result["score"]
+        return entry
     return {
         "count": count,
         "date": result["date"],

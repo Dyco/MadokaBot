@@ -1,0 +1,18 @@
+{
+  "id": "k_on",
+  "title": "轻音少女",
+  "category": "daily",
+  "danger": "安全",
+  "harem": false,
+  "death_causes": [
+    "疾病",
+    "意外"
+  ],
+  "events": [],
+  "notes": "以轻音部的校园、练习和演出日常为背景，不加入虚构的乐队灾难。",
+  "weight": 1,
+  "logo": "k_on.jpg",
+  "source_refs": [
+    "k_on_official"
+  ]
+}

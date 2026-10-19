@@ -1,0 +1,32 @@
+{
+  "id": "mushoku_tensei",
+  "title": "无职转生～到了异世界就拿出真本事～",
+  "category": "isekai",
+  "danger": "危险",
+  "harem": true,
+  "death_causes": [
+    "疾病",
+    "意外",
+    "魔物袭击",
+    "迷宫探险事故",
+    "作战",
+    "魔法事故"
+  ],
+  "events": [
+    {
+      "name": "转移灾害",
+      "weight": 3,
+      "age": [
+        1,
+        100
+      ]
+    }
+  ],
+  "notes": "剑与魔法的转生异世界，保留魔物、迷宫与转移事件风险；普通人寿命不套用长寿种族。多人婚育及转移事件波及结果为玩法预设。",
+  "weight": 1,
+  "logo": "mushoku_tensei.png",
+  "source_refs": [
+    "mushoku_tensei_official",
+    "mushoku_tensei_transfer"
+  ]
+}

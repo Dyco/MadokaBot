@@ -1,0 +1,19 @@
+{
+  "id": "isekai_farming",
+  "title": "异世界悠闲农家",
+  "category": "isekai",
+  "danger": "和平",
+  "harem": true,
+  "death_causes": [
+    "疾病",
+    "意外",
+    "魔物袭击"
+  ],
+  "events": [],
+  "notes": "以大树村及周边的农耕、交流日常为主要视角；保留村外魔物的低风险，不默认拥有万能农具或神赐体质。多人婚育仅为玩法预设。",
+  "weight": 1,
+  "logo": "isekai_farming.png",
+  "source_refs": [
+    "isekai_farming_official"
+  ]
+}

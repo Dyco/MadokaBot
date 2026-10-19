@@ -1,0 +1,20 @@
+{
+  "id": "bookworm",
+  "title": "小书痴的下克上",
+  "category": "isekai",
+  "danger": "动荡",
+  "harem": false,
+  "death_causes": [
+    "疾病",
+    "意外",
+    "贵族纷争",
+    "魔法事故"
+  ],
+  "events": [],
+  "notes": "采用平民与魔力贵族分层的异世界社会；保留疾病与贵族纷争风险，不默认具备梅茵的魔力或领主养女身份。",
+  "weight": 1,
+  "logo": "bookworm.png",
+  "source_refs": [
+    "bookworm_official"
+  ]
+}

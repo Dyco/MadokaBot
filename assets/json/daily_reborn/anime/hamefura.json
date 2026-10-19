@@ -1,0 +1,21 @@
+{
+  "id": "hamefura",
+  "title": "转生成为了只有乙女游戏破灭Flag的邪恶大小姐",
+  "category": "isekai",
+  "danger": "动荡",
+  "harem": false,
+  "death_causes": [
+    "疾病",
+    "意外",
+    "绑架",
+    "魔法事故",
+    "贵族纷争"
+  ],
+  "events": [],
+  "notes": "乙女游戏中的贵族与魔法学院世界，日常之外仍有绑架与魔法威胁；不把卡塔莉娜的破灭路线套给所有居民，也不因多位追求者而默认多配偶。",
+  "weight": 1,
+  "logo": "hamefura.png",
+  "source_refs": [
+    "hamefura_official"
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "id": "konosuba",
+  "title": "为美好的世界献上祝福！",
+  "category": "isekai",
+  "danger": "危险",
+  "harem": false,
+  "death_causes": [
+    "疾病",
+    "意外",
+    "魔物袭击",
+    "探险事故",
+    "魔王军袭击",
+    "魔法失控"
+  ],
+  "events": [],
+  "notes": "喜剧冒险异世界仍存在魔物、魔王军与冒险风险；普通居民不默认获得和真一行的复活待遇。",
+  "weight": 1,
+  "logo": "konosuba.png",
+  "source_refs": [
+    "konosuba_official"
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "id": "jellyfish",
+  "title": "夜晚的水母不会游泳",
+  "category": "daily",
+  "danger": "和平",
+  "harem": false,
+  "death_causes": [
+    "疾病",
+    "意外"
+  ],
+  "events": [],
+  "notes": "涩谷背景的少女音乐与匿名创作群像；属于音乐日常，不将创作或社交冲突升级为灾难。",
+  "weight": 1,
+  "logo": "jellyfish.png",
+  "source_refs": [
+    "jellyfish_official"
+  ]
+}

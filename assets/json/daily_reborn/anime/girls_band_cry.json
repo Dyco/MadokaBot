@@ -1,0 +1,18 @@
+{
+  "id": "girls_band_cry",
+  "title": "Girls Band Cry",
+  "category": "daily",
+  "danger": "和平",
+  "harem": false,
+  "death_causes": [
+    "疾病",
+    "意外"
+  ],
+  "events": [],
+  "notes": "现代都市少女乐队题材；求学、打工和音乐活动中的矛盾不作为危险大事件。",
+  "weight": 1,
+  "logo": "girls_band_cry.png",
+  "source_refs": [
+    "girls_band_cry_official"
+  ]
+}

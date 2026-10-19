@@ -1,0 +1,21 @@
+{
+  "id": "assassin_aristocrat",
+  "title": "世界顶尖的暗杀者，转生为异世界贵族",
+  "category": "isekai",
+  "danger": "危险",
+  "harem": true,
+  "death_causes": [
+    "疾病",
+    "意外",
+    "暗杀",
+    "领地战争",
+    "魔法事故"
+  ],
+  "events": [],
+  "notes": "即俗称的暗杀贵族，以暗杀贵族、剑与魔法的世界为背景；不默认继承卢各的技能、身份或暗杀勇者的任务。多人婚育仅为本作品的玩法预设。",
+  "weight": 1,
+  "logo": "assassin_aristocrat.png",
+  "source_refs": [
+    "assassin_aristocrat_official"
+  ]
+}

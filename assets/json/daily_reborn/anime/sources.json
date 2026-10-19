@@ -288,5 +288,173 @@
     "url": "http://akame.tv/story_22.html",
     "kind": "official",
     "checked_at": "2026-10-19"
+  },
+  {
+    "id": "bocchi_the_rock_official",
+    "title": "《孤独摇滚！》动画官网",
+    "url": "https://bocchi.rocks/tv/",
+    "publisher": "孤独摇滚动画制作方",
+    "kind": "official",
+    "checked_at": "2026-10-19"
+  },
+  {
+    "id": "k_on_official",
+    "title": "《轻音少女》动画官网",
+    "url": "https://www.tbs.co.jp/anime/k-on/",
+    "publisher": "TBS",
+    "kind": "official",
+    "checked_at": "2026-10-19"
+  },
+  {
+    "id": "girls_band_cry_official",
+    "title": "《Girls Band Cry》动画官网",
+    "url": "https://girls-band-cry.com/story/",
+    "publisher": "东映动画",
+    "kind": "official",
+    "checked_at": "2026-10-19"
+  },
+  {
+    "id": "bang_dream_mygo_official",
+    "title": "《BanG Dream! It's MyGO!!!!!》动画官网",
+    "url": "https://anime.bang-dream.com/mygo/story/",
+    "publisher": "BanG Dream! Project",
+    "kind": "official",
+    "checked_at": "2026-10-19"
+  },
+  {
+    "id": "jellyfish_official",
+    "title": "《夜晚的水母不会游泳》动画官网",
+    "url": "https://yorukura-anime.com/",
+    "publisher": "JELEE动画制作方",
+    "kind": "official",
+    "checked_at": "2026-10-19"
+  },
+  {
+    "id": "euphonium_official",
+    "title": "《吹响！上低音号》动画官网",
+    "url": "https://tv3rd.anime-eupho.com/",
+    "publisher": "吹响！上低音号动画制作方",
+    "kind": "official",
+    "checked_at": "2026-10-19"
+  },
+  {
+    "id": "non_non_biyori_official",
+    "title": "《悠哉日常大王》动画官网",
+    "url": "https://nonnontv.com/tvanime/",
+    "publisher": "悠哉日常大王动画制作方",
+    "kind": "official",
+    "checked_at": "2026-10-19"
+  },
+  {
+    "id": "gochiusa_official",
+    "title": "《请问您今天要来点兔子吗？》动画官网",
+    "url": "https://gochiusa.com/bloom/",
+    "publisher": "请问您今天要来点兔子吗动画制作方",
+    "kind": "official",
+    "checked_at": "2026-10-19"
+  },
+  {
+    "id": "yuru_yuri_official",
+    "title": "《摇曳百合》动画官网",
+    "url": "https://yuruyuri.com/3hai/",
+    "publisher": "摇曳百合动画制作方",
+    "kind": "official",
+    "checked_at": "2026-10-19"
+  },
+  {
+    "id": "yama_no_susume_official",
+    "title": "《向山进发》动画官网",
+    "url": "https://yamanosusume-ns.com/",
+    "publisher": "向山进发动画制作方",
+    "kind": "official",
+    "checked_at": "2026-10-19"
+  },
+  {
+    "id": "assassin_aristocrat_official",
+    "title": "《世界顶尖的暗杀者，转生为异世界贵族》动画官网",
+    "url": "https://ansatsu-kizoku.jp/",
+    "publisher": "暗杀贵族动画制作委员会",
+    "kind": "official",
+    "checked_at": "2026-10-19"
+  },
+  {
+    "id": "konosuba_official",
+    "title": "《为美好的世界献上祝福！》动画官网",
+    "url": "https://konosuba.com/3rd/introduction/",
+    "publisher": "为美好的世界献上祝福动画制作方",
+    "kind": "official",
+    "checked_at": "2026-10-19"
+  },
+  {
+    "id": "re_zero_official",
+    "title": "《Re：从零开始的异世界生活》动画官网",
+    "url": "https://re-zero-anime.jp/tv/story/tv2.html",
+    "publisher": "Re：从零开始的异世界生活动画制作方",
+    "kind": "official",
+    "checked_at": "2026-10-19"
+  },
+  {
+    "id": "mushoku_tensei_official",
+    "title": "《无职转生～到了异世界就拿出真本事～》动画官网",
+    "url": "https://mushokutensei.jp/",
+    "publisher": "无职转生动画制作委员会",
+    "kind": "official",
+    "checked_at": "2026-10-19"
+  },
+  {
+    "id": "mushoku_tensei_transfer",
+    "title": "无职转生动画官网：第二季度宣传影像与转移事件",
+    "url": "https://mushokutensei.jp/news/210816-01/",
+    "publisher": "无职转生动画制作委员会",
+    "kind": "official",
+    "checked_at": "2026-10-19"
+  },
+  {
+    "id": "tensura_official",
+    "title": "《关于我转生变成史莱姆这档事》动画官网",
+    "url": "https://www.ten-sura.com/anime/tensura",
+    "publisher": "转生史莱姆动画制作方",
+    "kind": "official",
+    "checked_at": "2026-10-19"
+  },
+  {
+    "id": "shield_hero_official",
+    "title": "《盾之勇者成名录》动画官网",
+    "url": "https://shieldhero-anime.jp/3rd/",
+    "publisher": "Shield Hero动画制作方",
+    "kind": "official",
+    "checked_at": "2026-10-19"
+  },
+  {
+    "id": "eminence_in_shadow_official",
+    "title": "《想要成为影之实力者！》动画官网",
+    "url": "https://shadow-garden.jp/2nd/",
+    "publisher": "想要成为影之实力者动画制作方",
+    "kind": "official",
+    "checked_at": "2026-10-19"
+  },
+  {
+    "id": "hamefura_official",
+    "title": "《转生成为了只有乙女游戏破灭Flag的邪恶大小姐》动画官网",
+    "url": "https://hamehura-anime.com/",
+    "publisher": "转生恶役大小姐动画制作方",
+    "kind": "official",
+    "checked_at": "2026-10-19"
+  },
+  {
+    "id": "bookworm_official",
+    "title": "《小书痴的下克上》动画官网",
+    "url": "https://booklove-anime.jp/story/",
+    "publisher": "小书痴的下克上动画制作方",
+    "kind": "official",
+    "checked_at": "2026-10-19"
+  },
+  {
+    "id": "isekai_farming_official",
+    "title": "《异世界悠闲农家》动画官网",
+    "url": "https://nonbiri-nouka.com/",
+    "publisher": "异世界悠闲农家动画制作方",
+    "kind": "official",
+    "checked_at": "2026-10-19"
   }
 ]

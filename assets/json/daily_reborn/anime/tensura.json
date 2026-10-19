@@ -1,0 +1,21 @@
+{
+  "id": "tensura",
+  "title": "关于我转生变成史莱姆这档事",
+  "category": "isekai",
+  "danger": "危险",
+  "harem": false,
+  "death_causes": [
+    "疾病",
+    "意外",
+    "魔物袭击",
+    "战争",
+    "魔法事故"
+  ],
+  "events": [],
+  "notes": "以人类与魔物国家并存的奇幻世界为背景；普通居民不默认成为利姆鲁、魔王或不老魔物。",
+  "weight": 1,
+  "logo": "tensura.png",
+  "source_refs": [
+    "tensura_official"
+  ]
+}

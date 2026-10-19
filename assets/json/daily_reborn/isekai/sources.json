@@ -491,6 +491,15 @@
             "checked_on": "2026-10-19",
             "supports": "在身份允许范围内补较低原生等级；赛博入门档、岗位门槛与权重均为项目设计。",
             "limitations": "不是原作人口统计或现实资格规范；不新增境界子等级，不强行把所有池凑至5项。"
+        },
+        {
+            "id": "greyhawk_official",
+            "title": "Legends of Greyhawk 官方世界背景",
+            "url": "https://www.dndbeyond.com/en/legends-of-greyhawk",
+            "publisher": "Wizards of the Coast",
+            "authority": "primary",
+            "access_status": "page_read",
+            "note": "仅支持灰鹰与弗拉尼斯背景；具体家庭、地位及人生结果为项目游戏设定。"
         }
     ]
 }

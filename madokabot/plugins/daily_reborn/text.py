@@ -77,35 +77,14 @@ def games_text(result: dict) -> str:
 
 
 def isekai_text(result: dict) -> str:
-    """输出异世界出生条件、父母身份与力量及家庭成长内容。"""
-    child = result["child"]
-    household = result["household"]
-    lineage = f" · {child['lineage']}" if child["lineage"] else ""
-    lines = [f"世界：{result['world']['title']}"]
-    if "setting" in result:
-        lines.append(f"时代：{result['setting']['name']}")
-    lines.extend([
-        f"出生地：{result['birthplace']['name']}",
-        f"种族：{child['species']}{lineage}",
-        f"性别：{result['gender']}",
-        f"出生状态：{child['birth_state']}",
-        f"家庭：{household['name']}（{household['rarity']}）",
-    ])
+    """输出父母、四项星级、世界专属人生结果及百分制综合评分。"""
+    if not all(key in result for key in ("attributes", "life", "score", "body")):
+        return "旧档案缺少综合人生数据"
+    lines = [f"世界：{result['world']['title']}", f"种族/躯体：{result['body']}", f"性别：{result['gender']}"]
     for parent in result["parents"]:
-        lineage = f" · {parent['lineage']}" if parent["lineage"] else ""
-        powers = "；".join(power["name"] for power in parent.get("powers", [parent["power"]]))
-        lines.extend([
-            f"{parent['role']}：{parent['species']}{lineage} · {parent['occupation']}",
-            f"身份：{parent['identity']}",
-            f"实力：{powers}",
-        ])
-        if parent.get("affiliation"):
-            lines.append(f"关系：{parent['affiliation']}")
-    lines.append(f"家庭资源：{'、'.join(household['resources'])}")
-    lines.append(f"{child.get('trait_label', '先天特征')}：{child['trait']['name']}")
-    lines.extend(f"{row['label']}：{row['name']}" for row in child.get("aspects", []))
-    lines.extend([
-        f"成长方向：{'、'.join(household['directions'])}",
-        f"成长课题：{household['challenge']}",
-    ])
+        lines.append(parent["role"])
+        lines.extend(f"{row['label']}：{row['value']}" for row in parent["fields"])
+    lines.extend(f"{row['name']}：{row['value_text']}星" for row in attribute_rows(result["attributes"]))
+    lines.extend(f"{row['label']}：{row['value']}" for row in result["life"])
+    lines.append(f"综合评分：{result['score']}/100")
     return "\n".join(lines)

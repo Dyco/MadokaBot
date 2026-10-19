@@ -1,0 +1,22 @@
+{
+  "id": "eminence_in_shadow",
+  "title": "想要成为影之实力者！",
+  "category": "isekai",
+  "danger": "危险",
+  "harem": false,
+  "death_causes": [
+    "疾病",
+    "意外",
+    "教团迫害",
+    "魔物袭击",
+    "作战",
+    "魔力失控"
+  ],
+  "events": [],
+  "notes": "采用剑与魔法、暗中势力交锋的异世界背景；不默认获得希德的力量或暗影庭园成员身份。",
+  "weight": 1,
+  "logo": "eminence_in_shadow.svg",
+  "source_refs": [
+    "eminence_in_shadow_official"
+  ]
+}

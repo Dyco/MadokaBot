@@ -1,0 +1,30 @@
+{
+  "id": "shield_hero",
+  "title": "盾之勇者成名录",
+  "category": "isekai",
+  "danger": "危险",
+  "harem": false,
+  "death_causes": [
+    "疾病",
+    "意外",
+    "魔物袭击",
+    "战争",
+    "探险事故"
+  ],
+  "events": [
+    {
+      "name": "灾厄之波",
+      "weight": 3,
+      "age": [
+        1,
+        100
+      ]
+    }
+  ],
+  "notes": "采用勇者、亚人与魔物共存且受波威胁的世界背景；不默认成为四圣勇者。灾厄波及及遇难结果属于玩法模拟。",
+  "weight": 1,
+  "logo": "shield_hero.svg",
+  "source_refs": [
+    "shield_hero_official"
+  ]
+}

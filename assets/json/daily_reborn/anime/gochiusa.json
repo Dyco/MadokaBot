@@ -1,0 +1,18 @@
+{
+  "id": "gochiusa",
+  "title": "请问您今天要来点兔子吗？",
+  "category": "daily",
+  "danger": "安全",
+  "harem": false,
+  "death_causes": [
+    "疾病",
+    "意外"
+  ],
+  "events": [],
+  "notes": "咖啡店、校园与小镇生活日常；按安全作品处理，不加入危险大事件。",
+  "weight": 1,
+  "logo": "gochiusa.svg",
+  "source_refs": [
+    "gochiusa_official"
+  ]
+}

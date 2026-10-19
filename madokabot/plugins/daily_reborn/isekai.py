@@ -5,6 +5,7 @@ import random
 from functools import lru_cache
 
 from .resources import load_json_resource
+from .isekai_life import complete_life
 
 
 def validate_pool(rows: list[dict], label: str, *, weighted: bool = True) -> None:
@@ -181,7 +182,7 @@ def simulate_isekai() -> dict:
         ]
     ))
     trait = draw_entry(world["traits"])
-    return {
+    result = {
         "mode": "isekai",
         "result_version": "isekai_v2",
         "dataset_version": dataset["version"],
@@ -210,3 +211,5 @@ def simulate_isekai() -> dict:
         } | {"resources": list(dict.fromkeys(family["resources"] + [item for parent in parents for item in parent["resources"]]))},
         "parents": parents,
     }
+
+    return complete_life(result)

@@ -1,0 +1,18 @@
+{
+  "id": "yuru_yuri",
+  "title": "摇曳百合",
+  "category": "daily",
+  "danger": "安全",
+  "harem": false,
+  "death_causes": [
+    "疾病",
+    "意外"
+  ],
+  "events": [],
+  "notes": "七森中学娱乐部的校园喜剧日常；夸张喜剧桥段不作为现实致命事件。",
+  "weight": 1,
+  "logo": "yuru_yuri.png",
+  "source_refs": [
+    "yuru_yuri_official"
+  ]
+}

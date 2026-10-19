@@ -2,7 +2,7 @@
     "id": "high_fantasy",
     "title": "奇幻世界",
     "weight": 1,
-    "description": "城镇、林地与要塞组成的原创剑与魔法世界，物种和职业参考D&D 2024基础规则。",
+    "description": "以灰鹰世界的弗拉尼斯地区为背景，呈现剑与魔法、骑士与巨龙并存的中世纪魔幻人生。",
     "source_refs": [
         "dnd_origins",
         "dnd_classes",
@@ -10,7 +10,8 @@
         "dnd_equipment",
         "dnd_srd",
         "project_isekai_v3",
-        "project_lower_power_ranges"
+        "project_lower_power_ranges",
+        "greyhawk_official"
     ],
     "species": [
         {
@@ -3980,8 +3981,8 @@
     "settings": [
         {
             "id": "srd_2024_original",
-            "name": "剑与魔法文明",
-            "description": "剑与魔法伴随日常生活，家庭可以从聚落、工坊、商路与神殿获得不同的成长条件。",
+            "name": "灰鹰 - 弗拉尼斯",
+            "description": "城邦、诸国、骑士领地与荒野并存；人物职业与力量仅用于世界背景，不展示跑团等级或模拟器面板。",
             "weight": 1,
             "provenance": "mixed",
             "source_refs": [
