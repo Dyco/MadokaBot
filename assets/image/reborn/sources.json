@@ -205,6 +205,185 @@
         314,
         140
       ]
+    },
+    {
+      "id": "yuru_camp",
+      "file": "yuru_camp.png",
+      "page": "https://yurucamp.jp/first/",
+      "url": "https://yurucamp.jp/first/images/logo.png",
+      "status": "ready",
+      "bytes": 8030,
+      "size": [
+        165,
+        39
+      ],
+      "title": "摇曳露营△",
+      "mode": "anime"
+    },
+    {
+      "id": "steins_gate",
+      "file": "steins_gate.gif",
+      "page": "http://steinsgate.tv/",
+      "url": "http://steinsgate.tv/images/img_logo.gif",
+      "status": "ready",
+      "bytes": 11654,
+      "size": [
+        224,
+        90
+      ],
+      "title": "命运石之门",
+      "mode": "anime"
+    },
+    {
+      "id": "saiki_kusuo",
+      "file": "saiki_kusuo.png",
+      "page": "https://www.saikikusuo.com/",
+      "url": "https://www.saikikusuo.com/image/index/logoMain.png",
+      "status": "ready",
+      "bytes": 37212,
+      "size": [
+        552,
+        195
+      ],
+      "title": "齐木楠雄的灾难",
+      "mode": "anime"
+    },
+    {
+      "id": "railgun",
+      "file": "railgun.svg",
+      "page": "https://toaru-project.com/railgun_t/",
+      "url": "https://toaru-project.com/railgun_t/core_sys/images/main/common/logo_t.svg",
+      "status": "ready",
+      "bytes": 24971,
+      "size": null,
+      "title": "某科学的超电磁炮",
+      "mode": "anime"
+    },
+    {
+      "id": "to_love_ru",
+      "file": "to_love_ru.jpg",
+      "page": "https://www.tbs.co.jp/anime/to-love-ru/",
+      "url": "https://www.tbs.co.jp/anime/to-love-ru/images/h1_img.jpg",
+      "size": [
+        246,
+        100
+      ],
+      "bytes": 10003,
+      "status": "ready",
+      "title": "To LOVE",
+      "mode": "anime"
+    },
+    {
+      "id": "date_a_live",
+      "file": "date_a_live.png",
+      "page": "https://date-a-live-anime.com/",
+      "url": "https://date-a-live-anime.com/images/renewal/update9/logo.png",
+      "status": "ready",
+      "bytes": 111649,
+      "size": [
+        1200,
+        316
+      ],
+      "title": "约会大作战",
+      "mode": "anime"
+    },
+    {
+      "id": "engage_kiss",
+      "file": "engage_kiss.png",
+      "page": "https://engage-kiss.com/",
+      "url": "https://engage-kiss.com/assets/img/common/logo_2x.png",
+      "status": "ready",
+      "bytes": 30645,
+      "size": [
+        968,
+        368
+      ],
+      "title": "契约之吻",
+      "mode": "anime"
+    },
+    {
+      "id": "wandering_witch",
+      "file": "wandering_witch.png",
+      "page": "https://majotabi.jp/",
+      "url": "https://majotabi.jp/images/top-main/logo.png",
+      "status": "ready",
+      "bytes": 83423,
+      "size": [
+        1032,
+        332
+      ],
+      "title": "魔女之旅",
+      "mode": "anime"
+    },
+    {
+      "id": "danmachi",
+      "file": "danmachi.png",
+      "page": "https://danmachi.com/danmachi3/",
+      "url": "https://danmachi.com/danmachi3/images/logo.png",
+      "size": [
+        700,
+        248
+      ],
+      "bytes": 30159,
+      "status": "ready",
+      "title": "在地下城寻求邂逅是否搞错了什么",
+      "mode": "anime"
+    },
+    {
+      "id": "akashic_records",
+      "file": "akashic_records.png",
+      "page": "https://rokuaka.jp/",
+      "url": "https://rokuaka.jp/img/common/logo2.png",
+      "status": "ready",
+      "bytes": 118118,
+      "size": [
+        564,
+        217
+      ],
+      "title": "不正经的魔术讲师与禁忌教典",
+      "mode": "anime"
+    },
+    {
+      "id": "overlord",
+      "file": "overlord.png",
+      "page": "https://overlord-anime.com/_season1/",
+      "url": "https://overlord-anime.com/_season1/images/top/logo2.png",
+      "status": "ready",
+      "bytes": 79396,
+      "size": [
+        590,
+        170
+      ],
+      "title": "OVERLORD",
+      "mode": "anime"
+    },
+    {
+      "id": "high_school_dxd",
+      "file": "high_school_dxd.png",
+      "page": "https://haremking.tv/",
+      "url": "https://haremking.tv/images/common-logo.png",
+      "status": "ready",
+      "bytes": 65236,
+      "size": [
+        329,
+        216
+      ],
+      "title": "High School DxD",
+      "mode": "anime"
+    },
+    {
+      "id": "akame_ga_kill",
+      "file": "akame_ga_kill.jpg",
+      "page": "http://akame.tv/",
+      "url": "http://akame.tv/images/logo.jpg",
+      "status": "ready",
+      "bytes": 13157,
+      "size": [
+        204,
+        130
+      ],
+      "title": "斩·赤红之瞳！",
+      "mode": "anime"
     }
   ]
 }

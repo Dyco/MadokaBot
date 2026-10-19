@@ -1,0 +1,21 @@
+{
+  "id": "engage_kiss",
+  "title": "契约之吻",
+  "category": "daily",
+  "danger": "动荡",
+  "harem": true,
+  "death_causes": [
+    "疾病",
+    "意外",
+    "恶魔袭击",
+    "D灾害",
+    "契约反噬"
+  ],
+  "events": [],
+  "notes": "按用户要求使用日常战斗番模板，多角恋题材经用户确认启用多人婚育玩法。",
+  "weight": 1,
+  "logo": "engage_kiss.png",
+  "source_refs": [
+    "engage_kiss_official"
+  ]
+}

@@ -2,420 +2,45 @@
   "id": "zenless",
   "title": "绝区零",
   "weight": 1,
-  "description": "新艾利都代理人档案，属性、特性和晋升阶段构成独立的养成体系。",
-  "scope": "收录六类通用属性（含3.2风）、七类特性（含锋御）与三处活动地区；不分配烈霜、玄墨等特定人物属性；评级采用A/S，不换算成星级战力。 投胎评级采用D、C、B、A、S五档，D/C/B为插件自定义档；低档沿用已收录的成长模板，不新增S级以上档位。",
-  "history_fields": [
-    "region",
-    "element",
-    "specialty",
-    "level"
+  "logo": "zenless.svg",
+  "regions": [
+    "六分街",
+    "光映广场",
+    "厄匹斯港"
   ],
-  "sections": [
-    {
-      "title": "基础属性",
-      "fields": [
-        "faction",
-        "region",
-        "element",
-        "specialty"
-      ]
-    },
-    {
-      "title": "养成数值",
-      "fields": [
-        "stage",
-        "level",
-        "cinema"
-      ]
-    }
+  "combat_attributes": [
+    "物理",
+    "火",
+    "冰",
+    "电",
+    "以太",
+    "风"
   ],
-  "pools": [
-    {
-      "id": "faction",
-      "label": "身份",
-      "options": [
-        {
-          "id": "faction_0",
-          "value": "代理人",
-          "weight": 1,
-          "source_refs": [
-            "zzz_baidu",
-            "zzz_moegirl"
-          ]
-        }
-      ]
-    },
-    {
-      "id": "region",
-      "label": "活动地区",
-      "options": [
-        {
-          "id": "region_0",
-          "value": "六分街",
-          "weight": 1,
-          "source_refs": [
-            "zzz_regions"
-          ]
-        },
-        {
-          "id": "region_1",
-          "value": "光映广场",
-          "weight": 1,
-          "source_refs": [
-            "zzz_regions"
-          ]
-        },
-        {
-          "id": "region_2",
-          "value": "厄匹斯港",
-          "weight": 1,
-          "source_refs": [
-            "zzz_regions"
-          ]
-        }
-      ]
-    },
-    {
-      "id": "element",
-      "label": "属性",
-      "options": [
-        {
-          "id": "element_0",
-          "value": "物理",
-          "weight": 1,
-          "source_refs": [
-            "zzz_baidu"
-          ]
-        },
-        {
-          "id": "element_1",
-          "value": "火",
-          "weight": 1,
-          "source_refs": [
-            "zzz_baidu"
-          ]
-        },
-        {
-          "id": "element_2",
-          "value": "冰",
-          "weight": 1,
-          "source_refs": [
-            "zzz_baidu"
-          ]
-        },
-        {
-          "id": "element_3",
-          "value": "电",
-          "weight": 1,
-          "source_refs": [
-            "zzz_baidu"
-          ]
-        },
-        {
-          "id": "element_4",
-          "value": "以太",
-          "weight": 1,
-          "source_refs": [
-            "zzz_baidu"
-          ]
-        },
-        {
-          "id": "element_5",
-          "value": "风",
-          "weight": 1,
-          "source_refs": [
-            "zzz_32"
-          ]
-        }
-      ]
-    },
-    {
-      "id": "specialty",
-      "label": "特性",
-      "options": [
-        {
-          "id": "specialty_0",
-          "value": "强攻",
-          "weight": 1,
-          "source_refs": [
-            "zzz_baidu"
-          ]
-        },
-        {
-          "id": "specialty_1",
-          "value": "击破",
-          "weight": 1,
-          "source_refs": [
-            "zzz_baidu"
-          ]
-        },
-        {
-          "id": "specialty_2",
-          "value": "异常",
-          "weight": 1,
-          "source_refs": [
-            "zzz_baidu"
-          ]
-        },
-        {
-          "id": "specialty_3",
-          "value": "支援",
-          "weight": 1,
-          "source_refs": [
-            "zzz_baidu"
-          ]
-        },
-        {
-          "id": "specialty_4",
-          "value": "防护",
-          "weight": 1,
-          "source_refs": [
-            "zzz_baidu"
-          ]
-        },
-        {
-          "id": "specialty_5",
-          "value": "命破",
-          "weight": 1,
-          "source_refs": [
-            "zzz_baidu"
-          ]
-        },
-        {
-          "id": "specialty_6",
-          "value": "锋御",
-          "weight": 1,
-          "source_refs": [
-            "zzz_32"
-          ]
-        }
-      ]
-    },
-    {
-      "id": "rating",
-      "label": "投胎评级",
-      "options": [
-        {
-          "id": "d",
-          "value": "D级",
-          "weight": 1,
-          "basis": "gameplay",
-          "source_refs": [],
-          "description": "插件向下扩展的投胎评级，非原作可抽取角色稀有度；成长沿用本游戏已收录的基础模板。"
-        },
-        {
-          "id": "c",
-          "value": "C级",
-          "weight": 1,
-          "basis": "gameplay",
-          "source_refs": [],
-          "description": "插件向下扩展的投胎评级，非原作可抽取角色稀有度；成长沿用本游戏已收录的基础模板。"
-        },
-        {
-          "id": "b",
-          "value": "B级",
-          "weight": 1,
-          "basis": "gameplay",
-          "source_refs": [],
-          "description": "插件向下扩展的投胎评级，非原作可抽取角色稀有度；成长沿用本游戏已收录的基础模板。"
-        },
-        {
-          "id": "a",
-          "value": "A级",
-          "weight": 1,
-          "source_refs": [
-            "zzz_growth"
-          ]
-        },
-        {
-          "id": "s",
-          "value": "S级",
-          "weight": 1,
-          "source_refs": [
-            "zzz_32"
-          ]
-        }
-      ]
-    },
-    {
-      "id": "stage",
-      "label": "代理人晋升",
-      "options": [
-        {
-          "id": "s0",
-          "value": "0阶",
-          "weight": 1,
-          "source_refs": [
-            "zzz_growth"
-          ]
-        },
-        {
-          "id": "s1",
-          "value": "1阶",
-          "weight": 1,
-          "source_refs": [
-            "zzz_growth"
-          ]
-        },
-        {
-          "id": "s2",
-          "value": "2阶",
-          "weight": 1,
-          "source_refs": [
-            "zzz_growth"
-          ]
-        },
-        {
-          "id": "s3",
-          "value": "3阶",
-          "weight": 1,
-          "source_refs": [
-            "zzz_growth"
-          ]
-        },
-        {
-          "id": "s4",
-          "value": "4阶",
-          "weight": 1,
-          "source_refs": [
-            "zzz_growth"
-          ]
-        },
-        {
-          "id": "s5",
-          "value": "5阶",
-          "weight": 1,
-          "source_refs": [
-            "zzz_growth"
-          ]
-        }
-      ]
-    },
-    {
-      "id": "level",
-      "label": "当前等级",
-      "options": [
-        {
-          "id": "lv0",
-          "weight": 1,
-          "source_refs": [
-            "zzz_growth"
-          ],
-          "requires": {
-            "stage": [
-              "s0"
-            ]
-          },
-          "range": [
-            1,
-            10
-          ],
-          "unit": "级"
-        },
-        {
-          "id": "lv1",
-          "weight": 1,
-          "source_refs": [
-            "zzz_growth"
-          ],
-          "requires": {
-            "stage": [
-              "s1"
-            ]
-          },
-          "range": [
-            10,
-            20
-          ],
-          "unit": "级"
-        },
-        {
-          "id": "lv2",
-          "weight": 1,
-          "source_refs": [
-            "zzz_growth"
-          ],
-          "requires": {
-            "stage": [
-              "s2"
-            ]
-          },
-          "range": [
-            20,
-            30
-          ],
-          "unit": "级"
-        },
-        {
-          "id": "lv3",
-          "weight": 1,
-          "source_refs": [
-            "zzz_growth"
-          ],
-          "requires": {
-            "stage": [
-              "s3"
-            ]
-          },
-          "range": [
-            30,
-            40
-          ],
-          "unit": "级"
-        },
-        {
-          "id": "lv4",
-          "weight": 1,
-          "source_refs": [
-            "zzz_growth"
-          ],
-          "requires": {
-            "stage": [
-              "s4"
-            ]
-          },
-          "range": [
-            40,
-            50
-          ],
-          "unit": "级"
-        },
-        {
-          "id": "lv5",
-          "weight": 1,
-          "source_refs": [
-            "zzz_growth"
-          ],
-          "requires": {
-            "stage": [
-              "s5"
-            ]
-          },
-          "range": [
-            50,
-            60
-          ],
-          "unit": "级"
-        }
-      ]
-    },
-    {
-      "id": "cinema",
-      "label": "意象影画解锁",
-      "options": [
-        {
-          "id": "cinema",
-          "weight": 1,
-          "source_refs": [
-            "zzz_growth"
-          ],
-          "range": [
-            0,
-            6
-          ],
-          "unit": "幅"
-        }
-      ]
-    }
+  "awakening": {
+    "label": "影画",
+    "max": 6
+  },
+  "rarities": [
+    "D级",
+    "C级",
+    "B级",
+    "A级",
+    "S级"
+  ],
+  "level_caps": {
+    "default": [
+      10,
+      20,
+      30,
+      40,
+      50,
+      60
+    ]
+  },
+  "source_refs": [
+    "zzz_regions",
+    "zzz_baidu",
+    "zzz_32",
+    "zzz_growth"
   ]
 }

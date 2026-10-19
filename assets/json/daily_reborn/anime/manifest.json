@@ -1,6 +1,6 @@
 {
   "schema_version": 2,
-  "version": "2026.10.19.4",
+  "version": "2026.10.19.5",
   "title": "投胎二次元",
   "notice": "按作品题材模拟匿名人物的成长与人生结局。星级、存在感、危险度、战力字母、寿命及婚育均为游戏设定；人物评级按本作品阵营抽取。上海时间明日零点可再次免费投胎。",
   "genders": [
@@ -23,6 +23,19 @@
     "one_piece.json",
     "hunter_x_hunter.json",
     "fullmetal_alchemist.json",
-    "attack_on_titan.json"
+    "attack_on_titan.json",
+    "yuru_camp.json",
+    "steins_gate.json",
+    "saiki_kusuo.json",
+    "railgun.json",
+    "to_love_ru.json",
+    "date_a_live.json",
+    "engage_kiss.json",
+    "wandering_witch.json",
+    "danmachi.json",
+    "akashic_records.json",
+    "overlord.json",
+    "high_school_dxd.json",
+    "akame_ga_kill.json"
   ]
 }

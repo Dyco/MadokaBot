@@ -190,5 +190,103 @@
     "url": "https://shingeki.tv/season1/story/episode_05.php",
     "checked_at": "2026-10-19",
     "kind": "official"
+  },
+  {
+    "id": "yuru_camp_official",
+    "title": "摇曳露营动画官网",
+    "url": "https://yurucamp.jp/first/",
+    "kind": "official",
+    "checked_at": "2026-10-19"
+  },
+  {
+    "id": "steins_gate_official",
+    "title": "KADOKAWA Animation：命运石之门",
+    "url": "https://kadokawa-animation.jp/lineup/steinsgate",
+    "kind": "official",
+    "checked_at": "2026-10-19"
+  },
+  {
+    "id": "saiki_kusuo_official",
+    "title": "东京电视台：齐木楠雄的灾难人物",
+    "url": "https://www.tv-tokyo.co.jp/anime/saikikusuo/chara/",
+    "kind": "official",
+    "checked_at": "2026-10-19"
+  },
+  {
+    "id": "railgun_official",
+    "title": "某科学的超电磁炮 T 官网人物",
+    "url": "https://toaru-project.com/railgun_t/chara/index.html",
+    "kind": "official",
+    "checked_at": "2026-10-19"
+  },
+  {
+    "id": "to_love_ru_official",
+    "title": "TBS：To LOVE 动画官网",
+    "url": "https://www.tbs.co.jp/anime/to-love-ru/",
+    "kind": "official",
+    "checked_at": "2026-10-19"
+  },
+  {
+    "id": "date_a_live_official",
+    "title": "约会大作战官网故事",
+    "url": "https://date-a-live-anime.com/story/",
+    "kind": "official",
+    "checked_at": "2026-10-19"
+  },
+  {
+    "id": "engage_kiss_official",
+    "title": "契约之吻官网故事背景",
+    "url": "https://engage-kiss.com/intro/",
+    "kind": "official",
+    "checked_at": "2026-10-19"
+  },
+  {
+    "id": "wandering_witch_official",
+    "title": "魔女之旅官网故事与人物",
+    "url": "https://majotabi.jp/",
+    "kind": "official",
+    "checked_at": "2026-10-19"
+  },
+  {
+    "id": "danmachi_official",
+    "title": "地下城邂逅系列动画官网",
+    "url": "https://danmachi.com/",
+    "kind": "official",
+    "checked_at": "2026-10-19"
+  },
+  {
+    "id": "akashic_records_official",
+    "title": "不正经的魔术讲师与禁忌教典动画官网",
+    "url": "https://rokuaka.jp/",
+    "kind": "official",
+    "checked_at": "2026-10-19"
+  },
+  {
+    "id": "overlord_official",
+    "title": "OVERLORD 官网：圣王国背景",
+    "url": "https://overlord-anime.com/",
+    "kind": "official",
+    "checked_at": "2026-10-19"
+  },
+  {
+    "id": "high_school_dxd_official",
+    "title": "High School DxD HERO 官网人物",
+    "url": "https://haremking.tv/character/",
+    "kind": "official",
+    "checked_at": "2026-10-19"
+  },
+  {
+    "id": "akame_ga_kill_official",
+    "title": "斩·赤红之瞳动画官网人物",
+    "url": "http://akame.tv/character.html",
+    "kind": "official",
+    "checked_at": "2026-10-19"
+  },
+  {
+    "id": "akame_event_capital",
+    "title": "斩·赤红之瞳官网：帝都包围与决战阶段",
+    "url": "http://akame.tv/story_22.html",
+    "kind": "official",
+    "checked_at": "2026-10-19"
   }
 ]

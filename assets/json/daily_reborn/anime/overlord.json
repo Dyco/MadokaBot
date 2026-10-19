@@ -1,0 +1,33 @@
+{
+  "id": "overlord",
+  "title": "OVERLORD",
+  "category": "isekai",
+  "danger": "危险",
+  "harem": false,
+  "death_causes": [
+    "疾病",
+    "饥荒",
+    "意外",
+    "魔物袭击",
+    "战争",
+    "魔法波及",
+    "探险事故",
+    "中毒"
+  ],
+  "events": [
+    {
+      "name": "圣王国战争",
+      "weight": 3,
+      "age": [
+        16,
+        100
+      ]
+    }
+  ],
+  "notes": "将用户所写 Overload 规范为 OVERLORD；危险度按用户设定。当前模拟人类居民的一生，不默认继承安兹的不死族身份或无寿命上限。",
+  "weight": 1,
+  "logo": "overlord.png",
+  "source_refs": [
+    "overlord_official"
+  ]
+}

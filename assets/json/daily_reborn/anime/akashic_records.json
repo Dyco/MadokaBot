@@ -1,0 +1,24 @@
+{
+  "id": "akashic_records",
+  "title": "不正经的魔术讲师与禁忌教典",
+  "category": "isekai",
+  "danger": "动荡",
+  "harem": true,
+  "death_causes": [
+    "疾病",
+    "瘟疫",
+    "意外",
+    "魔术事故",
+    "禁忌魔术反噬",
+    "恐怖袭击",
+    "遗迹探险事故",
+    "作战"
+  ],
+  "events": [],
+  "notes": "奇幻魔术学园作品按用户指定归入异世界番，多角恋题材经用户确认启用多人婚育玩法。",
+  "weight": 1,
+  "logo": "akashic_records.png",
+  "source_refs": [
+    "akashic_records_official"
+  ]
+}

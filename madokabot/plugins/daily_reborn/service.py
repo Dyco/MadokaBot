@@ -11,7 +11,7 @@ from madokabot.core.db.base import shanghai_now
 from madokabot.core.user.models import UserStats
 
 from .anime import ANIME_VERSION, simulate_anime
-from .games import simulate_games
+from .games import GAMES_VERSION, simulate_games
 from .isekai import simulate_isekai
 from .models import (
     AnimeRebornRecord,
@@ -36,7 +36,7 @@ RECORD_MODELS = {
 
 
 def history_entry(result: dict, count: int) -> dict:
-    """按模式保存历史摘要，动漫新版记录分数，旧作品快照保留原有评级。"""
+    """按模式保存历史摘要，动漫记录分数，二游记录综合评级及其色阶。"""
     if result.get("result_version") == ANIME_VERSION:
         return {
             "count": count, "date": result["date"], "world": result["world"]["title"],
@@ -44,10 +44,13 @@ def history_entry(result: dict, count: int) -> dict:
             "rating": f"{result['score']}分", "summary": result["summary"],
         }
     if result.get("mode") in {"anime", "games"}:
-        return {
+        entry = {
             "count": count, "date": result["date"], "world": result["world"]["title"],
             "gender": result["gender"], "rating": result["rating"]["value"], "summary": result["summary"],
         }
+        if result.get("result_version") == GAMES_VERSION:
+            entry["rating_tier"] = result["rating"]["tier"]
+        return entry
     if result.get("mode") == "isekai":
         return {
             "count": count,

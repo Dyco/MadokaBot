@@ -1,0 +1,19 @@
+{
+  "id": "to_love_ru",
+  "title": "To LOVE",
+  "category": "daily",
+  "danger": "和平",
+  "harem": true,
+  "death_causes": [
+    "疾病",
+    "意外",
+    "宇宙科技事故"
+  ],
+  "events": [],
+  "notes": "校园恋爱喜剧；启用后宫题材的多人婚育玩法，不表示原作多人婚姻已成立。",
+  "weight": 1,
+  "logo": "to_love_ru.jpg",
+  "source_refs": [
+    "to_love_ru_official"
+  ]
+}

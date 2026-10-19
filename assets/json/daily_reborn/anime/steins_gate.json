@@ -1,0 +1,21 @@
+{
+  "id": "steins_gate",
+  "title": "命运石之门",
+  "category": "daily",
+  "danger": "和平",
+  "harem": false,
+  "death_causes": [
+    "疾病",
+    "意外",
+    "实验事故",
+    "遭遇袭击",
+    "交通事故"
+  ],
+  "events": [],
+  "notes": "按用户要求使用日常番模板与和平危险度，不按时间旅行悬疑情节提高分级。",
+  "weight": 1,
+  "logo": "steins_gate.gif",
+  "source_refs": [
+    "steins_gate_official"
+  ]
+}

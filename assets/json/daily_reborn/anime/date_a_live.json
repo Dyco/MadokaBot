@@ -1,0 +1,21 @@
+{
+  "id": "date_a_live",
+  "title": "约会大作战",
+  "category": "daily",
+  "danger": "动荡",
+  "harem": true,
+  "death_causes": [
+    "疾病",
+    "意外",
+    "空间震",
+    "精灵冲突",
+    "战斗波及"
+  ],
+  "events": [],
+  "notes": "按用户要求使用日常番模板并启用多人婚育；危险度保留动荡，不以热血战斗番处理。",
+  "weight": 1,
+  "logo": "date_a_live.png",
+  "source_refs": [
+    "date_a_live_official"
+  ]
+}

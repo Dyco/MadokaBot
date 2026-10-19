@@ -1,0 +1,24 @@
+{
+  "id": "danmachi",
+  "title": "在地下城寻求邂逅是否搞错了什么",
+  "category": "isekai",
+  "danger": "危险",
+  "harem": true,
+  "death_causes": [
+    "疾病",
+    "意外",
+    "地下城探索事故",
+    "魔物袭击",
+    "陷阱",
+    "作战",
+    "中毒",
+    "伤重不治"
+  ],
+  "events": [],
+  "notes": "按用户指定归入异世界番，模拟普通居民或冒险者的人生；启用多人婚育玩法，不混用其他作品的阵营或评级。",
+  "weight": 1,
+  "logo": "danmachi.png",
+  "source_refs": [
+    "danmachi_official"
+  ]
+}

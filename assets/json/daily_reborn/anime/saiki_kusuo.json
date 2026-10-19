@@ -1,0 +1,20 @@
+{
+  "id": "saiki_kusuo",
+  "title": "齐木楠雄的灾难",
+  "category": "daily",
+  "danger": "和平",
+  "harem": false,
+  "death_causes": [
+    "疾病",
+    "意外",
+    "交通事故",
+    "灾害波及"
+  ],
+  "events": [],
+  "notes": "超能力校园喜剧，使用日常番属性，不预设继承齐木楠雄的超能力。",
+  "weight": 1,
+  "logo": "saiki_kusuo.png",
+  "source_refs": [
+    "saiki_kusuo_official"
+  ]
+}

@@ -1,0 +1,63 @@
+{% extends "anime_card.html" %}
+
+{% block extra_styles %}
+    {{ super() }}
+    .game-fact-value { font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .awakening-head { grid-template-columns: 60px minmax(0, 1fr) 55px; }
+    .awakening-head .attribute-name { font-size: 11px; }
+    .awakening-head .star { width: 16px; height: 16px; }
+    .awakening-head .stars { gap: 4px; }
+    .awakening-head .star-value { font-size: 14px; }
+    .combat-field { grid-template-columns: 60px minmax(0, 1fr); }
+    .game-rating .score-circle { flex-direction: column; gap: 3px; }
+    .game-rating .score { font-size: 36px; letter-spacing: 0; }
+    .game-rating-label { color: #a6bec9; font-size: 9px; letter-spacing: 2px; }
+    .game-details .life-value { font-size: 17px; font-variant-numeric: tabular-nums; }
+{% endblock %}
+
+{% block left_header %}
+      <header>
+        <div class="heading"><h1>每日投胎</h1><span class="date">{{ result.date }}<span class="version">MADOKABOT VER.{{ bot_version }}</span></span></div>
+        <div class="eyebrow">二游 · 第 {{ result.reborn_count }} 次投胎</div>
+        <div class="name"><strong class="nickname">{{ name }}</strong><span>，这次你成为了卡池角色</span></div>
+        <div class="destination"><h2>{{ result.world.title }}</h2><span class="gender {% if result.gender == '男' %}male{% else %}female{% endif %}">{% if result.gender == '男' %}♂男性{% else %}♀女性{% endif %}</span></div>
+      </header>
+{% endblock %}
+
+{% block birthplace_panel %}
+      <div class="anime-media">
+        <div class="title-art"><img src="{{ title_image_uri }}" alt="{{ result.world.title }}标题图"></div>
+        <div class="world-facts">
+          <div class="world-fact"><span class="world-label">游戏名</span><strong class="world-value game-fact-value">{{ result.world.title }}</strong></div>
+          <div class="world-fact"><span class="world-label">地区</span><strong class="world-value game-fact-value">{{ result.region }}</strong></div>
+        </div>
+      </div>
+{% endblock %}
+
+{% block right_panel %}
+    <div class="right">
+      <h3 class="section-title">角色与卡池档案</h3>
+      <div class="attributes">
+        {% for row in attribute_rows %}
+        <div class="attribute rarity-{{ row.rarity }}">
+          {% if row.value >= 4 %}<div class="rarity-effects" aria-hidden="true"><i>✦</i></div>{% endif %}
+          <div class="attribute-head"><span class="attribute-name">{{ row.name }}</span><div class="stars" role="img" aria-label="{{ row.name }} {{ row.value_text }} 星，满星 5 星">
+            {% for slot in row.slots %}<svg class="star {{ slot }}" viewBox="0 0 24 24" aria-hidden="true">{% if slot != 'empty' %}<use href="#reborn-star" class="star-filled"{% if slot == 'half' %} clip-path="url(#reborn-half)"{% endif %}/>{% endif %}<use href="#reborn-star" class="star-outline"/></svg>{% endfor %}
+          </div><strong class="star-value">{{ row.value_text }}<small>星</small></strong><span class="rarity-badge">{{ row.title }}</span></div>
+        </div>
+        {% endfor %}
+        <div class="attribute rarity-fine">
+          <div class="attribute-head awakening-head"><span class="attribute-name">{{ result.awakening.label }}</span><div class="stars" role="img" aria-label="{{ result.awakening.label }} {{ result.awakening.count }} 次，最多 {{ result.awakening.max }} 次">
+            {% for index in range(result.awakening.max) %}<svg class="star {% if index < result.awakening.count %}full{% else %}empty{% endif %}" viewBox="0 0 24 24" aria-hidden="true">{% if index < result.awakening.count %}<use href="#reborn-star" class="star-filled"/>{% endif %}<use href="#reborn-star" class="star-outline"/></svg>{% endfor %}
+          </div><strong class="star-value">{{ result.awakening.count }}/{{ result.awakening.max }}<small>次</small></strong></div>
+        </div>
+        <div class="attribute anime-field combat-field"><span class="anime-field-name">战斗属性</span><span class="anime-field-value">{{ result.combat_attribute }}</span></div>
+      </div>
+      <div class="summary">
+        <div class="life-facts game-details">
+          {% for row in detail_rows %}<div><div class="life-label">{{ row.label }}</div><div class="life-value">{{ row.value }}</div></div>{% endfor %}
+        </div>
+        <div class="rating game-rating"><div class="score-circle"><span class="game-rating-label">综合评级</span><span class="score">{{ result.rating.value }}</span></div></div>
+      </div>
+    </div>
+{% endblock %}

@@ -13,13 +13,14 @@ from madokabot.core.version import get_bot_version
 from .anime import ANIME_VERSION
 from .anime_life import CATEGORY_NAMES, anime_life_rows
 from .attributes import attribute_rows
+from .games import GAMES_VERSION, game_detail_rows
 from .geography import focused_map, load_regional_map, load_world_map, result_location
 from .life import life_rows
 from .modes import MODE_COMMANDS, MODE_NAMES
 from .potential import score_tier
 from .regions import result_region, world_region
 from .simulation import display_result, load_population
-from .text import anime_text
+from .text import anime_text, games_text
 
 TEMPLATE_DIR = Path(__file__).parent / "templates"
 # 所有模式统一使用九百乘四百五十视口，像素倍率沿用渲染器默认值。
@@ -131,9 +132,21 @@ async def render_reborn_card(result: dict, name: str) -> MessageSegment:
 
 
 def render_anime_html(result: dict, name: str) -> str:
-    """新版动漫按题材呈现标题图与人生结局，二游及已保存的旧动漫使用原作品卡。"""
+    """新版动漫和二游使用标题图卡片，旧版结果继续展示已保存的作品快照。"""
     font = get_file(ResourceType.FONT, ResourceFolder.SIGN, "font.ttf")
     history = list(reversed(result["reborn_history"][-10:]))
+    if result.get("result_version") == GAMES_VERSION:
+        history = [entry | {
+            "score_text": entry["rating"], "score_tier": entry.get("rating_tier", "slate"),
+        } for entry in history]
+        image = assets.get_dir(ResourceType.IMAGE) / "reborn" / result["world"]["logo"]
+        return _environment.get_template("games_card.html").render(
+            result=result, name=name, card_size=CARD_VIEWPORT,
+            attribute_rows=attribute_rows(result["attributes"]), detail_rows=game_detail_rows(result),
+            score_tier=result["rating"]["tier"], bot_version=get_bot_version(),
+            font_uri=font.resolve().as_uri() if font else "", title_image_uri=image.resolve().as_uri(),
+            history_slots=history + [None] * (10 - len(history)),
+        )
     if result.get("result_version") == ANIME_VERSION:
         history = [entry | {
             "score_text": f"{entry['score']}分" if "score" in entry else entry["rating"],
@@ -241,7 +254,18 @@ def isekai_result_text(result: dict, *, prefix: str, name: str) -> str:
 
 
 def anime_result_text(result: dict, *, prefix: str, name: str) -> str:
-    """新版动漫输出题材人生，二游及旧动漫保留已存的分区字段与引用。"""
+    """新版动漫和二游输出精简档案，旧版保留已存的分区字段与引用。"""
+    if result.get("result_version") == GAMES_VERSION:
+        history = "\n".join(
+            f"第{row['count']}次 {row['world']} · {row['rating']} "
+            f"{'♂' if row['gender'] == '男' else '♀'}"
+            for row in reversed(result["reborn_history"][-10:])
+        )
+        return (
+            f"{prefix}\n{result['title']} · {result['date']}\n"
+            f"{name + '，' if name else ''}这是你的第{result['reborn_count']}次二游投胎\n"
+            f"{games_text(result)}\n{result['notice']}\n记录：\n{history}"
+        )
     if result.get("result_version") == ANIME_VERSION:
         history = "\n".join(
             f"第{row['count']}次 {row['world']} · "

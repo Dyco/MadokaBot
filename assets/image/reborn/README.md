@@ -1,8 +1,8 @@
 # 投胎作品标题图
 
-二次元、二游共 15 款作品的 Logo 与标题字标均已就绪，文件名与作品资料 ID 对齐。资源目录为 `assets/image/reborn`；图片保持原始比例，排版时使用 `object-fit: contain`，不裁切拉伸。
+二次元、二游共 28 款作品的 Logo 与标题字标均已就绪，其中二次元 21 款、二游 7 款，文件名与作品资料 ID 对齐。资源目录为 `assets/image/reborn`；图片保持原始比例，排版时使用 `object-fit: contain`，不裁切拉伸。
 
-二次元已接入正式卡片：左栏原地图区域上方展示标题图，下方为两个等宽、横向并排的长方形信息框，左框为“世界危险度”，右框为“作品分类”；存在感移至右侧人生结果。二游目前仅准备素材，独立异世界模式不在本次范围。
+二次元和二游均已接入正式卡片：左栏原地图区域上方展示标题图，下方为两个等宽、横向并排的长方形信息框。二次元左框为“世界危险度”，右框为“作品分类”；二游左框为“游戏名”，右框为“地区”。独立异世界模式不在本次范围。
 
 存在感候选、世界危险度及分类规则见[二次元资料规范](../../json/daily_reborn/anime/README.md)。
 
@@ -18,6 +18,19 @@
 | 二次元 | 全职猎人 | [hunter_x_hunter.png](hunter_x_hunter.png) | [官方页面](https://www.ntv.co.jp/hunterhunter/index.html) | 已获取 |
 | 二次元 | 钢之炼金术师 FA | [fullmetal_alchemist.png](fullmetal_alchemist.png) | [官方页面](https://www.hagaren.jp/fa/) | 已获取 |
 | 二次元 | 进击的巨人 | [attack_on_titan.png](attack_on_titan.png) | [官方页面](https://shingeki.tv/final/) | 已获取 |
+| 二次元 | 摇曳露营△ | [yuru_camp.png](yuru_camp.png) | [官方页面](https://yurucamp.jp/first/) | 已获取 |
+| 二次元 | 命运石之门 | [steins_gate.gif](steins_gate.gif) | [官方页面](http://steinsgate.tv/) | 已获取 |
+| 二次元 | 齐木楠雄的灾难 | [saiki_kusuo.png](saiki_kusuo.png) | [官方页面](https://www.saikikusuo.com/) | 已获取 |
+| 二次元 | 某科学的超电磁炮 | [railgun.svg](railgun.svg) | [官方页面](https://toaru-project.com/railgun_t/) | 已获取 |
+| 二次元 | To LOVE | [to_love_ru.jpg](to_love_ru.jpg) | [官方页面](https://www.tbs.co.jp/anime/to-love-ru/) | 已获取 |
+| 二次元 | 约会大作战 | [date_a_live.png](date_a_live.png) | [官方页面](https://date-a-live-anime.com/) | 已获取 |
+| 二次元 | 契约之吻 | [engage_kiss.png](engage_kiss.png) | [官方页面](https://engage-kiss.com/) | 已获取 |
+| 二次元 | 魔女之旅 | [wandering_witch.png](wandering_witch.png) | [官方页面](https://majotabi.jp/) | 已获取 |
+| 二次元 | 在地下城寻求邂逅是否搞错了什么 | [danmachi.png](danmachi.png) | [官方页面](https://danmachi.com/) | 已获取 |
+| 二次元 | 不正经的魔术讲师与禁忌教典 | [akashic_records.png](akashic_records.png) | [官方页面](https://rokuaka.jp/) | 已获取 |
+| 二次元 | OVERLORD | [overlord.png](overlord.png) | [官方页面](https://overlord-anime.com/_season1/) | 已获取 |
+| 二次元 | High School DxD | [high_school_dxd.png](high_school_dxd.png) | [官方页面](https://haremking.tv/) | 已获取 |
+| 二次元 | 斩·赤红之瞳！ | [akame_ga_kill.jpg](akame_ga_kill.jpg) | [官方页面](http://akame.tv/) | 已获取 |
 | 二游 | 原神 | [genshin.png](genshin.png) | [官方页面](https://ys.mihoyo.com/main/) | 已获取 |
 | 二游 | 鸣潮 | [wuthering_waves.png](wuthering_waves.png) | [官方页面](https://mc.kurogames.com/main/) | 已获取 |
 | 二游 | 崩坏：星穹铁道 | [star_rail.png](star_rail.png) | [官方页面](https://sr.mihoyo.com/) | 已获取 |

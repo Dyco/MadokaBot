@@ -1,0 +1,21 @@
+{
+  "id": "railgun",
+  "title": "某科学的超电磁炮",
+  "category": "daily",
+  "danger": "动荡",
+  "harem": false,
+  "death_causes": [
+    "疾病",
+    "意外",
+    "能力失控",
+    "实验事故",
+    "卷入冲突"
+  ],
+  "events": [],
+  "notes": "按用户要求视为日常战斗番，使用日常番五项属性；动荡等级保留，不套热血战斗评级。",
+  "weight": 1,
+  "logo": "railgun.svg",
+  "source_refs": [
+    "railgun_official"
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "id": "wandering_witch",
+  "title": "魔女之旅",
+  "category": "isekai",
+  "danger": "动荡",
+  "harem": false,
+  "death_causes": [
+    "疾病",
+    "瘟疫",
+    "意外",
+    "旅途遇险",
+    "魔物袭击",
+    "诅咒",
+    "魔法失控",
+    "自然灾害"
+  ],
+  "events": [],
+  "notes": "奇幻旅行作品按用户指定归入异世界番玩法大类，不宣称主角是现实转生者。",
+  "weight": 1,
+  "logo": "wandering_witch.png",
+  "source_refs": [
+    "wandering_witch_official"
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "id": "yuru_camp",
+  "title": "摇曳露营△",
+  "category": "daily",
+  "danger": "安全",
+  "harem": false,
+  "death_causes": [
+    "疾病",
+    "意外"
+  ],
+  "events": [],
+  "notes": "校园露营日常；安全等级按用户设定，不加入露营灾害大事件。",
+  "weight": 1,
+  "logo": "yuru_camp.png",
+  "source_refs": [
+    "yuru_camp_official"
+  ]
+}

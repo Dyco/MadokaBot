@@ -3,7 +3,8 @@
 {% block extra_styles %}
     .anime-media { display: grid; grid-template-rows: minmax(0, 1fr) 56px; gap: 9px; min-height: 0; }
     .title-art { display: flex; align-items: center; justify-content: center; padding: 20px; min-height: 0; border: .5px solid #304459; border-radius: 10px; background: radial-gradient(ellipse at center, #263b4e, #101f30); overflow: hidden; }
-    .title-art img { display: block; width: 100%; height: 100%; object-fit: contain; }
+    /* 浅色轮廓帮助黑色透明字标在深色卡片中保持可读。 */
+    .title-art img { display: block; width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 0 1px #d7e6ef) drop-shadow(0 1px 5px #8cacc05c); }
     .world-facts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; }
     .world-fact { display: flex; flex-direction: column; justify-content: center; gap: 3px; padding: 8px 12px; min-width: 0; border: .5px solid #345064; border-radius: 7px; background: linear-gradient(115deg, #192a3b, #132032); }
     .world-label { color: #90aabd; font-size: 8.5px; }

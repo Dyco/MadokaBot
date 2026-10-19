@@ -3,6 +3,7 @@
 from .anime import ANIME_VERSION
 from .anime_life import CATEGORY_NAMES, anime_life_rows
 from .attributes import attribute_rows
+from .games import GAMES_VERSION, game_detail_rows
 from .life import life_rows
 from .modes import MODE_NAMES
 from .simulation import display_result
@@ -14,6 +15,8 @@ def combined_result_text(result: dict) -> str:
     title = f"——{MODE_NAMES[mode]}投胎——"
     if result.get("result_version") == ANIME_VERSION:
         content = anime_text(result)
+    elif result.get("result_version") == GAMES_VERSION:
+        content = games_text(result)
     elif mode in {"anime", "games"}:
         content = identity_text(result)
     elif mode == "isekai":
@@ -56,6 +59,20 @@ def identity_text(result: dict) -> str:
         lines.extend(f"{row['label']}：{row['value']}" for row in section["rows"])
     rating = result["rating"]
     lines.append(f"{rating['label']}：{rating['value']}")
+    return "\n".join(lines)
+
+
+def games_text(result: dict) -> str:
+    """输出二游角色的星级、觉醒次数、战斗属性及卡池表现。"""
+    awakening = result["awakening"]
+    lines = [f"游戏：{result['world']['title']} ｜ 地区：{result['region']}", f"性别：{result['gender']}"]
+    lines.extend(f"{row['name']}：{row['value_text']} 星" for row in attribute_rows(result["attributes"]))
+    lines.extend([
+        f"{awakening['label']}：{awakening['count']}/{awakening['max']}次",
+        f"战斗属性：{result['combat_attribute']}",
+    ])
+    lines.extend(f"{row['label']}：{row['value']}" for row in game_detail_rows(result))
+    lines.append(f"综合评级：{result['rating']['value']}")
     return "\n".join(lines)
 
 

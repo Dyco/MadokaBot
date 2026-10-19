@@ -5,27 +5,7 @@
     "url": "https://moegirl.uk/index.php?title=原神/元素&variant=zh-cn",
     "publisher": "moegirl.uk 非官方镜像／萌娘百科原条目贡献者",
     "kind": "mirror",
-    "checked_at": "2026-10-19",
-    "access": "page_text",
-    "facts": [
-      "七元素为火、水、风、雷、草、冰、岩",
-      "神之眼持有者能引导元素力量"
-    ],
-    "limitations": "主站正文未能读取；只取与其他百科一致的基础分类，不采用镜像中的剧情推论。",
-    "original_url": "https://zh.moegirl.org.cn/原神/元素"
-  },
-  {
-    "id": "genshin_vision",
-    "title": "HoYoWiki：神之眼",
-    "url": "https://wiki.hoyolab.com/pc/genshin/entry/3830?lang=zh-cn",
-    "publisher": "HoYoLAB / HoYoWiki",
-    "kind": "official_wiki",
-    "checked_at": "2026-10-19",
-    "access": "search_excerpt",
-    "facts": [
-      "神之眼使持有者能够引导特定元素力量"
-    ],
-    "limitations": "仅核对力量来源；不推断神之眼授予机制。"
+    "checked_at": "2026-10-19"
   },
   {
     "id": "genshin_regions",
@@ -33,13 +13,7 @@
     "url": "https://moegirl.uk/index.php?title=蒙德地区&variant=zh-hans",
     "publisher": "moegirl.uk 非官方镜像／萌娘百科原条目贡献者",
     "kind": "mirror",
-    "checked_at": "2026-10-19",
-    "access": "search_excerpt",
-    "facts": [
-      "地区导航列出蒙德、璃月、稻妻、须弥、枫丹、纳塔、至冬"
-    ],
-    "limitations": "仅采用地区名称；不代表各地区在某版本的完整开放状态。",
-    "original_url": "https://zh.moegirl.org.cn/蒙德地区"
+    "checked_at": "2026-10-19"
   },
   {
     "id": "genshin_growth",
@@ -47,15 +21,7 @@
     "url": "https://wiki.biligame.com/ys/角色系统",
     "publisher": "哔哩哔哩游戏百科贡献者",
     "kind": "game_wiki",
-    "checked_at": "2026-10-19",
-    "access": "page_text",
-    "facts": [
-      "武器类型：单手剑、双手剑、长柄武器、法器、弓",
-      "常规0至6阶突破对应上限20、40、50、60、70、80、90级",
-      "另有使用无主的命星的95及100级上限突破",
-      "角色突破属性表区分4星与5星"
-    ],
-    "limitations": "本池只收录常规1至90级，不将90写成当前游戏的绝对最高等级。"
+    "checked_at": "2026-10-19"
   },
   {
     "id": "genshin_constellation",
@@ -63,12 +29,7 @@
     "url": "https://bkso.baidu.com/item/命之座/68575947?fromModule=lemma_inlink",
     "publisher": "百度百科",
     "kind": "encyclopedia",
-    "checked_at": "2026-10-19",
-    "access": "search_excerpt",
-    "facts": [
-      "角色命之座由六层星图构成"
-    ],
-    "limitations": "仅采用0至6层范围，不分配原作人物的专属命座名称。"
+    "checked_at": "2026-10-19"
   },
   {
     "id": "wuwa_baidu",
@@ -76,31 +37,7 @@
     "url": "https://wapbaike.baidu.com/item/鸣潮/60900055?fromModule=tashuo-article_bottom-lemma",
     "publisher": "百度百科",
     "kind": "encyclopedia",
-    "checked_at": "2026-10-19",
-    "access": "page_text",
-    "facts": [
-      "六种属性：冷凝、热熔、气动、导电、衍射、湮灭",
-      "共鸣者拥有六层共鸣链节点",
-      "角色稀有度包括4星和5星",
-      "地区包含今州、黑海岸、黎那汐塔和拉海洛",
-      "拉海洛3.0内容包括星炬学院",
-      "武器包括迅刀、长刃、佩枪、臂铠、音感仪"
-    ],
-    "limitations": "采用角色设定、地图和3.0公告中的事实，不采纳强度榜。"
-  },
-  {
-    "id": "wuwa_moegirl",
-    "title": "萌娘百科镜像：鸣潮",
-    "url": "https://moegirl.uk/鸣潮",
-    "publisher": "moegirl.uk 非官方镜像／萌娘百科原条目贡献者",
-    "kind": "mirror",
-    "checked_at": "2026-10-19",
-    "access": "page_text",
-    "facts": [
-      "人物导航区分瑝珑、黑海岸和深空联合（星炬学院）等组织"
-    ],
-    "limitations": "主站正文未能读取；本页仅用于交叉核对人物所属分类。",
-    "original_url": "https://zh.moegirl.org.cn/鸣潮"
+    "checked_at": "2026-10-19"
   },
   {
     "id": "wuwa_growth",
@@ -108,13 +45,7 @@
     "url": "https://wiki.biligame.com/wutheringwaves/共鸣者/吟霖",
     "publisher": "哔哩哔哩游戏百科贡献者",
     "kind": "game_wiki",
-    "checked_at": "2026-10-19",
-    "access": "page_text",
-    "facts": [
-      "角色等级表从1至90级，突破节点为20、40、50、60、70、80",
-      "角色资料区分属性、武器、星级和势力"
-    ],
-    "limitations": "仅采用通用等级阶段，不复制吟霖的专属能力与攻击、生命、防御数值。"
+    "checked_at": "2026-10-19"
   },
   {
     "id": "wuwa_lahairoi",
@@ -122,13 +53,7 @@
     "url": "https://wuwa.huijiwiki.com/wiki/坠剑湖",
     "publisher": "鸣潮百科／灰机wiki贡献者",
     "kind": "game_wiki",
-    "checked_at": "2026-10-19",
-    "access": "page_text",
-    "facts": [
-      "拉海洛位于罗伊冰原之下",
-      "深空联合包括星炬学院和研究院"
-    ],
-    "limitations": "该地址重定向至拉海洛；只采用地理及团体归属。"
+    "checked_at": "2026-10-19"
   },
   {
     "id": "hsr_baidu",
@@ -136,14 +61,7 @@
     "url": "https://wapbaike.baidu.com/item/崩坏：星穹铁道/58766453?fromModule=tashuo-article_bottom-lemma",
     "publisher": "百度百科",
     "kind": "encyclopedia",
-    "checked_at": "2026-10-19",
-    "access": "page_text",
-    "facts": [
-      "战斗属性包括物理、火、冰、雷、风、量子、虚数",
-      "角色通过晋阶提升等级上限",
-      "可操作角色有4星与5星"
-    ],
-    "limitations": "该百科的命途总数段落仍有旧版本残留；命途清单另用角色图鉴和官方资料核对。"
+    "checked_at": "2026-10-19"
   },
   {
     "id": "hsr_moegirl",
@@ -151,27 +69,7 @@
     "url": "https://moegirl.uk/崩坏：星穹铁道/智库",
     "publisher": "moegirl.uk 非官方镜像／萌娘百科原条目贡献者",
     "kind": "mirror",
-    "checked_at": "2026-10-19",
-    "access": "page_text",
-    "facts": [
-      "命途行者会践行命途理念",
-      "智库涉及空间站、雅利洛、仙舟与匹诺康尼"
-    ],
-    "limitations": "主站正文未能读取；使用镜像的游戏智库整理并与其他百科对照。",
-    "original_url": "https://zh.moegirl.org.cn/崩坏：星穹铁道/智库"
-  },
-  {
-    "id": "hsr_paths",
-    "title": "HoYoWiki：命途",
-    "url": "https://wiki.hoyolab.com/pc/hsr/aggregate/fate?lang=zh-cn",
-    "publisher": "HoYoLAB / HoYoWiki",
-    "kind": "official_wiki",
-    "checked_at": "2026-10-19",
-    "access": "page_text",
-    "facts": [
-      "记忆、欢愉、毁灭、巡猎、智识、同谐、虚无、存护、丰饶均为原作命途名称"
-    ],
-    "limitations": "原作设定命途多于可玩职业，本池只采用已核实实装的九类战斗命途。"
+    "checked_at": "2026-10-19"
   },
   {
     "id": "hsr_elation",
@@ -179,13 +77,7 @@
     "url": "https://bbs.mihoyo.com/sr/wiki/content/7047/detail",
     "publisher": "米游社／开拓者笔记贡献者",
     "kind": "official_wiki",
-    "checked_at": "2026-10-19",
-    "access": "page_text",
-    "facts": [
-      "欢愉已有可操作角色",
-      "角色80级属性及20、30、40、50、60、70级晋阶节点"
-    ],
-    "limitations": "仅用于欢愉实装与通用晋阶节点，不赋予随机身份开拓者的专属技能。"
+    "checked_at": "2026-10-19"
   },
   {
     "id": "hsr_growth",
@@ -193,13 +85,7 @@
     "url": "https://wiki.biligame.com/sr/景元",
     "publisher": "哔哩哔哩游戏百科贡献者",
     "kind": "game_wiki",
-    "checked_at": "2026-10-19",
-    "access": "page_text",
-    "facts": [
-      "等级从1至80级，晋阶节点为20、30、40、50、60、70级",
-      "角色具有六个星魂节点"
-    ],
-    "limitations": "只采用通用养成范围，不复制景元个人属性。"
+    "checked_at": "2026-10-19"
   },
   {
     "id": "hsr_roles",
@@ -207,12 +93,7 @@
     "url": "https://wiki.biligame.com/sr/角色",
     "publisher": "哔哩哔哩游戏百科贡献者",
     "kind": "game_wiki",
-    "checked_at": "2026-10-19",
-    "access": "page_text",
-    "facts": [
-      "角色图鉴区分4星与5星及战斗命途"
-    ],
-    "limitations": "图鉴筛选可能滞后；记忆与欢愉另交叉核对。"
+    "checked_at": "2026-10-19"
   },
   {
     "id": "hsr_current_paths",
@@ -220,13 +101,7 @@
     "url": "https://zh.wikipedia.org/wiki/崩坏：星穹铁道",
     "publisher": "维基百科贡献者",
     "kind": "encyclopedia",
-    "checked_at": "2026-10-19",
-    "access": "page_text",
-    "facts": [
-      "可玩命途包括3.0新增记忆和4.0新增欢愉，共九类",
-      "剧情地区包括空间站黑塔、雅利洛-Ⅵ、仙舟罗浮、匹诺康尼"
-    ],
-    "limitations": "只作已公开内容的交叉核对，不引入未实装预测。"
+    "checked_at": "2026-10-19"
   },
   {
     "id": "zzz_baidu",
@@ -234,29 +109,7 @@
     "url": "https://bkso.baidu.com/item/《绝区零》/59933659?fromModule=lemma_inlink",
     "publisher": "百度百科",
     "kind": "encyclopedia",
-    "checked_at": "2026-10-19",
-    "access": "page_text",
-    "facts": [
-      "代理人有物理、火、冰、电、以太等属性",
-      "特性包括强攻、击破、异常、支援、防护、命破",
-      "代理人是与绳匠建立合作关系的战斗角色"
-    ],
-    "limitations": "百科部分分类仍为旧版本；风和锋御另核对官方3.2公告，不把属性数量写死。"
-  },
-  {
-    "id": "zzz_moegirl",
-    "title": "萌娘百科镜像：绝区零",
-    "url": "https://moegirl.uk/index.php?title=绝区零&variant=zh-hans",
-    "publisher": "moegirl.uk 非官方镜像／萌娘百科原条目贡献者",
-    "kind": "mirror",
-    "checked_at": "2026-10-19",
-    "access": "page_text",
-    "facts": [
-      "游戏区分代理人和绳匠",
-      "战斗技能包括普攻、闪避、支援、特殊技、连携技和核心技"
-    ],
-    "limitations": "主站正文未能读取；镜像只作术语分类的辅助核对。",
-    "original_url": "https://zh.moegirl.org.cn/绝区零"
+    "checked_at": "2026-10-19"
   },
   {
     "id": "zzz_32",
@@ -264,13 +117,7 @@
     "url": "https://zzz.mihoyo.com/news/166026?nav=米哈游?nav=米哈游",
     "publisher": "米哈游／绝区零官方网站",
     "kind": "official",
-    "checked_at": "2026-10-19",
-    "access": "page_text",
-    "facts": [
-      "3.2新增S级代理人克拉蕾（电·锋御）",
-      "3.2新增S级代理人洛克茜（风·击破）"
-    ],
-    "limitations": "仅采用已实装属性与特性名称；不复制个人技能，也不分配烈霜、玄墨等专属属性。"
+    "checked_at": "2026-10-19"
   },
   {
     "id": "zzz_growth",
@@ -278,14 +125,7 @@
     "url": "https://wiki.biligame.com/zzz/安比",
     "publisher": "哔哩哔哩游戏百科贡献者",
     "kind": "game_wiki",
-    "checked_at": "2026-10-19",
-    "access": "page_text_and_search_excerpt",
-    "facts": [
-      "代理人等级表从1至60级",
-      "晋升节点为10、20、30、40、50级",
-      "意象影画有六个解锁节点"
-    ],
-    "limitations": "只采用普通代理人共用的养成规格，不复制安比的技能倍率。"
+    "checked_at": "2026-10-19"
   },
   {
     "id": "zzz_regions",
@@ -293,12 +133,7 @@
     "url": "https://wiki.biligame.com/zzz/「流光札记」",
     "publisher": "哔哩哔哩游戏百科贡献者",
     "kind": "game_wiki",
-    "checked_at": "2026-10-19",
-    "access": "search_excerpt",
-    "facts": [
-      "地点记录含六分街、光映广场、厄匹斯港"
-    ],
-    "limitations": "地点只作活动地区；不编造角色出生街区。"
+    "checked_at": "2026-10-19"
   },
   {
     "id": "ark_baidu",
@@ -306,14 +141,7 @@
     "url": "https://wapbaike.baidu.com/item/干员/24458524",
     "publisher": "百度百科",
     "kind": "encyclopedia",
-    "checked_at": "2026-10-19",
-    "access": "page_text",
-    "facts": [
-      "干员职业包括先锋、近卫、重装、狙击、术师、医疗、辅助、特种",
-      "4至6星干员可以精英化至二阶段",
-      "干员潜能通常从1至6"
-    ],
-    "limitations": "本池取2至6星成长模型，不混入一星机器人或无潜能设计的特殊角色；新增低星与职业分支的组合不表示官方实装名单。"
+    "checked_at": "2026-10-19"
   },
   {
     "id": "ark_moegirl",
@@ -321,16 +149,7 @@
     "url": "https://moegirl.uk/明日方舟/干员",
     "publisher": "moegirl.uk 非官方镜像／萌娘百科原条目贡献者",
     "kind": "mirror",
-    "checked_at": "2026-10-19",
-    "access": "page_text",
-    "facts": [
-      "干员表记录出身地、势力与种族",
-      "采用的种族为菲林、鲁珀、黎博利、卡特斯、佩洛、萨卡兹",
-      "采用的出身地为炎、维多利亚、乌萨斯、哥伦比亚、莱塔尼亚、卡兹戴尔",
-      "罗德岛干员具有多种出身"
-    ],
-    "limitations": "主站正文未能读取；只用已列出的设定名词，不继承个人经历或族群人口比例。",
-    "original_url": "https://zh.moegirl.org.cn/明日方舟/干员"
+    "checked_at": "2026-10-19"
   },
   {
     "id": "ark_professions",
@@ -338,19 +157,7 @@
     "url": "https://prts.wiki/w/子职业",
     "publisher": "PRTS Wiki贡献者",
     "kind": "game_wiki",
-    "checked_at": "2026-10-19",
-    "access": "page_text",
-    "facts": [
-      "先锋含尖兵、冲锋手、执旗手",
-      "近卫含领主、无畏者、强攻手",
-      "重装含铁卫、守护者",
-      "狙击含速射手、炮手",
-      "术师含中坚术师、扩散术师",
-      "医疗含医师、群愈师",
-      "辅助含凝滞师、召唤师",
-      "特种含处决者、推击手"
-    ],
-    "limitations": "只采用职业到分支的从属关系，不由分支推断统一战力或具体攻击范围。"
+    "checked_at": "2026-10-19"
   },
   {
     "id": "ark_growth",
@@ -358,73 +165,7 @@
     "url": "https://prts.wiki/w/干员等级上限",
     "publisher": "PRTS Wiki贡献者",
     "kind": "game_wiki",
-    "checked_at": "2026-10-19",
-    "access": "page_text",
-    "facts": [
-      "2星只能精英0，上限30级",
-      "3星精英0/1上限40/55级，不能精英2",
-      "4星精英0/1/2上限为45/60/70",
-      "5星精英0/1/2上限为50/70/80",
-      "6星精英0/1/2上限为50/80/90"
-    ],
-    "limitations": "精英化后等级重新从1开始，本池按2至6星及阶段关联范围；低星与全部职业分支的组合为插件玩法。"
-  },
-  {
-    "id": "ark_skills",
-    "title": "PRTS：新人入门",
-    "url": "https://prts.wiki/w/新人入门",
-    "publisher": "PRTS Wiki贡献者",
-    "kind": "game_wiki",
-    "checked_at": "2026-10-19",
-    "access": "page_text",
-    "facts": [
-      "精英0技能上限4，精英1技能上限7",
-      "技能专精需要精英2阶段"
-    ],
-    "limitations": "本池不分配个人技能，也不将专精误记作基础技能8至10级。"
-  },
-  {
-    "id": "ark_trust",
-    "title": "PRTS：信赖值",
-    "url": "https://prts.wiki/w/信赖",
-    "publisher": "PRTS Wiki贡献者",
-    "kind": "game_wiki",
-    "checked_at": "2026-10-19",
-    "access": "page_text",
-    "facts": [
-      "干员信赖值范围为0%至200%",
-      "100%时本体信赖属性加成达到上限"
-    ],
-    "limitations": "不将200%信赖解释成双倍属性，不复制该页已划除的旧版助战限制。"
-  },
-  {
-    "id": "nte_official_background",
-    "title": "异环官网：PS5常见问题说明（附游戏介绍）",
-    "url": "https://yh.wanmei.com/m/news/gamebroad/20260422/261857.html",
-    "publisher": "Hotta Studio／完美世界游戏",
-    "kind": "official",
-    "checked_at": "2026-10-19",
-    "access": "search_excerpt",
-    "facts": [
-      "海特洛市为故事起点",
-      "伊波恩古董店接取民间异象委托，主角以异象猎人身份活动"
-    ],
-    "limitations": "公告搜索索引可读，直接打开失败；只取背景，不分配主角专有身份。"
-  },
-  {
-    "id": "nte_moegirl",
-    "title": "萌娘百科镜像：异环",
-    "url": "https://moegirl.uk/异环",
-    "publisher": "moegirl.uk 非官方镜像／萌娘百科原条目贡献者",
-    "kind": "mirror",
-    "checked_at": "2026-10-19",
-    "access": "page_text",
-    "facts": [
-      "海特洛市有异象管理局与异能者",
-      "半角街为故事中的活动街区"
-    ],
-    "limitations": "镜像仍残留未开服提示，只采用与官方介绍相符的地区与组织，不作数值依据。",
-    "original_url": "https://zh.moegirl.org.cn/异环"
+    "checked_at": "2026-10-19"
   },
   {
     "id": "nte_esper",
@@ -432,15 +173,7 @@
     "url": "https://www.ntestation.com/异能",
     "publisher": "异环信息站贡献者",
     "kind": "game_wiki",
-    "checked_at": "2026-10-19",
-    "access": "page_text",
-    "facts": [
-      "异能者是人类中觉醒异能的个体",
-      "常见系谱为光、灵、咒、相、魂、暗",
-      "异能可以先天拥有或后天觉醒",
-      "尚无按维特海默值对异能者统一划定的等级"
-    ],
-    "limitations": "不生成维特海默值，不按它推算战力，不混淆异能者、异象和歧骸。"
+    "checked_at": "2026-10-19"
   },
   {
     "id": "nte_sakiri",
@@ -448,14 +181,7 @@
     "url": "https://www.ntestation.com/早雾",
     "publisher": "异环信息站贡献者",
     "kind": "game_wiki",
-    "checked_at": "2026-10-19",
-    "access": "page_text",
-    "facts": [
-      "S级、咒属性、气态适配，属于伊波恩古董店",
-      "20、30、40、50、60、70级对应1至6次突破",
-      "六个觉醒效果，3次和6次觉醒后额外获得共鸣效果"
-    ],
-    "limitations": "只取共用分类和成长门槛，不分配早雾的契约、召唤物或共鸣技能。"
+    "checked_at": "2026-10-19"
   },
   {
     "id": "nte_mint",
@@ -463,13 +189,7 @@
     "url": "https://www.ntestation.com/薄荷",
     "publisher": "异环信息站贡献者",
     "kind": "game_wiki",
-    "checked_at": "2026-10-19",
-    "access": "page_text",
-    "facts": [
-      "A级、灵属性、液态适配，属于异象管理局收容二组",
-      "20、30、40、50、60、70级为突破节点"
-    ],
-    "limitations": "与百度百科交叉核对，不采用其他百科施工页的占位数值。"
+    "checked_at": "2026-10-19"
   },
   {
     "id": "nte_baidu_hotori",
@@ -477,12 +197,7 @@
     "url": "https://wapbaike.baidu.com/item/浔/64978112",
     "publisher": "百度百科",
     "kind": "encyclopedia",
-    "checked_at": "2026-10-19",
-    "access": "page_text",
-    "facts": [
-      "S级光属性角色，弧盘适配固态，属于伊波恩古董店"
-    ],
-    "limitations": "只取信息栏分类；个人技能、武器攻击力和混频等级不作通用角色数据。"
+    "checked_at": "2026-10-19"
   },
   {
     "id": "nte_baidu_mint",
@@ -490,12 +205,7 @@
     "url": "https://bkso.baidu.com/item/薄荷/64668584?fromModule=lemma_inlink",
     "publisher": "百度百科",
     "kind": "encyclopedia",
-    "checked_at": "2026-10-19",
-    "access": "page_text",
-    "facts": [
-      "A级灵属性角色，液态适配，属于异象管理局收容二组"
-    ],
-    "limitations": "只取与专门Wiki一致的分类，不抽取个人经历与专属能力。"
+    "checked_at": "2026-10-19"
   },
   {
     "id": "nte_growth_80",
@@ -503,27 +213,7 @@
     "url": "https://news.17173.com/content/05152026/132037866.shtml",
     "publisher": "17173游戏门户",
     "kind": "game_media",
-    "checked_at": "2026-10-19",
-    "access": "page_text",
-    "facts": [
-      "计算涉及60级和80级角色",
-      "觉醒可以选择第6项而不按1至6依次选择"
-    ],
-    "limitations": "与专门Wiki突破表共同核对1至80级常规范围；不采用伤害估算、强度排名或抽卡建议。"
-  },
-  {
-    "id": "fgo_baidu",
-    "title": "百度百科：命运-冠位指定",
-    "url": "https://bkso.baidu.com/item/命运-冠位指定/18910471?fromid=15091274&fromtitle=Fate%2FGrand+Order",
-    "publisher": "百度百科",
-    "kind": "encyclopedia",
-    "checked_at": "2026-10-19",
-    "access": "page_text",
-    "facts": [
-      "FGO即Fate/Grand Order（命运-冠位指定）",
-      "系统区分灵基再临、技能强化、宝具强化、圣杯转临和牵绊上限开放"
-    ],
-    "limitations": "只核对名称与系统边界，不将参数字母评级解释成养成等级。"
+    "checked_at": "2026-10-19"
   },
   {
     "id": "fgo_moegirl",
@@ -531,14 +221,7 @@
     "url": "https://moegirl.uk/Fate/Grand_Order",
     "publisher": "moegirl.uk 非官方镜像／萌娘百科原条目贡献者",
     "kind": "mirror",
-    "checked_at": "2026-10-19",
-    "access": "page_text",
-    "facts": [
-      "迦勒底召唤从者并修复特异点",
-      "第一部包含冬木、奥尔良、伦敦、卡美洛、巴比伦尼亚"
-    ],
-    "limitations": "只取召唤归属与第一部地区；活动地区不是英灵生前出身地，不抽取剧情结局。",
-    "original_url": "https://zh.moegirl.org.cn/Fate/Grand_Order"
+    "checked_at": "2026-10-19"
   },
   {
     "id": "fgo_classes",
@@ -546,28 +229,7 @@
     "url": "https://fgo.wiki/w/Ruler",
     "publisher": "Mooncell Wiki贡献者",
     "kind": "game_wiki",
-    "checked_at": "2026-10-19",
-    "access": "page_text",
-    "facts": [
-      "七骑士为Saber、Archer、Lancer、Rider、Caster、Assassin、Berserker",
-      "额外职阶包括Ruler、Avenger、MoonCancer、Alterego、Foreigner、Pretender等"
-    ],
-    "limitations": "本池精选13类；低星与全部职阶的组合可由插件扩展，不代表官方实装名单。排除盾阶、兽阶与特殊变更形态。"
-  },
-  {
-    "id": "fgo_official_attributes",
-    "title": "FGO日服官网：2025-02-28新增属性与副属性筛选",
-    "url": "https://news.fate-go.jp/2025/olgamally_quest_3/",
-    "publisher": "TYPE-MOON／FGO PROJECT",
-    "kind": "official",
-    "checked_at": "2026-10-19",
-    "access": "page_text",
-    "facts": [
-      "属性含秩序、中立、混沌、善、中庸、恶、其他",
-      "副属性含天、地、人、星、兽",
-      "公告确认Alterego、Foreigner、Pretender等额外职阶"
-    ],
-    "limitations": "本池只取常规九组阵营及天/地/人/星；不将副属性当元素，不收录狂、夏、新娘和兽等特殊组合。"
+    "checked_at": "2026-10-19"
   },
   {
     "id": "fgo_growth",
@@ -575,16 +237,7 @@
     "url": "https://fgo.wiki/w/新人入门",
     "publisher": "Mooncell Wiki贡献者",
     "kind": "game_wiki",
-    "checked_at": "2026-10-19",
-    "access": "search_excerpt",
-    "facts": [
-      "1至5星对应C、UC、R、SR、SSR",
-      "普通再临4次，每次提升10级上限",
-      "1至5星初始上限20/25/30/40/50，满破上限60/65/70/80/90",
-      "普通技能可强化至10级；第二、第三技能解锁有例外",
-      "圣杯与从者币可突破普通满级"
-    ],
-    "limitations": "采用搜索索引返回的培养表；正文提取及移动版缺少该章节。仅普通无圣杯再临，不分配第二、第三技能。"
+    "checked_at": "2026-10-19"
   },
   {
     "id": "fgo_game_data",
@@ -592,43 +245,7 @@
     "url": "https://fgo.wiki/w/游戏数据基础",
     "publisher": "Mooncell Wiki贡献者",
     "kind": "game_wiki",
-    "checked_at": "2026-10-19",
-    "access": "page_text",
-    "facts": [
-      "技能强化Lv.1至Lv.10",
-      "宝具强化Lv.1至Lv.5",
-      "指令卡分为Buster、Arts、Quick",
-      "圣杯及从者币可将等级上限提高至120"
-    ],
-    "limitations": "只取养成范围与卡色；不生成个人HP、ATK、伤害倍率、真名或原作字母评级。"
-  },
-  {
-    "id": "fgo_bond",
-    "title": "Mooncell：牵绊等级上限开放",
-    "url": "https://fgo.wiki/w/牵绊等级上限开放",
-    "publisher": "Mooncell Wiki贡献者",
-    "kind": "game_wiki",
-    "checked_at": "2026-10-19",
-    "access": "page_text",
-    "facts": [
-      "普通上限10级",
-      "梦火可开放至15，日服十一周年大梦火另可开放16"
-    ],
-    "limitations": "页面残留最高15的旧段落。本池只取未用梦火0至10级，不混合国服与日服进度或宣称绝对上限。"
-  },
-  {
-    "id": "fgo_alignment",
-    "title": "Mooncell：属性·秩序善分类",
-    "url": "https://fgo.wiki/w/秩序善",
-    "publisher": "Mooncell Wiki贡献者",
-    "kind": "game_wiki",
-    "checked_at": "2026-10-19",
-    "access": "page_text",
-    "facts": [
-      "属性包括秩序、中立、混沌、善、恶、中庸等分类",
-      "属性与职阶为不同维度"
-    ],
-    "limitations": "只取分类名，模拟组合不用于指定人物性格与原作身份。"
+    "checked_at": "2026-10-19"
   },
   {
     "id": "nte_official_city",
@@ -636,71 +253,7 @@
     "url": "https://yh.wanmei.com/main.html",
     "publisher": "Hotta Studio／完美世界游戏",
     "kind": "official",
-    "checked_at": "2026-10-19",
-    "access": "search_excerpt",
-    "facts": [
-      "海特洛市包含桥间地、米格尔区、未闻浦、绘空町、新赫兰德区",
-      "角色介绍列出E.T.D四队与六队身份"
-    ],
-    "limitations": "检索索引正文可读，直接打开失败；只采用明确列出的城市名、地区名与编制，不推断组织驻地。"
-  },
-  {
-    "id": "nte_ring",
-    "title": "异环信息站：名词词典·环",
-    "url": "https://www.ntestation.com/名词词典",
-    "publisher": "异环信息站贡献者",
-    "kind": "game_wiki",
-    "checked_at": "2026-10-19",
-    "access": "page_text",
-    "facts": [
-      "狭义环为五大公权机关与最高议庭A6",
-      "五大公权为异象管理局、尤克阿什庭、塞拉伊诺馆、零角实验室、格赫罗斯岛",
-      "管理局负责控制，馆与岛负责收容，庭与实验室负责认知"
-    ],
-    "limitations": "不由机构数量推断城市总数、城市名称或驻地对应。"
-  },
-  {
-    "id": "nte_bureau",
-    "title": "异环信息站：异象管理局",
-    "url": "https://www.ntestation.com/异象管理局",
-    "publisher": "异环信息站贡献者",
-    "kind": "game_wiki",
-    "checked_at": "2026-10-19",
-    "access": "page_text",
-    "facts": [
-      "总部位于海特洛市，各地设有分局",
-      "三个代表性外勤部门为联合特遣队J.T.F、收容行动组、禁制机动队E.T.D",
-      "联合特遣队由经过训练的普通人类组成",
-      "E.T.D共七队，总局城市驻两队，其余分属其他城市分局；已知四队与六队"
-    ],
-    "limitations": "页面注明个别工作守则有站长补文；不采用守则补文，不推断其他五队驻地，不向异能者池加入普通人类J.T.F身份。"
-  },
-  {
-    "id": "nte_hathor",
-    "title": "异环信息站：哈索尔",
-    "url": "https://www.ntestation.com/哈索尔",
-    "publisher": "异环信息站贡献者",
-    "kind": "game_wiki",
-    "checked_at": "2026-10-19",
-    "access": "page_text",
-    "facts": [
-      "哈索尔所属斯特利速递，职业为快递员",
-      "弧盘适配为等离子"
-    ],
-    "limitations": "只取组织、职业与适配分类，不继承精英称号、个人能力或出身。"
-  },
-  {
-    "id": "nte_hathor_bwiki",
-    "title": "BWIKI：哈索尔（基础信息）",
-    "url": "https://wiki.biligame.com/yh/哈索尔",
-    "publisher": "哔哩哔哩游戏WIKI贡献者",
-    "kind": "game_wiki",
-    "checked_at": "2026-10-19",
-    "access": "page_text",
-    "facts": [
-      "信息栏所属为斯特利速递，弧盘适配为等离子"
-    ],
-    "limitations": "页面养成表仍有空白占位，只交叉核对与专门Wiki一致的组织和适配分类，不采用其突破表。"
+    "checked_at": "2026-10-19"
   },
   {
     "id": "nte_official_1_1",
@@ -708,12 +261,7 @@
     "url": "https://www.taptap.cn/moment/808694741750252109",
     "publisher": "异环项目组／TapTap官方账号",
     "kind": "official",
-    "checked_at": "2026-10-19",
-    "access": "page_text",
-    "facts": [
-      "1.1版本新增向阳岛，可通过正篇剧情抵达"
-    ],
-    "limitations": "只取区域名称与正式发布信息，不将任务解锁条件当作模拟身份的成长条件。"
+    "checked_at": "2026-10-19"
   },
   {
     "id": "nte_official_1_3",
@@ -721,65 +269,14 @@
     "url": "https://www.taptap.cn/moment/836615080601715421",
     "publisher": "异环项目组／TapTap官方账号",
     "kind": "official",
-    "checked_at": "2026-10-19",
-    "access": "search_excerpt",
-    "facts": [
-      "1.3版本正式新增泊暮区",
-      "雾巢游戏剧情涉及红字与T女士"
-    ],
-    "limitations": "采用检索索引的公告正文；不由剧情预告推断组织在结局后的存续状态或所有成员当前归属。"
+    "checked_at": "2026-10-19"
   },
   {
-    "id": "nte_canhong_baidu",
-    "title": "百度百科：残虹（异环）",
-    "url": "https://bkso.baidu.com/item/残虹/68191893?fromModule=lemma_inlink",
-    "publisher": "百度百科",
-    "kind": "encyclopedia",
-    "checked_at": "2026-10-19",
-    "access": "page_text",
-    "facts": [
-      "残虹与红字组织存在剧情归属关系"
-    ],
-    "limitations": "正文混有强度评价及剧情推论，仅用于交叉核对红字名称；当前归属采用明确区分前成员的游戏档案。"
-  },
-  {
-    "id": "nte_canhong_gamekee",
-    "title": "GameKee异环Wiki：残虹档案简介",
-    "url": "https://www.gamekee.com/yh/716764.html",
-    "publisher": "GameKee异环Wiki贡献者",
-    "kind": "game_wiki",
-    "checked_at": "2026-10-19",
-    "access": "page_text",
-    "facts": [
-      "残虹为前秘密组织红字成员，现为格赫罗斯岛囚犯"
-    ],
-    "limitations": "只归档组织名和前后归属区分，不把囚犯当作格赫罗斯岛工作人员或直接分配该角色经历。"
-  },
-  {
-    "id": "nte_half_harbor_video",
-    "title": "哔哩哔哩实机：半港区扩建记录",
-    "url": "https://www.bilibili.com/video/BV1Tzaw6TEhp/",
-    "publisher": "苍白回响／哔哩哔哩",
-    "kind": "player_recording",
-    "checked_at": "2026-10-19",
-    "access": "search_excerpt",
-    "facts": [
-      "2026-09-24实机视频标题及简介提及半港区扩建"
-    ],
-    "limitations": "直接打开失败；仅确认地名存在的实机记录，不用扩建视频证明正式开放范围，暂不进入活动地区池。"
-  },
-  {
-    "id": "ark_durin",
-    "title": "PRTS：杜林（技能与精英化）",
-    "url": "https://prts.wiki/w/杜林",
-    "publisher": "PRTS Wiki贡献者",
-    "kind": "game_wiki",
-    "checked_at": "2026-10-19",
-    "access": "page_text",
-    "facts": [
-      "杜林没有主动技能且无法精英化",
-      "仍有后勤技能与天赋，不等于完全没有能力"
-    ],
-    "limitations": "为插件二星模拟身份提供低星无主动技能模板，不复制其个人天赋、属性或后勤技能；应用于全部自定义职业组合属于玩法。"
+    "id": "fgo_official_enhancement",
+    "title": "Fate/Grand Order 官方指南：强化",
+    "url": "https://www.fate-go.jp/howto/manual/5.html",
+    "publisher": "Fate/Grand Order",
+    "kind": "official",
+    "checked_at": "2026-10-19"
   }
 ]
