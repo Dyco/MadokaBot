@@ -4,9 +4,9 @@ import random
 import re
 
 from .attributes import STAR_DISTRIBUTION
-from .potential import STAR_POINTS
+from .potential import EVALUATION_SYSTEM, calculate_score
 
-VERSION = "isekai_life_v1"
+VERSION = "isekai_life_v2"
 REALMS = ("凡人", "炼气", "筑基", "结丹", "元婴", "化神", "炼虚", "合体", "大乘")
 YEARS = (85, 120, 220, 500, 1200, 2200, 5000, 10000, 18000)
 SPECIES_YEARS = {"elf": 750, "dwarf": 350, "halfling": 150, "gnome": 425}
@@ -95,7 +95,7 @@ def complete_life(result: dict) -> dict:
         details = [{"label": "玄力", "value": REALMS[rank]}, {"label": "寿命", "value": f"{age}岁"}, {"label": "地位", "value": status}]
         prestige = next((value for title, value in (("皇族", 1), ("圣宗", 1), ("仙宗", .8),
                         ("一级宗门", .6), ("二级宗门", .4), ("三级宗门", .2)) if title in status), .1)
-        quality = (rank / 8 + age / YEARS[-1] + prestige) / 3
+        quality = (rank / 8 + age / YEARS[rank] + prestige) / 3
     else:
         normal_age = SPECIES_YEARS.get(result["child"]["species_id"], 85) if kind == "high_fantasy" else 100 if kind == "cyberpunk" else 85
         age = max(18, round(normal_age * rng.uniform(.5, 1.1) * (.7 + stars["运气"] * .08)))
@@ -123,9 +123,9 @@ def complete_life(result: dict) -> dict:
             sequence = re.search(r"序列(\d+)", power)
             strength = min(1, (10 - int(sequence[1])) / 4) if sequence else 0
             quality = (fortune / 7 + min(1, age / normal_age) + strength) / 3
-    score = min(100, max(0, round(sum(STAR_POINTS[value] for value in stars.values()) + quality * 20)))
+    score = calculate_score(stars.values(), quality)
     return result | {
-        "result_version": VERSION,
+        "result_version": VERSION, "evaluation_system": EVALUATION_SYSTEM,
         "attributes": stars, "parents": parents, "body": body, "life": details, "score": score,
     }
 

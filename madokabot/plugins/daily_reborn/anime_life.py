@@ -2,12 +2,14 @@
 
 import random
 
-from .life import simulate_life
+from .life import life_quality, simulate_life
 
 # 作品分类和世界危险度必须由资料作者预设，不能根据抽到的身份临时改写。
 CATEGORY_NAMES = {"daily": "日常番", "isekai": "异世界番", "battle": "战斗番"}
 DANGER_RISK = {"安全": 0, "和平": .03, "动荡": .14, "危险": .30, "灾难": .50}
 PRESENCE_WEIGHTS = {"路人": 42, "配角": 18, "炮灰": 15, "工具人": 10, "反派": 9, "大反派": 5, "主角": 1}
+# 叙事表现仅占人生质量的两成，反派定位不作为道德扣分。
+PRESENCE_QUALITY = {"路人": .45, "配角": .7, "炮灰": .15, "工具人": .35, "反派": .6, "大反派": .85, "主角": 1}
 
 
 def draw_presence(category: str, faction: dict, popularity: float) -> str:
@@ -79,3 +81,9 @@ def anime_life_rows(result: dict) -> list[dict]:
         {"label": "最终寿命", "value": lifespan},
         {"label": "婚育子女", "value": marriage},
     ]
+
+
+def anime_life_quality(life: dict, faction: dict, presence: str) -> float:
+    """按阵营预期寿元综合实际寿命与叙事表现，避免长寿种族天然获得额外满分。"""
+    normal_age = sum(faction["lifespan"]) / 2 if "lifespan" in faction else 85
+    return .8 * life_quality(life, normal_age) + .2 * PRESENCE_QUALITY[presence]

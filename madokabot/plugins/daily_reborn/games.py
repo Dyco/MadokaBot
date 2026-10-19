@@ -8,9 +8,10 @@ from madokabot.core.storage.json_store import JsonDataStore
 
 from .attributes import draw_star
 from .identity import draw_option, validate_pool
+from .potential import attribute_quality
 from .resources import DATA_DIR, load_json_resource
 
-GAMES_VERSION = "games_v2"
+GAMES_VERSION = "games_v3"
 # 稀有度由低至高配置，最高档使用金色，六星制比五星制多一个基础档。
 RARITY_TONES = ("copper", "slate", "jade", "azure", "violet", "gold")
 
@@ -64,26 +65,42 @@ def game_detail_rows(result: dict) -> list[dict]:
     ]
 
 
+def game_rating_index(world: dict, attributes: dict, growth: float, revenue: int, players: int) -> int:
+    """按属性、养成与实际模拟表现定档，双三星可达最高档，五星以上需百万流水。"""
+    quality = attribute_quality(attributes.values()) + growth * .15
+    count = len(world["rarities"])
+    index = min(count - 2, int(quality * (count - 1) / .6))
+    if min(attributes.values()) >= 2.5 and quality >= .48 and revenue >= 1_000_000 and players >= 10_000:
+        index = count - 1
+    million_tier = world["rarities"].index("5星") if "5星" in world["rarities"] else count - 1
+    if revenue < 1_000_000:
+        index = min(index, max(0, million_tier - 1))
+    return index
+
+
 def simulate_games() -> dict:
-    """联动角色人气、战力与觉醒形成评级，并生成等级、持有人数和卡池收入。"""
+    """先模拟持有人数和流水，再综合属性与养成评定等级，不生成百分制分数。"""
     dataset = load_games_data()
     world = draw_option(dataset["worlds"])
     attributes = {"人气": draw_star(), "战力": draw_star()}
     maximum = world["awakening"]["max"]
     awakening = random.choices(range(maximum + 1), weights=[.6**index for index in range(maximum + 1)])[0]
-    quality = (sum(attributes.values()) - 2) / 8 * .9 + awakening / maximum * .1
-    index = min(len(world["rarities"]) - 1, int(quality * len(world["rarities"])))
+    quality = attribute_quality(attributes.values())
+    growth = awakening / maximum
+    popularity = (attributes["人气"] - 1) / 4
+    combat = (attributes["战力"] - 1) / 4
+    appeal = popularity * .65 + combat * .35
+    # 双三星的最低受众为一万人、最低单人投入为一百，天然达到百万元级流水。
+    players = round(10 ** random.uniform(3 + appeal * 2, 4 + appeal * 3))
+    spending = random.uniform(50, 200) * (1 + quality * 2) * (1 + growth * .5)
+    revenue = round(max(10_000, min(9_999_999_999, players * spending)))
+    index = game_rating_index(world, attributes, growth, revenue, players)
     rarity = world["rarities"][index]
     caps = world["level_caps"].get(rarity, world["level_caps"]["default"])
     stage = random.randrange(len(caps))
     level_cap = caps[stage]
     # 方舟精英化后等级重置；其他游戏沿用已解锁的相邻突破区间。
     minimum = 1 if world["id"] == "arknights" or stage == 0 else caps[stage - 1]
-    popularity = (attributes["人气"] - 1) / 4
-    holding_rate = 1 - index / (len(world["rarities"]) - 1) * .65
-    players = round(10 ** random.uniform(3 + popularity * 2, 4 + popularity * 3) * holding_rate)
-    spending = random.uniform(30, 300) * (1 + quality * 3) * (1 + awakening / maximum * .5)
-    revenue = round(max(10_000, min(9_999_999_999, players * spending)))
     region = random.choice(world["regions"])
     combat_attribute = random.choice(world["combat_attributes"])
     return {

@@ -28,10 +28,12 @@ def is_current_result(result: dict) -> bool:
 
 
 def recent_records(result: dict, *fields: str) -> list[dict]:
-    """读取最近十次记录，缺少当前展示字段的历史直接跳过。"""
+    """读取最近十次记录，只展示当前评价规则且字段完整的历史。"""
+    version_key = "result_version" if result["mode"] == "games" else "evaluation_system"
     return [
         entry for entry in reversed(result["reborn_history"][-10:])
         if all(entry.get(key) is not None for key in fields)
+        and entry.get(version_key) == result[version_key]
     ]
 
 

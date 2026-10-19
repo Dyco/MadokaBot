@@ -6,14 +6,14 @@ from pathlib import Path
 
 from madokabot.core.storage.json_store import JsonDataStore
 
-from .anime_life import CATEGORY_NAMES, DANGER_RISK, draw_presence, simulate_anime_life
+from .anime_life import CATEGORY_NAMES, DANGER_RISK, anime_life_quality, draw_presence, simulate_anime_life
 from .attributes import draw_attributes
 from .identity import draw_option, validate_pool
-from .potential import STAR_POINTS
+from .potential import EVALUATION_SYSTEM, calculate_score
 from .resources import DATA_DIR, load_json_resource
 
-ANIME_VERSION = "anime_v2"
-# 字母战力为作品内部的玩法分档，不表示不同作品之间的实力换算。
+ANIME_VERSION = "anime_v3"
+# 字母战力数值仅用于评级抽样与生存风险，不再作为综合评分的固定加分表。
 COMBAT_POINTS = {"D": 2, "D+": 4, "C": 7, "C+": 10, "B": 13, "B+": 16, "A": 18, "A+": 19, "S": 20}
 # 复用五项联合星级分布，同时保持可见魅力与人生婚育使用同一个属性。
 ISEKAI_ATTRIBUTES = {"财富": "家境", "战力": "智力", "魅力": "魅力", "声望": "健康", "运气": "运气"}
@@ -90,18 +90,19 @@ def simulate_anime() -> dict:
         faction = draw_option(world["factions"])
         rank, combat = draw_battle_rank(world, faction, attributes["天赋"])
         power = COMBAT_POINTS[combat] / 20
-        score = round((sum(STAR_POINTS[value] for value in attributes.values()) + COMBAT_POINTS[combat]) * 5 / 3)
     else:
         attributes = base if category == "daily" else {name: base[source] for name, source in ISEKAI_ATTRIBUTES.items()}
         power = 0 if category == "daily" else attributes["战力"] / 5
-        score = sum(STAR_POINTS[value] for value in attributes.values())
     presence = draw_presence(category, faction, base["魅力"])
     life = simulate_anime_life(world, base, faction, presence, power)
+    # 字母战力的九个档位对应一至五星，与两项可见属性一起参与统一评分。
+    scoring_stars = (*attributes.values(), 1 + tuple(COMBAT_POINTS).index(combat) / 2) if category == "battle" else attributes.values()
+    score = calculate_score(scoring_stars, anime_life_quality(life, faction, presence))
     return {
         "mode": "anime", "result_version": ANIME_VERSION, "dataset_version": dataset["version"],
         "title": dataset["title"], "notice": dataset["notice"],
         "world": {key: world[key] for key in ("id", "title", "category", "danger", "logo")},
         "gender": draw_option(dataset["genders"])["name"], "attributes": attributes,
         "faction": faction.get("name", ""), "rank": rank, "combat": combat,
-        "presence": presence, "life": life, "score": score,
+        "presence": presence, "life": life, "score": score, "evaluation_system": EVALUATION_SYSTEM,
     }

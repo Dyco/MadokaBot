@@ -1,15 +1,27 @@
-"""五项星级的递减增益评分与静态视觉分档。"""
+"""汇总属性与人生质量后的边际递减评分及视觉分档。"""
 
-from .attributes import ATTRIBUTES
+from collections.abc import Iterable
 
-EVALUATION_SYSTEM = "potential_v2"
-# 四星后进入边际递减区，每项每提升半星仅加一分；低中星级保留更明显的差距。
-STAR_POINTS = {1: 2, 1.5: 4, 2: 7, 2.5: 10, 3: 13, 3.5: 16, 4: 18, 4.5: 19, 5: 20}
+EVALUATION_SYSTEM = "potential_v3"
+# 保留低分段较快增长，四星以上再接近满分；曲线统一作用于综合质量。
+BASE_SCORE = 20
+PERFECT_QUALITY = .84
+SCORE_POWER = .7
 
 
-def calculate_score(stars: dict) -> int:
-    """累加五项递减分值，全四星九十分、全四星半九十五分、仅全五星一百分。"""
-    return sum(STAR_POINTS[stars[name]] for name in ATTRIBUTES)
+def attribute_quality(stars: Iterable[float]) -> float:
+    """按平均水平占七成五、最突出属性占两成五汇总，保持顺序无关和单调递增。"""
+    values = [(value - 1) / 4 for value in stars]
+    return .75 * sum(values) / len(values) + .25 * max(values)
+
+
+def calculate_score(stars: Iterable[float], life_quality: float) -> int:
+    """先汇总六成五属性与三成五人生质量，再用凹幂函数实现总量边际递减。"""
+    quality = .65 * attribute_quality(stars) + .35 * max(0, min(1, life_quality))
+    if quality >= PERFECT_QUALITY:
+        return 100
+    # 未满足满分条件时最多九十九分，避免四舍五入提前得到一百分。
+    return min(99, round(BASE_SCORE + (100 - BASE_SCORE) * (quality / PERFECT_QUALITY) ** SCORE_POWER))
 
 
 def score_tier(score: int) -> str:
@@ -21,8 +33,3 @@ def score_tier(score: int) -> str:
         if score >= threshold:
             return tier
     raise ValueError("评分不能为负数")
-
-
-def evaluate_life(stars: dict) -> dict:
-    """根据已保存星级计算当前评分，不叠加破坏分值锚点的天赋保底或共鸣加分。"""
-    return {"evaluation_system": EVALUATION_SYSTEM, "score": calculate_score(stars)}

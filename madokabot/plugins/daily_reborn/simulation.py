@@ -6,9 +6,9 @@ from functools import lru_cache
 
 from .attributes import STAR_SYSTEM, draw_attributes
 from .geography import random_location
-from .life import simulate_life
+from .life import life_quality, simulate_life
 from .modes import RebornMode
-from .potential import evaluate_life
+from .potential import EVALUATION_SYSTEM, calculate_score
 from .resources import load_json_resource
 
 
@@ -34,6 +34,7 @@ def simulate_rebirth(*, mode: RebornMode = "world") -> dict:
     countries = dataset["countries"]
     country = random.choices(countries, weights=[row["births"] for row in countries])[0]
     attributes = draw_attributes()
+    life = simulate_life(attributes)
     # 出生性别比统一为每 100 名女婴对应的男婴数量，不使用总人口性别比。
     ratio = country["sex_ratio"]
     gender = "男" if random.random() < ratio / (ratio + 100) else "女"
@@ -48,6 +49,7 @@ def simulate_rebirth(*, mode: RebornMode = "world") -> dict:
         "map_point": random_location(country, mode=mode),
         "attributes": attributes,
         "attribute_system": STAR_SYSTEM,
-        "life": simulate_life(attributes),
-        **evaluate_life(attributes),
+        "life": life,
+        "evaluation_system": EVALUATION_SYSTEM,
+        "score": calculate_score(attributes.values(), life_quality(life)),
     }

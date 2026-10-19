@@ -41,3 +41,12 @@ def life_rows(life: dict) -> list[dict]:
         {"label": "最终寿命", "value": f"{life['lifespan']}岁"},
         {"label": "婚育子女", "value": f"{'结婚' if life['married'] else '未婚'} - {life['children']}名子女"},
     ]
+
+
+def life_quality(life: dict, normal_age: float = 85) -> float:
+    """按预期寿命归一化，存在资产结果时与资产档位等权综合；婚育不加减分。"""
+    longevity = max(0, min(1, life["lifespan"] / normal_age))
+    if "assets" not in life:
+        return longevity
+    wealth = ASSET_LEVELS.index(life["assets"]) / (len(ASSET_LEVELS) - 1)
+    return (longevity + wealth) / 2
