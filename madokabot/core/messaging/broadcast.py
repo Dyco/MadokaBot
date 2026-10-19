@@ -11,6 +11,7 @@ from nonebot.adapters.onebot.v11 import (
     MessageSegment,
     OneBotV11AdapterException,
 )
+from nonebot.compat import type_validate_python
 
 _broadcast_lock = asyncio.Lock()
 
@@ -25,12 +26,12 @@ def _prepare_message(message: Message) -> Message:
 
 
 async def _prepare_forward_nodes(bot: Bot, forward_id: str) -> list[MessageSegment]:
-    """读取合并转发节点，保留发送者和嵌套合并内容。"""
+    """读取并反序列化合并转发节点，保留发送者和嵌套合并内容。"""
     forward = await bot.get_forward_msg(id=forward_id)
     nodes = []
     for item in forward["messages"]:
         sender = item["sender"]
-        content = _prepare_message(Message(item["content"]))
+        content = _prepare_message(type_validate_python(Message, item["content"]))
         for index, segment in enumerate(content):
             if segment.type == "forward":
                 content[index] = MessageSegment.node_custom(
