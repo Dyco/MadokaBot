@@ -1,5 +1,5 @@
 {
-    "version": "2026.10.19-v4",
+    "version": "2026.10.19-v6",
     "checked_on": "2026-10-19",
     "description": "运行资料的来源目录；页面访问程度和证据边界分别记录。",
     "provenance_help": {
@@ -87,28 +87,6 @@
             "limitations": "官方示例只能支持结构，不能证明本项目原创职业的完整清单。"
         },
         {
-            "id": "red_downloads",
-            "title": "Cyberpunk 官方下载目录",
-            "url": "https://rtalsoriangames.com/downloadable-content/",
-            "publisher": "R. Talsorian Games",
-            "authority": "primary",
-            "access_status": "search_index",
-            "checked_on": "2026-10-19",
-            "supports": "未来补充角色表、扩展资料的入口",
-            "limitations": "尚未逐份整理其下载文件，不计入已收集细目。"
-        },
-        {
-            "id": "ep_game",
-            "title": "Eclipse Phase：The Game",
-            "url": "https://eclipsephase.com/game/",
-            "publisher": "Posthuman Studios",
-            "authority": "primary",
-            "access_status": "page_read",
-            "checked_on": "2026-10-19",
-            "supports": "心智与躯体分离、合成躯体、数字形态等远期科幻维度",
-            "limitations": "独立设定参考；不能直接混入 Cyberpunk RED 正史。"
-        },
-        {
             "id": "rmji_127",
             "title": "凡人修仙传：第127章（英文发行页）",
             "url": "https://www.wuxiaworld.com/novel/rmji/rmji-chapter-127",
@@ -140,28 +118,6 @@
             "checked_on": "2026-10-19",
             "supports": "高阶境界之间存在明显实力差距",
             "limitations": "不能推导亲子资质、寿命和境界人口分布。"
-        },
-        {
-            "id": "rmji_roots_wiki",
-            "title": "RMJI.WIKI：天灵根",
-            "url": "https://rmji.wiki/special-constitutions/heavenly-spiritual-roots",
-            "publisher": "RMJI.WIKI 社区",
-            "authority": "secondary",
-            "access_status": "search_index",
-            "checked_on": "2026-10-19",
-            "supports": "单属性天灵根及前后期适用差异的二手线索",
-            "limitations": "二手资料；细节待原著复核，未纳入正式概率规则。"
-        },
-        {
-            "id": "rmji_energy_wiki",
-            "title": "RMJI Fandom：Energy / Qi",
-            "url": "https://rmji.fandom.com/wiki/Energy_/_Qi",
-            "publisher": "RMJI Fandom 社区",
-            "authority": "secondary",
-            "access_status": "search_index",
-            "checked_on": "2026-10-19",
-            "supports": "真灵根、伪灵根和变异灵根分类线索",
-            "limitations": "搜索索引可读，直接打开失败；不冒充原著核验。"
         },
         {
             "id": "lotm_setting",
@@ -197,17 +153,6 @@
             "limitations": "借鉴结构，不照搬完整建卡流程。"
         },
         {
-            "id": "blades_basics",
-            "title": "Blades in the Dark：The Basics",
-            "url": "https://bladesinthedark.com/basics",
-            "publisher": "Blades in the Dark",
-            "authority": "primary",
-            "access_status": "page_read",
-            "checked_on": "2026-10-19",
-            "supports": "叙事与规则基本结构的参考入口",
-            "limitations": "非本项目投胎概率依据。"
-        },
-        {
             "id": "nasa_eclss",
             "title": "NASA：Environmental Control and Life Support Systems",
             "url": "https://www.nasa.gov/reference/environmental-control-and-life-support-systems-eclss/",
@@ -217,17 +162,6 @@
             "checked_on": "2026-10-19",
             "supports": "空气、水循环、氧气供应等生命保障维度",
             "limitations": "来源说明现实系统；轨道城市家庭和岗位为项目外推。"
-        },
-        {
-            "id": "nasa_hab",
-            "title": "NASA：Deep Space Habitation Overview",
-            "url": "https://www.nasa.gov/humans-in-space/deep-space-habitation-overview/",
-            "publisher": "NASA",
-            "authority": "primary",
-            "access_status": "excerpt_read",
-            "checked_on": "2026-10-19",
-            "supports": "深空居住涉及生命保障、防辐射和健康维护",
-            "limitations": "概念与研发目标不代表成熟殖民社会已经存在。"
         },
         {
             "id": "bci_study",
@@ -251,26 +185,6 @@
             "limitations": "本轮曾读到正文，复访超时，搜索索引仍可交叉核对；不是全部力量规则。"
         },
         {
-            "id": "coi_official_intro",
-            "title": "官方《宿命之环》介绍",
-            "url": "https://www.lotmworld.com/zh/coti",
-            "authority": "primary",
-            "access_status": "page_read",
-            "checked_on": "2026-10-19",
-            "supports": "第二部作品与官方阅读入口。",
-            "limitations": "介绍页的1368年宣传语不能直接当作所有出生事件的统一年份。"
-        },
-        {
-            "id": "lotm_huiji_home",
-            "title": "灰机百科首页与内容覆盖提醒",
-            "url": "https://lom.huijiwiki.com/wiki/首页",
-            "authority": "secondary",
-            "access_status": "search_index",
-            "checked_on": "2026-10-19",
-            "supports": "首页明示多数词条默认只覆盖第一部，部分条目另有第二部内容。",
-            "limitations": "不能以整个网站作为已同步《宿命之环》的保证。"
-        },
-        {
             "id": "lotm_huiji_pathways",
             "title": "灰机百科：非凡途径",
             "url": "https://lom.huijiwiki.com/wiki/非凡途径",
@@ -281,66 +195,6 @@
             "limitations": "未逐项读取220个序列的原章依据。"
         },
         {
-            "id": "lotm_huiji_author_answers",
-            "title": "灰机百科：作者回答合集",
-            "url": "https://lom.huijiwiki.com/wiki/作者回答合集",
-            "authority": "author_repost",
-            "access_status": "search_index",
-            "checked_on": "2026-10-19",
-            "supports": "2025年作者问答转载；外神恩赐组合不能一律视为单条原生途径。",
-            "limitations": "未直读原微信公众号；问答嵌套须回原帖核对，转载时间不是原始发表时间。"
-        },
-        {
-            "id": "lotm_huiji_reader_updates",
-            "title": "灰机百科：阅读者途径参考资料",
-            "url": "https://lom.huijiwiki.com/wiki/阅读者途径",
-            "authority": "secondary",
-            "access_status": "search_index",
-            "checked_on": "2026-10-19",
-            "supports": "列出2026-02-02配方补充和2026-02-09能力补充的作者文章。",
-            "limitations": "只确认存在这些原文线索，未确认原文所有能力或配方。"
-        },
-        {
-            "id": "lotm_huiji_demoness_updates",
-            "title": "灰机百科：刺客途径参考资料",
-            "url": "https://lom.huijiwiki.com/wiki/刺客途径",
-            "authority": "secondary",
-            "access_status": "search_index",
-            "checked_on": "2026-10-19",
-            "supports": "列出2025-06-23魔药补完和2025-08-04能力、特性问题补充。",
-            "limitations": "未直读作者原帖；不能将旧设定集当作最终完整版本。"
-        },
-        {
-            "id": "lotm_huiji_tarot",
-            "title": "灰机百科：塔罗会",
-            "url": "https://lom.huijiwiki.com/wiki/塔罗会",
-            "authority": "secondary",
-            "access_status": "search_index",
-            "checked_on": "2026-10-19",
-            "supports": "第二部的小阿卡那组织结构和卷章索引线索。",
-            "limitations": "组织状态随剧情变化；不将完本后的成员或地位混入早期出生池。"
-        },
-        {
-            "id": "lotm_fandom_pathways",
-            "title": "英文百科：Pathways",
-            "url": "https://lordofthemysteries.fandom.com/wiki/Pathways",
-            "authority": "secondary",
-            "access_status": "search_index",
-            "checked_on": "2026-10-19",
-            "supports": "22条标准途径之外的外神体系；地球恩赐与宇宙特性途径的适用范围有别。",
-            "limitations": "直开受限，不绕过限制；这里只采用搜索索引，复杂规则待原章核验。"
-        },
-        {
-            "id": "lotm_fandom_boons",
-            "title": "英文百科：Boon System",
-            "url": "https://lordofthemysteries.fandom.com/wiki/Boon_System",
-            "authority": "secondary",
-            "access_status": "search_index",
-            "checked_on": "2026-10-19",
-            "supports": "恩赐与非凡特性可能并存；授予者可混合自身途径的不同序列。",
-            "limitations": "细节仅二手索引；不据此写死通用兼容关系、恩赐数量或继承概率。"
-        },
-        {
             "id": "lotm_fandom_inheritance",
             "title": "英文百科：罗塞尔日记编年整理",
             "url": "https://lordofthemysteries.fandom.com/wiki/Roselle%27s_Diary_in_a_Chronological_Order",
@@ -349,66 +203,6 @@
             "checked_on": "2026-10-19",
             "supports": "序列6、5传递部分特性和高序列主动控制遗传的原文整理线索。",
             "limitations": "原小说继承段落尚未在发行页公开节选中读到；不把接近序列9强度等同于完整序列9。"
-        },
-        {
-            "id": "lotm_official_ch237",
-            "title": "WebNovel：原作第237章 Sequence 2",
-            "url": "https://www.webnovel.com/book/lord-of-mysteries_11022733006234505/sequence-2_35957781160850515",
-            "authority": "primary",
-            "access_status": "excerpt_read",
-            "checked_on": "2026-10-19",
-            "supports": "原作章节标题和定位，对应第二卷第24章《序列2》。",
-            "limitations": "本次只能读取开头，继承段落未展示；不能称为已完成原文遗传规则直读。"
-        },
-        {
-            "id": "lotm_forum_mud_table",
-            "title": "MUD.REN：宿命之环及其衍生作品中的外神途径",
-            "url": "https://mud.ren/threads/407",
-            "authority": "community_compilation",
-            "access_status": "page_read",
-            "checked_on": "2026-10-19",
-            "supports": "2025-05-26社区外神序列表，可作为候选条目导航。",
-            "limitations": "标题包含衍生作品；未逐条注明原著章据，且开头混称恩赐和魔药，不能整表导入。"
-        },
-        {
-            "id": "lotm_author_qna_reddit",
-            "title": "Reddit：宿命之环作者微信问答原文转载",
-            "url": "https://www.reddit.com/r/LordofTheMysteries/comments/1r5nqeo/lotm_and_coi_general_qna_raw_cuttlefishs_wechat/",
-            "authority": "author_repost",
-            "access_status": "page_read",
-            "checked_on": "2026-10-19",
-            "supports": "作者问答的另一转载入口，便于寻找原始公众号文章。",
-            "limitations": "仍是用户转载；原始发表日期须与原文核对，不能使用页面相对时间代替。"
-        },
-        {
-            "id": "lotm_reddit_split_boon",
-            "title": "Reddit：World Pathway Split Boon",
-            "url": "https://www.reddit.com/r/LordofTheMysteries/comments/1svf2c9/coi_general_world_pathway_split_boon/",
-            "authority": "fanon",
-            "access_status": "page_read",
-            "checked_on": "2026-10-19",
-            "supports": "识别自创内容：发帖者说明自己拆分、补完作者未展开的途径。",
-            "limitations": "仅用于排除混入正史的风险，不作为原作设定来源。"
-        },
-        {
-            "id": "red_official_faq",
-            "title": "Cyberpunk RED 官方FAQ",
-            "url": "https://rtalsoriangames.com/2019/05/30/the-cyberpunk-red-faq/",
-            "authority": "primary",
-            "access_status": "search_index",
-            "checked_on": "2026-10-19",
-            "supports": "RED以2045年为现在，处于第四次企业战争后的重建期。",
-            "limitations": "与2077共用时间线不等于所有时代的组织和技术可直接混用。"
-        },
-        {
-            "id": "red_night_city_2045",
-            "title": "官方 Night City 2045 资料介绍",
-            "url": "https://rtalsoriangames.com/night-city-2045/",
-            "authority": "primary",
-            "access_status": "search_index",
-            "checked_on": "2026-10-19",
-            "supports": "可继续整理2045年城市与街区背景的官方资料入口。",
-            "limitations": "本轮未读取资料书正文，不将目录介绍计作已收齐城市数据。"
         },
         {
             "id": "project_isekai_v3",
@@ -462,16 +256,6 @@
             "limitations": "只用于地区文化，不导入神灵人物资料或完本后的权柄状态。"
         },
         {
-            "id": "lotm_abyss_updates",
-            "title": "灰机百科：罪犯途径与作者后续补充",
-            "url": "https://lom.huijiwiki.com/wiki/罪犯途径",
-            "authority": "secondary",
-            "access_status": "search_index",
-            "checked_on": "2026-10-19",
-            "supports": "序列8折翼天使、古称冷血者；参考文献指向2025年12月作者补充。",
-            "limitations": "作者原文未直读；该序列的身体变化与出生兼容未核定，本版只列为待扩展资料。"
-        },
-        {
             "id": "rmji_roots_ch127_guide",
             "title": "RMJI.WIKI：第127章及灵根分类导读",
             "url": "https://rmji.wiki/chapters/127",
@@ -483,9 +267,9 @@
         },
         {
             "id": "project_lower_power_ranges",
-            "title": "较低实力等级补充与小范围清单",
+            "title": "异世界资料规则与较低实力范围说明",
             "url": "",
-            "path": "madokabot/plugins/daily_reborn/research/isekai/lower_power_ranges.md",
+            "path": "assets/json/daily_reborn/isekai/README.md",
             "authority": "project",
             "access_status": "local_document",
             "checked_on": "2026-10-19",

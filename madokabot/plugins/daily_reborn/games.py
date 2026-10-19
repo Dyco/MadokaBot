@@ -95,5 +95,4 @@ def simulate_games() -> dict:
         "level": random.randint(minimum, level_cap), "level_cap": level_cap,
         "revenue": revenue, "players": players,
         "rating": {"value": rarity, "tier": RARITY_TONES[-len(world["rarities"]) + index]},
-        "summary": f"{region} · {combat_attribute}",
     }

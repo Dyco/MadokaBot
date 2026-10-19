@@ -1,6 +1,5 @@
 """人生属性的半星抽样、稀有度与展示信息。"""
 
-import math
 import random
 
 ATTRIBUTES = ("家境", "健康", "智力", "魅力", "运气")
@@ -33,13 +32,6 @@ def draw_attributes() -> dict[str, float]:
     exclude = family if family in (4, 5) and all(value == family for value in stars.values()) else None
     stars["运气"] = draw_star(exclude=exclude)
     return stars
-
-
-def attribute_stars(result: dict) -> dict[str, float]:
-    """读取两版半星档案，旧百分制仅转换展示，不改变已保存属性或应用新的家境联动。"""
-    if result.get("attribute_system") in {"stars_v1", STAR_SYSTEM}:
-        return dict(result["attributes"])
-    return {name: max(1, min(5, math.floor(value / 10 + .5) / 2)) for name, value in result["attributes"].items()}
 
 
 def attribute_rows(stars: dict) -> list[dict]:

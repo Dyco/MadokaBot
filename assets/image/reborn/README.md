@@ -6,7 +6,7 @@
 
 存在感候选、世界危险度及分类规则见[二次元资料规范](../../json/daily_reborn/anime/README.md)。
 
-来源记录见 [sources.json](sources.json)。图片版权归原作及各权利方。
+原有图片的来源记录见 [sources.json](sources.json)，新增 20 部番剧的图片与官方来源见[番剧扩充记录](../../json/daily_reborn/anime/expansion-2026-10-19.md)。图片版权归原作及各权利方。
 
 | 模式 | 作品 | 文件 | 来源 | 说明 |
 | --- | --- | --- | --- | --- |

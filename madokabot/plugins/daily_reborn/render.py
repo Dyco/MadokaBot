@@ -10,17 +10,15 @@ from nonebot_plugin_htmlrender import html_to_pic
 from madokabot.core.resources import ResourceFolder, ResourceType, assets, get_file
 from madokabot.core.version import get_bot_version
 
-from .anime import ANIME_VERSION
 from .anime_life import CATEGORY_NAMES, anime_life_rows
 from .attributes import attribute_rows
-from .games import GAMES_VERSION, game_detail_rows
+from .games import game_detail_rows
 from .geography import focused_map, load_regional_map, load_world_map, result_location
 from .life import life_rows
 from .modes import MODE_COMMANDS, MODE_NAMES
 from .potential import score_tier
 from .regions import result_region, world_region
-from .simulation import display_result, load_population
-from .text import anime_text, games_text, isekai_text
+from .text import OLD_RESULT_NOTICE, anime_text, games_text, is_current_result, isekai_text, recent_records
 
 TEMPLATE_DIR = Path(__file__).parent / "templates"
 # 所有模式统一使用九百乘四百五十视口，像素倍率沿用渲染器默认值。
@@ -34,29 +32,12 @@ _render_limit = asyncio.Semaphore(2)
 
 
 def recent_history(result: dict) -> list[dict]:
-    """整理最近历史、纠正朝韩误标，并为世界记录补充可确定的地理分区。"""
-    history = result.get("reborn_history") or [{
-        "count": result.get("reborn_count", 1),
-        "date": result["date"],
-        "country": result["country"]["name"],
-        "gender": result["gender"],
-        "score": result["score"],
-    }]
+    """整理有效的现实投胎历史，世界记录显示已保存的地理分区。"""
     rows = []
-    for entry in reversed(history[-10:]):
-        if entry["country"] == "朝韩非军事区":
-            code = entry.get("country_code")
-            if not code and entry["count"] == result.get("reborn_count"):
-                code = result["country"]["code"]
-            entry = entry | {"country": {"PRK": "朝鲜", "KOR": "韩国"}.get(code, "朝鲜／韩国")}
-        if entry["count"] == result.get("reborn_count", 1):
-            entry = entry | {"score": result["score"]}
-        if result.get("mode", "world") == "world":
-            code = entry.get("country_code") or next(
-                (row["code"] for row in load_population()["countries"] if row["name"] == entry["country"]), ""
-            )
-            area = result_region(result) if entry["count"] == result.get("reborn_count", 1) else (
-                entry.get("world_region") or world_region(code)
+    for entry in recent_records(result, "count", "date", "country", "country_code", "gender", "score"):
+        if result["mode"] == "world":
+            area = result_region(result) if entry["count"] == result["reborn_count"] else (
+                entry.get("world_region") or world_region(entry["country_code"])
             )
             if area:
                 entry = entry | {"country": f"{entry['country']} - {area}"}
@@ -70,7 +51,6 @@ def render_reborn_html(result: dict, name: str) -> str:
         return render_anime_html(result, name)
     if result.get("mode") == "isekai":
         return render_isekai_html(result, name)
-    result = display_result(result)
     font = get_file(ResourceType.FONT, ResourceFolder.SIGN, "font.ttf")
     mode = result.get("mode", "world")
     regional_map = load_regional_map(mode) if mode != "world" else {}
@@ -108,10 +88,7 @@ def render_reborn_html(result: dict, name: str) -> str:
 def render_isekai_html(result: dict, name: str) -> str:
     """渲染新版综合人生卡片，历史缺少必要字段时直接跳过。"""
     font = get_file(ResourceType.FONT, ResourceFolder.SIGN, "font.ttf")
-    history = [
-        entry for entry in reversed(result["reborn_history"])
-        if all(entry.get(key) is not None for key in ("count", "world", "gender", "score"))
-    ][:10]
+    history = recent_records(result, "count", "world", "gender", "score")
     history = [entry | {"score_tier": score_tier(entry["score"])} for entry in history]
     return _environment.get_template("isekai.html").render(
         result=result,
@@ -128,6 +105,8 @@ def render_isekai_html(result: dict, name: str) -> str:
 
 async def render_reborn_card(result: dict, name: str) -> MessageSegment:
     """按固定二比一视口生成 PNG，保留渲染器默认双倍像素。"""
+    if not is_current_result(result):
+        return MessageSegment.text(OLD_RESULT_NOTICE)
     async with _render_limit:
         picture = await html_to_pic(
             html=render_reborn_html(result, name),
@@ -139,51 +118,40 @@ async def render_reborn_card(result: dict, name: str) -> MessageSegment:
 
 
 def render_anime_html(result: dict, name: str) -> str:
-    """新版动漫和二游使用标题图卡片，旧版结果继续展示已保存的作品快照。"""
+    """按当前模式渲染二次元和二游标题图卡片，跳过字段不完整的历史。"""
     font = get_file(ResourceType.FONT, ResourceFolder.SIGN, "font.ttf")
-    history = list(reversed(result["reborn_history"][-10:]))
-    if result.get("result_version") == GAMES_VERSION:
+    image = assets.get_dir(ResourceType.IMAGE) / "reborn" / result["world"]["logo"]
+    context = {
+        "result": result, "name": name, "card_size": CARD_VIEWPORT,
+        "attribute_rows": attribute_rows(result["attributes"]), "bot_version": get_bot_version(),
+        "font_uri": font.resolve().as_uri() if font else "", "title_image_uri": image.resolve().as_uri(),
+    }
+    if result["mode"] == "games":
         history = [entry | {
-            "score_text": entry["rating"], "score_tier": entry.get("rating_tier", "slate"),
-        } for entry in history]
-        image = assets.get_dir(ResourceType.IMAGE) / "reborn" / result["world"]["logo"]
+            "score_text": entry["rating"], "score_tier": entry["rating_tier"],
+        } for entry in recent_records(result, "count", "world", "gender", "rating", "rating_tier")]
         return _environment.get_template("games_card.html").render(
-            result=result, name=name, card_size=CARD_VIEWPORT,
-            attribute_rows=attribute_rows(result["attributes"]), detail_rows=game_detail_rows(result),
-            score_tier=result["rating"]["tier"], bot_version=get_bot_version(),
-            font_uri=font.resolve().as_uri() if font else "", title_image_uri=image.resolve().as_uri(),
+            **context, detail_rows=game_detail_rows(result), score_tier=result["rating"]["tier"],
             history_slots=history + [None] * (10 - len(history)),
         )
-    if result.get("result_version") == ANIME_VERSION:
-        history = [entry | {
-            "score_text": f"{entry['score']}分" if "score" in entry else entry["rating"],
-            "score_tier": score_tier(entry["score"]) if "score" in entry else "slate",
-        } for entry in history]
-        image = assets.get_dir(ResourceType.IMAGE) / "reborn" / result["world"]["logo"]
-        return _environment.get_template("anime_card.html").render(
-            result=result, name=name, card_size=CARD_VIEWPORT,
-            category_name=CATEGORY_NAMES[result["world"]["category"]],
-            attribute_rows=attribute_rows(result["attributes"]), life_rows=anime_life_rows(result),
-            score_tier=score_tier(result["score"]), bot_version=get_bot_version(),
-            font_uri=font.resolve().as_uri() if font else "", title_image_uri=image.resolve().as_uri(),
-            history_slots=history + [None] * (10 - len(history)),
-        )
-    return _environment.get_template("anime.html").render(
-        result=result, name=name, mode_name=MODE_NAMES[result["mode"]],
-        card_size=CARD_VIEWPORT,
-        bot_version=get_bot_version(),
-        font_uri=font.resolve().as_uri() if font else "",
+    history = [entry | {
+        "score_text": f"{entry['score']}分", "score_tier": score_tier(entry["score"]),
+    } for entry in recent_records(result, "count", "world", "gender", "score")]
+    return _environment.get_template("anime_card.html").render(
+        **context, category_name=CATEGORY_NAMES[result["world"]["category"]],
+        life_rows=anime_life_rows(result), score_tier=score_tier(result["score"]),
         history_slots=history + [None] * (10 - len(history)),
     )
 
 
 def result_text(result: dict, *, prefix: str, name: str = "") -> str:
     """图片不可用时按模式返回档案，现实模式展示星级、评分、人生结果及记录。"""
+    if not is_current_result(result):
+        return f"{prefix}\n{OLD_RESULT_NOTICE}"
     if result.get("mode") in {"anime", "games"}:
         return anime_result_text(result, prefix=prefix, name=name)
     if result.get("mode") == "isekai":
         return isekai_result_text(result, prefix=prefix, name=name)
-    result = display_result(result)
     country = result["country"]
     attributes = "\n".join(
         f"{row['name']}：{row['value_text']} 星（{row['title']}）"
@@ -213,70 +181,32 @@ def result_text(result: dict, *, prefix: str, name: str = "") -> str:
 
 
 def isekai_result_text(result: dict, *, prefix: str, name: str) -> str:
-    """回复新版综合人生与有效历史，缺少新版数据的旧结果不作补全。"""
-    if not all(key in result for key in ("attributes", "life", "score", "body")):
-        return f"{prefix}\n这份旧档案缺少综合人生数据，请重开或明日重新投胎。"
+    """回复综合人生与有效历史，不补全旧档案。"""
     history = "\n".join(
         f"第{row['count']}次 {row['world']} - {row['score']}分"
-        for row in reversed(result["reborn_history"])
-        if all(row.get(key) is not None for key in ("count", "world", "gender", "score"))
+        for row in recent_records(result, "count", "world", "gender", "score")
     )
     return f"{prefix}\n{name}，这是你的第{result['reborn_count']}次异世界投胎\n{isekai_text(result)}\n记录：\n{history}"
 
 
 def anime_result_text(result: dict, *, prefix: str, name: str) -> str:
-    """新版动漫和二游输出精简档案，旧版保留已存的分区字段与引用。"""
-    if result.get("result_version") == GAMES_VERSION:
+    """输出当前二次元或二游档案及完整历史条目。"""
+    if result["mode"] == "games":
         history = "\n".join(
             f"第{row['count']}次 {row['world']} · {row['rating']} "
             f"{'♂' if row['gender'] == '男' else '♀'}"
-            for row in reversed(result["reborn_history"][-10:])
+            for row in recent_records(result, "count", "world", "gender", "rating", "rating_tier")
         )
-        return (
-            f"{prefix}\n{result['title']} · {result['date']}\n"
-            f"{name + '，' if name else ''}这是你的第{result['reborn_count']}次二游投胎\n"
-            f"{games_text(result)}\n{result['notice']}\n记录：\n{history}"
-        )
-    if result.get("result_version") == ANIME_VERSION:
+        mode_name, content = "二游", games_text(result)
+    else:
         history = "\n".join(
-            f"第{row['count']}次 {row['world']} · "
-            f"{str(row['score']) + '分' if 'score' in row else row['rating']} "
+            f"第{row['count']}次 {row['world']} · {row['score']}分 "
             f"{'♂' if row['gender'] == '男' else '♀'}"
-            for row in reversed(result["reborn_history"][-10:])
+            for row in recent_records(result, "count", "world", "gender", "score")
         )
-        return (
-            f"{prefix}\n{result['title']} · {result['date']}\n"
-            f"{name + '，' if name else ''}这是你的第{result['reborn_count']}次二次元投胎\n"
-            f"{anime_text(result)}\n{result['notice']}\n记录：\n{history}"
-        )
-    numbers = {source["id"]: index for index, source in enumerate(result["sources"], 1)}
-    sections = []
-    for section in result["sections"]:
-        lines = []
-        for row in section["rows"]:
-            refs = "".join(f"[{numbers[ref]}]" for ref in row["source_refs"])
-            description = f"\n  {row['description']}" if row["description"] else ""
-            lines.append(f"{row['label']}：{row['value']}{refs}{description}")
-        sections.append(f"——{section['title']}——\n" + "\n".join(lines))
-    fields = "\n\n".join(sections)
-    rating = result["rating"]
-    rating_refs = "".join(f"[{numbers[ref]}]" for ref in rating["source_refs"])
-    sources = "\n".join(
-        f"[{index}] {source['title']}（{source['checked_at']}）\n{source['url']}"
-        for index, source in enumerate(result["sources"], 1)
-    )
-    history = "\n".join(
-        f"第{row['count']}次 {row['date'][5:]} {row['world']} · {row['gender']} · {row['rating']} · {row['summary']}"
-        for row in reversed(result["reborn_history"][-10:])
-    )
-    introduction = f"{name}，" if name else ""
-    mode_name = MODE_NAMES[result["mode"]]
+        mode_name, content = "二次元", anime_text(result)
     return (
         f"{prefix}\n{result['title']} · {result['date']}\n"
-        f"{introduction}这是你的第{result['reborn_count']}次{mode_name}投胎\n"
-        f"世界：{result['world']['title']} ｜ 性别：{result['gender']}\n"
-        f"{result['world']['description']}\n资料范围：{result['world']['scope']}\n\n{fields}\n\n"
-        f"{rating['label']}：{rating['value']}{rating_refs}\n{rating['description']}\n"
-        f"{result['notice']}\n资料版本：{result['dataset_version']}\n"
-        f"资料来源：\n{sources}\n最近十次{mode_name}投胎：\n{history}"
+        f"{name + '，' if name else ''}这是你的第{result['reborn_count']}次{mode_name}投胎\n"
+        f"{content}\n{result['notice']}\n记录：\n{history}"
     )

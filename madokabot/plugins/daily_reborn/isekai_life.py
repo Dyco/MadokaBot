@@ -7,7 +7,6 @@ from .attributes import STAR_DISTRIBUTION
 from .potential import STAR_POINTS
 
 VERSION = "isekai_life_v1"
-WORLD_NAMES = {"high_fantasy": "奇幻世界", "cyberpunk": "赛博未来", "cultivation": "仙侠修仙", "occult_industrial": "诡秘世界"}
 REALMS = ("凡人", "炼气", "筑基", "结丹", "元婴", "化神", "炼虚", "合体", "大乘")
 YEARS = (85, 120, 220, 500, 1200, 2200, 5000, 10000, 18000)
 SPECIES_YEARS = {"elf": 750, "dwarf": 350, "halfling": 150, "gnome": 425}
@@ -41,7 +40,7 @@ def parent_fields(parent: dict, kind: str, region: str, rng: random.Random) -> l
     if kind == "cyberpunk":
         return [{"label": "职业", "value": parent["occupation"]}, {"label": "地区", "value": region},
                 {"label": "躯体", "value": body_text(rng.choices((0, 15, 30, 45, 55, 70), (25, 25, 20, 15, 10, 5))[0])}]
-    powers = parent.get("powers", [parent["power"]])
+    powers = parent["powers"]
     power = " / ".join(row["name"] for row in powers)
     identity = parent["identity"]
     label = "实力"
@@ -125,10 +124,8 @@ def complete_life(result: dict) -> dict:
             strength = min(1, (10 - int(sequence[1])) / 4) if sequence else 0
             quality = (fortune / 7 + min(1, age / normal_age) + strength) / 3
     score = min(100, max(0, round(sum(STAR_POINTS[value] for value in stars.values()) + quality * 20)))
-    title = WORLD_NAMES[kind]
     return result | {
-        "result_version": VERSION, "title": "异世界人生档案", "world": result["world"] | {"title": title},
+        "result_version": VERSION,
         "attributes": stars, "parents": parents, "body": body, "life": details, "score": score,
-        "notice": "综合人生结果为游戏模拟。上海时间明日零点可再次免费投胎。",
     }
 

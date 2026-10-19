@@ -18,12 +18,6 @@
             "id": "human",
             "name": "人类",
             "weight": 50,
-            "birth_state": "人类新生，尚未学习冒险者职业。",
-            "features": [
-                "类人生物",
-                "体型和文化多样"
-            ],
-            "life_span": "通常约80年，属于物种背景参考。",
             "original_term": "Human",
             "provenance": "source_summary",
             "source_refs": [
@@ -37,50 +31,6 @@
             "id": "elf",
             "name": "精灵",
             "weight": 12,
-            "lineages": [
-                {
-                    "id": "high_elf",
-                    "name": "高等精灵",
-                    "weight": 3,
-                    "provenance": "source_summary",
-                    "source_refs": [
-                        "dnd_origins"
-                    ],
-                    "source_locator": "Character Origins / Elf / Lineage or Ancestry",
-                    "review_note": "中文为项目工作译名；同祖源家庭为第一版游戏简化。",
-                    "reviewed_on": "2026-10-19"
-                },
-                {
-                    "id": "wood_elf",
-                    "name": "木精灵",
-                    "weight": 3,
-                    "provenance": "source_summary",
-                    "source_refs": [
-                        "dnd_origins"
-                    ],
-                    "source_locator": "Character Origins / Elf / Lineage or Ancestry",
-                    "review_note": "中文为项目工作译名；同祖源家庭为第一版游戏简化。",
-                    "reviewed_on": "2026-10-19"
-                },
-                {
-                    "id": "drow",
-                    "name": "卓尔精灵",
-                    "weight": 1,
-                    "provenance": "source_summary",
-                    "source_refs": [
-                        "dnd_origins"
-                    ],
-                    "source_locator": "Character Origins / Elf / Lineage or Ancestry",
-                    "review_note": "中文为项目工作译名；同祖源家庭为第一版游戏简化。",
-                    "reviewed_on": "2026-10-19"
-                }
-            ],
-            "birth_state": "精灵新生，尚未学习冒险者职业。",
-            "features": [
-                "尖耳的长寿族群",
-                "高等、木与卓尔祖源"
-            ],
-            "life_span": "通常约750年，属于物种背景参考。",
             "original_term": "Elf",
             "provenance": "source_summary",
             "source_refs": [
@@ -94,12 +44,6 @@
             "id": "dwarf",
             "name": "矮人",
             "weight": 10,
-            "birth_state": "矮人新生，尚未学习冒险者职业。",
-            "features": [
-                "类人生物",
-                "矮人族群具有坚韧的生理与魔法特征"
-            ],
-            "life_span": "通常约350年，属于物种背景参考。",
             "original_term": "Dwarf",
             "provenance": "source_summary",
             "source_refs": [
@@ -113,12 +57,6 @@
             "id": "halfling",
             "name": "半身人",
             "weight": 8,
-            "birth_state": "半身人新生，尚未学习冒险者职业。",
-            "features": [
-                "小型类人族群",
-                "规则中具有勇气与幸运相关特征"
-            ],
-            "life_span": "通常约150年，属于物种背景参考。",
             "original_term": "Halfling",
             "provenance": "source_summary",
             "source_refs": [
@@ -132,38 +70,6 @@
             "id": "gnome",
             "name": "侏儒",
             "weight": 6,
-            "lineages": [
-                {
-                    "id": "forest",
-                    "name": "森林侏儒",
-                    "weight": 1,
-                    "provenance": "source_summary",
-                    "source_refs": [
-                        "dnd_origins"
-                    ],
-                    "source_locator": "Character Origins / Gnome / Lineage or Ancestry",
-                    "review_note": "中文为项目工作译名；同祖源家庭为第一版游戏简化。",
-                    "reviewed_on": "2026-10-19"
-                },
-                {
-                    "id": "rock",
-                    "name": "岩侏儒",
-                    "weight": 1,
-                    "provenance": "source_summary",
-                    "source_refs": [
-                        "dnd_origins"
-                    ],
-                    "source_locator": "Character Origins / Gnome / Lineage or Ancestry",
-                    "review_note": "中文为项目工作译名；同祖源家庭为第一版游戏简化。",
-                    "reviewed_on": "2026-10-19"
-                }
-            ],
-            "birth_state": "侏儒新生，尚未学习冒险者职业。",
-            "features": [
-                "小型长寿族群",
-                "森林与岩侏儒祖源"
-            ],
-            "life_span": "通常约425年，属于物种背景参考。",
             "original_term": "Gnome",
             "provenance": "source_summary",
             "source_refs": [
@@ -177,144 +83,6 @@
             "id": "dragonborn",
             "name": "龙裔",
             "weight": 5,
-            "lineages": [
-                {
-                    "id": "black",
-                    "name": "黑龙祖源",
-                    "weight": 1,
-                    "provenance": "source_summary",
-                    "source_refs": [
-                        "dnd_origins"
-                    ],
-                    "source_locator": "Character Origins / Dragonborn / Lineage or Ancestry",
-                    "review_note": "中文为项目工作译名；同祖源家庭为第一版游戏简化。",
-                    "reviewed_on": "2026-10-19",
-                    "description": "祖源对应酸蚀类型；不赋予新生儿已经熟练使用的吐息。"
-                },
-                {
-                    "id": "blue",
-                    "name": "蓝龙祖源",
-                    "weight": 1,
-                    "provenance": "source_summary",
-                    "source_refs": [
-                        "dnd_origins"
-                    ],
-                    "source_locator": "Character Origins / Dragonborn / Lineage or Ancestry",
-                    "review_note": "中文为项目工作译名；同祖源家庭为第一版游戏简化。",
-                    "reviewed_on": "2026-10-19",
-                    "description": "祖源对应闪电类型；不赋予新生儿已经熟练使用的吐息。"
-                },
-                {
-                    "id": "brass",
-                    "name": "黄铜龙祖源",
-                    "weight": 1,
-                    "provenance": "source_summary",
-                    "source_refs": [
-                        "dnd_origins"
-                    ],
-                    "source_locator": "Character Origins / Dragonborn / Lineage or Ancestry",
-                    "review_note": "中文为项目工作译名；同祖源家庭为第一版游戏简化。",
-                    "reviewed_on": "2026-10-19",
-                    "description": "祖源对应火焰类型；不赋予新生儿已经熟练使用的吐息。"
-                },
-                {
-                    "id": "bronze",
-                    "name": "青铜龙祖源",
-                    "weight": 1,
-                    "provenance": "source_summary",
-                    "source_refs": [
-                        "dnd_origins"
-                    ],
-                    "source_locator": "Character Origins / Dragonborn / Lineage or Ancestry",
-                    "review_note": "中文为项目工作译名；同祖源家庭为第一版游戏简化。",
-                    "reviewed_on": "2026-10-19",
-                    "description": "祖源对应闪电类型；不赋予新生儿已经熟练使用的吐息。"
-                },
-                {
-                    "id": "copper",
-                    "name": "赤铜龙祖源",
-                    "weight": 1,
-                    "provenance": "source_summary",
-                    "source_refs": [
-                        "dnd_origins"
-                    ],
-                    "source_locator": "Character Origins / Dragonborn / Lineage or Ancestry",
-                    "review_note": "中文为项目工作译名；同祖源家庭为第一版游戏简化。",
-                    "reviewed_on": "2026-10-19",
-                    "description": "祖源对应酸蚀类型；不赋予新生儿已经熟练使用的吐息。"
-                },
-                {
-                    "id": "gold",
-                    "name": "金龙祖源",
-                    "weight": 1,
-                    "provenance": "source_summary",
-                    "source_refs": [
-                        "dnd_origins"
-                    ],
-                    "source_locator": "Character Origins / Dragonborn / Lineage or Ancestry",
-                    "review_note": "中文为项目工作译名；同祖源家庭为第一版游戏简化。",
-                    "reviewed_on": "2026-10-19",
-                    "description": "祖源对应火焰类型；不赋予新生儿已经熟练使用的吐息。"
-                },
-                {
-                    "id": "green",
-                    "name": "绿龙祖源",
-                    "weight": 1,
-                    "provenance": "source_summary",
-                    "source_refs": [
-                        "dnd_origins"
-                    ],
-                    "source_locator": "Character Origins / Dragonborn / Lineage or Ancestry",
-                    "review_note": "中文为项目工作译名；同祖源家庭为第一版游戏简化。",
-                    "reviewed_on": "2026-10-19",
-                    "description": "祖源对应毒素类型；不赋予新生儿已经熟练使用的吐息。"
-                },
-                {
-                    "id": "red",
-                    "name": "红龙祖源",
-                    "weight": 1,
-                    "provenance": "source_summary",
-                    "source_refs": [
-                        "dnd_origins"
-                    ],
-                    "source_locator": "Character Origins / Dragonborn / Lineage or Ancestry",
-                    "review_note": "中文为项目工作译名；同祖源家庭为第一版游戏简化。",
-                    "reviewed_on": "2026-10-19",
-                    "description": "祖源对应火焰类型；不赋予新生儿已经熟练使用的吐息。"
-                },
-                {
-                    "id": "silver",
-                    "name": "银龙祖源",
-                    "weight": 1,
-                    "provenance": "source_summary",
-                    "source_refs": [
-                        "dnd_origins"
-                    ],
-                    "source_locator": "Character Origins / Dragonborn / Lineage or Ancestry",
-                    "review_note": "中文为项目工作译名；同祖源家庭为第一版游戏简化。",
-                    "reviewed_on": "2026-10-19",
-                    "description": "祖源对应寒冷类型；不赋予新生儿已经熟练使用的吐息。"
-                },
-                {
-                    "id": "white",
-                    "name": "白龙祖源",
-                    "weight": 1,
-                    "provenance": "source_summary",
-                    "source_refs": [
-                        "dnd_origins"
-                    ],
-                    "source_locator": "Character Origins / Dragonborn / Lineage or Ancestry",
-                    "review_note": "中文为项目工作译名；同祖源家庭为第一版游戏简化。",
-                    "reviewed_on": "2026-10-19",
-                    "description": "祖源对应寒冷类型；不赋予新生儿已经熟练使用的吐息。"
-                }
-            ],
-            "birth_state": "龙裔新生，尚未学习冒险者职业。",
-            "features": [
-                "有鳞片与龙形外貌的类人族群",
-                "祖源影响外观与成长后的元素特征"
-            ],
-            "life_span": "通常约80年，属于物种背景参考。",
             "original_term": "Dragonborn",
             "provenance": "source_summary",
             "source_refs": [
@@ -328,12 +96,6 @@
             "id": "orc",
             "name": "兽人",
             "weight": 5,
-            "birth_state": "兽人新生，尚未学习冒险者职业。",
-            "features": [
-                "类人生物",
-                "族群具有坚韧与行动相关特征"
-            ],
-            "life_span": "通常约80年，属于物种背景参考。",
             "original_term": "Orc",
             "provenance": "source_summary",
             "source_refs": [
@@ -347,50 +109,6 @@
             "id": "tiefling",
             "name": "提夫林",
             "weight": 3,
-            "lineages": [
-                {
-                    "id": "abyssal",
-                    "name": "深渊传承",
-                    "weight": 1,
-                    "provenance": "source_summary",
-                    "source_refs": [
-                        "dnd_origins"
-                    ],
-                    "source_locator": "Character Origins / Tiefling / Lineage or Ancestry",
-                    "review_note": "中文为项目工作译名；同祖源家庭为第一版游戏简化。",
-                    "reviewed_on": "2026-10-19"
-                },
-                {
-                    "id": "chthonic",
-                    "name": "冥界传承",
-                    "weight": 1,
-                    "provenance": "source_summary",
-                    "source_refs": [
-                        "dnd_origins"
-                    ],
-                    "source_locator": "Character Origins / Tiefling / Lineage or Ancestry",
-                    "review_note": "中文为项目工作译名；同祖源家庭为第一版游戏简化。",
-                    "reviewed_on": "2026-10-19"
-                },
-                {
-                    "id": "infernal",
-                    "name": "炼狱传承",
-                    "weight": 1,
-                    "provenance": "source_summary",
-                    "source_refs": [
-                        "dnd_origins"
-                    ],
-                    "source_locator": "Character Origins / Tiefling / Lineage or Ancestry",
-                    "review_note": "中文为项目工作译名；同祖源家庭为第一版游戏简化。",
-                    "reviewed_on": "2026-10-19"
-                }
-            ],
-            "birth_state": "提夫林新生，尚未学习冒险者职业。",
-            "features": [
-                "受下层位面传承影响的类人族群",
-                "传承不决定个人善恶"
-            ],
-            "life_span": "通常约80年，属于物种背景参考。",
             "original_term": "Tiefling",
             "provenance": "source_summary",
             "source_refs": [
@@ -404,86 +122,6 @@
             "id": "goliath",
             "name": "歌利亚",
             "weight": 1,
-            "lineages": [
-                {
-                    "id": "cloud_giant",
-                    "name": "云巨人祖源",
-                    "weight": 1,
-                    "provenance": "source_summary",
-                    "source_refs": [
-                        "dnd_origins"
-                    ],
-                    "source_locator": "Character Origins / Goliath / Lineage or Ancestry",
-                    "review_note": "中文为项目工作译名；同祖源家庭为第一版游戏简化。",
-                    "reviewed_on": "2026-10-19"
-                },
-                {
-                    "id": "fire_giant",
-                    "name": "火巨人祖源",
-                    "weight": 1,
-                    "provenance": "source_summary",
-                    "source_refs": [
-                        "dnd_origins"
-                    ],
-                    "source_locator": "Character Origins / Goliath / Lineage or Ancestry",
-                    "review_note": "中文为项目工作译名；同祖源家庭为第一版游戏简化。",
-                    "reviewed_on": "2026-10-19"
-                },
-                {
-                    "id": "frost_giant",
-                    "name": "霜巨人祖源",
-                    "weight": 1,
-                    "provenance": "source_summary",
-                    "source_refs": [
-                        "dnd_origins"
-                    ],
-                    "source_locator": "Character Origins / Goliath / Lineage or Ancestry",
-                    "review_note": "中文为项目工作译名；同祖源家庭为第一版游戏简化。",
-                    "reviewed_on": "2026-10-19"
-                },
-                {
-                    "id": "hill_giant",
-                    "name": "山丘巨人祖源",
-                    "weight": 1,
-                    "provenance": "source_summary",
-                    "source_refs": [
-                        "dnd_origins"
-                    ],
-                    "source_locator": "Character Origins / Goliath / Lineage or Ancestry",
-                    "review_note": "中文为项目工作译名；同祖源家庭为第一版游戏简化。",
-                    "reviewed_on": "2026-10-19"
-                },
-                {
-                    "id": "stone_giant",
-                    "name": "石巨人祖源",
-                    "weight": 1,
-                    "provenance": "source_summary",
-                    "source_refs": [
-                        "dnd_origins"
-                    ],
-                    "source_locator": "Character Origins / Goliath / Lineage or Ancestry",
-                    "review_note": "中文为项目工作译名；同祖源家庭为第一版游戏简化。",
-                    "reviewed_on": "2026-10-19"
-                },
-                {
-                    "id": "storm_giant",
-                    "name": "风暴巨人祖源",
-                    "weight": 1,
-                    "provenance": "source_summary",
-                    "source_refs": [
-                        "dnd_origins"
-                    ],
-                    "source_locator": "Character Origins / Goliath / Lineage or Ancestry",
-                    "review_note": "中文为项目工作译名；同祖源家庭为第一版游戏简化。",
-                    "reviewed_on": "2026-10-19"
-                }
-            ],
-            "birth_state": "歌利亚新生，尚未学习冒险者职业。",
-            "features": [
-                "具有巨人祖源的类人族群",
-                "祖源并不等于成年巨人的体型和实力"
-            ],
-            "life_span": "通常约80年，属于物种背景参考。",
             "original_term": "Goliath",
             "provenance": "source_summary",
             "source_refs": [
@@ -851,27 +489,13 @@
                 "herbalist",
                 "porter"
             ],
-            "resources": [
-                "稳定的乡邻联系",
-                "基础生活技能"
-            ],
-            "directions": [
-                "农业与手艺",
-                "商队或城镇工作"
-            ],
-            "challenge": "教育与远行需要自行积累资源。",
             "provenance": "adaptation",
             "source_refs": [
                 "project_isekai_v3"
             ],
             "source_locator": "奇幻世界 / families / rural",
             "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。",
-            "reviewed_on": "2026-10-19",
-            "birth_options": {
-                "upbringing": [
-                    "community"
-                ]
-            }
+            "reviewed_on": "2026-10-19"
         },
         {
             "id": "craft",
@@ -885,28 +509,13 @@
                 "carpenter",
                 "mining_worker"
             ],
-            "resources": [
-                "工坊学习机会",
-                "基础识字渠道"
-            ],
-            "directions": [
-                "工匠学徒",
-                "行会经营"
-            ],
-            "challenge": "接触高阶知识仍需要师承与机会。",
             "provenance": "adaptation",
             "source_refs": [
                 "project_isekai_v3"
             ],
             "source_locator": "奇幻世界 / families / craft",
             "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。",
-            "reviewed_on": "2026-10-19",
-            "birth_options": {
-                "upbringing": [
-                    "community",
-                    "workshop"
-                ]
-            }
+            "reviewed_on": "2026-10-19"
         },
         {
             "id": "merchant",
@@ -920,29 +529,13 @@
                 "caravan_guard",
                 "surveyor"
             ],
-            "resources": [
-                "基础教育",
-                "商路见闻",
-                "经营人脉"
-            ],
-            "directions": [
-                "商贸经营",
-                "远行探索"
-            ],
-            "challenge": "商路风险和经营波动会影响家庭。",
             "provenance": "adaptation",
             "source_refs": [
                 "project_isekai_v3"
             ],
             "source_locator": "奇幻世界 / families / merchant",
             "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。",
-            "reviewed_on": "2026-10-19",
-            "birth_options": {
-                "upbringing": [
-                    "travel",
-                    "library"
-                ]
-            }
+            "reviewed_on": "2026-10-19"
         },
         {
             "id": "temple",
@@ -955,29 +548,13 @@
                 "healer",
                 "cleric"
             ],
-            "resources": [
-                "神殿识字渠道",
-                "基础照护",
-                "信仰知识"
-            ],
-            "directions": [
-                "神殿事务",
-                "照护与求学"
-            ],
-            "challenge": "神殿资源需要学习与服务换取。",
             "provenance": "adaptation",
             "source_refs": [
                 "project_isekai_v3"
             ],
             "source_locator": "奇幻世界 / families / temple",
             "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。",
-            "reviewed_on": "2026-10-19",
-            "birth_options": {
-                "upbringing": [
-                    "temple",
-                    "community"
-                ]
-            }
+            "reviewed_on": "2026-10-19"
         },
         {
             "id": "adventurer",
@@ -995,29 +572,13 @@
                 "paladin",
                 "druid"
             ],
-            "resources": [
-                "旅途故事",
-                "基础体能指导",
-                "装备见识"
-            ],
-            "directions": [
-                "探索与护卫",
-                "冒险者训练"
-            ],
-            "challenge": "父母外出的不确定性会影响成长环境。",
             "provenance": "adaptation",
             "source_refs": [
                 "project_isekai_v3"
             ],
             "source_locator": "奇幻世界 / families / adventurer",
             "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。",
-            "reviewed_on": "2026-10-19",
-            "birth_options": {
-                "upbringing": [
-                    "travel",
-                    "tutored"
-                ]
-            }
+            "reviewed_on": "2026-10-19"
         },
         {
             "id": "arcane",
@@ -1031,28 +592,13 @@
                 "warlock",
                 "scribe"
             ],
-            "resources": [
-                "奥术学馆联系",
-                "基础识字环境"
-            ],
-            "directions": [
-                "奥术求学",
-                "知识与研究"
-            ],
-            "challenge": "接触魔法不等于已经具备施法能力。",
             "provenance": "adaptation",
             "source_refs": [
                 "project_isekai_v3"
             ],
             "source_locator": "奇幻世界 / families / arcane",
             "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。",
-            "reviewed_on": "2026-10-19",
-            "birth_options": {
-                "upbringing": [
-                    "library",
-                    "tutored"
-                ]
-            }
+            "reviewed_on": "2026-10-19"
         },
         {
             "id": "legacy",
@@ -1065,29 +611,13 @@
                 "senior_wizard",
                 "senior_cleric"
             ],
-            "resources": [
-                "系统教育",
-                "训练指导",
-                "较丰富的家庭资源"
-            ],
-            "directions": [
-                "专业训练",
-                "自主探索"
-            ],
-            "challenge": "家庭声望可能伴随责任，个人实力仍需成长。",
             "provenance": "adaptation",
             "source_refs": [
                 "project_isekai_v3"
             ],
             "source_locator": "奇幻世界 / families / legacy",
             "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。",
-            "reviewed_on": "2026-10-19",
-            "birth_options": {
-                "upbringing": [
-                    "tutored",
-                    "library"
-                ]
-            }
+            "reviewed_on": "2026-10-19"
         },
         {
             "id": "fishing",
@@ -1100,28 +630,13 @@
                 "hunter",
                 "carpenter"
             ],
-            "resources": [
-                "水岸生活经验",
-                "渔猎技艺接触"
-            ],
-            "directions": [
-                "渔猎与手艺",
-                "水路贸易"
-            ],
-            "challenge": "风浪和收成会影响家庭的积蓄。",
             "provenance": "adaptation",
             "source_refs": [
                 "project_isekai_v3"
             ],
             "source_locator": "奇幻世界 / families / fishing",
             "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。",
-            "reviewed_on": "2026-10-19",
-            "birth_options": {
-                "upbringing": [
-                    "community",
-                    "workshop"
-                ]
-            }
+            "reviewed_on": "2026-10-19"
         },
         {
             "id": "port_workers",
@@ -1134,29 +649,13 @@
                 "boatwright",
                 "porter"
             ],
-            "resources": [
-                "船舶见闻",
-                "基础工坊接触",
-                "商队联系"
-            ],
-            "directions": [
-                "航运与修造",
-                "商贸往来"
-            ],
-            "challenge": "长期出航与港口波动可能影响照护安排。",
             "provenance": "adaptation",
             "source_refs": [
                 "project_isekai_v3"
             ],
             "source_locator": "奇幻世界 / families / port_workers",
             "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。",
-            "reviewed_on": "2026-10-19",
-            "birth_options": {
-                "upbringing": [
-                    "community",
-                    "travel"
-                ]
-            }
+            "reviewed_on": "2026-10-19"
         },
         {
             "id": "border_watch",
@@ -1169,28 +668,13 @@
                 "caravan_guard",
                 "smith"
             ],
-            "resources": [
-                "基础训练",
-                "守备人员联系"
-            ],
-            "directions": [
-                "护卫与训练",
-                "军需手艺"
-            ],
-            "challenge": "边境局势会改变家庭的生活节奏。",
             "provenance": "adaptation",
             "source_refs": [
                 "project_isekai_v3"
             ],
             "source_locator": "奇幻世界 / families / border_watch",
             "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。",
-            "reviewed_on": "2026-10-19",
-            "birth_options": {
-                "upbringing": [
-                    "community",
-                    "tutored"
-                ]
-            }
+            "reviewed_on": "2026-10-19"
         },
         {
             "id": "scholars",
@@ -1203,29 +687,13 @@
                 "librarian",
                 "scribe"
             ],
-            "resources": [
-                "稳定识字教育",
-                "图书接触",
-                "学习指导"
-            ],
-            "directions": [
-                "文书与教育",
-                "知识求学"
-            ],
-            "challenge": "具备求学渠道不等于能够负担所有高阶课程。",
             "provenance": "adaptation",
             "source_refs": [
                 "project_isekai_v3"
             ],
             "source_locator": "奇幻世界 / families / scholars",
             "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。",
-            "reviewed_on": "2026-10-19",
-            "birth_options": {
-                "upbringing": [
-                    "library",
-                    "tutored"
-                ]
-            }
+            "reviewed_on": "2026-10-19"
         },
         {
             "id": "performers",
@@ -1238,28 +706,13 @@
                 "bard",
                 "innkeeper"
             ],
-            "resources": [
-                "表演启蒙",
-                "跨地区见闻"
-            ],
-            "directions": [
-                "表演与创作",
-                "巡演经营"
-            ],
-            "challenge": "迁移生活可能使稳定教育更加困难。",
             "provenance": "adaptation",
             "source_refs": [
                 "project_isekai_v3"
             ],
             "source_locator": "奇幻世界 / families / performers",
             "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。",
-            "reviewed_on": "2026-10-19",
-            "birth_options": {
-                "upbringing": [
-                    "travel",
-                    "community"
-                ]
-            }
+            "reviewed_on": "2026-10-19"
         },
         {
             "id": "wardens",
@@ -1272,28 +725,13 @@
                 "ranger",
                 "herbalist"
             ],
-            "resources": [
-                "野外生活指导",
-                "林地聚落联系"
-            ],
-            "directions": [
-                "巡护与探索",
-                "药材采集"
-            ],
-            "challenge": "自然环境和远行风险需要长期学习应对。",
             "provenance": "adaptation",
             "source_refs": [
                 "project_isekai_v3"
             ],
             "source_locator": "奇幻世界 / families / wardens",
             "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。",
-            "reviewed_on": "2026-10-19",
-            "birth_options": {
-                "upbringing": [
-                    "community",
-                    "travel"
-                ]
-            }
+            "reviewed_on": "2026-10-19"
         },
         {
             "id": "displaced",
@@ -1306,27 +744,13 @@
                 "porter",
                 "carpenter"
             ],
-            "resources": [
-                "务实的谋生经验",
-                "互助关系"
-            ],
-            "directions": [
-                "定居与学艺",
-                "商路工作"
-            ],
-            "challenge": "资源与关系需要重新积累，住房可能暂不稳定。",
             "provenance": "adaptation",
             "source_refs": [
                 "project_isekai_v3"
             ],
             "source_locator": "奇幻世界 / families / displaced",
             "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。",
-            "reviewed_on": "2026-10-19",
-            "birth_options": {
-                "upbringing": [
-                    "community"
-                ]
-            }
+            "reviewed_on": "2026-10-19"
         },
         {
             "id": "landed",
@@ -1339,28 +763,13 @@
                 "steward",
                 "teacher"
             ],
-            "resources": [
-                "庄园生活联系",
-                "基础识字渠道"
-            ],
-            "directions": [
-                "领地事务",
-                "自主求学"
-            ],
-            "challenge": "社会身份不等于冒险等级，家庭责任也会限制选择。",
             "provenance": "adaptation",
             "source_refs": [
                 "project_isekai_v3"
             ],
             "source_locator": "奇幻世界 / families / landed",
             "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。",
-            "reviewed_on": "2026-10-19",
-            "birth_options": {
-                "upbringing": [
-                    "library",
-                    "tutored"
-                ]
-            }
+            "reviewed_on": "2026-10-19"
         }
     ],
     "parent_profiles": [
@@ -1376,10 +785,6 @@
             "source_locator": "奇幻世界 / parent_profiles / farmer",
             "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。",
             "reviewed_on": "2026-10-19",
-            "affiliation": "当地行会、聚落或个人师承",
-            "resources": [
-                "农户相关的学艺见闻"
-            ],
             "power_set_ids": [
                 "single_mundane"
             ]
@@ -1396,10 +801,6 @@
             "source_locator": "奇幻世界 / parent_profiles / herbalist",
             "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。",
             "reviewed_on": "2026-10-19",
-            "affiliation": "当地行会、聚落或个人师承",
-            "resources": [
-                "采药人相关的学艺见闻"
-            ],
             "power_set_ids": [
                 "single_mundane"
             ]
@@ -1416,10 +817,6 @@
             "source_locator": "奇幻世界 / parent_profiles / porter",
             "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。",
             "reviewed_on": "2026-10-19",
-            "affiliation": "当地行会、聚落或个人师承",
-            "resources": [
-                "搬运工相关的学艺见闻"
-            ],
             "power_set_ids": [
                 "single_mundane"
             ]
@@ -1436,10 +833,6 @@
             "source_locator": "奇幻世界 / parent_profiles / smith",
             "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。",
             "reviewed_on": "2026-10-19",
-            "affiliation": "当地行会、聚落或个人师承",
-            "resources": [
-                "铁匠相关的学艺见闻"
-            ],
             "power_set_ids": [
                 "single_mundane"
             ]
@@ -1456,10 +849,6 @@
             "source_locator": "奇幻世界 / parent_profiles / scribe",
             "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。",
             "reviewed_on": "2026-10-19",
-            "affiliation": "当地行会、聚落或个人师承",
-            "resources": [
-                "抄写员相关的学艺见闻"
-            ],
             "power_set_ids": [
                 "single_mundane"
             ]
@@ -1476,10 +865,6 @@
             "source_locator": "奇幻世界 / parent_profiles / carpenter",
             "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。",
             "reviewed_on": "2026-10-19",
-            "affiliation": "当地行会、聚落或个人师承",
-            "resources": [
-                "木匠相关的学艺见闻"
-            ],
             "power_set_ids": [
                 "single_mundane"
             ]
@@ -1496,10 +881,6 @@
             "source_locator": "奇幻世界 / parent_profiles / merchant",
             "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。",
             "reviewed_on": "2026-10-19",
-            "affiliation": "当地行会、聚落或个人师承",
-            "resources": [
-                "商人相关的学艺见闻"
-            ],
             "power_set_ids": [
                 "single_mundane"
             ]
@@ -1517,10 +898,6 @@
             "source_locator": "奇幻世界 / parent_profiles / caravan_guard",
             "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。 本轮较低实力范围：补入2级，不向上扩大原有3级上限。",
             "reviewed_on": "2026-10-19",
-            "affiliation": "当地行会、聚落或个人师承",
-            "resources": [
-                "商队护卫相关的学艺见闻"
-            ],
             "power_set_ids": [
                 "single_fighter_1",
                 "single_fighter_2",
@@ -1539,10 +916,6 @@
             "source_locator": "奇幻世界 / parent_profiles / temple_scribe",
             "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。",
             "reviewed_on": "2026-10-19",
-            "affiliation": "当地行会、聚落或个人师承",
-            "resources": [
-                "神殿抄写员相关的学艺见闻"
-            ],
             "power_set_ids": [
                 "single_mundane"
             ]
@@ -1559,10 +932,6 @@
             "source_locator": "奇幻世界 / parent_profiles / healer",
             "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。",
             "reviewed_on": "2026-10-19",
-            "affiliation": "当地行会、聚落或个人师承",
-            "resources": [
-                "照护者相关的学艺见闻"
-            ],
             "power_set_ids": [
                 "single_mundane"
             ]
@@ -1580,10 +949,6 @@
             "source_locator": "奇幻世界 / parent_profiles / cleric",
             "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。 本轮较低实力范围：补齐1—5级中的2、4级，1级以下不虚设职业0级。",
             "reviewed_on": "2026-10-19",
-            "affiliation": "当地行会、聚落或个人师承",
-            "resources": [
-                "神殿牧师相关的学艺见闻"
-            ],
             "power_set_ids": [
                 "single_cleric_1",
                 "single_cleric_2",
@@ -1605,10 +970,6 @@
             "source_locator": "奇幻世界 / parent_profiles / fighter",
             "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。 本轮较低实力范围：补齐1—5级中的2、4级，1级以下不虚设职业0级。",
             "reviewed_on": "2026-10-19",
-            "affiliation": "当地行会、聚落或个人师承",
-            "resources": [
-                "战士相关的学艺见闻"
-            ],
             "power_set_ids": [
                 "single_fighter_1",
                 "single_fighter_2",
@@ -1630,10 +991,6 @@
             "source_locator": "奇幻世界 / parent_profiles / ranger",
             "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。 本轮较低实力范围：补齐1—5级中的2、4级，1级以下不虚设职业0级。",
             "reviewed_on": "2026-10-19",
-            "affiliation": "当地行会、聚落或个人师承",
-            "resources": [
-                "游侠相关的学艺见闻"
-            ],
             "power_set_ids": [
                 "single_ranger_1",
                 "single_ranger_2",
@@ -1655,10 +1012,6 @@
             "source_locator": "奇幻世界 / parent_profiles / rogue",
             "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。 本轮较低实力范围：补齐1—5级中的2、4级，1级以下不虚设职业0级。",
             "reviewed_on": "2026-10-19",
-            "affiliation": "当地行会、聚落或个人师承",
-            "resources": [
-                "游荡者相关的学艺见闻"
-            ],
             "power_set_ids": [
                 "single_rogue_1",
                 "single_rogue_2",
@@ -1680,10 +1033,6 @@
             "source_locator": "奇幻世界 / parent_profiles / barbarian",
             "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。 本轮较低实力范围：补齐1—5级中的2、4级，1级以下不虚设职业0级。",
             "reviewed_on": "2026-10-19",
-            "affiliation": "当地行会、聚落或个人师承",
-            "resources": [
-                "野蛮人相关的学艺见闻"
-            ],
             "power_set_ids": [
                 "single_barbarian_1",
                 "single_barbarian_2",
@@ -1705,10 +1054,6 @@
             "source_locator": "奇幻世界 / parent_profiles / bard",
             "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。 本轮较低实力范围：补齐1—5级中的2、4级，1级以下不虚设职业0级。",
             "reviewed_on": "2026-10-19",
-            "affiliation": "当地行会、聚落或个人师承",
-            "resources": [
-                "吟游诗人相关的学艺见闻"
-            ],
             "power_set_ids": [
                 "single_bard_1",
                 "single_bard_2",
@@ -1730,10 +1075,6 @@
             "source_locator": "奇幻世界 / parent_profiles / monk",
             "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。 本轮较低实力范围：补齐1—5级中的2、4级，1级以下不虚设职业0级。",
             "reviewed_on": "2026-10-19",
-            "affiliation": "当地行会、聚落或个人师承",
-            "resources": [
-                "武僧相关的学艺见闻"
-            ],
             "power_set_ids": [
                 "single_monk_1",
                 "single_monk_2",
@@ -1755,10 +1096,6 @@
             "source_locator": "奇幻世界 / parent_profiles / paladin",
             "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。 本轮较低实力范围：补齐1—5级中的2、4级，1级以下不虚设职业0级。",
             "reviewed_on": "2026-10-19",
-            "affiliation": "当地行会、聚落或个人师承",
-            "resources": [
-                "圣武士相关的学艺见闻"
-            ],
             "power_set_ids": [
                 "single_paladin_1",
                 "single_paladin_2",
@@ -1780,10 +1117,6 @@
             "source_locator": "奇幻世界 / parent_profiles / druid",
             "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。 本轮较低实力范围：补齐1—5级中的2、4级，1级以下不虚设职业0级。",
             "reviewed_on": "2026-10-19",
-            "affiliation": "当地行会、聚落或个人师承",
-            "resources": [
-                "德鲁伊相关的学艺见闻"
-            ],
             "power_set_ids": [
                 "single_druid_1",
                 "single_druid_2",
@@ -1805,10 +1138,6 @@
             "source_locator": "奇幻世界 / parent_profiles / wizard",
             "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。 本轮较低实力范围：补齐1—5级中的2、4级，1级以下不虚设职业0级。",
             "reviewed_on": "2026-10-19",
-            "affiliation": "当地行会、聚落或个人师承",
-            "resources": [
-                "法师相关的学艺见闻"
-            ],
             "power_set_ids": [
                 "single_wizard_1",
                 "single_wizard_2",
@@ -1830,10 +1159,6 @@
             "source_locator": "奇幻世界 / parent_profiles / sorcerer",
             "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。 本轮较低实力范围：补齐1—5级中的2、4级，1级以下不虚设职业0级。",
             "reviewed_on": "2026-10-19",
-            "affiliation": "当地行会、聚落或个人师承",
-            "resources": [
-                "术士相关的学艺见闻"
-            ],
             "power_set_ids": [
                 "single_sorcerer_1",
                 "single_sorcerer_2",
@@ -1855,10 +1180,6 @@
             "source_locator": "奇幻世界 / parent_profiles / warlock",
             "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。 本轮较低实力范围：补齐1—5级中的2、4级，1级以下不虚设职业0级。",
             "reviewed_on": "2026-10-19",
-            "affiliation": "当地行会、聚落或个人师承",
-            "resources": [
-                "邪术师相关的学艺见闻"
-            ],
             "power_set_ids": [
                 "single_warlock_1",
                 "single_warlock_2",
@@ -1880,10 +1201,6 @@
             "source_locator": "奇幻世界 / parent_profiles / veteran_fighter",
             "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。 本轮较低实力范围：从9、13级补为5—13级；保留资深身份，5级下限属于本项目定位，不是D&D官方职业准入线。",
             "reviewed_on": "2026-10-19",
-            "affiliation": "当地行会、聚落或个人师承",
-            "resources": [
-                "资深战士相关的学艺见闻"
-            ],
             "power_set_ids": [
                 "single_fighter_5",
                 "single_fighter_6",
@@ -1909,10 +1226,6 @@
             "source_locator": "奇幻世界 / parent_profiles / senior_wizard",
             "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。 本轮较低实力范围：从9、13级补为5—13级；保留资深身份，5级下限属于本项目定位，不是D&D官方职业准入线。",
             "reviewed_on": "2026-10-19",
-            "affiliation": "当地行会、聚落或个人师承",
-            "resources": [
-                "资深法师相关的学艺见闻"
-            ],
             "power_set_ids": [
                 "single_wizard_5",
                 "single_wizard_6",
@@ -1938,10 +1251,6 @@
             "source_locator": "奇幻世界 / parent_profiles / senior_cleric",
             "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。 本轮较低实力范围：从9、13级补为5—13级；保留资深身份，5级下限属于本项目定位，不是D&D官方职业准入线。",
             "reviewed_on": "2026-10-19",
-            "affiliation": "当地行会、聚落或个人师承",
-            "resources": [
-                "资深牧师相关的学艺见闻"
-            ],
             "power_set_ids": [
                 "single_cleric_5",
                 "single_cleric_6",
@@ -1966,10 +1275,6 @@
             "source_locator": "奇幻世界 / parent_profiles / fisher",
             "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。",
             "reviewed_on": "2026-10-19",
-            "affiliation": "当地行会、聚落或个人师承",
-            "resources": [
-                "渔民相关的学艺见闻"
-            ],
             "power_set_ids": [
                 "single_mundane"
             ]
@@ -1986,10 +1291,6 @@
             "source_locator": "奇幻世界 / parent_profiles / sailor",
             "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。",
             "reviewed_on": "2026-10-19",
-            "affiliation": "当地行会、聚落或个人师承",
-            "resources": [
-                "水手相关的学艺见闻"
-            ],
             "power_set_ids": [
                 "single_mundane",
                 "single_fighter_1"
@@ -2007,10 +1308,6 @@
             "source_locator": "奇幻世界 / parent_profiles / boatwright",
             "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。",
             "reviewed_on": "2026-10-19",
-            "affiliation": "当地行会、聚落或个人师承",
-            "resources": [
-                "造船匠相关的学艺见闻"
-            ],
             "power_set_ids": [
                 "single_mundane"
             ]
@@ -2027,10 +1324,6 @@
             "source_locator": "奇幻世界 / parent_profiles / innkeeper",
             "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。",
             "reviewed_on": "2026-10-19",
-            "affiliation": "当地行会、聚落或个人师承",
-            "resources": [
-                "旅店经营者相关的学艺见闻"
-            ],
             "power_set_ids": [
                 "single_mundane"
             ]
@@ -2047,10 +1340,6 @@
             "source_locator": "奇幻世界 / parent_profiles / hunter",
             "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。",
             "reviewed_on": "2026-10-19",
-            "affiliation": "当地行会、聚落或个人师承",
-            "resources": [
-                "猎人相关的学艺见闻"
-            ],
             "power_set_ids": [
                 "single_mundane",
                 "single_ranger_1"
@@ -2069,10 +1358,6 @@
             "source_locator": "奇幻世界 / parent_profiles / watch_guard",
             "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。 本轮较低实力范围：补入2级，不向上扩大原有3级上限。",
             "reviewed_on": "2026-10-19",
-            "affiliation": "当地行会、聚落或个人师承",
-            "resources": [
-                "城镇卫兵相关的学艺见闻"
-            ],
             "power_set_ids": [
                 "single_fighter_1",
                 "single_fighter_2",
@@ -2091,10 +1376,6 @@
             "source_locator": "奇幻世界 / parent_profiles / surveyor",
             "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。",
             "reviewed_on": "2026-10-19",
-            "affiliation": "当地行会、聚落或个人师承",
-            "resources": [
-                "测绘员相关的学艺见闻"
-            ],
             "power_set_ids": [
                 "single_mundane",
                 "single_ranger_1"
@@ -2112,10 +1393,6 @@
             "source_locator": "奇幻世界 / parent_profiles / teacher",
             "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。",
             "reviewed_on": "2026-10-19",
-            "affiliation": "当地行会、聚落或个人师承",
-            "resources": [
-                "识字教师相关的学艺见闻"
-            ],
             "power_set_ids": [
                 "single_mundane"
             ]
@@ -2132,10 +1409,6 @@
             "source_locator": "奇幻世界 / parent_profiles / performer",
             "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。",
             "reviewed_on": "2026-10-19",
-            "affiliation": "当地行会、聚落或个人师承",
-            "resources": [
-                "巡回艺人相关的学艺见闻"
-            ],
             "power_set_ids": [
                 "single_mundane",
                 "single_bard_1"
@@ -2153,10 +1426,6 @@
             "source_locator": "奇幻世界 / parent_profiles / librarian",
             "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。",
             "reviewed_on": "2026-10-19",
-            "affiliation": "当地行会、聚落或个人师承",
-            "resources": [
-                "藏书管理员相关的学艺见闻"
-            ],
             "power_set_ids": [
                 "single_mundane"
             ]
@@ -2173,10 +1442,6 @@
             "source_locator": "奇幻世界 / parent_profiles / tenant",
             "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。",
             "reviewed_on": "2026-10-19",
-            "affiliation": "当地行会、聚落或个人师承",
-            "resources": [
-                "佃农相关的学艺见闻"
-            ],
             "power_set_ids": [
                 "single_mundane"
             ]
@@ -2193,10 +1458,6 @@
             "source_locator": "奇幻世界 / parent_profiles / noble",
             "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。",
             "reviewed_on": "2026-10-19",
-            "affiliation": "当地行会、聚落或个人师承",
-            "resources": [
-                "领地事务主持者相关的学艺见闻"
-            ],
             "power_set_ids": [
                 "single_mundane"
             ]
@@ -2213,10 +1474,6 @@
             "source_locator": "奇幻世界 / parent_profiles / steward",
             "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。",
             "reviewed_on": "2026-10-19",
-            "affiliation": "当地行会、聚落或个人师承",
-            "resources": [
-                "庄园管事相关的学艺见闻"
-            ],
             "power_set_ids": [
                 "single_mundane"
             ]
@@ -2233,10 +1490,6 @@
             "source_locator": "奇幻世界 / parent_profiles / mining_worker",
             "review_note": "逐项检查适用范围；叙事标签不是原作职业表或先天能力判定。",
             "reviewed_on": "2026-10-19",
-            "affiliation": "当地行会、聚落或个人师承",
-            "resources": [
-                "矿工相关的学艺见闻"
-            ],
             "power_set_ids": [
                 "single_mundane"
             ]
@@ -2250,7 +1503,6 @@
             "rank": null,
             "acquisition": "普通生计",
             "risk": "",
-            "birth_note": "",
             "provenance": "adaptation",
             "source_refs": [
                 "project_isekai_v3"
@@ -2267,7 +1519,6 @@
             "rank": 1,
             "acquisition": "职业学习与个人经历",
             "risk": "",
-            "birth_note": "",
             "provenance": "source_summary",
             "source_refs": [
                 "dnd_classes",
@@ -2285,7 +1536,6 @@
             "rank": 3,
             "acquisition": "职业学习与个人经历",
             "risk": "",
-            "birth_note": "",
             "provenance": "source_summary",
             "source_refs": [
                 "dnd_classes",
@@ -2303,7 +1553,6 @@
             "rank": 5,
             "acquisition": "职业学习与个人经历",
             "risk": "",
-            "birth_note": "",
             "provenance": "source_summary",
             "source_refs": [
                 "dnd_classes",
@@ -2321,7 +1570,6 @@
             "rank": 1,
             "acquisition": "职业学习与个人经历",
             "risk": "",
-            "birth_note": "",
             "provenance": "source_summary",
             "source_refs": [
                 "dnd_classes",
@@ -2339,7 +1587,6 @@
             "rank": 3,
             "acquisition": "职业学习与个人经历",
             "risk": "",
-            "birth_note": "",
             "provenance": "source_summary",
             "source_refs": [
                 "dnd_classes",
@@ -2357,7 +1604,6 @@
             "rank": 5,
             "acquisition": "职业学习与个人经历",
             "risk": "",
-            "birth_note": "",
             "provenance": "source_summary",
             "source_refs": [
                 "dnd_classes",
@@ -2375,7 +1621,6 @@
             "rank": 1,
             "acquisition": "职业学习与个人经历",
             "risk": "",
-            "birth_note": "",
             "provenance": "source_summary",
             "source_refs": [
                 "dnd_classes",
@@ -2393,7 +1638,6 @@
             "rank": 3,
             "acquisition": "职业学习与个人经历",
             "risk": "",
-            "birth_note": "",
             "provenance": "source_summary",
             "source_refs": [
                 "dnd_classes",
@@ -2411,7 +1655,6 @@
             "rank": 5,
             "acquisition": "职业学习与个人经历",
             "risk": "",
-            "birth_note": "",
             "provenance": "source_summary",
             "source_refs": [
                 "dnd_classes",
@@ -2429,7 +1672,6 @@
             "rank": 9,
             "acquisition": "职业学习与个人经历",
             "risk": "",
-            "birth_note": "",
             "provenance": "source_summary",
             "source_refs": [
                 "dnd_classes",
@@ -2447,7 +1689,6 @@
             "rank": 13,
             "acquisition": "职业学习与个人经历",
             "risk": "",
-            "birth_note": "",
             "provenance": "source_summary",
             "source_refs": [
                 "dnd_classes",
@@ -2465,7 +1706,6 @@
             "rank": 1,
             "acquisition": "职业学习与个人经历",
             "risk": "",
-            "birth_note": "",
             "provenance": "source_summary",
             "source_refs": [
                 "dnd_classes",
@@ -2483,7 +1723,6 @@
             "rank": 3,
             "acquisition": "职业学习与个人经历",
             "risk": "",
-            "birth_note": "",
             "provenance": "source_summary",
             "source_refs": [
                 "dnd_classes",
@@ -2501,7 +1740,6 @@
             "rank": 5,
             "acquisition": "职业学习与个人经历",
             "risk": "",
-            "birth_note": "",
             "provenance": "source_summary",
             "source_refs": [
                 "dnd_classes",
@@ -2519,7 +1757,6 @@
             "rank": 1,
             "acquisition": "职业学习与个人经历",
             "risk": "",
-            "birth_note": "",
             "provenance": "source_summary",
             "source_refs": [
                 "dnd_classes",
@@ -2537,7 +1774,6 @@
             "rank": 3,
             "acquisition": "职业学习与个人经历",
             "risk": "",
-            "birth_note": "",
             "provenance": "source_summary",
             "source_refs": [
                 "dnd_classes",
@@ -2555,7 +1791,6 @@
             "rank": 5,
             "acquisition": "职业学习与个人经历",
             "risk": "",
-            "birth_note": "",
             "provenance": "source_summary",
             "source_refs": [
                 "dnd_classes",
@@ -2573,7 +1808,6 @@
             "rank": 9,
             "acquisition": "职业学习与个人经历",
             "risk": "",
-            "birth_note": "",
             "provenance": "source_summary",
             "source_refs": [
                 "dnd_classes",
@@ -2591,7 +1825,6 @@
             "rank": 13,
             "acquisition": "职业学习与个人经历",
             "risk": "",
-            "birth_note": "",
             "provenance": "source_summary",
             "source_refs": [
                 "dnd_classes",
@@ -2609,7 +1842,6 @@
             "rank": 1,
             "acquisition": "职业学习与个人经历",
             "risk": "",
-            "birth_note": "",
             "provenance": "source_summary",
             "source_refs": [
                 "dnd_classes",
@@ -2627,7 +1859,6 @@
             "rank": 3,
             "acquisition": "职业学习与个人经历",
             "risk": "",
-            "birth_note": "",
             "provenance": "source_summary",
             "source_refs": [
                 "dnd_classes",
@@ -2645,7 +1876,6 @@
             "rank": 5,
             "acquisition": "职业学习与个人经历",
             "risk": "",
-            "birth_note": "",
             "provenance": "source_summary",
             "source_refs": [
                 "dnd_classes",
@@ -2663,7 +1893,6 @@
             "rank": 1,
             "acquisition": "职业学习与个人经历",
             "risk": "",
-            "birth_note": "",
             "provenance": "source_summary",
             "source_refs": [
                 "dnd_classes",
@@ -2681,7 +1910,6 @@
             "rank": 3,
             "acquisition": "职业学习与个人经历",
             "risk": "",
-            "birth_note": "",
             "provenance": "source_summary",
             "source_refs": [
                 "dnd_classes",
@@ -2699,7 +1927,6 @@
             "rank": 5,
             "acquisition": "职业学习与个人经历",
             "risk": "",
-            "birth_note": "",
             "provenance": "source_summary",
             "source_refs": [
                 "dnd_classes",
@@ -2717,7 +1944,6 @@
             "rank": 1,
             "acquisition": "职业学习与个人经历",
             "risk": "",
-            "birth_note": "",
             "provenance": "source_summary",
             "source_refs": [
                 "dnd_classes",
@@ -2735,7 +1961,6 @@
             "rank": 3,
             "acquisition": "职业学习与个人经历",
             "risk": "",
-            "birth_note": "",
             "provenance": "source_summary",
             "source_refs": [
                 "dnd_classes",
@@ -2753,7 +1978,6 @@
             "rank": 5,
             "acquisition": "职业学习与个人经历",
             "risk": "",
-            "birth_note": "",
             "provenance": "source_summary",
             "source_refs": [
                 "dnd_classes",
@@ -2771,7 +1995,6 @@
             "rank": 1,
             "acquisition": "职业学习与个人经历",
             "risk": "",
-            "birth_note": "",
             "provenance": "source_summary",
             "source_refs": [
                 "dnd_classes",
@@ -2789,7 +2012,6 @@
             "rank": 3,
             "acquisition": "职业学习与个人经历",
             "risk": "",
-            "birth_note": "",
             "provenance": "source_summary",
             "source_refs": [
                 "dnd_classes",
@@ -2807,7 +2029,6 @@
             "rank": 5,
             "acquisition": "职业学习与个人经历",
             "risk": "",
-            "birth_note": "",
             "provenance": "source_summary",
             "source_refs": [
                 "dnd_classes",
@@ -2825,7 +2046,6 @@
             "rank": 1,
             "acquisition": "职业学习与个人经历",
             "risk": "",
-            "birth_note": "",
             "provenance": "source_summary",
             "source_refs": [
                 "dnd_classes",
@@ -2843,7 +2063,6 @@
             "rank": 3,
             "acquisition": "职业学习与个人经历",
             "risk": "",
-            "birth_note": "",
             "provenance": "source_summary",
             "source_refs": [
                 "dnd_classes",
@@ -2861,7 +2080,6 @@
             "rank": 5,
             "acquisition": "职业学习与个人经历",
             "risk": "",
-            "birth_note": "",
             "provenance": "source_summary",
             "source_refs": [
                 "dnd_classes",
@@ -2879,7 +2097,6 @@
             "rank": 1,
             "acquisition": "职业学习与个人经历",
             "risk": "",
-            "birth_note": "",
             "provenance": "source_summary",
             "source_refs": [
                 "dnd_classes",
@@ -2897,7 +2114,6 @@
             "rank": 3,
             "acquisition": "职业学习与个人经历",
             "risk": "",
-            "birth_note": "",
             "provenance": "source_summary",
             "source_refs": [
                 "dnd_classes",
@@ -2915,7 +2131,6 @@
             "rank": 5,
             "acquisition": "职业学习与个人经历",
             "risk": "",
-            "birth_note": "",
             "provenance": "source_summary",
             "source_refs": [
                 "dnd_classes",
@@ -2933,7 +2148,6 @@
             "rank": 1,
             "acquisition": "职业学习与个人经历",
             "risk": "",
-            "birth_note": "",
             "provenance": "source_summary",
             "source_refs": [
                 "dnd_classes",
@@ -2951,7 +2165,6 @@
             "rank": 3,
             "acquisition": "职业学习与个人经历",
             "risk": "",
-            "birth_note": "",
             "provenance": "source_summary",
             "source_refs": [
                 "dnd_classes",
@@ -2969,7 +2182,6 @@
             "rank": 5,
             "acquisition": "职业学习与个人经历",
             "risk": "",
-            "birth_note": "",
             "provenance": "source_summary",
             "source_refs": [
                 "dnd_classes",
@@ -2987,7 +2199,6 @@
             "rank": 9,
             "acquisition": "职业学习与个人经历",
             "risk": "",
-            "birth_note": "",
             "provenance": "source_summary",
             "source_refs": [
                 "dnd_classes",
@@ -3005,7 +2216,6 @@
             "rank": 13,
             "acquisition": "职业学习与个人经历",
             "risk": "",
-            "birth_note": "",
             "provenance": "source_summary",
             "source_refs": [
                 "dnd_classes",
@@ -3023,7 +2233,6 @@
             "rank": 2,
             "acquisition": "职业学习与个人经历",
             "risk": "",
-            "birth_note": "",
             "provenance": "source_summary",
             "source_refs": [
                 "dnd_classes",
@@ -3042,7 +2251,6 @@
             "rank": 4,
             "acquisition": "职业学习与个人经历",
             "risk": "",
-            "birth_note": "",
             "provenance": "source_summary",
             "source_refs": [
                 "dnd_classes",
@@ -3061,7 +2269,6 @@
             "rank": 2,
             "acquisition": "职业学习与个人经历",
             "risk": "",
-            "birth_note": "",
             "provenance": "source_summary",
             "source_refs": [
                 "dnd_classes",
@@ -3080,7 +2287,6 @@
             "rank": 4,
             "acquisition": "职业学习与个人经历",
             "risk": "",
-            "birth_note": "",
             "provenance": "source_summary",
             "source_refs": [
                 "dnd_classes",
@@ -3099,7 +2305,6 @@
             "rank": 2,
             "acquisition": "职业学习与个人经历",
             "risk": "",
-            "birth_note": "",
             "provenance": "source_summary",
             "source_refs": [
                 "dnd_classes",
@@ -3118,7 +2323,6 @@
             "rank": 4,
             "acquisition": "职业学习与个人经历",
             "risk": "",
-            "birth_note": "",
             "provenance": "source_summary",
             "source_refs": [
                 "dnd_classes",
@@ -3137,7 +2341,6 @@
             "rank": 6,
             "acquisition": "职业学习与个人经历",
             "risk": "",
-            "birth_note": "",
             "provenance": "source_summary",
             "source_refs": [
                 "dnd_classes",
@@ -3156,7 +2359,6 @@
             "rank": 7,
             "acquisition": "职业学习与个人经历",
             "risk": "",
-            "birth_note": "",
             "provenance": "source_summary",
             "source_refs": [
                 "dnd_classes",
@@ -3175,7 +2377,6 @@
             "rank": 8,
             "acquisition": "职业学习与个人经历",
             "risk": "",
-            "birth_note": "",
             "provenance": "source_summary",
             "source_refs": [
                 "dnd_classes",
@@ -3194,7 +2395,6 @@
             "rank": 10,
             "acquisition": "职业学习与个人经历",
             "risk": "",
-            "birth_note": "",
             "provenance": "source_summary",
             "source_refs": [
                 "dnd_classes",
@@ -3213,7 +2413,6 @@
             "rank": 11,
             "acquisition": "职业学习与个人经历",
             "risk": "",
-            "birth_note": "",
             "provenance": "source_summary",
             "source_refs": [
                 "dnd_classes",
@@ -3232,7 +2431,6 @@
             "rank": 12,
             "acquisition": "职业学习与个人经历",
             "risk": "",
-            "birth_note": "",
             "provenance": "source_summary",
             "source_refs": [
                 "dnd_classes",
@@ -3251,7 +2449,6 @@
             "rank": 2,
             "acquisition": "职业学习与个人经历",
             "risk": "",
-            "birth_note": "",
             "provenance": "source_summary",
             "source_refs": [
                 "dnd_classes",
@@ -3270,7 +2467,6 @@
             "rank": 4,
             "acquisition": "职业学习与个人经历",
             "risk": "",
-            "birth_note": "",
             "provenance": "source_summary",
             "source_refs": [
                 "dnd_classes",
@@ -3289,7 +2485,6 @@
             "rank": 2,
             "acquisition": "职业学习与个人经历",
             "risk": "",
-            "birth_note": "",
             "provenance": "source_summary",
             "source_refs": [
                 "dnd_classes",
@@ -3308,7 +2503,6 @@
             "rank": 4,
             "acquisition": "职业学习与个人经历",
             "risk": "",
-            "birth_note": "",
             "provenance": "source_summary",
             "source_refs": [
                 "dnd_classes",
@@ -3327,7 +2521,6 @@
             "rank": 6,
             "acquisition": "职业学习与个人经历",
             "risk": "",
-            "birth_note": "",
             "provenance": "source_summary",
             "source_refs": [
                 "dnd_classes",
@@ -3346,7 +2539,6 @@
             "rank": 7,
             "acquisition": "职业学习与个人经历",
             "risk": "",
-            "birth_note": "",
             "provenance": "source_summary",
             "source_refs": [
                 "dnd_classes",
@@ -3365,7 +2557,6 @@
             "rank": 8,
             "acquisition": "职业学习与个人经历",
             "risk": "",
-            "birth_note": "",
             "provenance": "source_summary",
             "source_refs": [
                 "dnd_classes",
@@ -3384,7 +2575,6 @@
             "rank": 10,
             "acquisition": "职业学习与个人经历",
             "risk": "",
-            "birth_note": "",
             "provenance": "source_summary",
             "source_refs": [
                 "dnd_classes",
@@ -3403,7 +2593,6 @@
             "rank": 11,
             "acquisition": "职业学习与个人经历",
             "risk": "",
-            "birth_note": "",
             "provenance": "source_summary",
             "source_refs": [
                 "dnd_classes",
@@ -3422,7 +2611,6 @@
             "rank": 12,
             "acquisition": "职业学习与个人经历",
             "risk": "",
-            "birth_note": "",
             "provenance": "source_summary",
             "source_refs": [
                 "dnd_classes",
@@ -3441,7 +2629,6 @@
             "rank": 2,
             "acquisition": "职业学习与个人经历",
             "risk": "",
-            "birth_note": "",
             "provenance": "source_summary",
             "source_refs": [
                 "dnd_classes",
@@ -3460,7 +2647,6 @@
             "rank": 4,
             "acquisition": "职业学习与个人经历",
             "risk": "",
-            "birth_note": "",
             "provenance": "source_summary",
             "source_refs": [
                 "dnd_classes",
@@ -3479,7 +2665,6 @@
             "rank": 2,
             "acquisition": "职业学习与个人经历",
             "risk": "",
-            "birth_note": "",
             "provenance": "source_summary",
             "source_refs": [
                 "dnd_classes",
@@ -3498,7 +2683,6 @@
             "rank": 4,
             "acquisition": "职业学习与个人经历",
             "risk": "",
-            "birth_note": "",
             "provenance": "source_summary",
             "source_refs": [
                 "dnd_classes",
@@ -3517,7 +2701,6 @@
             "rank": 2,
             "acquisition": "职业学习与个人经历",
             "risk": "",
-            "birth_note": "",
             "provenance": "source_summary",
             "source_refs": [
                 "dnd_classes",
@@ -3536,7 +2719,6 @@
             "rank": 4,
             "acquisition": "职业学习与个人经历",
             "risk": "",
-            "birth_note": "",
             "provenance": "source_summary",
             "source_refs": [
                 "dnd_classes",
@@ -3555,7 +2737,6 @@
             "rank": 2,
             "acquisition": "职业学习与个人经历",
             "risk": "",
-            "birth_note": "",
             "provenance": "source_summary",
             "source_refs": [
                 "dnd_classes",
@@ -3574,7 +2755,6 @@
             "rank": 4,
             "acquisition": "职业学习与个人经历",
             "risk": "",
-            "birth_note": "",
             "provenance": "source_summary",
             "source_refs": [
                 "dnd_classes",
@@ -3593,7 +2773,6 @@
             "rank": 2,
             "acquisition": "职业学习与个人经历",
             "risk": "",
-            "birth_note": "",
             "provenance": "source_summary",
             "source_refs": [
                 "dnd_classes",
@@ -3612,7 +2791,6 @@
             "rank": 4,
             "acquisition": "职业学习与个人经历",
             "risk": "",
-            "birth_note": "",
             "provenance": "source_summary",
             "source_refs": [
                 "dnd_classes",
@@ -3631,7 +2809,6 @@
             "rank": 2,
             "acquisition": "职业学习与个人经历",
             "risk": "",
-            "birth_note": "",
             "provenance": "source_summary",
             "source_refs": [
                 "dnd_classes",
@@ -3650,7 +2827,6 @@
             "rank": 4,
             "acquisition": "职业学习与个人经历",
             "risk": "",
-            "birth_note": "",
             "provenance": "source_summary",
             "source_refs": [
                 "dnd_classes",
@@ -3669,7 +2845,6 @@
             "rank": 2,
             "acquisition": "职业学习与个人经历",
             "risk": "",
-            "birth_note": "",
             "provenance": "source_summary",
             "source_refs": [
                 "dnd_classes",
@@ -3688,7 +2863,6 @@
             "rank": 4,
             "acquisition": "职业学习与个人经历",
             "risk": "",
-            "birth_note": "",
             "provenance": "source_summary",
             "source_refs": [
                 "dnd_classes",
@@ -3707,7 +2881,6 @@
             "rank": 6,
             "acquisition": "职业学习与个人经历",
             "risk": "",
-            "birth_note": "",
             "provenance": "source_summary",
             "source_refs": [
                 "dnd_classes",
@@ -3726,7 +2899,6 @@
             "rank": 7,
             "acquisition": "职业学习与个人经历",
             "risk": "",
-            "birth_note": "",
             "provenance": "source_summary",
             "source_refs": [
                 "dnd_classes",
@@ -3745,7 +2917,6 @@
             "rank": 8,
             "acquisition": "职业学习与个人经历",
             "risk": "",
-            "birth_note": "",
             "provenance": "source_summary",
             "source_refs": [
                 "dnd_classes",
@@ -3764,7 +2935,6 @@
             "rank": 10,
             "acquisition": "职业学习与个人经历",
             "risk": "",
-            "birth_note": "",
             "provenance": "source_summary",
             "source_refs": [
                 "dnd_classes",
@@ -3783,7 +2953,6 @@
             "rank": 11,
             "acquisition": "职业学习与个人经历",
             "risk": "",
-            "birth_note": "",
             "provenance": "source_summary",
             "source_refs": [
                 "dnd_classes",
@@ -3802,7 +2971,6 @@
             "rank": 12,
             "acquisition": "职业学习与个人经历",
             "risk": "",
-            "birth_note": "",
             "provenance": "source_summary",
             "source_refs": [
                 "dnd_classes",
@@ -3814,170 +2982,8 @@
             "reviewed_on": "2026-10-19"
         }
     ],
-    "traits": [
-        {
-            "id": "curious",
-            "name": "求知好奇",
-            "weight": 24,
-            "description": "对新事物容易保持注意，成长中可能喜欢追问原因。",
-            "provenance": "adaptation",
-            "source_refs": [
-                "project_isekai_v3"
-            ],
-            "source_locator": "奇幻世界 / traits / curious",
-            "review_note": "成长倾向属于游戏叙事，不作新生儿认知诊断，不推断未来职业、原作能力或必然成就。",
-            "reviewed_on": "2026-10-19"
-        },
-        {
-            "id": "perceptive",
-            "name": "感知敏锐",
-            "weight": 18,
-            "description": "对周围声音与变化较敏感，仍需要学习如何理解这些信息。",
-            "provenance": "adaptation",
-            "source_refs": [
-                "project_isekai_v3"
-            ],
-            "source_locator": "奇幻世界 / traits / perceptive",
-            "review_note": "成长倾向属于游戏叙事，不作新生儿认知诊断，不推断未来职业、原作能力或必然成就。",
-            "reviewed_on": "2026-10-19"
-        },
-        {
-            "id": "sturdy",
-            "name": "体魄扎实",
-            "weight": 18,
-            "description": "出生时体能基础较稳，之后仍需要照护和训练。",
-            "provenance": "adaptation",
-            "source_refs": [
-                "project_isekai_v3"
-            ],
-            "source_locator": "奇幻世界 / traits / sturdy",
-            "review_note": "成长倾向属于游戏叙事，不作新生儿认知诊断，不推断未来职业、原作能力或必然成就。",
-            "reviewed_on": "2026-10-19"
-        },
-        {
-            "id": "patient",
-            "name": "耐心沉稳",
-            "weight": 18,
-            "description": "适合循序学习，长期积累可能成为优势。",
-            "provenance": "adaptation",
-            "source_refs": [
-                "project_isekai_v3"
-            ],
-            "source_locator": "奇幻世界 / traits / patient",
-            "review_note": "成长倾向属于游戏叙事，不作新生儿认知诊断，不推断未来职业、原作能力或必然成就。",
-            "reviewed_on": "2026-10-19"
-        },
-        {
-            "id": "expressive",
-            "name": "表达活跃",
-            "weight": 12,
-            "description": "乐于回应周围的人，可能较早表现出交流兴趣。",
-            "provenance": "adaptation",
-            "source_refs": [
-                "project_isekai_v3"
-            ],
-            "source_locator": "奇幻世界 / traits / expressive",
-            "review_note": "成长倾向属于游戏叙事，不作新生儿认知诊断，不推断未来职业、原作能力或必然成就。",
-            "reviewed_on": "2026-10-19"
-        },
-        {
-            "id": "ordinary",
-            "name": "平实新生",
-            "weight": 10,
-            "description": "没有特别突出的额外征兆，未来留给经历与选择。",
-            "provenance": "adaptation",
-            "source_refs": [
-                "project_isekai_v3"
-            ],
-            "source_locator": "奇幻世界 / traits / ordinary",
-            "review_note": "成长倾向属于游戏叙事，不作新生儿认知诊断，不推断未来职业、原作能力或必然成就。",
-            "reviewed_on": "2026-10-19"
-        },
-        {
-            "id": "rhythm",
-            "name": "节奏感良好",
-            "weight": 10,
-            "description": "对声音节奏容易产生回应，未来可在练习中培养音乐或动作兴趣。",
-            "provenance": "adaptation",
-            "source_refs": [
-                "project_isekai_v3"
-            ],
-            "source_locator": "奇幻世界 / traits / rhythm",
-            "review_note": "成长倾向属于游戏叙事，不作新生儿认知诊断，不推断未来职业、原作能力或必然成就。",
-            "reviewed_on": "2026-10-19"
-        },
-        {
-            "id": "spatial",
-            "name": "空间感灵动",
-            "weight": 10,
-            "description": "对位置与形状的变化较感兴趣，成长中可能喜欢制作和探索。",
-            "provenance": "adaptation",
-            "source_refs": [
-                "project_isekai_v3"
-            ],
-            "source_locator": "奇幻世界 / traits / spatial",
-            "review_note": "成长倾向属于游戏叙事，不作新生儿认知诊断，不推断未来职业、原作能力或必然成就。",
-            "reviewed_on": "2026-10-19"
-        },
-        {
-            "id": "linguistic",
-            "name": "语言感受细腻",
-            "weight": 10,
-            "description": "对说话的语气与声音反应细致，表达能力仍需成长培养。",
-            "provenance": "adaptation",
-            "source_refs": [
-                "project_isekai_v3"
-            ],
-            "source_locator": "奇幻世界 / traits / linguistic",
-            "review_note": "成长倾向属于游戏叙事，不作新生儿认知诊断，不推断未来职业、原作能力或必然成就。",
-            "reviewed_on": "2026-10-19"
-        },
-        {
-            "id": "resolute",
-            "name": "遇事坚韧",
-            "weight": 10,
-            "description": "适应日常变化时较有韧性，并不代表可以忽略照护与风险。",
-            "provenance": "adaptation",
-            "source_refs": [
-                "project_isekai_v3"
-            ],
-            "source_locator": "奇幻世界 / traits / resolute",
-            "review_note": "成长倾向属于游戏叙事，不作新生儿认知诊断，不推断未来职业、原作能力或必然成就。",
-            "reviewed_on": "2026-10-19"
-        },
-        {
-            "id": "imaginative",
-            "name": "想象活跃",
-            "weight": 10,
-            "description": "容易对声音和故事保持兴趣，未来可能喜欢创作与求知。",
-            "provenance": "adaptation",
-            "source_refs": [
-                "project_isekai_v3"
-            ],
-            "source_locator": "奇幻世界 / traits / imaginative",
-            "review_note": "成长倾向属于游戏叙事，不作新生儿认知诊断，不推断未来职业、原作能力或必然成就。",
-            "reviewed_on": "2026-10-19"
-        },
-        {
-            "id": "careful",
-            "name": "细致谨慎",
-            "weight": 10,
-            "description": "面对陌生环境倾向先观察，适合在稳定指导下逐渐探索。",
-            "provenance": "adaptation",
-            "source_refs": [
-                "project_isekai_v3"
-            ],
-            "source_locator": "奇幻世界 / traits / careful",
-            "review_note": "成长倾向属于游戏叙事，不作新生儿认知诊断，不推断未来职业、原作能力或必然成就。",
-            "reviewed_on": "2026-10-19"
-        }
-    ],
     "content_note": "原作名词、二手整理和游戏改编逐条标注。地区组合、岗位搭配、资源与权重为游戏设计，不表示人口统计；普通同族家庭不推导通用遗传规律。",
-    "dataset_version": "2026.10.19-v4",
-    "birth_notes": [
-        "物种资料描述成长背景，不代表新生儿已经掌握职业、法术或等级能力。"
-    ],
-    "trait_label": "成长倾向",
+    "dataset_version": "2026.10.19-v6",
     "settings": [
         {
             "id": "srd_2024_original",
@@ -3994,99 +3000,6 @@
             "review_note": "时代抽取权重为游戏设定。",
             "reviewed_on": "2026-10-19",
             "canon_scope": "2024基础规则范围；原创聚落，不复刻具体战役世界。"
-        }
-    ],
-    "birth_axes": [
-        {
-            "id": "upbringing",
-            "label": "启蒙环境",
-            "options": [
-                {
-                    "id": "community",
-                    "name": "聚落互助",
-                    "description": "最初的照护与学艺依靠乡邻和社区。",
-                    "weight": 5,
-                    "provenance": "adaptation",
-                    "source_refs": [
-                        "project_isekai_v3"
-                    ],
-                    "source_locator": "出生条件",
-                    "review_note": "抽取与家庭限制属于项目设计。",
-                    "reviewed_on": "2026-10-19"
-                },
-                {
-                    "id": "workshop",
-                    "name": "工坊见习渠道",
-                    "description": "成长后有机会观察手艺制作，工具使用仍需指导。",
-                    "weight": 3,
-                    "provenance": "adaptation",
-                    "source_refs": [
-                        "project_isekai_v3"
-                    ],
-                    "source_locator": "出生条件",
-                    "review_note": "抽取与家庭限制属于项目设计。",
-                    "reviewed_on": "2026-10-19"
-                },
-                {
-                    "id": "temple",
-                    "name": "神殿识字渠道",
-                    "description": "能够尝试通过神殿服务获得基础教育。",
-                    "weight": 2,
-                    "provenance": "adaptation",
-                    "source_refs": [
-                        "project_isekai_v3"
-                    ],
-                    "source_locator": "出生条件",
-                    "review_note": "抽取与家庭限制属于项目设计。",
-                    "reviewed_on": "2026-10-19"
-                },
-                {
-                    "id": "library",
-                    "name": "藏书与识字环境",
-                    "description": "家中有文字或藏书接触渠道，不等于已经学会魔法。",
-                    "weight": 2,
-                    "provenance": "adaptation",
-                    "source_refs": [
-                        "project_isekai_v3"
-                    ],
-                    "source_locator": "出生条件",
-                    "review_note": "抽取与家庭限制属于项目设计。",
-                    "reviewed_on": "2026-10-19"
-                },
-                {
-                    "id": "travel",
-                    "name": "商路与巡游见闻",
-                    "description": "流动生活增加见闻，也需要安排持续的照护。",
-                    "weight": 2,
-                    "provenance": "adaptation",
-                    "source_refs": [
-                        "project_isekai_v3"
-                    ],
-                    "source_locator": "出生条件",
-                    "review_note": "抽取与家庭限制属于项目设计。",
-                    "reviewed_on": "2026-10-19"
-                },
-                {
-                    "id": "tutored",
-                    "name": "有计划的家庭指导",
-                    "description": "家中愿意投入长期教学，成效仍取决于学习。",
-                    "weight": 1,
-                    "provenance": "adaptation",
-                    "source_refs": [
-                        "project_isekai_v3"
-                    ],
-                    "source_locator": "出生条件",
-                    "review_note": "抽取与家庭限制属于项目设计。",
-                    "reviewed_on": "2026-10-19"
-                }
-            ],
-            "provenance": "adaptation",
-            "source_refs": [
-                "project_isekai_v3"
-            ],
-            "source_locator": "启蒙环境",
-            "review_note": "",
-            "reviewed_on": "2026-10-19"
         }
     ],
     "power_sets": [

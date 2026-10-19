@@ -104,5 +104,4 @@ def simulate_anime() -> dict:
         "gender": draw_option(dataset["genders"])["name"], "attributes": attributes,
         "faction": faction.get("name", ""), "rank": rank, "combat": combat,
         "presence": presence, "life": life, "score": score,
-        "summary": " · ".join(value for value in (presence, faction.get("name", ""), rank) if value),
     }

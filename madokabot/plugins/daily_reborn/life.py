@@ -6,9 +6,9 @@ import random
 ASSET_LEVELS = ("千元级", "万元级", "十万元级", "百万级", "千万级", "亿级", "十亿级", "百亿级")
 
 
-def simulate_life(stars: dict, *, seed: str | None = None) -> dict:
-    """以属性联动人生结果，低运气放大资产波动及损失；指定种子时稳定补全旧档案。"""
-    rng = random.Random(seed)
+def simulate_life(stars: dict) -> dict:
+    """以属性联动人生结果，低运气放大资产波动及损失。"""
+    rng = random.Random()
     family, health, intelligence, charm, luck = (stars[name] for name in ("家境", "健康", "智力", "魅力", "运气"))
     expected_age = 40 + health * 8 + family * 2 + luck * 2
     early_risk = .025 + (5 - health) * .02 + (5 - luck) * .01

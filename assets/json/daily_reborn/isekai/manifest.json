@@ -1,5 +1,5 @@
 {
-    "version": "2026.10.19-v5",
+    "version": "2026.10.19-v6",
     "title": "异世界人生档案",
     "notice": "综合人生结果为游戏模拟。上海时间明日零点可再次免费投胎。",
     "genders": [
@@ -35,5 +35,5 @@
         "mysteries.json"
     ],
     "source_catalog": "sources.json",
-    "schema_version": 2
+    "schema_version": 3
 }

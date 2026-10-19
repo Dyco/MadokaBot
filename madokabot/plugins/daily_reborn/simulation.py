@@ -4,11 +4,11 @@ import math
 import random
 from functools import lru_cache
 
-from .attributes import STAR_SYSTEM, attribute_stars, draw_attributes
+from .attributes import STAR_SYSTEM, draw_attributes
 from .geography import random_location
 from .life import simulate_life
 from .modes import RebornMode
-from .potential import EVALUATION_SYSTEM, evaluate_life
+from .potential import evaluate_life
 from .resources import load_json_resource
 
 
@@ -26,25 +26,6 @@ def load_population(mode: RebornMode = "world") -> dict:
         if not math.isfinite(row["sex_ratio"]) or row["sex_ratio"] <= 0:
             raise ValueError(f"出生性别比无效：{row['code']}")
     return dataset
-
-
-def display_result(result: dict) -> dict:
-    """保留原星级并按新规则展示评分，旧档案的人生结果稳定补全，不写回或重新抽取。"""
-    country = result.get("country", {})
-    if country.get("code") in ("PRK", "KOR") and country.get("name") == "朝韩非军事区":
-        current = next(row for row in load_population()["countries"] if row["code"] == country["code"])
-        result = result | {
-            "country": country | {key: current[key] for key in ("name", "longitude", "latitude", "map_code")},
-            "map_point": None,
-        }
-    if result.get("attribute_system") == STAR_SYSTEM and result.get("evaluation_system") == EVALUATION_SYSTEM and "life" in result:
-        return result
-    stars = attribute_stars(result)
-    view = result | {"attributes": stars, "attribute_system": STAR_SYSTEM} | evaluate_life(stars)
-    if "life" not in view:
-        seed = f"{view.get('mode', 'world')}|{view.get('date', '')}|{country.get('code', '')}|{view.get('gender', '')}|{sorted(stars.items())}"
-        view["life"] = simulate_life(stars, seed=seed)
-    return view
 
 
 def simulate_rebirth(*, mode: RebornMode = "world") -> dict:

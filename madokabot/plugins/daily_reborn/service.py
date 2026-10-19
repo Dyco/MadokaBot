@@ -10,8 +10,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from madokabot.core.db.base import shanghai_now
 from madokabot.core.user.models import UserStats
 
-from .anime import ANIME_VERSION, simulate_anime
-from .games import GAMES_VERSION, simulate_games
+from .anime import simulate_anime
+from .games import simulate_games
 from .isekai import simulate_isekai
 from .models import (
     AnimeRebornRecord,
@@ -26,6 +26,7 @@ from .models import (
 from .modes import RebornMode
 from .regions import result_region
 from .simulation import simulate_rebirth
+from .text import is_current_result
 
 REROLL_COST = 5
 HISTORY_LIMIT = 10
@@ -37,33 +38,17 @@ RECORD_MODELS = {
 
 def history_entry(result: dict, count: int) -> dict:
     """按模式保存历史摘要，动漫记录分数，二游记录综合评级及其色阶。"""
-    if result.get("result_version") == ANIME_VERSION:
+    if result["mode"] in {"anime", "isekai"}:
         return {
             "count": count, "date": result["date"], "world": result["world"]["title"],
             "gender": result["gender"], "score": result["score"],
-            "rating": f"{result['score']}分", "summary": result["summary"],
         }
-    if result.get("mode") in {"anime", "games"}:
-        entry = {
+    if result["mode"] == "games":
+        return {
             "count": count, "date": result["date"], "world": result["world"]["title"],
-            "gender": result["gender"], "rating": result["rating"]["value"], "summary": result["summary"],
+            "gender": result["gender"], "rating": result["rating"]["value"],
+            "rating_tier": result["rating"]["tier"],
         }
-        if result.get("result_version") == GAMES_VERSION:
-            entry["rating_tier"] = result["rating"]["tier"]
-        return entry
-    if result.get("mode") == "isekai":
-        entry = {
-            "count": count,
-            "date": result["date"],
-            "world": result["world"]["title"],
-            "birthplace": result["birthplace"]["name"],
-            "species": result["child"]["species"],
-            "gender": result["gender"],
-            "family": result["household"]["name"],
-        }
-        if "score" in result:
-            entry["score"] = result["score"]
-        return entry
     return {
         "count": count,
         "date": result["date"],
@@ -90,6 +75,7 @@ async def lock_progress(session: AsyncSession, user_id: str, *, mode: RebornMode
         history = [
             history_entry(record.result | {"date": record.reborn_date.isoformat()}, number)
             for number, record in enumerate(reversed(records), start=count - len(records) + 1)
+            if is_current_result(record.result)
         ]
         try:
             # 保存点隔离首次初始化的主键竞争，保留外层扣款事务。
