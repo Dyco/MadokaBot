@@ -384,6 +384,22 @@
       ],
       "title": "斩·赤红之瞳！",
       "mode": "anime"
+    },
+    {
+      "id": "isekai_farming",
+      "title": "异世界悠闲农家",
+      "mode": "anime",
+      "file": "isekai_farming.png",
+      "page": "https://nonbiri-nouka.com/",
+      "url": "https://nonbiri-nouka.com/images/tmp/logo.png",
+      "note": "官网 header.html 引用的透明标题字标；修正此前误用的 main_img_logo_pc.png 播出时间告示图。",
+      "checked_at": "2026-10-20",
+      "status": "ready",
+      "bytes": 25460,
+      "size": [
+        519,
+        170
+      ]
     }
   ]
 }
