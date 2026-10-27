@@ -9,14 +9,14 @@ POINT_USAGE = (
     f"{command_start}积分 转账 <@用户|QQ号> <积分数量>\n"
     f"{command_start}积分 赠礼 <@用户|QQ号> <商品编号，如sign02或skin01>\n"
     f"{command_start}积分 红包 <总积分> <人数>（最多20人，超出按20人发放；每人一次，1小时后退回剩余积分）\n"
-    f"{command_start}积分 排名（本群与全部用户积分前20名）"
+    f"{command_start}积分 <排名|名次|排行>（本群与全部用户积分前20名）"
 )
 
 point_cmd_alc = Alconna(
     "point",
     Subcommand("help", alias=["帮助"]),
     Subcommand("query", alias=["查询"]),
-    Subcommand("list", alias=["排名", "List","Rank","列表","rank"]),
+    Subcommand("list", alias=["排名", "名次", "排行", "List", "Rank", "列表", "rank"]),
     Subcommand(
         "transfer",
         Args["target?", At | str]["amount?", str],

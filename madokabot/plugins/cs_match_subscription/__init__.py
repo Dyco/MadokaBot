@@ -23,7 +23,7 @@ __plugin_meta__ = PluginMetadata(
         f"{command_start}CS removesub <赛事ID>\n"
         f"{command_start}CS check <比赛链接>\n"
         f"{command_start}CS prediction <队伍名|竞猜编号> <积分>\n"
-        f"{command_start}CS prediction rank <本群|全部|个人>\n"
+        f"{command_start}CS prediction <rank|排名|名次|排行> <本群|全部|个人>\n"
         f"{command_start}CS prediction details\n"
         f"{command_start}CS login <手机号> <验证码>\n"
         f"{command_start}CS bind <5E|5e|5eplay> <玩家昵称>\n"

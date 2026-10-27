@@ -15,7 +15,7 @@ from madokabot.core.group.access import GroupAccessType, group_access
 from madokabot.core.messaging.broadcast import broadcast_message
 
 from .matchers import MODIFY_USAGE, broadcast_cmd, modify_cmd
-from .service import modify_user_stat
+from .service import modify_all_user_points, modify_user_stat
 
 
 @broadcast_cmd.handle()
@@ -38,7 +38,7 @@ async def handle_broadcast(bot: Bot, event: MessageEvent) -> None:
 
 @modify_cmd.handle()
 async def handle_modify(result: Arparma) -> None:
-    """用户数值修改命令处理方法。"""
+    """处理单个用户数值或全体已注册用户积分的增减命令。"""
     if not result.subcommands:
         await modify_cmd.finish(f"用法：{MODIFY_USAGE}")
     field, subcommand = next(iter(result.subcommands.items()))
@@ -53,7 +53,8 @@ async def handle_modify(result: Arparma) -> None:
         uid = str(target.target)
     else:
         uid = target.strip()
-    if not uid.isascii() or not uid.isdecimal() or int(uid) <= 0:
+    all_users = field == "积分" and uid.lower() in {"all", "全部", "全体"}
+    if not all_users and (not uid.isascii() or not uid.isdecimal() or int(uid) <= 0):
         await modify_cmd.finish("请艾特一位用户或输入有效的QQ号")
 
     raw_value = value.strip()
@@ -63,7 +64,10 @@ async def handle_modify(result: Arparma) -> None:
         amount = int(raw_value)
     except ValueError:
         await modify_cmd.finish("数值过大，请输入较小的整数")
-    ok, message = await modify_user_stat(str(int(uid)), field, amount)
+    if all_users:
+        ok, message = await modify_all_user_points(amount)
+    else:
+        ok, message = await modify_user_stat(str(int(uid)), field, amount)
     await modify_cmd.finish(
         MessageSegment.text(message if ok else f"修改失败：{message}")
     )

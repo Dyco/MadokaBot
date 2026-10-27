@@ -7,7 +7,10 @@ from nonebot_plugin_alconna import Alconna, Args, At, Subcommand, on_alconna
 
 from madokabot.core.config import command_start
 
-MODIFY_USAGE = f"{command_start}修改 <好感|积分> <@用户|QQ号> <数值>"
+MODIFY_USAGE = (
+    f"{command_start}修改 <好感|积分> <@用户|QQ号> <数值>\n"
+    f"{command_start}修改 积分 <ALL|all|All|全部|全体> <数值>（为全体已注册用户增减积分）"
+)
 
 modify_cmd_alc = Alconna(
     "修改",

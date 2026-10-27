@@ -8,6 +8,18 @@ from sqlalchemy import update
 from madokabot.core.user.models import UserStats
 
 
+async def modify_all_user_points(amount: int) -> tuple[bool, str]:
+    """原子增减全体已注册用户的积分，并返回涉及人数。"""
+    async with create_session() as session:
+        result = await session.execute(
+            update(UserStats).values(points=UserStats.points + amount)
+        )
+        count = result.rowcount
+        await session.commit()
+    change = f"增加{amount}" if amount >= 0 else f"减少{-amount}"
+    return True, f"修改成功：全体已注册用户（共{count}人）的积分{change}。"
+
+
 async def modify_user_stat(
     uid: str, field: Literal["好感", "积分"], amount: int
 ) -> tuple[bool, str]:

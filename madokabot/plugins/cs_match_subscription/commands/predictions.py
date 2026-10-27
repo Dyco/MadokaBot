@@ -83,7 +83,7 @@ async def handle_cs_prediction(
     """处理竞猜参与、下注详情和排行榜查询。"""
     raw_params = params.result.strip() if params.available else ""
     prediction_args = raw_params.split()
-    is_ranking = bool(prediction_args and prediction_args[0].casefold() in {"rank", "排名", "排行"})
+    is_ranking = bool(prediction_args and prediction_args[0].casefold() in {"rank", "排名", "名次", "排行"})
     is_details = bool(
         prediction_args and prediction_args[0].casefold() in {"details", "详情", "细节", "内容", "详细"}
     )
@@ -103,7 +103,7 @@ async def handle_cs_prediction(
 
     if is_ranking:
         if len(prediction_args) != 2:
-            await cs_cmd.finish(f"用法：{command_start}CS prediction rank <本群|全部|个人>")
+            await cs_cmd.finish(f"用法：{command_start}CS prediction <rank|排名|名次|排行> <本群|全部|个人>")
             return
         scope_value = prediction_args[1].casefold()
         if scope_value in {"个人", "本人"}:
@@ -123,7 +123,7 @@ async def handle_cs_prediction(
             scope = "all"
             scope_label = "全部赛事"
         else:
-            await cs_cmd.finish(f"用法：{command_start}CS prediction rank <本群|全部|个人>")
+            await cs_cmd.finish(f"用法：{command_start}CS prediction <rank|排名|名次|排行> <本群|全部|个人>")
             return
         try:
             entries = await get_prediction_ranking(scope, str(event.group_id))
